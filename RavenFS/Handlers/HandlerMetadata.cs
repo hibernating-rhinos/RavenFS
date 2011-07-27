@@ -7,8 +7,8 @@ namespace RavenFS.Handlers
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 	public class HandlerMetadataAttribute : ExportAttribute
 	{
-		public string Url { get; set; }
-		public string Method { get; set; }
+		public string Url { get; private set; }
+		public string Method { get; private set; }
 
 		public HandlerMetadataAttribute(string url, string method)
 			: base(typeof(AbstractAsyncHandler))

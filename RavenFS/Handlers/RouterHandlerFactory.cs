@@ -3,12 +3,14 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Linq;
 using System.Web;
+using NLog;
 using RavenFS.Util;
 
 namespace RavenFS.Handlers
 {
 	public class RouterHandlerFactory : IHttpHandlerFactory, IDisposable
 	{
+		private Logger logger = LogManager.GetCurrentClassLogger();
 		private readonly CompositionContainer compositionContainer;
 		private readonly BufferPool globalBufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
 
@@ -24,6 +26,7 @@ namespace RavenFS.Handlers
 			foreach (var handler in Handlers)
 			{
 				handler.Value.BufferPool = globalBufferPool;
+				handler.Value.Url = handler.Metadata.Url;
 			}
 		}
 
@@ -36,9 +39,12 @@ namespace RavenFS.Handlers
 		/// <param name="context">An instance of the <see cref="T:System.Web.HttpContext"/> class that provides references to intrinsic server objects (for example, Request, Response, Session, and Server) used to service HTTP requests. </param><param name="requestType">The HTTP data transfer method (GET or POST) that the client uses. </param><param name="url">The <see cref="P:System.Web.HttpRequest.RawUrl"/> of the requested resource. </param><param name="pathTranslated">The <see cref="P:System.Web.HttpRequest.PhysicalApplicationPath"/> to the requested resource. </param>
 		public IHttpHandler GetHandler(HttpContext context, string requestType, string url, string pathTranslated)
 		{
+
 			var result = Handlers
 				.Where(handler => handler.Metadata.Matches(requestType, url))
 				.FirstOrDefault();
+
+			logger.Debug("{0} {1} -> {2}", requestType, url, ((object)result ?? "Unhandled"));
 
 			if(result == null)
 				throw new InvalidOperationException("Could not find a handler for request: " + requestType + " " + url);

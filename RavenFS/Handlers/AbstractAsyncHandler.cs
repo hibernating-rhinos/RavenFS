@@ -5,8 +5,10 @@
 // //-----------------------------------------------------------------------
 using System;
 using System.ComponentModel.Composition;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using RavenFS.Storage;
 using RavenFS.Util;
 
 namespace RavenFS.Handlers
@@ -15,8 +17,14 @@ namespace RavenFS.Handlers
 	{
 		protected abstract Task ProcessRequestAsync(HttpContext context);
 
+		public IStorage Storage { get; set; }
 		public IBufferPool BufferPool { get; set; }
 	
+		public byte[] TakeBuffer()
+		{
+			return BufferPool.TakeBuffer(64*1024);
+		}
+
 		private Task ProcessRequestAsync(HttpContext context, AsyncCallback cb)
 		{
 			return ProcessRequestAsync(context)
@@ -45,6 +53,8 @@ namespace RavenFS.Handlers
 		{
 			get { return true; }
 		}
+
+		public Regex Url { protected get; set; }
 
 		/// <summary>
 		///   Initiates an asynchronous call to the HTTP handler.
