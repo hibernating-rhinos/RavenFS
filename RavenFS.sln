@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenFS", "RavenFS\RavenFS.csproj", "{6057787E-1771-4942-B3E5-FB435CED0408}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenFS.Tests", "RavenFS.Tests\RavenFS.Tests.csproj", "{01CA67F3-1E46-455C-8713-86FCCF2EFBC7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{6057787E-1771-4942-B3E5-FB435CED0408}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6057787E-1771-4942-B3E5-FB435CED0408}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6057787E-1771-4942-B3E5-FB435CED0408}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01CA67F3-1E46-455C-8713-86FCCF2EFBC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01CA67F3-1E46-455C-8713-86FCCF2EFBC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01CA67F3-1E46-455C-8713-86FCCF2EFBC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01CA67F3-1E46-455C-8713-86FCCF2EFBC7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

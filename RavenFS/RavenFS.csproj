@@ -83,7 +83,6 @@
     <Compile Include="Util\DispsableAction.cs" />
     <Compile Include="Handlers\HandlerMetadata.cs" />
     <Compile Include="Handlers\IHandlerMetadata.cs" />
-    <Compile Include="Handlers\PutFileHandler.cs" />
     <Compile Include="Handlers\RouterHandlerFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\BufferPool.cs" />

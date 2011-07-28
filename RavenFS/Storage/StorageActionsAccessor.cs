@@ -4,12 +4,14 @@
 // </copyright>
 //-----------------------------------------------------------------------
 using System;
+using System.Security.Cryptography;
 using Microsoft.Isam.Esent.Interop;
+using RavenFS.Util;
 
 namespace RavenFS.Storage
 {
 	[CLSCompliant(false)]
-	public class StorageActionsAccessor : IDisposable
+	public class StorageActionsAccessor : IDisposable, IStorageActions
 	{
 		private readonly TableColumnsCache tableColumnsCache;
 		private readonly Session session;
@@ -68,6 +70,32 @@ namespace RavenFS.Storage
 		public void Commit()
 		{
 			transaction.Commit(CommitTransactionGrbit.None);
+		}
+
+		public HashKey InsertPage(byte[] buffer, int position, int size)
+		{
+			var key = new HashKey(buffer,position, size);
+
+			using(var update = new Update(session, Pages, JET_prep.Insert))
+			{
+				Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_strong_hash"],key.Strong);
+				Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_weak_hash"], key.Weak);
+				Api.JetSetColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, size,
+				                 SetColumnGrbit.None, null);
+
+				update.Save();
+			}
+			return key;
+		}
+
+		public void PutFile(string filename, long totalSize)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void AssociatePage(string filename, HashKey pageKey)
+		{
+			throw new NotImplementedException();
 		}
 	}
 

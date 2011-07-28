@@ -19,7 +19,6 @@ namespace RavenFS.Storage
 		private readonly ThreadLocal<StorageActionsAccessor> current = new ThreadLocal<StorageActionsAccessor>();
 		private readonly string database;
 		private readonly NameValueCollection settings;
-		private readonly Action onCommit;
 		private readonly ReaderWriterLockSlim disposerLock = new ReaderWriterLockSlim();
 		private readonly string path;
 		private bool disposed;
@@ -34,13 +33,11 @@ namespace RavenFS.Storage
 
 		public Storage(string database, NameValueCollection settings)
 		{
-			this.database = database;
 			this.settings = settings;
-			this.onCommit = onCommit;
 			path = database;
 			if (Path.IsPathRooted(database) == false)
 				path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, database);
-			database = Path.Combine(path, "Data.ravenfs");
+			this.database = Path.Combine(path, "Data.ravenfs");
 
 			new StorageConfigurator(settings).LimitSystemCache();
 
@@ -202,6 +199,8 @@ namespace RavenFS.Storage
 		[DebuggerHidden, DebuggerNonUserCode, DebuggerStepThrough]
 		public void Batch(Action<StorageActionsAccessor> action)
 		{
+			if(Id == Guid.Empty)
+				throw new InvalidOperationException("Cannot use Storage before Initialize was called");
 			if (disposed)
 			{
 				Trace.WriteLine("Storage.Batch was called after it was disposed, call was ignored.");

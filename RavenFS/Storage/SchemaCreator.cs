@@ -12,7 +12,7 @@ namespace RavenFS.Storage
 	[CLSCompliant(false)]
 	public class SchemaCreator
 	{
-		public const string SchemaVersion = "3.6";
+		public const string SchemaVersion = "0.1";
 		private readonly Session session;
 
 		public SchemaCreator(Session session)
@@ -28,15 +28,65 @@ namespace RavenFS.Storage
 			{
 				using (var tx = new Transaction(session))
 				{
+					CreateDetailsTable(dbid);
 					CreateFilesTable(dbid);
 					CreateUsageTable(dbid);
 					CreatePagesTable(dbid);
+
 					tx.Commit(CommitTransactionGrbit.None);
 				}
 			}
 			finally
 			{
 				Api.JetCloseDatabase(session, dbid, CloseDatabaseGrbit.None);
+			}
+		}
+
+
+		private void CreateDetailsTable(JET_DBID dbid)
+		{
+			JET_TABLEID tableid;
+			Api.JetCreateTable(session, dbid, "details", 1, 80, out tableid);
+			JET_COLUMNID id;
+			Api.JetAddColumn(session, tableid, "id", new JET_COLUMNDEF
+			{
+				cbMax = 16,
+				coltyp = JET_coltyp.Binary,
+				grbit = ColumndefGrbit.ColumnNotNULL | ColumndefGrbit.ColumnFixed
+			}, null, 0, out id);
+
+			JET_COLUMNID schemaVersion;
+			Api.JetAddColumn(session, tableid, "schema_version", new JET_COLUMNDEF
+			{
+				cbMax = Encoding.Unicode.GetByteCount(SchemaVersion),
+				cp = JET_CP.Unicode,
+				coltyp = JET_coltyp.Text,
+				grbit = ColumndefGrbit.ColumnNotNULL | ColumndefGrbit.ColumnFixed
+			}, null, 0, out schemaVersion);
+
+			JET_COLUMNID fileCount;
+			var bytes = BitConverter.GetBytes(0);
+			Api.JetAddColumn(session, tableid, "file_count", new JET_COLUMNDEF
+			{
+				coltyp = JET_coltyp.Long,
+				grbit = ColumndefGrbit.ColumnNotNULL | ColumndefGrbit.ColumnFixed | ColumndefGrbit.ColumnEscrowUpdate
+			}, bytes, bytes.Length, out fileCount);
+
+
+			JET_COLUMNID pageCount;
+			Api.JetAddColumn(session, tableid, "page_count", new JET_COLUMNDEF
+			{
+				coltyp = JET_coltyp.Long,
+				grbit = ColumndefGrbit.ColumnNotNULL | ColumndefGrbit.ColumnFixed | ColumndefGrbit.ColumnEscrowUpdate
+			}, bytes, bytes.Length, out pageCount);
+
+			using (var update = new Update(session, tableid, JET_prep.Insert))
+			{
+				Api.SetColumn(session, tableid, id, Guid.NewGuid().ToByteArray());
+				Api.SetColumn(session, tableid, schemaVersion, SchemaVersion, Encoding.Unicode);
+				Api.SetColumn(session, tableid, fileCount, 0);
+				Api.SetColumn(session, tableid, pageCount, 0);
+				update.Save();
 			}
 		}
 
@@ -72,8 +122,12 @@ namespace RavenFS.Storage
 				grbit = ColumndefGrbit.ColumnNotNULL
 			}, null, 0, out columnid);
 
-			const string indexDef = "+name\0\0";
-			Api.JetCreateIndex(session, tableid, "by_name", CreateIndexGrbit.IndexPrimary, indexDef, indexDef.Length,
+			string indexDef = "+id\0\0";
+			Api.JetCreateIndex(session, tableid, "by_id", CreateIndexGrbit.IndexPrimary, indexDef, indexDef.Length,
+							   80);
+
+			indexDef = "+page_weak_hash\0+page_strong_hash\0\0";
+			Api.JetCreateIndex(session, tableid, "by_keys", CreateIndexGrbit.IndexUnique, indexDef, indexDef.Length,
 							   80);
 		}
 		private void CreateUsageTable(JET_DBID dbid)
@@ -115,8 +169,12 @@ namespace RavenFS.Storage
 				grbit = ColumndefGrbit.ColumnFixed | ColumndefGrbit.ColumnNotNULL
 			}, null, 0, out columnid);
 
-			const string indexDef = "+name\0\0";
-			Api.JetCreateIndex(session, tableid, "by_name", CreateIndexGrbit.IndexPrimary, indexDef, indexDef.Length,
+			string indexDef = "+id\0\0";
+			Api.JetCreateIndex(session, tableid, "by_id", CreateIndexGrbit.IndexPrimary, indexDef, indexDef.Length,
+							   80);
+			
+			indexDef = "+name\0+file_pos\0\0";
+			Api.JetCreateIndex(session, tableid, "by_name_and_pos", CreateIndexGrbit.None, indexDef, indexDef.Length,
 							   80);
 		}
 		private void CreateFilesTable(JET_DBID dbid)
@@ -153,8 +211,13 @@ namespace RavenFS.Storage
 				grbit = ColumndefGrbit.ColumnFixed | ColumndefGrbit.ColumnNotNULL
 			}, null, 0, out columnid);
 
-			const string indexDef = "+name\0\0";
-			Api.JetCreateIndex(session, tableid, "by_name", CreateIndexGrbit.IndexPrimary, indexDef, indexDef.Length,
+
+			string indexDef = "+id\0\0";
+			Api.JetCreateIndex(session, tableid, "by_id", CreateIndexGrbit.IndexPrimary, indexDef, indexDef.Length,
+							   80);
+			
+			indexDef = "+name\0\0";
+			Api.JetCreateIndex(session, tableid, "by_name", CreateIndexGrbit.IndexUnique, indexDef, indexDef.Length,
 							   80);
 		}
 	}

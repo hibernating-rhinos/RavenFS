@@ -6,7 +6,7 @@
 using System;
 using System.Linq;
 
-namespace RavenFS.Hashing
+namespace RavenFS.Util
 {
 	/// <remarks>
 	/// Adapted from http://algs4.cs.princeton.edu/53substring/RabinKarp.java.html
@@ -25,12 +25,13 @@ namespace RavenFS.Hashing
 			RM = ((int)Math.Pow(R, length - 1)) % Q;
 		}
 
-		public int Init(byte[] bytes)
+		public int Init(byte[] bytes, int position, int size)
 		{
-			if(bytes.Length != length)
+			if(size != length)
 				throw new ArgumentException("Buffer size must match hasher length");
 
-			return current = bytes.Aggregate(0, (acc, cur) => (R*acc + cur)%Q);
+			return current = bytes.Skip(position).Take(size)
+				.Aggregate(0, (acc, cur) => (R*acc + cur)%Q);
 		}
 
 		public int Move(byte prev, byte next)

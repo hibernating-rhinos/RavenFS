@@ -17,7 +17,6 @@ namespace RavenFS.Handlers
 	{
 		protected abstract Task ProcessRequestAsync(HttpContext context);
 
-		public IStorage Storage { get; set; }
 		public IBufferPool BufferPool { get; set; }
 	
 		public byte[] TakeBuffer()
