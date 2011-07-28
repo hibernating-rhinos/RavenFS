@@ -97,6 +97,21 @@ namespace RavenFS.Storage
 		{
 			throw new NotImplementedException();
 		}
+
+		public int ReadPage(HashKey key, byte[] buffer, int index)
+		{
+			Api.JetSetCurrentIndex(session, Pages, "by_keys");
+			Api.MakeKey(session, Pages, key.Weak,MakeKeyGrbit.NewKey);
+			Api.MakeKey(session, Pages,key.Strong, MakeKeyGrbit.None);
+
+			if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ) == false)
+				return -1;
+
+			int size;
+			Api.JetRetrieveColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, buffer.Length - index, out size,
+			                      RetrieveColumnGrbit.None, null);
+			return size;
+		}
 	}
 
 }

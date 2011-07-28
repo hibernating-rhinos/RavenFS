@@ -2,6 +2,7 @@
 using System.Collections.Specialized;
 using System.IO;
 using Raven.Database.Extensions;
+using RavenFS.Util;
 using Xunit;
 
 namespace RavenFS.Tests
@@ -23,6 +24,23 @@ namespace RavenFS.Tests
 			storage.Batch(accessor =>
 			{
 				accessor.InsertPage(new byte[] {1, 2, 3, 4, 5, 6}, 1, 4);
+			});
+		}
+
+		[Fact]
+		public void CanInsertAndReadPage()
+		{
+			HashKey key = null;
+			storage.Batch(accessor =>
+			{
+				key = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 1, 4);
+			});
+
+			storage.Batch(accessor =>
+			{
+				var buffer = new byte[4];
+				Assert.Equal(4, accessor.ReadPage(key, buffer, 0));
+				Assert.Equal(new byte[]{2,3,4,5}, buffer);
 			});
 		}
 
