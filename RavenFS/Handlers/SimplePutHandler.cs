@@ -20,20 +20,25 @@ namespace RavenFS.Handlers
 
 		private Task ReadAllPages(HttpContext context, string filename, int pos)
 		{
-			return ReadPage(context, filename, pos)
+			var buffer = TakeBuffer();
+			return ReadPage(context, filename, pos, buffer)
 				.ContinueWith(task =>
 				{
 					if (task.Result == false)
 						return task;
 
-					return ReadPage(context, filename, pos + 1);
+					return ReadPage(context, filename, pos + 1, buffer);
 				})
-				.Unwrap();
+				.Unwrap()
+				.ContinueWith(task =>
+				{
+					BufferPool.ReturnBuffer(buffer);
+					return task;
+				});
 		}
 
-		private Task<bool> ReadPage(HttpContext context, string filename, int pos)
+		private Task<bool> ReadPage(HttpContext context, string filename, int pos, byte[] buffer)
 		{
-			var buffer = TakeBuffer();
 			return context.Request.InputStream.ReadAsync(buffer)
 				.ContinueWith(task =>
 				{

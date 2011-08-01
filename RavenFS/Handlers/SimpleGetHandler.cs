@@ -67,7 +67,7 @@ namespace RavenFS.Handlers
 					if (task.Exception != null)
 						return task;
 
-					if (pages.Count > index)
+					if (index >= pages.Count)
 						return task;
 
 					return WritePages(context, pages, index + 1);

@@ -81,14 +81,23 @@ namespace RavenFS.Storage
 		{
 			var key = new HashKey(buffer, size);
 
-			using(var update = new Update(session, Pages, JET_prep.Insert))
+			try
 			{
-				Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_strong_hash"],key.Strong);
-				Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_weak_hash"], key.Weak);
-				Api.JetSetColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, size,
-				                 SetColumnGrbit.None, null);
+				using(var update = new Update(session, Pages, JET_prep.Insert))
+				{
+					Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_strong_hash"],key.Strong);
+					Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_weak_hash"], key.Weak);
+					Api.JetSetColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, size,
+					                 SetColumnGrbit.None, null);
 
-				update.Save();
+					update.Save();
+				}
+			}
+			catch (EsentErrorException e)
+			{
+				// if the value already exists, we don't care about that.
+				if (e.Error != JET_err.KeyDuplicate)
+					throw;
 			}
 			return key;
 		}
