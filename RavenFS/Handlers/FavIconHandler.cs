@@ -10,7 +10,6 @@ namespace RavenFS.Handlers
 	{
 		protected override Task ProcessRequestAsync(HttpContext context)
 		{
-			context.Response.Status = "Not Found";
 			context.Response.StatusCode = 404;
 			return Completed;
 		}

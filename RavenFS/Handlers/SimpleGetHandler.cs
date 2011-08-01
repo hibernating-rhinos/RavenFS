@@ -29,7 +29,6 @@ namespace RavenFS.Handlers
 			}
 			catch (FileNotFoundException)
 			{
-				context.Response.Status = "Not Found";
 				context.Response.StatusCode = 404;
 
 				return Completed;
@@ -53,7 +52,6 @@ namespace RavenFS.Handlers
 				if(fromPage == 0)
 				{
 					context.Response.StatusCode = 204;
-					context.Response.Status = "No Content";
 				}
 				return Completed;
 			}
