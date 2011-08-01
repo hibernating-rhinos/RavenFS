@@ -35,6 +35,19 @@ namespace RavenFS.Handlers
 				return Completed;
 			}
 
+			foreach (var key in fileInformation.Metadata.AllKeys)
+			{
+				var values = fileInformation.Metadata.GetValues(key);
+				if (values == null)
+					continue;
+
+				foreach (var value in values)
+				{
+				context.Response.AddHeader(key, value);
+					
+				}
+			}
+
 			if(fileInformation.Pages.Count == 0)
 			{
 				if(fromPage == 0)

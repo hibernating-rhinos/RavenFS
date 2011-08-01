@@ -36,5 +36,15 @@ namespace RavenFS.Tests
 			var str = webClient.DownloadString("/files");
 			Assert.Equal("[{\"Name\":\"abc.txt\",\"TotalSize\":3,\"UploadedSize\":3,\"Metadata\":{\"Test\":\"Value\"}}]", str);
 		}
+
+		[Fact]
+		public void CanSetFileMetadata_Then_GetItFromFile()
+		{
+			webClient.Headers["Test"] = "Value";
+			webClient.UploadString("/files/abc.txt", "PUT", "abc");
+			var str = webClient.DownloadString("/files/abc.txt");
+			Assert.Equal("abc", str);
+			Assert.Equal("Value", webClient.ResponseHeaders["Test"]);
+		}
 	}
 }
