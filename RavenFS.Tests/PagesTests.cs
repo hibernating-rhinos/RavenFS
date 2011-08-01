@@ -25,6 +25,47 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
+		public void CanAssociatePageWithFile()
+		{
+			storage.Batch(accessor =>
+			{
+				accessor.PutFile("test.csv", 12);
+
+				var hashKey = accessor.InsertPage(new byte[] {1, 2, 3, 4, 5, 6}, 4);
+				accessor.AssociatePage("test.csv", hashKey,0, 4);
+
+				hashKey = accessor.InsertPage(new byte[] {5, 6, 7, 8, 9}, 4);
+				accessor.AssociatePage("test.csv", hashKey, 1, 4);
+			});
+		}
+
+		[Fact]
+		public void CanReadFilePages()
+		{
+			storage.Batch(accessor =>
+			{
+				accessor.PutFile("test.csv", 16);
+
+				var hashKey = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 4);
+				accessor.AssociatePage("test.csv", hashKey, 0, 4);
+
+				hashKey = accessor.InsertPage(new byte[] { 5, 6, 7, 8, 9 }, 4);
+				accessor.AssociatePage("test.csv", hashKey, 1, 4);
+
+				hashKey = accessor.InsertPage(new byte[] { 6, 7, 8, 9 }, 4);
+				accessor.AssociatePage("test.csv", hashKey, 2, 4);
+			});
+
+
+			storage.Batch(accessor =>
+			{
+				var file = accessor.GetFile("test.csv", 0, 2);
+				Assert.NotNull(file);
+				Assert.Equal(2, file.Pages.Count);
+			});
+		}
+
+		[Fact]
 		public void CanInsertAndReadPage()
 		{
 			HashKey key = null;
@@ -41,10 +82,6 @@ namespace RavenFS.Tests
 			});
 		}
 
-		/// <summary>
-		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-		/// </summary>
-		/// <filterpriority>2</filterpriority>
 		public void Dispose()
 		{
 			storage.Dispose();
