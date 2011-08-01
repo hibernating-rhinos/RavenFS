@@ -75,6 +75,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\MetadataExtensions.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Handlers\FilesHandler.cs" />
     <Compile Include="Handlers\RootHanlder.cs" />
