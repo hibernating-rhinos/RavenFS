@@ -13,7 +13,14 @@ namespace RavenFS.Handlers
 		{
 			var filename = Url.Match(context.Request.Url.AbsolutePath).Groups[1].Value;
 
-			Storage.Batch(accessor => accessor.PutFile(filename, context.Request.ContentLength, context.Request.Headers.FilterHeaders()));
+			Storage.Batch(accessor =>
+			{
+				accessor.Delete(filename);
+
+				accessor.PutFile(filename, context.Request.ContentLength,
+				                 context.Request.Headers.FilterHeaders());
+
+			});
 
 			return ReadAllPages(context, filename, 0);
 		}

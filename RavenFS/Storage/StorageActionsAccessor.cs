@@ -81,24 +81,27 @@ namespace RavenFS.Storage
 		{
 			var key = new HashKey(buffer, size);
 
-			try
-			{
-				using(var update = new Update(session, Pages, JET_prep.Insert))
-				{
-					Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_strong_hash"],key.Strong);
-					Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_weak_hash"], key.Weak);
-					Api.JetSetColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, size,
-					                 SetColumnGrbit.None, null);
+			Api.JetSetCurrentIndex(session, Pages, "by_keys");
 
-					update.Save();
-				}
-			}
-			catch (EsentErrorException e)
+			Api.MakeKey(session, Pages, key.Weak, MakeKeyGrbit.NewKey);
+			Api.MakeKey(session, Pages, key.Strong, MakeKeyGrbit.None);
+
+			if(Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
 			{
-				// if the value already exists, we don't care about that.
-				if (e.Error != JET_err.KeyDuplicate)
-					throw;
+				Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], 1); 
+				return key;
 			}
+
+			using (var update = new Update(session, Pages, JET_prep.Insert))
+			{
+				Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_strong_hash"], key.Strong);
+				Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_weak_hash"], key.Weak);
+				Api.JetSetColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, size,
+				                 SetColumnGrbit.None, null);
+
+				update.Save();
+			}
+
 			return key;
 		}
 
@@ -250,6 +253,47 @@ namespace RavenFS.Storage
 				};
 
 			} while (++index < size && Api.TryMoveNext(session, Files));
+		}
+
+		public void Delete(string filename)
+		{
+			Api.JetSetCurrentIndex(session, Files, "by_name");
+			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
+				return;
+			Api.JetDelete(session, Files);
+
+			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
+			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (!Api.TrySeek(session, Usage, SeekGrbit.SeekGE)) 
+				return;
+
+			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			Api.JetSetIndexRange(session, Usage, SetIndexRangeGrbit.RangeInclusive);
+
+			Api.JetSetCurrentIndex(session, Pages, "by_keys");
+
+			do
+			{
+				var page = new HashKey
+				{
+					Strong = Api.RetrieveColumn(session, Usage, tableColumnsCache.UsageColumns["page_strong_hash"]),
+					Weak = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_weak_hash"]).Value,
+				};
+
+				Api.MakeKey(session, Pages, page.Weak, MakeKeyGrbit.NewKey);
+				Api.MakeKey(session, Pages, page.Strong, MakeKeyGrbit.None);
+
+				if(Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
+				{
+					if(Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], -1) <= 0)
+					{
+						Api.JetDelete(session, Pages);
+					}
+				}
+
+				Api.JetDelete(session, Usage);
+			} while (Api.TryMoveNext(session, Usage));
 		}
 	}
 }

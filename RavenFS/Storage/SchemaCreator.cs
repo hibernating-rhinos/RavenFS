@@ -122,6 +122,13 @@ namespace RavenFS.Storage
 				grbit = ColumndefGrbit.ColumnNotNULL
 			}, null, 0, out columnid);
 
+			var one = BitConverter.GetBytes(1);
+			Api.JetAddColumn(session, tableid, "usage_count", new JET_COLUMNDEF
+			{
+				coltyp = JET_coltyp.Long,
+				grbit = ColumndefGrbit.ColumnEscrowUpdate | ColumndefGrbit.ColumnNotNULL
+			}, one, one.Length, out columnid);
+
 			string indexDef = "+id\0\0";
 			Api.JetCreateIndex(session, tableid, "by_id", CreateIndexGrbit.IndexPrimary, indexDef, indexDef.Length,
 							   80);
