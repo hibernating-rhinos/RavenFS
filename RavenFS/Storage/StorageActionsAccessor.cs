@@ -135,7 +135,7 @@ namespace RavenFS.Storage
 			}
 		}
 
-		public int ReadPage(HashKey key, byte[] buffer, int index)
+		public int ReadPage(HashKey key, byte[] buffer)
 		{
 			Api.JetSetCurrentIndex(session, Pages, "by_keys");
 			Api.MakeKey(session, Pages, key.Weak,MakeKeyGrbit.NewKey);
@@ -145,7 +145,7 @@ namespace RavenFS.Storage
 				return -1;
 
 			int size;
-			Api.JetRetrieveColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, buffer.Length - index, out size,
+			Api.JetRetrieveColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, buffer.Length, out size,
 			                      RetrieveColumnGrbit.None, null);
 			return size;
 		}
