@@ -5,9 +5,11 @@
 //-----------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web;
 using Microsoft.Isam.Esent.Interop;
 using RavenFS.Util;
 
@@ -91,16 +93,38 @@ namespace RavenFS.Storage
 			return key;
 		}
 
-		public void PutFile(string filename, long totalSize)
+		public void PutFile(string filename, long totalSize, NameValueCollection metadata)
 		{
 			using (var update = new Update(session, Files, JET_prep.Insert))
 			{
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["name"], filename, Encoding.Unicode);
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize));
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"], BitConverter.GetBytes(0));
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
 				
 				update.Save();
 			}
+		}
+
+		private static string ToQueryString(NameValueCollection metadata)
+		{
+			var sb = new StringBuilder();
+			foreach (var key in metadata.AllKeys)
+			{
+				var values = metadata.GetValues(key);
+				if(values == null)
+					continue;
+
+				foreach (var value in values)
+				{
+					sb.Append(key)
+						.Append("=")
+						.Append(Uri.EscapeUriString(value))
+						.Append("&");
+				}
+			}
+
+			return sb.ToString();
 		}
 
 		public void AssociatePage(string filename, HashKey pageKey, int pagePositionInFile, int pageSize)
@@ -158,10 +182,12 @@ namespace RavenFS.Storage
 			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
 				throw new FileNotFoundException("Could not find file: " + filename);
 
+			var metadata = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"],Encoding.Unicode);
 			var fileInformation = new FileInformation
 			{
 				TotalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0),
 				UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
+				Metadata = HttpUtility.ParseQueryString(metadata),
 				Name = filename,
 				Start = start
 			};
@@ -203,11 +229,13 @@ namespace RavenFS.Storage
 
 			do
 			{
+				var metadata = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"], Encoding.Unicode);
 				yield return new FileHeader
 				{
 					Name = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
 					TotalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0),
 					UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
+					Metadata = HttpUtility.ParseQueryString(metadata)
 				};
 
 			} while (++index < size && Api.TryMoveNext(session, Files));

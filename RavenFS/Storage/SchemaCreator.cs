@@ -203,6 +203,14 @@ namespace RavenFS.Storage
 				grbit = ColumndefGrbit.ColumnNotNULL
 			}, null, 0, out columnid);
 
+			Api.JetAddColumn(session, tableid, "metadata", new JET_COLUMNDEF
+			{
+				cbMax = 1024*64,
+				coltyp = JET_coltyp.LongText,
+				cp = JET_CP.Unicode,
+				grbit = ColumndefGrbit.ColumnNotNULL
+			}, null, 0, out columnid);
+
 			Api.JetAddColumn(session, tableid, "total_size", new JET_COLUMNDEF
 			{
 				coltyp = JET_coltyp.Binary,

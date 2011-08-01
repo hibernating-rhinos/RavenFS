@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using System.Web;
 using RavenFS.Infrastructure;
 using RavenFS.Extensions;
+using Raven.Abstractions.Extensions;
 
 namespace RavenFS.Handlers
 {
@@ -12,7 +13,7 @@ namespace RavenFS.Handlers
 		{
 			var filename = Url.Match(context.Request.Url.AbsolutePath).Groups[1].Value;
 
-			Storage.Batch(accessor => accessor.PutFile(filename, context.Request.ContentLength));
+			Storage.Batch(accessor => accessor.PutFile(filename, context.Request.ContentLength, context.Request.Headers.FilterHeaders()));
 
 			return ReadAllPages(context, filename, 0);
 		}

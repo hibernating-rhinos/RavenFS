@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Specialized;
-using System.IO;
 using Raven.Database.Extensions;
 using RavenFS.Util;
 using Xunit;
@@ -29,7 +28,7 @@ namespace RavenFS.Tests
 		{
 			storage.Batch(accessor =>
 			{
-				accessor.PutFile("test.csv", 12);
+				accessor.PutFile("test.csv", 12, new NameValueCollection());
 
 				var hashKey = accessor.InsertPage(new byte[] {1, 2, 3, 4, 5, 6}, 4);
 				accessor.AssociatePage("test.csv", hashKey,0, 4);
@@ -44,7 +43,7 @@ namespace RavenFS.Tests
 		{
 			storage.Batch(accessor =>
 			{
-				accessor.PutFile("test.csv", 16);
+				accessor.PutFile("test.csv", 16, new NameValueCollection());
 
 				var hashKey = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 4);
 				accessor.AssociatePage("test.csv", hashKey, 0, 4);
@@ -70,7 +69,7 @@ namespace RavenFS.Tests
 		{
 			storage.Batch(accessor =>
 			{
-				accessor.PutFile("test.csv", 16);
+				accessor.PutFile("test.csv", 16, new NameValueCollection());
 
 				var hashKey = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 4);
 				accessor.AssociatePage("test.csv", hashKey, 0, 4);
@@ -92,11 +91,28 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
+		public void CanReadMetadata()
+		{
+			storage.Batch(accessor => accessor.PutFile("test.csv", 16, new NameValueCollection
+			{
+				{"test", "abc"}
+			}));
+
+
+			storage.Batch(accessor =>
+			{
+				var file = accessor.GetFile("test.csv", 2, 2);
+				Assert.NotNull(file);
+				Assert.Equal("abc", file.Metadata["test"]);
+			});
+		}
+
+		[Fact]
 		public void CanReadFileContents()
 		{
 			storage.Batch(accessor =>
 			{
-				accessor.PutFile("test.csv", 16);
+				accessor.PutFile("test.csv", 16, new NameValueCollection());
 
 				var hashKey = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 4);
 				accessor.AssociatePage("test.csv", hashKey, 0, 4);
