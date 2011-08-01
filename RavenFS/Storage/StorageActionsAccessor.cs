@@ -286,7 +286,8 @@ namespace RavenFS.Storage
 
 				if(Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
 				{
-					if(Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], -1) <= 0)
+					var escrowUpdate = Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], -1);
+					if(escrowUpdate <= 1)
 					{
 						Api.JetDelete(session, Pages);
 					}
