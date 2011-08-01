@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.Composition;
 
-namespace RavenFS.Handlers
+namespace RavenFS.Infrastructure
 {
 	[MetadataAttribute]
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]

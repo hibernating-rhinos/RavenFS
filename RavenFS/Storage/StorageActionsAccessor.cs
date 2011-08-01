@@ -4,6 +4,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -95,8 +96,8 @@ namespace RavenFS.Storage
 			using (var update = new Update(session, Files, JET_prep.Insert))
 			{
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["name"], filename, Encoding.Unicode);
-				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], totalSize);
-				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"], 0);
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize));
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"], BitConverter.GetBytes(0));
 				
 				update.Save();
 			}
@@ -159,7 +160,8 @@ namespace RavenFS.Storage
 
 			var fileInformation = new FileInformation
 			{
-				TotalSize = Api.RetrieveColumnAsInt32(session, Files, tableColumnsCache.FilesColumns["total_size"]).Value,
+				TotalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0),
+				UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
 				Name = filename,
 				Start = start
 			};
@@ -187,6 +189,28 @@ namespace RavenFS.Storage
 			}
 
 			return fileInformation;
+		}
+
+		public IEnumerable<FileHeader> ReadFiles(int start, int size)
+		{
+			Api.JetSetCurrentIndex(session, Files, "by_name");
+			if(Api.TryMoveFirst(session, Files) == false)
+				yield break;
+
+			Api.JetMove(session, Files, start, MoveGrbit.None);
+
+			int index = 0;
+
+			do
+			{
+				yield return new FileHeader
+				{
+					Name = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
+					TotalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0),
+					UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
+				};
+
+			} while (++index < size && Api.TryMoveNext(session, Files));
 		}
 	}
 }

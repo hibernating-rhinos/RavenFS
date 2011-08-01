@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Specialized;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Linq;
@@ -6,17 +7,25 @@ using System.Web;
 using NLog;
 using RavenFS.Util;
 
-namespace RavenFS.Handlers
+namespace RavenFS.Infrastructure
 {
 	public class RouterHandlerFactory : IHttpHandlerFactory, IDisposable
 	{
-		private Logger logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 		private readonly CompositionContainer compositionContainer;
 		private readonly BufferPool globalBufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
 
 
 		[ImportMany]
 		public Lazy<AbstractAsyncHandler, HandlerMetadata>[] Handlers { get; set; }
+
+		private readonly static Storage.Storage storage;
+
+		static RouterHandlerFactory()
+		{
+			storage = new Storage.Storage("Data.ravenfs", new NameValueCollection());
+			storage.Initialize();
+		}
 
 		public RouterHandlerFactory()
 		{
@@ -25,8 +34,7 @@ namespace RavenFS.Handlers
 
 			foreach (var handler in Handlers)
 			{
-				handler.Value.BufferPool = globalBufferPool;
-				handler.Value.Url = handler.Metadata.Url;
+				handler.Value.Initialize(globalBufferPool, handler.Metadata.Url, storage);
 			}
 		}
 
