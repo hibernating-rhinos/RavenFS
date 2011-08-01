@@ -132,6 +132,8 @@ namespace RavenFS.Storage
 						.Append("&");
 				}
 			}
+			if (sb.Length > 0)
+				sb.Length = sb.Length - 1;
 
 			return sb.ToString();
 		}

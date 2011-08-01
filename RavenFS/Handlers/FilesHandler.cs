@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using RavenFS.Infrastructure;
 using System.Linq;
 using RavenFS.Storage;
+using RavenFS.Util;
 
 namespace RavenFS.Handlers
 {
@@ -32,7 +33,6 @@ namespace RavenFS.Handlers
 				fileHeaders = accessor.ReadFiles(start, pageSize).ToList();
 			});
 
-			var headersAsJson = JArray.FromObject(fileHeaders);
 
 			var buffer = TakeBuffer();
 			try
@@ -42,7 +42,7 @@ namespace RavenFS.Handlers
 				using (var streamWriter = new StreamWriter(memoryStream))
 				using (var jsonTextWriter = new JsonTextWriter(streamWriter))
 				{
-					headersAsJson.WriteTo(jsonTextWriter);
+					JsonSerializerFactory.Create().Serialize(jsonTextWriter, fileHeaders);
 
 					jsonTextWriter.Flush();
 					streamWriter.Flush();

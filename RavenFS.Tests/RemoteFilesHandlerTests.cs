@@ -11,7 +11,6 @@ namespace RavenFS.Tests
 			Assert.Equal("[]", str);
 		}
 
-
 		[Fact]
 		public void CanPutFile()
 		{
@@ -19,6 +18,23 @@ namespace RavenFS.Tests
 			webClient.UploadString("/files/abc.txt", "PUT", data);
 			var downloadString = webClient.DownloadString("/files/abc.txt");
 			Assert.Equal(data, downloadString);
+		}
+
+		[Fact]
+		public void CanGetFilesList()
+		{
+			webClient.UploadString("/files/abc.txt", "PUT", "abc");
+			var str = webClient.DownloadString("/files");
+			Assert.Equal("[{\"Name\":\"abc.txt\",\"TotalSize\":3,\"UploadedSize\":3,\"Metadata\":{}}]", str);
+		}
+
+		[Fact]
+		public void CanSetFileMetadata_Then_GetItFromFilesList()
+		{
+			webClient.Headers["Test"] = "Value";
+			webClient.UploadString("/files/abc.txt", "PUT", "abc");
+			var str = webClient.DownloadString("/files");
+			Assert.Equal("[{\"Name\":\"abc.txt\",\"TotalSize\":3,\"UploadedSize\":3,\"Metadata\":{\"Test\":\"Value\"}}]", str);
 		}
 	}
 }
