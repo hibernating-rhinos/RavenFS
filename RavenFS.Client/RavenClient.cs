@@ -38,6 +38,7 @@ namespace RavenFS.Client
 				.ContinueWith(task => source.CopyToAsync(task.Result)
 				                      	.ContinueWith(_ => task.Result.Close())
 				)
+				.Unwrap()
 				.ContinueWith(task => request.GetResponseAsync())
 				.Unwrap();
 		}
