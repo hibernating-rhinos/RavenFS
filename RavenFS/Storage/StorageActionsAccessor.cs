@@ -72,9 +72,9 @@ namespace RavenFS.Storage
 			transaction.Commit(CommitTransactionGrbit.None);
 		}
 
-		public HashKey InsertPage(byte[] buffer, int position, int size)
+		public HashKey InsertPage(byte[] buffer, int size)
 		{
-			var key = new HashKey(buffer,position, size);
+			var key = new HashKey(buffer, size);
 
 			using(var update = new Update(session, Pages, JET_prep.Insert))
 			{

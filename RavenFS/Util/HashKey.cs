@@ -5,12 +5,12 @@ namespace RavenFS.Util
 {
 	public class HashKey
 	{
-		public HashKey(byte[] buffer, int position, int size)
+		public HashKey(byte[] buffer, int size)
 		{
 			using (var sha256 = SHA256.Create())
 			{
-				Strong  = sha256.ComputeHash(buffer, position, size);
-				Weak = new RabinKarpHasher(size).Init(buffer, position, size);
+				Strong  = sha256.ComputeHash(buffer, 0, size);
+				Weak = new RabinKarpHasher(size).Init(buffer, 0, size);
 			}
 		}
 

@@ -21,10 +21,7 @@ namespace RavenFS.Tests
 		[Fact]
 		public void CanInsertPage()
 		{
-			storage.Batch(accessor =>
-			{
-				accessor.InsertPage(new byte[] {1, 2, 3, 4, 5, 6}, 1, 4);
-			});
+			storage.Batch(accessor => accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 4));
 		}
 
 		[Fact]
@@ -33,14 +30,14 @@ namespace RavenFS.Tests
 			HashKey key = null;
 			storage.Batch(accessor =>
 			{
-				key = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 1, 4);
+				key = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 4);
 			});
 
 			storage.Batch(accessor =>
 			{
 				var buffer = new byte[4];
 				Assert.Equal(4, accessor.ReadPage(key, buffer, 0));
-				Assert.Equal(new byte[]{2,3,4,5}, buffer);
+				Assert.Equal(new byte[] { 1, 2, 3, 4 }, buffer);
 			});
 		}
 
