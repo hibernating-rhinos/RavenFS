@@ -10,11 +10,10 @@ using System.IO;
 using System.Runtime.ConstrainedExecution;
 using System.Threading;
 using Microsoft.Isam.Esent.Interop;
-using RavenFS.Util;
 
 namespace RavenFS.Storage
 {
-	public class Storage : CriticalFinalizerObject, IDisposable
+	public class TransactionalStorage : CriticalFinalizerObject, IDisposable
 	{
 		private readonly ThreadLocal<StorageActionsAccessor> current = new ThreadLocal<StorageActionsAccessor>();
 		private readonly string database;
@@ -26,12 +25,12 @@ namespace RavenFS.Storage
 		private JET_INSTANCE instance;
 		private readonly TableColumnsCache tableColumnsCache = new TableColumnsCache();
 
-		static Storage()
+		static TransactionalStorage()
 		{
 			SystemParameters.MaxInstances = 1024;
 		}
 
-		public Storage(string database, NameValueCollection settings)
+		public TransactionalStorage(string database, NameValueCollection settings)
 		{
 			this.settings = settings;
 			path = database;
@@ -175,7 +174,7 @@ namespace RavenFS.Storage
 			}
 		}
 
-		~Storage()
+		~TransactionalStorage()
 		{
 			try
 			{

@@ -87,7 +87,7 @@
     <Compile Include="Storage\FileInformation.cs" />
     <Compile Include="Storage\PageInformation.cs" />
     <Compile Include="Storage\SchemaCreator.cs" />
-    <Compile Include="Storage\Storage.cs" />
+    <Compile Include="Storage\TransactionalStorage.cs" />
     <Compile Include="Storage\StorageActionsAccessor.cs" />
     <Compile Include="Storage\StorageConfigurator.cs" />
     <Compile Include="Storage\TableColumnsCache.cs" />

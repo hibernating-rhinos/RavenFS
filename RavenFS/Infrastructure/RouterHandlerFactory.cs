@@ -19,11 +19,11 @@ namespace RavenFS.Infrastructure
 		[ImportMany]
 		public Lazy<AbstractAsyncHandler, HandlerMetadata>[] Handlers { get; set; }
 
-		private readonly static Storage.Storage storage;
+		private readonly static Storage.TransactionalStorage storage;
 
 		static RouterHandlerFactory()
 		{
-			storage = new Storage.Storage("Data.ravenfs", new NameValueCollection());
+			storage = new Storage.TransactionalStorage("Data.ravenfs", new NameValueCollection());
 			storage.Initialize();
 		}
 

@@ -48,7 +48,7 @@ namespace RavenFS.Infrastructure
 			get { return true; }
 		}
 
-		public Storage.Storage Storage { get; private set; }
+		public Storage.TransactionalStorage Storage { get; private set; }
 
 		public Regex Url { protected get; set; }
 
@@ -64,7 +64,7 @@ namespace RavenFS.Infrastructure
 			((Task)result).Dispose();
 		}
 
-		public void Initialize(BufferPool bufferPool, Regex url, Storage.Storage storage)
+		public void Initialize(BufferPool bufferPool, Regex url, Storage.TransactionalStorage storage)
 		{
 			Url = url;
 			BufferPool = bufferPool;

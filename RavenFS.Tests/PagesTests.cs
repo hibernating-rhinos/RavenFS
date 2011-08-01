@@ -9,12 +9,12 @@ namespace RavenFS.Tests
 {
 	public class PagesTests : IDisposable
 	{
-		readonly Storage.Storage storage;
+		readonly Storage.TransactionalStorage storage;
 
 		public PagesTests()
 		{
 			IOExtensions.DeleteDirectory("test");
-			storage = new Storage.Storage("test", new NameValueCollection());
+			storage = new Storage.TransactionalStorage("test", new NameValueCollection());
 			storage.Initialize();
 		}
 
