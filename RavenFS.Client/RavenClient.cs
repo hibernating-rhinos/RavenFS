@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace RavenFS.Client
 {
@@ -15,6 +16,27 @@ namespace RavenFS.Client
 			this.baseUrl = baseUrl;
 			if (this.baseUrl.EndsWith("/"))
 				this.baseUrl = this.baseUrl.Substring(0, this.baseUrl.Length - 1);
+		}
+
+		public Task<FileInfo[]> Search(string query)
+		{
+			var request = (HttpWebRequest) WebRequest.Create(baseUrl + "/search?query=" + Uri.EscapeUriString(query));
+			return request.GetResponseAsync()
+				.ContinueWith(task =>
+				{
+						using(var responseStream = task.Result.GetResponseStream())
+						using(var streamReader = new StreamReader(responseStream))
+						using(var jsonTextReader = new JsonTextReader(streamReader))
+						{
+							return new JsonSerializer
+							{
+								Converters =
+									{
+										new NameValueCollectionJsonConverter()
+									}
+							}.Deserialize<FileInfo[]>(jsonTextReader);
+						}
+				});
 		}
 
 		public Task<NameValueCollection> Head(string filename)
@@ -37,7 +59,7 @@ namespace RavenFS.Client
 
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
 
-			
+
 			if (destination.CanSeek)
 			{
 				destination.Position = destination.Length;
@@ -50,7 +72,7 @@ namespace RavenFS.Client
 					var responseStream = task.Result.GetResponseStream();
 					return responseStream.CopyToAsync(destination)
 						.ContinueWith(_ =>
-						{ 
+						{
 							task.Result.Close();
 							return new NameValueCollection(task.Result.Headers);
 						});

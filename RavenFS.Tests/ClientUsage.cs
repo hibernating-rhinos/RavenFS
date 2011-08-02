@@ -47,6 +47,31 @@ namespace RavenFS.Tests
 			Assert.Equal("there", collection["hello"]);
 		}
 
+
+		[Fact]
+		public void CanQueryMetadata()
+		{
+			var ms = new MemoryStream();
+			var streamWriter = new StreamWriter(ms);
+			var expected = new string('a', 1024);
+			streamWriter.Write(expected);
+			streamWriter.Flush();
+			ms.Position = 0;
+
+			client.Upload("abc.txt", new NameValueCollection
+			{
+				{"Test", "value"},
+			}, ms).Wait();
+
+
+			var collection = client.Search("Test:value").Result;
+
+			Assert.Equal(1, collection.Length);
+			Assert.Equal("abc.txt", collection[0].Name);
+			Assert.Equal("value", collection[0].Metadata["Test"]);
+		}
+
+
 		[Fact]
 		public void CanDownload()
 		{

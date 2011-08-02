@@ -41,6 +41,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Esent\Esent.Interop.dll</HintPath>
     </Reference>
+    <Reference Include="Lucene.Net">
+      <HintPath>..\packages\Lucene\Lucene.Net.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.0.2\lib\net40\Newtonsoft.Json.dll</HintPath>
@@ -81,15 +84,18 @@
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Handlers\FavIconHandler.cs" />
     <Compile Include="Handlers\FilesHandler.cs" />
+    <Compile Include="Handlers\SearchHandler.cs" />
     <Compile Include="Handlers\RootHanlder.cs" />
     <Compile Include="Handlers\SimpleDeleteHandler.cs" />
     <Compile Include="Handlers\SimpleGetHandler.cs" />
     <Compile Include="Handlers\SimpleHeadHandler.cs" />
     <Compile Include="Handlers\SimplePutHandler.cs" />
     <Compile Include="Infrastructure\AbstractAsyncHandler.cs" />
+    <Compile Include="Search\IndexStorage.cs" />
+    <Compile Include="Search\LowerCaseKeywordAnalyzer.cs" />
     <Compile Include="Storage\EsentExtension.cs" />
     <Compile Include="Storage\FileHeader.cs" />
-    <Compile Include="Storage\FileInformation.cs" />
+    <Compile Include="Storage\FileAndPages.cs" />
     <Compile Include="Storage\PageInformation.cs" />
     <Compile Include="Storage\SchemaCreator.cs" />
     <Compile Include="Storage\TransactionalStorage.cs" />
