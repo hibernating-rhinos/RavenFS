@@ -33,11 +33,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AsyncCtpLibrary">
-      <HintPath>..\..\ravendb\SharedLibs\AsyncCtpLibrary.dll</HintPath>
+    <Reference Include="AsyncCtpLibrary, Version=1.0.4107.18181, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\AsyncCtp\AsyncCtpLibrary.dll</HintPath>
     </Reference>
-    <Reference Include="Esent.Interop">
-      <HintPath>..\..\ravendb\SharedLibs\Esent.Interop.dll</HintPath>
+    <Reference Include="Esent.Interop, Version=1.7.0.0, Culture=neutral, PublicKeyToken=8dd49bbdae3f61af, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Esent\Esent.Interop.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json">

@@ -42,7 +42,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Windows\Microsoft.NET\assembly\GAC_32\WebDev.WebHost40\v4.0_10.0.0.0__b03f5f7f11d50a3a\WebDev.WebHost40.dll</HintPath>
     </Reference>
-    <Reference Include="xunit">
+    <Reference Include="xunit, Version=1.8.0.1545, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\xunit.1.8.0.1545\lib\xunit.dll</HintPath>
     </Reference>
   </ItemGroup>
