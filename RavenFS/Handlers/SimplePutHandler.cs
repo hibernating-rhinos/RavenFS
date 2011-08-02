@@ -17,9 +17,11 @@ namespace RavenFS.Handlers
 			{
 				accessor.Delete(filename);
 
+				var headers = context.Request.Headers.FilterHeaders();
 				accessor.PutFile(filename, context.Request.ContentLength,
-				                 context.Request.Headers.FilterHeaders());
+				                 headers);
 
+				Search.Index(filename, headers);
 			});
 
 			return ReadAllPages(context, filename, 0);

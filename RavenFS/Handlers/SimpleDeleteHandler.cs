@@ -12,6 +12,7 @@ namespace RavenFS.Handlers
 		{
 			var filename = Url.Match(context.Request.Url.AbsolutePath).Groups[1].Value;
 
+			Search.Delete(filename);
 			Storage.Batch(accessor => accessor.Delete(filename));
 
 			context.Response.StatusCode = 204;

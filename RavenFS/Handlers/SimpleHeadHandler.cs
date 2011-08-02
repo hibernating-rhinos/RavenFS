@@ -13,12 +13,11 @@ namespace RavenFS.Handlers
 	{
 		protected override Task ProcessRequestAsync(HttpContext context)
 		{
-
 			var filename = Url.Match(context.Request.Url.AbsolutePath).Groups[1].Value;
-			FileInformation fileInformation = null;
+			FileAndPages fileAndPages = null;
 			try
 			{
-				Storage.Batch(accessor => fileInformation = accessor.GetFile(filename, 0, 0));
+				Storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, 0, 0));
 			}
 			catch (FileNotFoundException)
 			{
@@ -27,8 +26,8 @@ namespace RavenFS.Handlers
 				return Completed;
 			}
 
-			MetadataExtensions.AddHeaders(context, fileInformation);
-
+			MetadataExtensions.AddHeaders(context, fileAndPages);
+			
 			return Completed;
 		}
 	}
