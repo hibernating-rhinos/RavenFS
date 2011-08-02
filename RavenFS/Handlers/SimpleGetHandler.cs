@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using Raven.Abstractions.Extensions;
 using RavenFS.Infrastructure;
 using RavenFS.Storage;
 
@@ -18,7 +19,7 @@ namespace RavenFS.Handlers
 		{
 			var filename = Url.Match(context.Request.Url.AbsolutePath).Groups[1].Value;
 			var range = GetStartRange(context);
-			return WriteFile(context, filename, information => AddHeaders(context, information), 0, range);
+			return WriteFile(context, filename, information => MetadataExtensions.AddHeaders(context, information), 0, range);
 		}
 
 		private Task WriteFile(HttpContext context, string filename, Action<FileInformation> onFileInformation, int fromPage, long? maybeRange)
@@ -74,22 +75,7 @@ namespace RavenFS.Handlers
 				}).Unwrap();
 		}
 
-		private void AddHeaders(HttpContext context, FileInformation fileInformation)
-		{
-			foreach (var key in fileInformation.Metadata.AllKeys)
-			{
-				var values = fileInformation.Metadata.GetValues(key);
-				if (values == null)
-					continue;
-
-				foreach (var value in values)
-				{
-					context.Response.AddHeader(key, value);
-					
-				}
-			}
-		}
-
+		
 		static readonly Regex startRange = new Regex(@"^bytes=(\d+)-$",RegexOptions.Compiled);
 		private static long? GetStartRange(HttpContext context)
 		{

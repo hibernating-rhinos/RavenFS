@@ -8,8 +8,10 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Web;
 using Newtonsoft.Json;
 using System;
+using RavenFS.Storage;
 
 namespace Raven.Abstractions.Extensions
 {
@@ -18,6 +20,22 @@ namespace Raven.Abstractions.Extensions
     /// </summary>
     public static class MetadataExtensions
     {
+		public static void AddHeaders(HttpContext context, FileInformation fileInformation)
+		{
+			foreach (var key in fileInformation.Metadata.AllKeys)
+			{
+				var values = fileInformation.Metadata.GetValues(key);
+				if (values == null)
+					continue;
+
+				foreach (var value in values)
+				{
+					context.Response.AddHeader(key, value);
+
+				}
+			}
+		}
+
         private static readonly HashSet<string> HeadersToIgnoreClient = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
 			// Raven internal headers

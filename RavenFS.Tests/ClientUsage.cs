@@ -1,3 +1,4 @@
+using System.Collections.Specialized;
 using System.IO;
 using RavenFS.Client;
 using Xunit;
@@ -21,6 +22,29 @@ namespace RavenFS.Tests
 			client.Upload("abc.txt", ms).Wait();
 
 			Assert.Equal(expected, webClient.DownloadString("/files/abc.txt"));
+		}
+
+		[Fact]
+		public void CanUploadMetadata_And_HeadMetadata()
+		{
+			var ms = new MemoryStream();
+			var streamWriter = new StreamWriter(ms);
+			var expected = new string('a', 1024);
+			streamWriter.Write(expected);
+			streamWriter.Flush();
+			ms.Position = 0;
+
+			client.Upload("abc.txt",new NameValueCollection
+			{
+				{"test", "value"},
+				{"hello", "there"}
+			} ,ms).Wait();
+
+
+			var collection = client.Head("abc.txt").Result;
+
+			Assert.Equal("value", collection["test"]);
+			Assert.Equal("there", collection["hello"]);
 		}
 
 		[Fact]

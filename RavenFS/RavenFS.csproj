@@ -82,6 +82,7 @@
     <Compile Include="Handlers\RootHanlder.cs" />
     <Compile Include="Handlers\SimpleDeleteHandler.cs" />
     <Compile Include="Handlers\SimpleGetHandler.cs" />
+    <Compile Include="Handlers\SimpleHeadHandler.cs" />
     <Compile Include="Handlers\SimplePutHandler.cs" />
     <Compile Include="Infrastructure\AbstractAsyncHandler.cs" />
     <Compile Include="Storage\EsentExtension.cs" />
