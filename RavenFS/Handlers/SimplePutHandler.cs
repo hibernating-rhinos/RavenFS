@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using System.Web;
 using RavenFS.Infrastructure;
@@ -30,20 +31,22 @@ namespace RavenFS.Handlers
 		private Task ReadAllPages(HttpContext context, string filename, int pos)
 		{
 			var buffer = TakeBuffer();
-			return ReadPage(context, filename, pos, buffer)
-				.ContinueWith(task =>
-				{
-					if (task.Result == false)
+			try
+			{
+				return ReadPage(context, filename, pos, buffer)
+					.ContinueWith(task => task.Result == false ? task : ReadPage(context, filename, pos + 1, buffer))
+					.Unwrap()
+					.ContinueWith(task =>
+					{
+						BufferPool.ReturnBuffer(buffer);
 						return task;
-
-					return ReadPage(context, filename, pos + 1, buffer);
-				})
-				.Unwrap()
-				.ContinueWith(task =>
-				{
-					BufferPool.ReturnBuffer(buffer);
-					return task;
-				});
+					});
+			}
+			catch (Exception)
+			{
+				BufferPool.ReturnBuffer(buffer);
+				throw;
+			}
 		}
 
 		private Task<bool> ReadPage(HttpContext context, string filename, int pos, byte[] buffer)
