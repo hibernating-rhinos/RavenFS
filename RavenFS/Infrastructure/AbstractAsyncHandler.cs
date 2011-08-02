@@ -4,9 +4,12 @@
 // // </copyright>
 // //-----------------------------------------------------------------------
 using System;
+using System.Collections;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using Newtonsoft.Json;
 using RavenFS.Util;
 
 namespace RavenFS.Infrastructure
@@ -32,6 +35,49 @@ namespace RavenFS.Infrastructure
 			return BufferPool.TakeBuffer(64 * 1024);
 		}
 
+		protected Tuple<int,int> Paging(HttpContext context)
+		{
+			int start;
+			int.TryParse(context.Request.QueryString["start"], out start);
+
+			int pageSize;
+			int.TryParse(context.Request.QueryString["pageSize"], out pageSize);
+
+			if (pageSize <= 0 || pageSize >= 256)
+				pageSize = 256;
+
+			return Tuple.Create(start, pageSize);
+		}
+
+		protected Task WriteArray(HttpContext context, IEnumerable fileHeaders)
+		{
+			var buffer = TakeBuffer();
+			try
+			{
+				int pos;
+				using (var memoryStream = new MemoryStream(buffer, true))
+				using (var streamWriter = new StreamWriter(memoryStream))
+				using (var jsonTextWriter = new JsonTextWriter(streamWriter))
+				{
+					JsonSerializerFactory.Create().Serialize(jsonTextWriter, fileHeaders);
+
+					jsonTextWriter.Flush();
+					streamWriter.Flush();
+
+					pos = (int)memoryStream.Position;
+				}
+				context.Response.ContentType = "application/json";
+
+				return context.Response.OutputStream.WriteAsync(buffer, 0, pos)
+					.ContinueWith(task => BufferPool.ReturnBuffer(buffer));
+			}
+			catch (Exception)
+			{
+				BufferPool.ReturnBuffer(buffer);
+				throw;
+			}
+		}
+
 		private Task ProcessRequestAsync(HttpContext context, AsyncCallback cb)
 		{
 			return ProcessRequestAsync(context)
@@ -50,6 +96,8 @@ namespace RavenFS.Infrastructure
 
 		public Storage.TransactionalStorage Storage { get; private set; }
 
+		public Search.IndexStorage Search { get; private set; }
+
 		public Regex Url { protected get; set; }
 
 		public IAsyncResult BeginProcessRequest(HttpContext context, AsyncCallback cb, object extraData)
@@ -64,11 +112,12 @@ namespace RavenFS.Infrastructure
 			((Task)result).Dispose();
 		}
 
-		public void Initialize(BufferPool bufferPool, Regex url, Storage.TransactionalStorage storage)
+		public void Initialize(BufferPool bufferPool, Regex url, Storage.TransactionalStorage storage, Search.IndexStorage search)
 		{
 			Url = url;
 			BufferPool = bufferPool;
 			Storage = storage;
+			Search = search;
 		}
 	}
 }

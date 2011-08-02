@@ -20,11 +20,11 @@ namespace Raven.Abstractions.Extensions
     /// </summary>
     public static class MetadataExtensions
     {
-		public static void AddHeaders(HttpContext context, FileInformation fileInformation)
+		public static void AddHeaders(HttpContext context, FileAndPages fileAndPages)
 		{
-			foreach (var key in fileInformation.Metadata.AllKeys)
+			foreach (var key in fileAndPages.Metadata.AllKeys)
 			{
-				var values = fileInformation.Metadata.GetValues(key);
+				var values = fileAndPages.Metadata.GetValues(key);
 				if (values == null)
 					continue;
 
