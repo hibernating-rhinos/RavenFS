@@ -5,6 +5,7 @@ using System.ComponentModel.Composition.Hosting;
 using System.Linq;
 using System.Web;
 using NLog;
+using RavenFS.Search;
 using RavenFS.Util;
 
 namespace RavenFS.Infrastructure
@@ -20,11 +21,19 @@ namespace RavenFS.Infrastructure
 		public Lazy<AbstractAsyncHandler, HandlerMetadata>[] Handlers { get; set; }
 
 		private readonly static Storage.TransactionalStorage storage;
-
+		private static readonly Search.IndexStorage search;
 		static RouterHandlerFactory()
 		{
 			storage = new Storage.TransactionalStorage("Data.ravenfs", new NameValueCollection());
+			search = new IndexStorage("Index.ravenfs", new NameValueCollection());
 			storage.Initialize();
+			search.Initialize();
+
+			AppDomain.CurrentDomain.ProcessExit += (sender, args) =>
+			{
+				storage.Dispose();
+				search.Dispose();
+			};
 		}
 
 		public RouterHandlerFactory()
@@ -34,7 +43,7 @@ namespace RavenFS.Infrastructure
 
 			foreach (var handler in Handlers)
 			{
-				handler.Value.Initialize(globalBufferPool, handler.Metadata.Url, storage);
+				handler.Value.Initialize(globalBufferPool, handler.Metadata.Url, storage, search);
 			}
 		}
 
