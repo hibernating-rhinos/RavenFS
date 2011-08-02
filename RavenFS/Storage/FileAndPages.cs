@@ -4,7 +4,7 @@ using System.Collections.Specialized;
 
 namespace RavenFS.Storage
 {
-	public class FileInformation
+	public class FileAndPages
 	{
 		public string Name { get; set; }
 		public NameValueCollection Metadata { get; set; }
@@ -15,7 +15,7 @@ namespace RavenFS.Storage
 
 		public List<PageInformation> Pages { get; set; }
 
-		public FileInformation()
+		public FileAndPages()
 		{
 			Pages = new List<PageInformation>();
 			Metadata = new NameValueCollection();
