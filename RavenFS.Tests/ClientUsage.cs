@@ -63,7 +63,7 @@ namespace RavenFS.Tests
 			streamWriter.Flush();
 			
 			client.Download("abc.txt", ms2).Wait();
-
+			ms2.Position = 0;
 			var actual = new StreamReader(ms2).ReadToEnd();
 
 			Assert.Equal(new string('a', 2048), actual);

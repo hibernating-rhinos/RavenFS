@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using RavenFS.Infrastructure;
@@ -16,11 +17,11 @@ namespace RavenFS.Handlers
 		protected override Task ProcessRequestAsync(HttpContext context)
 		{
 			var filename = Url.Match(context.Request.Url.AbsolutePath).Groups[1].Value;
-
-			return WriteFile(context, filename, 0);
+			var range = GetStartRange(context);
+			return WriteFile(context, filename, information => AddHeaders(context, information), 0, range);
 		}
 
-		private Task WriteFile(HttpContext context, string filename, int fromPage)
+		private Task WriteFile(HttpContext context, string filename, Action<FileInformation> onFileInformation, int fromPage, long? maybeRange)
 		{
 			FileInformation fileInformation = null;
 			try
@@ -34,29 +35,32 @@ namespace RavenFS.Handlers
 				return Completed;
 			}
 
-			foreach (var key in fileInformation.Metadata.AllKeys)
-			{
-				var values = fileInformation.Metadata.GetValues(key);
-				if (values == null)
-					continue;
+			if (onFileInformation != null)
+				onFileInformation(fileInformation);
 
-				foreach (var value in values)
+			var offset = 0;
+			var pageIndex = 0;
+			if(maybeRange != null)
+			{
+				var range = maybeRange.Value;
+				foreach (var page in fileInformation.Pages)
 				{
-				context.Response.AddHeader(key, value);
-					
+					if(page.Size > range)
+					{
+						offset = (int) range;
+						break;
+					}
+					range -= page.Size;
+					pageIndex++;
 				}
 			}
 
 			if(fileInformation.Pages.Count == 0)
 			{
-				if(fromPage == 0)
-				{
-					context.Response.StatusCode = 204;
-				}
 				return Completed;
 			}
 
-			return WritePages(context, fileInformation.Pages, 0)
+			return WritePages(context, fileInformation.Pages, pageIndex, offset)
 				.ContinueWith(task =>
 				{
 					if (task.Exception != null)
@@ -65,14 +69,49 @@ namespace RavenFS.Handlers
 					if (fileInformation.Pages.Count != PagesBatchSize)
 						return task;
 
-					return WriteFile(context, filename, fromPage + PagesBatchSize);
+					return WriteFile(context, filename, null, fromPage + PagesBatchSize, null);
 
 				}).Unwrap();
 		}
 
-		public Task WritePages(HttpContext context, List<PageInformation> pages, int index)
+		private void AddHeaders(HttpContext context, FileInformation fileInformation)
 		{
-			return WritePage(context, pages[index])
+			foreach (var key in fileInformation.Metadata.AllKeys)
+			{
+				var values = fileInformation.Metadata.GetValues(key);
+				if (values == null)
+					continue;
+
+				foreach (var value in values)
+				{
+					context.Response.AddHeader(key, value);
+					
+				}
+			}
+		}
+
+		static readonly Regex startRange = new Regex(@"^bytes=(\d+)-$",RegexOptions.Compiled);
+		private static long? GetStartRange(HttpContext context)
+		{
+			var range = context.Request.Headers["Range"];
+			if (string.IsNullOrEmpty(range))
+				return null;
+
+			var match = startRange.Match(range);
+
+			if (match.Success == false)
+				return null;
+
+			long result;
+			if (long.TryParse(match.Groups[1].Value, out result) == false)
+				return null;
+
+			return result;
+		}
+
+		public Task WritePages(HttpContext context, List<PageInformation> pages, int index, int offset)
+		{
+			return WritePage(context, pages[index], offset)
 				.ContinueWith(task =>
 				{
 					if (task.Exception != null)
@@ -81,12 +120,12 @@ namespace RavenFS.Handlers
 					if (index >= pages.Count)
 						return task;
 
-					return WritePages(context, pages, index + 1);
+					return WritePages(context, pages, index + 1, 0);
 				})
 				.Unwrap();
 		}
 
-		private Task WritePage(HttpContext context, PageInformation information)
+		private Task WritePage(HttpContext context, PageInformation information, int offset)
 		{
 			var buffer = BufferPool.TakeBuffer(information.Size);
 			try
@@ -98,7 +137,7 @@ namespace RavenFS.Handlers
 				BufferPool.ReturnBuffer(buffer);
 				throw;
 			}
-			return context.Response.OutputStream.WriteAsync(buffer, 0, information.Size)
+			return context.Response.OutputStream.WriteAsync(buffer, offset, information.Size - offset)
 				.ContinueWith(task =>
 				{
 					BufferPool.ReturnBuffer(buffer);

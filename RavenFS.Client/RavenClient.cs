@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -17,9 +18,17 @@ namespace RavenFS.Client
 
 		public Task Download(string filename, Stream destination)
 		{
+			if(destination.CanWrite == false)
+				throw new ArgumentException("Stream does not support writing");
+
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
-			destination.Position = destination.Length;
-			request.AddRange(destination.Position);
+
+			if(destination.CanSeek)
+			{
+				destination.Position = destination.Length;
+				request.AddRange(destination.Position);	
+			}
+
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -32,6 +41,9 @@ namespace RavenFS.Client
 
 		public Task Upload(string filename, Stream source)
 		{
+			if(source.CanRead == false)
+				throw new AggregateException("Stream does not support reading");
+
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
 			request.Method = "PUT";
 			return request.GetRequestStreamAsync()
