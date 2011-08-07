@@ -111,7 +111,8 @@ namespace RavenFS.Client
 				)
 				.Unwrap()
 				.ContinueWith(task => request.GetResponseAsync())
-				.Unwrap();
+				.Unwrap()
+				.ContinueWith(task => task.Result.Close());
 		}
 	}
 }
