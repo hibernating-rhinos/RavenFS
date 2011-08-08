@@ -35,6 +35,11 @@ namespace RavenFS.Tests
 			server.Start();
 		}
 
+		protected HttpWebRequest CreateWebRequest(string url)
+		{
+			return (HttpWebRequest) WebRequest.Create("http://localhost:9090" + url);
+		}
+
 		public void Dispose()
 		{
 			server.Stop();

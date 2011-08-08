@@ -34,13 +34,20 @@ namespace RavenFS.Handlers
 
 			MetadataExtensions.AddHeaders(context, fileAndPages);
 
-			return WriteFile(context, filename, 0, range);
+			return WriteFile(context, filename, 0, range)
+				.ContinueWith(task => task.Result as Task ?? task)
+				.Unwrap();
 		}
 
-		private Task WriteFile(HttpContext context, string filename,int fromPage, long? maybeRange)
+		private Task<object> WriteFile(HttpContext context, string filename,int fromPage, long? maybeRange)
 		{
 			FileAndPages fileAndPages = null;
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, fromPage, PagesBatchSize));
+			if (fileAndPages.Pages.Count == 0)
+			{
+				return Completed;
+			}
+
 			var offset = 0;
 			var pageIndex = 0;
 			if(maybeRange != null)
@@ -56,21 +63,20 @@ namespace RavenFS.Handlers
 					range -= page.Size;
 					pageIndex++;
 				}
-			}
 
-			if(fileAndPages.Pages.Count == 0)
-			{
-				return Completed;
+				if (pageIndex >= fileAndPages.Pages.Count)
+				{
+					return WriteFile(context, filename, fromPage + fileAndPages.Pages.Count, range);
+				}
 			}
 
 			return WritePages(context, fileAndPages.Pages, pageIndex, offset)
 				.ContinueWith(task =>
 				{
 					if (task.Exception != null)
-						return task;
+						task.Wait();// throw 
 
 					return WriteFile(context, filename,  fromPage + fileAndPages.Pages.Count, null);
-
 				}).Unwrap();
 		}
 

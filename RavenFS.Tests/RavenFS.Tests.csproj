@@ -55,6 +55,7 @@
     <Compile Include="BigFileHandling.cs" />
     <Compile Include="ClientUsage.cs" />
     <Compile Include="FileHandling.cs" />
+    <Compile Include="HttpWebRequestExtensions.cs" />
     <Compile Include="RemoteFilesHandlerTests.cs" />
     <Compile Include="IOExtensions.cs" />
     <Compile Include="PagesTests.cs" />
