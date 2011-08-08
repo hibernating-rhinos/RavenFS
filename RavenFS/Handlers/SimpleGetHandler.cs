@@ -5,6 +5,7 @@
 // //-----------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -23,8 +24,10 @@ namespace RavenFS.Handlers
 
 		protected override Task ProcessRequestAsync(HttpContext context)
 		{
+			context.Response.BufferOutput = false;
 			var filename = Url.Match(context.Request.Url.AbsolutePath).Groups[1].Value;
 			var range = GetStartRange(context);
+
 
 			FileAndPages fileAndPages = null;
 			try
@@ -40,6 +43,10 @@ namespace RavenFS.Handlers
 
 			MetadataExtensions.AddHeaders(context, fileAndPages);
 
+			context.Response.AddHeader("Content-Length", (fileAndPages.TotalSize - (range ?? 0) ).ToString());
+
+			context.Response.AddHeader("Content-Disposition", "attachment; filename=" + filename);
+			
 			return WriteFile(context, filename, 0, range)
 				.ContinueWith(task => task.Result as Task ?? task)
 				.Unwrap();
