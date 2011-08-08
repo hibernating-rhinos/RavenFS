@@ -4,39 +4,35 @@ using Newtonsoft.Json;
 using RavenFS.Util;
 using RavenFS.Storage;
 using Xunit;
+using Xunit.Extensions;
 
 namespace RavenFS.Tests
 {
 	public class BigFileHandling : ServerTest
 	{
-		[Fact]
-		public void CanUploadOneMbFileAndGetStats()
+		[Theory]
+		[InlineData(1024 * 1024)]		// 1 mb
+		[InlineData(1024 * 1024 * 2)]	// 2 mb
+		[InlineData(1024 * 1024 * 4)]	// 4 mb
+		[InlineData(1024 * 1024 * 8)]	// 8 mb
+		public void CanHandleBigFiles(int size)
 		{
-			var oneMb = new byte[1024 * 1024];
-			new Random().NextBytes(oneMb);
+			var buffer = new byte[size];
+			new Random().NextBytes(buffer);
 
-			webClient.UploadData("/files/1mb.bin", "PUT", oneMb);
+			webClient.UploadData("/files/mb.bin", "PUT", buffer);
 
-			var downloadData = webClient.DownloadString("/files/");
-
-			var files = JsonConvert.DeserializeObject<List<FileHeader>>(downloadData,new NameValueCollectionJsonConverter());
+			var files = JsonConvert.DeserializeObject<List<FileHeader>>(webClient.DownloadString("/files/"), new NameValueCollectionJsonConverter());
 			Assert.Equal(1, files.Count);
-			Assert.Equal(oneMb.Length, files[0].TotalSize);
-			Assert.Equal(oneMb.Length, files[0].UploadedSize);
+			Assert.Equal(buffer.Length, files[0].TotalSize);
+			Assert.Equal(buffer.Length, files[0].UploadedSize);
+
+
+			var downloadData = webClient.DownloadData("/files/mb.bin");
+
+			Assert.Equal(buffer.Length, downloadData.Length);
+			Assert.Equal(buffer, downloadData);
 		}
 
-		[Fact]
-		public void CanUploadOneMbFile()
-		{
-			var oneMb = new byte[1024*1024];
-			new Random().NextBytes(oneMb);
-
-			webClient.UploadData("/files/1mb.bin", "PUT", oneMb);
-
-			var downloadData = webClient.DownloadData("/files/1mb.bin");
-
-			Assert.Equal(oneMb.Length, downloadData.Length);
-			Assert.Equal(oneMb, downloadData);
-		}
 	}
 }
