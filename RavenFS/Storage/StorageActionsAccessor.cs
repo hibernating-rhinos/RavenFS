@@ -220,26 +220,29 @@ namespace RavenFS.Storage
 				Start = start
 			};
 
-			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
-			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
-			Api.MakeKey(session, Usage, start, MakeKeyGrbit.None);
-			if (Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
+			if(pagesToLoad > 0)
 			{
+				Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
 				Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
-				Api.JetSetIndexRange(session, Usage, SetIndexRangeGrbit.RangeInclusive);
-
-				do
+				Api.MakeKey(session, Usage, start, MakeKeyGrbit.None);
+				if (Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
 				{
-					fileInformation.Pages.Add(new PageInformation
+					Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+					Api.JetSetIndexRange(session, Usage, SetIndexRangeGrbit.RangeInclusive);
+
+					do
 					{
-						Size = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_size"]).Value,
-						Key = new HashKey
+						fileInformation.Pages.Add(new PageInformation
 						{
-							Strong = Api.RetrieveColumn(session, Usage, tableColumnsCache.UsageColumns["page_strong_hash"]),
-							Weak = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_weak_hash"]).Value,
-						}
-					});
-				} while (Api.TryMoveNext(session, Usage) && fileInformation.Pages.Count < pagesToLoad);
+							Size = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_size"]).Value,
+							Key = new HashKey
+							{
+								Strong = Api.RetrieveColumn(session, Usage, tableColumnsCache.UsageColumns["page_strong_hash"]),
+								Weak = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_weak_hash"]).Value,
+							}
+						});
+					} while (Api.TryMoveNext(session, Usage) && fileInformation.Pages.Count < pagesToLoad);
+				}
 			}
 
 			return fileInformation;
