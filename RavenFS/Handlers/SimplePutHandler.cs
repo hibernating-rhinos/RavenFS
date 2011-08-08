@@ -51,7 +51,7 @@ namespace RavenFS.Handlers
 			private readonly string filename;
 			private int pos;
 			readonly byte[] buffer;
-			private Stream inputStream;
+			private readonly Stream inputStream;
 
 			public ReadFileToDatabase(AbstractAsyncHandler parent, HttpContext context, string filename)
 			{

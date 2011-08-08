@@ -7,7 +7,7 @@ namespace RavenFS.Extensions
 	{
 		private static Task<int> ReadAsync(this Stream stream, byte[] buffer, int start)
 		{
-			return stream.ReadAsync(buffer, start, buffer.Length)
+			return stream.ReadAsync(buffer, start, buffer.Length - start)
 				.ContinueWith(task =>
 				{
 					if (task.Result == 0)
