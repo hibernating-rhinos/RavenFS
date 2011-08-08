@@ -16,7 +16,7 @@ namespace RavenFS.Infrastructure
 {
 	public abstract class AbstractAsyncHandler : IHttpAsyncHandler
 	{
-		protected Task<object> Completed
+		public Task<object> Completed
 		{
 			get
 			{

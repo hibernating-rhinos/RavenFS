@@ -19,15 +19,11 @@ namespace RavenFS.Handlers
 		{
 			var filename = Url.Match(context.Request.Url.AbsolutePath).Groups[1].Value;
 			var range = GetStartRange(context);
-			return WriteFile(context, filename, information => MetadataExtensions.AddHeaders(context, information), 0, range);
-		}
 
-		private Task WriteFile(HttpContext context, string filename, Action<FileAndPages> onFileInformation, int fromPage, long? maybeRange)
-		{
 			FileAndPages fileAndPages = null;
 			try
 			{
-				Storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, fromPage, PagesBatchSize));
+				Storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, 0, 0));
 			}
 			catch (FileNotFoundException)
 			{
@@ -36,9 +32,15 @@ namespace RavenFS.Handlers
 				return Completed;
 			}
 
-			if (onFileInformation != null)
-				onFileInformation(fileAndPages);
+			MetadataExtensions.AddHeaders(context, fileAndPages);
 
+			return WriteFile(context, filename, 0, range);
+		}
+
+		private Task WriteFile(HttpContext context, string filename,int fromPage, long? maybeRange)
+		{
+			FileAndPages fileAndPages = null;
+			Storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, fromPage, PagesBatchSize));
 			var offset = 0;
 			var pageIndex = 0;
 			if(maybeRange != null)
@@ -67,10 +69,7 @@ namespace RavenFS.Handlers
 					if (task.Exception != null)
 						return task;
 
-					if (fileAndPages.Pages.Count != PagesBatchSize)
-						return task;
-
-					return WriteFile(context, filename, null, fromPage + PagesBatchSize, null);
+					return WriteFile(context, filename,  fromPage + fileAndPages.Pages.Count, null);
 
 				}).Unwrap();
 		}
@@ -103,7 +102,7 @@ namespace RavenFS.Handlers
 					if (task.Exception != null)
 						return task;
 
-					if (index >= pages.Count)
+					if (index+1 >= pages.Count)
 						return task;
 
 					return WritePages(context, pages, index + 1, 0);
