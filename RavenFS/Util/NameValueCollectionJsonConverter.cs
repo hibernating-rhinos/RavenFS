@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Specialized;
+using System.IO;
 using Newtonsoft.Json;
 
+#if !CLIENT
 namespace RavenFS.Util
+#else
+namespace RavenFS.Client
+#endif
 {
 	public class NameValueCollectionJsonConverter : JsonConverter
 	{
@@ -44,12 +49,40 @@ namespace RavenFS.Util
 
 		public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
 		{
-			throw new NotImplementedException();
+			var collection = new NameValueCollection();
+
+			while (reader.Read())
+			{
+				if (reader.TokenType == JsonToken.EndObject)
+					break;
+
+				var key = (string)reader.Value;
+
+				if (reader.Read() == false)
+					throw new InvalidDataException("Expected PropertyName, got " + reader.TokenType);
+
+				if (reader.TokenType == JsonToken.StartArray)
+				{
+					var values = serializer.Deserialize<string[]>(reader);
+					foreach (var value in values)
+					{
+						collection.Add(key, value);
+					}
+				}
+				else
+				{
+					collection.Add(key, (string)reader.Value);
+				}
+			}
+
+			return collection;
 		}
 
 		public override bool CanConvert(Type objectType)
 		{
-			return objectType.IsSubclassOf(typeof(NameValueCollection));
+			return
+				objectType == typeof(NameValueCollection) ||
+				objectType.IsSubclassOf(typeof(NameValueCollection));
 		}
 	}
 }
