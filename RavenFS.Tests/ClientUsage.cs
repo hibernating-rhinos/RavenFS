@@ -7,7 +7,7 @@ namespace RavenFS.Tests
 {
 	public class ClientUsage : ServerTest
 	{
-		private readonly RavenClient client = new RavenClient("http://localhost:9090");
+		private readonly RavenFileSystemClient client = new RavenFileSystemClient("http://localhost:9090");
 
 		[Fact]
 		public void CanUpload()
@@ -41,7 +41,7 @@ namespace RavenFS.Tests
 			} ,ms).Wait();
 
 
-			var collection = client.Head("abc.txt").Result;
+			var collection = client.GetMetadataFor("abc.txt").Result;
 
 			Assert.Equal("value", collection["test"]);
 			Assert.Equal("there", collection["hello"]);

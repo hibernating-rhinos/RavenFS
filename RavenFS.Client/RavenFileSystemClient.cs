@@ -7,11 +7,11 @@ using Newtonsoft.Json;
 
 namespace RavenFS.Client
 {
-	public class RavenClient
+	public class RavenFileSystemClient
 	{
 		private readonly string baseUrl;
 
-		public RavenClient(string baseUrl)
+		public RavenFileSystemClient(string baseUrl)
 		{
 			this.baseUrl = baseUrl;
 			if (this.baseUrl.EndsWith("/"))
@@ -39,7 +39,7 @@ namespace RavenFS.Client
 				});
 		}
 
-		public Task<NameValueCollection> Head(string filename)
+		public Task<NameValueCollection> GetMetadataFor(string filename)
 		{
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
 			request.Method = "HEAD";

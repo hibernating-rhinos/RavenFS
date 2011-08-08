@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="BigFileHandling.cs" />
     <Compile Include="ClientUsage.cs" />
+    <Compile Include="CompleteUsage.cs" />
     <Compile Include="FileHandling.cs" />
     <Compile Include="HttpWebRequestExtensions.cs" />
     <Compile Include="RemoteFilesHandlerTests.cs" />

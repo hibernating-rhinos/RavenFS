@@ -10,6 +10,17 @@ namespace RavenFS.Tests
 	{
 		private readonly Server server;
 
+		static ServerTest()
+		{
+			try
+			{
+				new Uri("http://localhost/?query=Customer:Northwind%20AND%20Preferred:True");
+			}
+			catch (Exception)
+			{
+			}
+		}
+
 		protected WebClient webClient = new WebClient
 		{
 			BaseAddress = "http://localhost:9090"
