@@ -48,7 +48,6 @@ namespace RavenFS.Handlers
 		public class ReadFileToDatabase : IDisposable
 		{
 			private readonly AbstractAsyncHandler parent;
-			private readonly HttpContext context;
 			private readonly string filename;
 			private int pos;
 			readonly byte[] buffer;
@@ -57,7 +56,6 @@ namespace RavenFS.Handlers
 			public ReadFileToDatabase(AbstractAsyncHandler parent, HttpContext context, string filename)
 			{
 				this.parent = parent;
-				this.context = context;
 				this.filename = filename;
 				buffer = parent.TakeBuffer();
 				inputStream = context.Request.GetBufferlessInputStream();
