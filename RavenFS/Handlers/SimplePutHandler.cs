@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Web;
 using RavenFS.Infrastructure;
@@ -13,7 +14,7 @@ namespace RavenFS.Handlers
 		protected override Task ProcessRequestAsync(HttpContext context)
 		{
 			var filename = Url.Match(context.Request.Url.AbsolutePath).Groups[1].Value;
-
+			
 			Storage.Batch(accessor =>
 			{
 				accessor.Delete(filename);
@@ -51,6 +52,7 @@ namespace RavenFS.Handlers
 			private readonly string filename;
 			private int pos;
 			readonly byte[] buffer;
+			private Stream inputStream;
 
 			public ReadFileToDatabase(AbstractAsyncHandler parent, HttpContext context, string filename)
 			{
@@ -58,11 +60,12 @@ namespace RavenFS.Handlers
 				this.context = context;
 				this.filename = filename;
 				buffer = parent.TakeBuffer();
+				inputStream = context.Request.GetBufferlessInputStream();
 			}
 
 			public Task Execute()
 			{
-				return context.Request.InputStream.ReadAsync(buffer)
+				return inputStream.ReadAsync(buffer)
 					.ContinueWith(task =>
 					{
 						if (task.Result == 0) // nothing left to read
