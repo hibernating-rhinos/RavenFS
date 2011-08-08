@@ -1,3 +1,8 @@
+// //-----------------------------------------------------------------------
+// // <copyright company="Hibernating Rhinos LTD">
+// //     Copyright (c) Hibernating Rhinos LTD. All rights reserved.
+// // </copyright>
+// //-----------------------------------------------------------------------
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,10 +15,11 @@ using RavenFS.Storage;
 
 namespace RavenFS.Handlers
 {
-	[HandlerMetadata("^/files/(.+)","GET")]
+	[HandlerMetadata("^/files/(.+)", "GET")]
 	public class SimpleGetHandler : AbstractAsyncHandler
 	{
 		private const int PagesBatchSize = 64;
+		private static readonly Regex startRange = new Regex(@"^bytes=(\d+)-$", RegexOptions.Compiled);
 
 		protected override Task ProcessRequestAsync(HttpContext context)
 		{
@@ -39,7 +45,7 @@ namespace RavenFS.Handlers
 				.Unwrap();
 		}
 
-		private Task<object> WriteFile(HttpContext context, string filename,int fromPage, long? maybeRange)
+		private Task<object> WriteFile(HttpContext context, string filename, int fromPage, long? maybeRange)
 		{
 			FileAndPages fileAndPages = null;
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, fromPage, PagesBatchSize));
@@ -50,12 +56,12 @@ namespace RavenFS.Handlers
 
 			var offset = 0;
 			var pageIndex = 0;
-			if(maybeRange != null)
+			if (maybeRange != null)
 			{
 				var range = maybeRange.Value;
 				foreach (var page in fileAndPages.Pages)
 				{
-					if(page.Size > range)
+					if (page.Size > range)
 					{
 						offset = (int) range;
 						break;
@@ -74,14 +80,13 @@ namespace RavenFS.Handlers
 				.ContinueWith(task =>
 				{
 					if (task.Exception != null)
-						task.Wait();// throw 
+						task.Wait(); // throw 
 
-					return WriteFile(context, filename,  fromPage + fileAndPages.Pages.Count, null);
+					return WriteFile(context, filename, fromPage + fileAndPages.Pages.Count, null);
 				}).Unwrap();
 		}
 
-		
-		static readonly Regex startRange = new Regex(@"^bytes=(\d+)-$",RegexOptions.Compiled);
+
 		private static long? GetStartRange(HttpContext context)
 		{
 			var range = context.Request.Headers["Range"];
@@ -108,7 +113,7 @@ namespace RavenFS.Handlers
 					if (task.Exception != null)
 						return task;
 
-					if (index+1 >= pages.Count)
+					if (index + 1 >= pages.Count)
 						return task;
 
 					return WritePages(context, pages, index + 1, 0);
@@ -122,19 +127,19 @@ namespace RavenFS.Handlers
 			try
 			{
 				Storage.Batch(accessor => accessor.ReadPage(information.Key, buffer));
+				return context.Response.OutputStream.WriteAsync(buffer, offset, information.Size - offset)
+					.ContinueWith(task =>
+					{
+						BufferPool.ReturnBuffer(buffer);
+						return task;
+					})
+					.Unwrap();
 			}
 			catch (Exception)
 			{
 				BufferPool.ReturnBuffer(buffer);
 				throw;
 			}
-			return context.Response.OutputStream.WriteAsync(buffer, offset, information.Size - offset)
-				.ContinueWith(task =>
-				{
-					BufferPool.ReturnBuffer(buffer);
-					return task;
-				})
-				.Unwrap();
 		}
 	}
 }
