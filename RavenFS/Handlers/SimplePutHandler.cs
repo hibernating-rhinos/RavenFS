@@ -20,51 +20,71 @@ namespace RavenFS.Handlers
 
 				var headers = context.Request.Headers.FilterHeaders();
 				accessor.PutFile(filename, context.Request.ContentLength,
-				                 headers);
+								 headers);
 
 				Search.Index(filename, headers);
 			});
 
-			return ReadAllPages(context, filename, 0);
-		}
-
-		private Task ReadAllPages(HttpContext context, string filename, int pos)
-		{
-			var buffer = TakeBuffer();
+			var readFileToDatabase = new ReadFileToDatabase(this, context, filename);
 			try
 			{
-				return ReadPage(context, filename, pos, buffer)
-					.ContinueWith(task => task.Result == false ? task : ReadPage(context, filename, pos + 1, buffer))
-					.Unwrap()
+				return readFileToDatabase.Execute()
 					.ContinueWith(task =>
 					{
-						BufferPool.ReturnBuffer(buffer);
+						readFileToDatabase.Dispose();
 						return task;
-					});
+					})
+					.Unwrap();
 			}
 			catch (Exception)
 			{
-				BufferPool.ReturnBuffer(buffer);
+				readFileToDatabase.Dispose();
+
 				throw;
 			}
 		}
 
-		private Task<bool> ReadPage(HttpContext context, string filename, int pos, byte[] buffer)
+		public class ReadFileToDatabase : IDisposable
 		{
-			return context.Request.InputStream.ReadAsync(buffer)
-				.ContinueWith(task =>
-				{
-					if (task.Result == 0) // nothing left to read
-						return false;
+			private readonly AbstractAsyncHandler parent;
+			private readonly HttpContext context;
+			private readonly string filename;
+			private int pos;
+			readonly byte[] buffer;
 
-					Storage.Batch(accessor =>
+			public ReadFileToDatabase(AbstractAsyncHandler parent, HttpContext context, string filename)
+			{
+				this.parent = parent;
+				this.context = context;
+				this.filename = filename;
+				buffer = parent.TakeBuffer();
+			}
+
+			public Task Execute()
+			{
+				return context.Request.InputStream.ReadAsync(buffer)
+					.ContinueWith(task =>
 					{
-						var hashKey = accessor.InsertPage(buffer, task.Result);
-						accessor.AssociatePage(filename, hashKey, pos, task.Result);
-					});
+						if (task.Result == 0) // nothing left to read
+							return parent.Completed;
 
-					return true;
-				});
+						parent.Storage.Batch(accessor =>
+						{
+							var hashKey = accessor.InsertPage(buffer, task.Result);
+							accessor.AssociatePage(filename, hashKey, pos, task.Result);
+						});
+
+						pos++;
+						return Execute();
+					})
+					.Unwrap();
+			}
+
+			public void Dispose()
+			{
+				parent.BufferPool.ReturnBuffer(buffer);
+			}
 		}
+
 	}
 }
