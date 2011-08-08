@@ -1,20 +1,13 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using RavenFS.Infrastructure;
 using System.Linq;
 using RavenFS.Storage;
-using RavenFS.Util;
 
 namespace RavenFS.Handlers
 {
-	[HandlerMetadata("/files/?", "GET")]
+	[HandlerMetadata("^/files/?$", "GET")]
 	public class FilesHandler : AbstractAsyncHandler
 	{
 		protected override Task ProcessRequestAsync(HttpContext context)
