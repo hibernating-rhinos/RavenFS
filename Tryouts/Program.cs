@@ -15,8 +15,8 @@ namespace Tryouts
 	{
 		static void Main(string[] args)
 		{
-			Put();
-			//Get();
+			//Put();
+			Get();
 		}
 
 		private static void Put()
@@ -27,7 +27,7 @@ namespace Tryouts
 
 			var request = (HttpWebRequest)WebRequest.Create("http://localhost:37229/files/2011-08-02_12-11-56.avi");
 			request.Method = "PUT";
-
+			request.Timeout = 1000*1000;
 			using (var s = request.GetRequestStream())
 			{
 				file.CopyTo(s);
@@ -47,7 +47,8 @@ namespace Tryouts
 			var sp = Stopwatch.StartNew();
 
 			var request = (HttpWebRequest)WebRequest.Create("http://localhost:37229/files/2011-08-02_12-11-56.avi");
-
+			request.Timeout = 1000 * 1000;
+		
 			using (var a = request.GetResponse())
 			{
 				a.GetResponseStream().CopyTo(file);
