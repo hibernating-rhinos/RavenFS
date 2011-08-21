@@ -19,6 +19,7 @@ namespace RavenFS.Handlers
             try
             {
                 Storage.Batch(accessor => accessor.UpdateFileMetadata(filename, headers));
+                Search.Index(filename, headers);
             }
             catch (FileNotFoundException)
             {
