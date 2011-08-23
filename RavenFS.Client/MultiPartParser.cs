@@ -19,12 +19,10 @@ namespace RavenFS.Client
 
 		private readonly StringBuilder currentLine = new StringBuilder();
 
-		public MultiPartParser(string contentType, Stream inputStream, Encoding contentEncoding)
+		public MultiPartParser(Stream inputStream)
 		{
-			ContentType = contentType;
 			InputStream = inputStream;
-			ContentEncoding = contentEncoding;
-
+			var headers = ReadHeaders();
 			string boundary = GetParameter(ContentType, "; boundary=");
 			if (boundary == null)
 				throw new InvalidOperationException("Could not figure out what the boundary is");
@@ -52,7 +50,7 @@ namespace RavenFS.Client
 		private NameValueCollection ReadHeaders()
 		{
 			var headers = new NameValueCollection();
-			ReadLine(); // consume crlf after boundary
+			var _ = ReadLine(); // consume crlf after boundary
 			while (true)
 			{
 				string line = ReadLine();
