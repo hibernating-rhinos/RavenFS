@@ -11,23 +11,19 @@ namespace RavenFS.Client
 	{
 		private readonly byte[] boundaryBytes;
 
-		public string ContentType { get; private set; }
-
 		public Stream InputStream { get; private set; }
-
-		public Encoding ContentEncoding { get; private set; }
 
 		private readonly StringBuilder currentLine = new StringBuilder();
 
 		public MultiPartParser(Stream inputStream)
 		{
 			InputStream = inputStream;
-			var headers = ReadHeaders();
-			string boundary = GetParameter(ContentType, "; boundary=");
+			var headers = ReadHeaders(); // TODO - need to be smarter about parsing things here
+			string boundary = GetParameter(headers["Content-Type"], "; boundary=");
 			if (boundary == null)
 				throw new InvalidOperationException("Could not figure out what the boundary is");
 
-			boundaryBytes = ContentEncoding.GetBytes("--" + boundary);
+			boundaryBytes = Encoding.UTF8.GetBytes("--" + boundary); // TODO - need to be smarter about figuring out which encoding to use
 		}
 
 		public Tuple<Stream,NameValueCollection> Next()
