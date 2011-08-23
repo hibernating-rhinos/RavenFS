@@ -51,6 +51,7 @@
       <Link>NameValueCollectionJsonConverter.cs</Link>
     </Compile>
     <Compile Include="FileInfo.cs" />
+    <Compile Include="MultiPartParser.cs" />
     <Compile Include="RavenFileSystemClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
