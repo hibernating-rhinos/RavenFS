@@ -9,6 +9,32 @@ namespace RavenFS.Tests
 	{
 		private readonly RavenFileSystemClient client = new RavenFileSystemClient("http://localhost:9090");
 
+        [Fact]
+        public void CanUpdateJustMetadata()
+        {
+            var ms = new MemoryStream();
+            var streamWriter = new StreamWriter(ms);
+            var expected = new string('a', 1024);
+            streamWriter.Write(expected);
+            streamWriter.Flush();
+            ms.Position = 0;
+
+            client.Upload("abc.txt",new NameValueCollection
+                                        {
+                                            {"test", "1"}
+                                        }, ms).Wait();
+
+            var updateMetadataTask = client.UpdateMetadata("abc.txt", new NameValueCollection
+                                                                      {
+                                                                          {"test", "2"}
+                                                                      });
+            updateMetadataTask.Wait();
+
+
+            var metadata = client.GetMetadataFor("abc.txt");
+            Assert.Equal("2", metadata.Result["test"]);
+            Assert.Equal(expected, webClient.DownloadString("/files/abc.txt"));
+        }
 		[Fact]
 		public void CanUpload()
 		{

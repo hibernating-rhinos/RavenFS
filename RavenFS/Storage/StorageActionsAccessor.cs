@@ -313,5 +313,20 @@ namespace RavenFS.Storage
 				Api.JetDelete(session, Usage);
 			} while (Api.TryMoveNext(session, Usage));
 		}
+
+	    public void UpdateFileMetadata(string filename, NameValueCollection metadata)
+	    {
+            Api.JetSetCurrentIndex(session, Files, "by_name");
+            Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+            if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
+                throw new FileNotFoundException(filename);
+		
+            using (var update = new Update(session, Files, JET_prep.Replace))
+            {
+                Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
+
+                update.Save();
+            }
+	    }
 	}
 }

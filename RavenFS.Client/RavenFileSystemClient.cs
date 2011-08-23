@@ -80,12 +80,27 @@ namespace RavenFS.Client
 				.Unwrap();
 		}
 
-		public Task Upload(string filename, Stream source)
+	    public Task UpdateMetadata(string filename, NameValueCollection metadata)
+	    {
+            var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
+            request.Method = "POST";
+            AddHeaders(metadata, request);
+	        return request.GetResponseAsync()
+	            .ContinueWith(task =>
+	                              {
+                                      if (task.Result != null)
+                                          task.Result.Close();
+	                                  return task;
+	                              })
+                                  .Unwrap();
+	    }
+
+	    public Task Upload(string filename, Stream source)
 		{
 			return Upload(filename, new NameValueCollection(), source);
 		}
 
-		public Task Upload(string filename, NameValueCollection collection, Stream source)
+	    public Task Upload(string filename, NameValueCollection metadata, Stream source)
 		{
 			if (source.CanRead == false)
 				throw new AggregateException("Stream does not support reading");
@@ -93,17 +108,7 @@ namespace RavenFS.Client
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
 			request.Method = "PUT";
 
-			foreach (var key in collection.AllKeys)
-			{
-				var values = collection.GetValues(key);
-				if (values == null)
-					continue;
-				foreach (var value in values)
-				{
-					request.Headers.Add(key, value);
-				}
-			}
-
+			AddHeaders(metadata, request);
 
 			return request.GetRequestStreamAsync()
 				.ContinueWith(task => source.CopyToAsync(task.Result)
@@ -114,5 +119,19 @@ namespace RavenFS.Client
 				.Unwrap()
 				.ContinueWith(task => task.Result.Close());
 		}
+
+	    private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
+	    {
+	        foreach (var key in metadata.AllKeys)
+	        {
+	            var values = metadata.GetValues(key);
+	            if (values == null)
+	                continue;
+	            foreach (var value in values)
+	            {
+	                request.Headers.Add(key, value);
+	            }
+	        }
+	    }
 	}
 }
