@@ -192,6 +192,10 @@ namespace RavenFS.Storage
 		public FileHeader ReadFile(string filename)
 		{
 			Api.JetSetCurrentIndex(session, Files, "by_name");
+			Api.JetSetCurrentIndex(session, Files, "by_name");
+			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
+				return null;
 
 			var metadata = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"], Encoding.Unicode);
 			return new FileHeader
