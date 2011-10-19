@@ -6,6 +6,7 @@ namespace RavenFS.Client
 	{
 		public string Name { get; set; }
 		public long TotalSize { get; set; }
+		public string HuamneTotalSize { get; set; }
 		public NameValueCollection Metadata { get; set; }
 	}
 }
