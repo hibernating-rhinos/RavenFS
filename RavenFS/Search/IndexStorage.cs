@@ -50,7 +50,7 @@ namespace RavenFS.Search
 
 			for (var i = start; i < pageSize + start && i < topDocs.totalHits; i++)
 			{
-				var document = searcher.Doc(i);
+				var document = searcher.Doc(topDocs.scoreDocs[i].doc);
 				results.Add(document.Get("__key"));
 			}
 			return results.ToArray();
