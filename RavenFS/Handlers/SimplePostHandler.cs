@@ -13,7 +13,7 @@ namespace RavenFS.Handlers
     {
         protected override Task ProcessRequestAsync(HttpContext context)
         {
-            var filename = Url.Match(context.Request.Url.AbsolutePath).Groups[1].Value;
+			var filename = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
 
             var headers = context.Request.Headers.FilterHeaders();
             try

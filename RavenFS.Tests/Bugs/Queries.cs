@@ -2,7 +2,6 @@
 using System.IO;
 using RavenFS.Client;
 using Xunit;
-using FileInfo = RavenFS.Client.FileInfo;
 
 namespace RavenFS.Tests.Bugs
 {
@@ -76,6 +75,30 @@ namespace RavenFS.Tests.Bugs
 
 			Assert.Equal(1, fileInfos.Length);
 			Assert.Equal("CorelVBAManual.PDF", fileInfos[0].Name);
+		}
+
+		[Fact]
+		public void ShouldEncodeValues()
+		{
+
+			var ms = new MemoryStream();
+			var streamWriter = new StreamWriter(ms);
+			var expected = new string('a', 1024);
+			streamWriter.Write(expected);
+			streamWriter.Flush();
+			ms.Position = 0;
+
+			const string filename = "10 jQuery Transition Effects- Moving Elements with Style - DevSnippets.txt";
+			client.Upload(filename, new NameValueCollection
+			{
+				{"Item", "10"}
+			}, ms).Wait();
+
+
+			var fileInfos = client.Search("Item:10*").Result;
+
+			Assert.Equal(1, fileInfos.Length);
+			Assert.Equal(filename, fileInfos[0].Name);
 		}
 	}
 }
