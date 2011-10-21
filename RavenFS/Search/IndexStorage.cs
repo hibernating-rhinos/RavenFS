@@ -62,7 +62,8 @@ namespace RavenFS.Search
 			{
 				var doc = new Document();
 
-				doc.Add(new Field("__key", key, Field.Store.YES, Field.Index.ANALYZED_NO_NORMS));
+				string lowerKey = key.ToLowerInvariant();
+				doc.Add(new Field("__key", lowerKey, Field.Store.YES, Field.Index.ANALYZED_NO_NORMS));
 
 				foreach (var metadataKey in metadata.AllKeys)
 				{
@@ -76,7 +77,7 @@ namespace RavenFS.Search
 					}
 				}
 
-				writer.DeleteDocuments(new Term("__key", key));
+				writer.DeleteDocuments(new Term("__key", lowerKey));
 				writer.AddDocument(doc);
 				// yes, this is slow, but we aren't expecting high writes count
 				writer.Commit();
