@@ -18,6 +18,36 @@ namespace RavenFS.Client
 				this.baseUrl = this.baseUrl.Substring(0, this.baseUrl.Length - 1);
 		}
 
+		public Task Delete(string filename)
+		{
+			var requestUriString = baseUrl + "/files/" + Uri.EscapeDataString(filename);
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+			request.Method = "DELETE";
+			return request.GetResponseAsync()
+				.ContinueWith(task => task.Result.Close());
+		}
+
+		public Task<FileInfo[]> Browse(int start=0, int pageSize=25)
+		{
+			var request = (HttpWebRequest) WebRequest.Create(baseUrl + "/files?start=" + start + "&pageSize=" + pageSize);
+			return request.GetResponseAsync()
+				.ContinueWith(task =>
+				{
+					using (var responseStream = task.Result.GetResponseStream())
+					using (var streamReader = new StreamReader(responseStream))
+					using (var jsonTextReader = new JsonTextReader(streamReader))
+					{
+						return new JsonSerializer
+						{
+							Converters =
+									{
+										new NameValueCollectionJsonConverter()
+									}
+						}.Deserialize<FileInfo[]>(jsonTextReader);
+					}
+				});
+		}
+
 		public Task<FileInfo[]> Search(string query)
 		{
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/search?query=" + Uri.EscapeUriString(query));
@@ -114,7 +144,7 @@ namespace RavenFS.Client
 
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
 			request.Method = "PUT";
-
+			request.SendChunked = true;
 			AddHeaders(metadata, request);
 
 			return request.GetRequestStreamAsync()
