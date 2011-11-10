@@ -20,22 +20,22 @@ namespace RavenFS.Client
 
 		public Task<FileInfo[]> Search(string query)
 		{
-			var request = (HttpWebRequest) WebRequest.Create(baseUrl + "/search?query=" + Uri.EscapeUriString(query));
+			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/search?query=" + Uri.EscapeUriString(query));
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
-						using(var responseStream = task.Result.GetResponseStream())
-						using(var streamReader = new StreamReader(responseStream))
-						using(var jsonTextReader = new JsonTextReader(streamReader))
+					using (var responseStream = task.Result.GetResponseStream())
+					using (var streamReader = new StreamReader(responseStream))
+					using (var jsonTextReader = new JsonTextReader(streamReader))
+					{
+						return new JsonSerializer
 						{
-							return new JsonSerializer
-							{
-								Converters =
+							Converters =
 									{
 										new NameValueCollectionJsonConverter()
 									}
-							}.Deserialize<FileInfo[]>(jsonTextReader);
-						}
+						}.Deserialize<FileInfo[]>(jsonTextReader);
+					}
 				});
 		}
 
@@ -80,27 +80,34 @@ namespace RavenFS.Client
 				.Unwrap();
 		}
 
-	    public Task UpdateMetadata(string filename, NameValueCollection metadata)
-	    {
-            var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
-            request.Method = "POST";
-            AddHeaders(metadata, request);
-	        return request.GetResponseAsync()
-	            .ContinueWith(task =>
-	                              {
-                                      if (task.Result != null)
-                                          task.Result.Close();
-	                                  return task;
-	                              })
-                                  .Unwrap();
-	    }
+		public Task UpdateMetadata(string filename, NameValueCollection metadata)
+		{
+			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
+			request.Method = "POST";
+			AddHeaders(metadata, request);
+			return request
+				.GetRequestStreamAsync()
+				.ContinueWith(requestTask =>
+				{
+					if (requestTask.Exception != null)
+						return requestTask;
+					return request.GetResponseAsync()
+						.ContinueWith(task =>
+						{
+							if (task.Result != null)
+								task.Result.Close();
+							return task;
+						})
+						.Unwrap();
+				}).Unwrap();
+		}
 
-	    public Task Upload(string filename, Stream source)
+		public Task Upload(string filename, Stream source)
 		{
 			return Upload(filename, new NameValueCollection(), source);
 		}
 
-	    public Task Upload(string filename, NameValueCollection metadata, Stream source)
+		public Task Upload(string filename, NameValueCollection metadata, Stream source)
 		{
 			if (source.CanRead == false)
 				throw new AggregateException("Stream does not support reading");
@@ -120,18 +127,18 @@ namespace RavenFS.Client
 				.ContinueWith(task => task.Result.Close());
 		}
 
-	    private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
-	    {
-	        foreach (var key in metadata.AllKeys)
-	        {
-	            var values = metadata.GetValues(key);
-	            if (values == null)
-	                continue;
-	            foreach (var value in values)
-	            {
-	                request.Headers.Add(key, value);
-	            }
-	        }
-	    }
+		private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
+		{
+			foreach (var key in metadata.AllKeys)
+			{
+				var values = metadata.GetValues(key);
+				if (values == null)
+					continue;
+				foreach (var value in values)
+				{
+					request.Headers.Add(key, value);
+				}
+			}
+		}
 	}
 }
