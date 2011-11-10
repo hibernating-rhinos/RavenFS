@@ -50,6 +50,7 @@
     <Compile Include="..\RavenFS\Util\NameValueCollectionJsonConverter.cs">
       <Link>NameValueCollectionJsonConverter.cs</Link>
     </Compile>
+    <Compile Include="AsyncExtensions.cs" />
     <Compile Include="FileInfo.cs" />
     <Compile Include="MultiPartParser.cs" />
     <Compile Include="RavenFileSystemClient.cs" />
