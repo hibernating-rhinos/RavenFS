@@ -1,4 +1,5 @@
-﻿using System.Collections.Specialized;
+﻿using System;
+using System.Collections.Specialized;
 
 namespace RavenFS.Storage
 {
@@ -21,15 +22,16 @@ namespace RavenFS.Storage
 
 		public static string Humane(long size)
 		{
+			var absSize = Math.Abs(size);
 			const double GB = 1024 * 1024 * 1024;
 			const double MB = 1024 * 1024 ;
 			const double KB = 1024;
 
-			if (size > GB) // GB
+			if (absSize > GB) // GB
 				return string.Format("{0:#,#.##} GBytes", size / GB);
-			if(size > MB)
+			if (absSize > MB)
 				return string.Format("{0:#,#.##} MBytes", size / MB);
-			if (size > MB)
+			if (absSize > MB)
 				return string.Format("{0:#,#.##} KBytes", size / KB);
 			return string.Format("{0:#,#} Bytes", size);
 
