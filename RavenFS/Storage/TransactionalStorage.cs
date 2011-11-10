@@ -27,7 +27,15 @@ namespace RavenFS.Storage
 
 		static TransactionalStorage()
 		{
-			SystemParameters.MaxInstances = 1024;
+			try
+			{
+				SystemParameters.MaxInstances = 1024;
+			}
+			catch (EsentErrorException e)
+			{
+				if (e.Error != JET_err.AlreadyInitialized)
+					throw;
+			}
 		}
 
 		public TransactionalStorage(string database, NameValueCollection settings)
