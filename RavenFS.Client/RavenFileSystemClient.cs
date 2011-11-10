@@ -27,9 +27,9 @@ namespace RavenFS.Client
 				.ContinueWith(task => task.Result.Close());
 		}
 
-		public Task<FileInfo[]> Browse(int start=0, int pageSize=25)
+		public Task<FileInfo[]> Browse(int start = 0, int pageSize = 25)
 		{
-			var request = (HttpWebRequest) WebRequest.Create(baseUrl + "/files?start=" + start + "&pageSize=" + pageSize);
+			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files?start=" + start + "&pageSize=" + pageSize);
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -134,10 +134,15 @@ namespace RavenFS.Client
 
 		public Task Upload(string filename, Stream source)
 		{
-			return Upload(filename, new NameValueCollection(), source);
+			return Upload(filename, new NameValueCollection(), source, null);
 		}
 
 		public Task Upload(string filename, NameValueCollection metadata, Stream source)
+		{
+			return Upload(filename, metadata, source, null);
+		}
+
+		public Task Upload(string filename, NameValueCollection metadata, Stream source, Action<string, int> progress)
 		{
 			if (source.CanRead == false)
 				throw new AggregateException("Stream does not support reading");
@@ -148,13 +153,24 @@ namespace RavenFS.Client
 			AddHeaders(metadata, request);
 
 			return request.GetRequestStreamAsync()
-				.ContinueWith(task => source.CopyToAsync(task.Result)
-										.ContinueWith(_ => task.Result.Close())
+				.ContinueWith(task => source.CopyToAsync(task.Result, written =>
+				{
+					if (progress != null)
+						progress(filename, written);
+				})
+				                      	.ContinueWith(_ => task.Result.Close())
 				)
 				.Unwrap()
-				.ContinueWith(task => request.GetResponseAsync())
+				.ContinueWith(task =>
+				{
+					task.Wait();
+					return request.GetResponseAsync();
+				})
 				.Unwrap()
-				.ContinueWith(task => task.Result.Close());
+				.ContinueWith(task =>
+				{
+					task.Result.Close();
+				});
 		}
 
 		private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
