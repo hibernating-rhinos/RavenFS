@@ -80,6 +80,7 @@ namespace RavenFS.Infrastructure
 
 		private Task ProcessRequestAsync(HttpContext context, AsyncCallback cb)
 		{
+			context.Response.TrySkipIisCustomErrors = true;
 			return ProcessRequestAsync(context)
 				.ContinueWith(task => cb(task));
 		}
