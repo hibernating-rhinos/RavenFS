@@ -12,3 +12,5 @@ _ReSharper.*/
 *.InstallLog
 RavenFS/Data.ravenfs/*
 RavenFS/Index.ravenfs/*
+/Deploy/*
+/RavenFS/RavenFS.Publish.xml
