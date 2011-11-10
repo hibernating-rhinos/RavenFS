@@ -155,7 +155,7 @@ namespace RavenFS.Storage
 
 				if(uploadedSize+pageSize > totalSize)
 					throw new InvalidDataException("Try to upload more data than the file was allocated for (" + totalSize +
-					                               ") and new size would be: " + uploadedSize + pageSize);
+					                               ") and new size would be: " + (uploadedSize + pageSize));
 
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"], uploadedSize + pageSize);
 
