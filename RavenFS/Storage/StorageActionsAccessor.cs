@@ -55,20 +55,20 @@ namespace RavenFS.Storage
 				throw;
 			}
 		}
-		
+
 		public void Dispose()
 		{
-			if(pages != null)
+			if (pages != null)
 				pages.Dispose();
 			if (usage != null)
 				usage.Dispose();
-			if(files != null)
+			if (files != null)
 				files.Dispose();
-			if(Equals(database, JET_DBID.Nil) == false)
+			if (Equals(database, JET_DBID.Nil) == false)
 				Api.JetCloseDatabase(session, database, CloseDatabaseGrbit.None);
-			if(transaction != null)
+			if (transaction != null)
 				transaction.Dispose();
-			if(session != null)
+			if (session != null)
 				session.Dispose();
 		}
 
@@ -86,9 +86,9 @@ namespace RavenFS.Storage
 			Api.MakeKey(session, Pages, key.Weak, MakeKeyGrbit.NewKey);
 			Api.MakeKey(session, Pages, key.Strong, MakeKeyGrbit.None);
 
-			if(Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
+			if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
 			{
-				Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], 1); 
+				Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], 1);
 				return key;
 			}
 
@@ -97,7 +97,7 @@ namespace RavenFS.Storage
 				Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_strong_hash"], key.Strong);
 				Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_weak_hash"], key.Weak);
 				Api.JetSetColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, size,
-				                 SetColumnGrbit.None, null);
+								 SetColumnGrbit.None, null);
 
 				update.Save();
 			}
@@ -113,7 +113,7 @@ namespace RavenFS.Storage
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize));
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"], BitConverter.GetBytes(0));
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
-				
+
 				update.Save();
 			}
 		}
@@ -124,7 +124,7 @@ namespace RavenFS.Storage
 			foreach (var key in metadata.AllKeys)
 			{
 				var values = metadata.GetValues(key);
-				if(values == null)
+				if (values == null)
 					continue;
 
 				foreach (var value in values)
@@ -145,19 +145,26 @@ namespace RavenFS.Storage
 		{
 			Api.JetSetCurrentIndex(session, Files, "by_name");
 			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
-			if(Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
+			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
 				throw new FileNotFoundException("Could not find file: " + filename);
 
 			using (var update = new Update(session, Files, JET_prep.Replace))
 			{
-				var totalSize = Api.RetrieveColumnAsInt32(session, Files, tableColumnsCache.FilesColumns["total_size"]).Value;
-				var uploadedSize = Api.RetrieveColumnAsInt32(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]).Value;
+				var totalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0);
+				var uploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0);
 
-				if(uploadedSize+pageSize > totalSize)
+				if (totalSize > 0 && uploadedSize + pageSize > totalSize)
 					throw new InvalidDataException("Try to upload more data than the file was allocated for (" + totalSize +
-					                               ") and new size would be: " + (uploadedSize + pageSize));
+												   ") and new size would be: " + (uploadedSize + pageSize));
 
-				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"], uploadedSize + pageSize);
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"], BitConverter.GetBytes(uploadedSize + pageSize));
+
+				// using chunked encoding, we don't know what the size is
+				// we use negative values here for keeping track of the unknown size
+				if (totalSize < 0)
+				{
+					Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize - pageSize));
+				}
 
 				update.Save();
 			}
@@ -177,15 +184,15 @@ namespace RavenFS.Storage
 		public int ReadPage(HashKey key, byte[] buffer)
 		{
 			Api.JetSetCurrentIndex(session, Pages, "by_keys");
-			Api.MakeKey(session, Pages, key.Weak,MakeKeyGrbit.NewKey);
-			Api.MakeKey(session, Pages,key.Strong, MakeKeyGrbit.None);
+			Api.MakeKey(session, Pages, key.Weak, MakeKeyGrbit.NewKey);
+			Api.MakeKey(session, Pages, key.Strong, MakeKeyGrbit.None);
 
 			if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ) == false)
 				return -1;
 
 			int size;
 			Api.JetRetrieveColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, buffer.Length, out size,
-			                      RetrieveColumnGrbit.None, null);
+								  RetrieveColumnGrbit.None, null);
 			return size;
 		}
 
@@ -214,7 +221,7 @@ namespace RavenFS.Storage
 			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
 				throw new FileNotFoundException("Could not find file: " + filename);
 
-			var metadata = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"],Encoding.Unicode);
+			var metadata = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"], Encoding.Unicode);
 			var fileInformation = new FileAndPages
 			{
 				TotalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0),
@@ -224,7 +231,7 @@ namespace RavenFS.Storage
 				Start = start
 			};
 
-			if(pagesToLoad > 0)
+			if (pagesToLoad > 0)
 			{
 				Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
 				Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
@@ -255,7 +262,7 @@ namespace RavenFS.Storage
 		public IEnumerable<FileHeader> ReadFiles(int start, int size)
 		{
 			Api.JetSetCurrentIndex(session, Files, "by_name");
-			if(Api.TryMoveFirst(session, Files) == false)
+			if (Api.TryMoveFirst(session, Files) == false)
 				yield break;
 
 			Api.JetMove(session, Files, start, MoveGrbit.None);
@@ -286,7 +293,7 @@ namespace RavenFS.Storage
 
 			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
 			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
-			if (!Api.TrySeek(session, Usage, SeekGrbit.SeekGE)) 
+			if (!Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
 				return;
 
 			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
@@ -305,10 +312,10 @@ namespace RavenFS.Storage
 				Api.MakeKey(session, Pages, page.Weak, MakeKeyGrbit.NewKey);
 				Api.MakeKey(session, Pages, page.Strong, MakeKeyGrbit.None);
 
-				if(Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
+				if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
 				{
 					var escrowUpdate = Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], -1);
-					if(escrowUpdate <= 1)
+					if (escrowUpdate <= 1)
 					{
 						Api.JetDelete(session, Pages);
 					}
@@ -318,19 +325,35 @@ namespace RavenFS.Storage
 			} while (Api.TryMoveNext(session, Usage));
 		}
 
-	    public void UpdateFileMetadata(string filename, NameValueCollection metadata)
-	    {
-            Api.JetSetCurrentIndex(session, Files, "by_name");
-            Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
-            if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
-                throw new FileNotFoundException(filename);
-		
-            using (var update = new Update(session, Files, JET_prep.Replace))
-            {
-                Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
+		public void UpdateFileMetadata(string filename, NameValueCollection metadata)
+		{
+			Api.JetSetCurrentIndex(session, Files, "by_name");
+			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
+				throw new FileNotFoundException(filename);
 
-                update.Save();
-            }
-	    }
+			using (var update = new Update(session, Files, JET_prep.Replace))
+			{
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
+
+				update.Save();
+			}
+		}
+
+		public void CompleteFileUpload(string filename)
+		{
+			Api.JetSetCurrentIndex(session, Files, "by_name");
+			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
+				throw new FileNotFoundException("Could not find file: " + filename);
+
+			using (var update = new Update(session, Files, JET_prep.Replace))
+			{
+				var totalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0);
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize * -1));
+
+				update.Save();
+			}
+		}
 	}
 }
