@@ -14,7 +14,7 @@ namespace Tryouts
 
 			var ms = new MemoryStream();
 			var streamWriter = new StreamWriter(ms);
-			var expected = new string('a', 1024 * 1024 * 100);
+			var expected = new string('a', 1024 * 1024 * 500);
 			streamWriter.Write(expected);
 			streamWriter.Flush();
 			ms.Position = 0;
