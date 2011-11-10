@@ -110,7 +110,10 @@ namespace RavenFS.Infrastructure
 		{
 			if (result == null)
 				return;
-			((Task)result).Dispose();
+
+			var task = ((Task)result);
+			task.Wait();
+			task.Dispose();
 		}
 
 		public void Initialize(BufferPool bufferPool, Regex url, Storage.TransactionalStorage storage, Search.IndexStorage search)
