@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading;
 using RavenFS.Client;
-using System.Threading.Tasks;
 
 namespace Tryouts
 {
@@ -15,8 +10,37 @@ namespace Tryouts
 	{
 		static void Main(string[] args)
 		{
-		}
+			var fs = new RavenFileSystemClient("http://localhost");
 
+			var ms = new MemoryStream();
+			var streamWriter = new StreamWriter(ms);
+			var expected = new string('a', 1024 * 1024 * 100);
+			streamWriter.Write(expected);
+			streamWriter.Flush();
+			ms.Position = 0;
+
+			Console.WriteLine("Writing...");
+
+			try
+			{
+				fs.Upload("large-file-100mb", new NameValueCollection(), ms, (s, written) => Console.WriteLine("{0:#,#} kb", written/1024)).Wait();
+			}
+			catch (AggregateException e)
+			{
+				while(e.InnerException is AggregateException)
+				{
+					e = (AggregateException) e.InnerException;
+				}
+				var we = e.InnerException as WebException;
+				if (we == null)
+					throw;
+				var httpWebResponse = we.Response as HttpWebResponse;
+				if (httpWebResponse == null)
+					throw;
+
+				Console.WriteLine(new StreamReader(httpWebResponse.GetResponseStream()).ReadToEnd());
+			}
+		}
 		
 	}
 }
