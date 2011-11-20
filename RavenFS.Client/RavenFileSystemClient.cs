@@ -89,12 +89,13 @@ namespace RavenFS.Client
 
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
 
-
+#if !SILVERLIGHT
 			if (destination.CanSeek)
 			{
 				destination.Position = destination.Length;
 				request.AddRange(destination.Position);
 			}
+#endif
 
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
@@ -149,7 +150,9 @@ namespace RavenFS.Client
 
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
 			request.Method = "PUT";
+#if !SILVERLIGHT
 			request.SendChunked = true;
+#endif
 			AddHeaders(metadata, request);
 
 			return request.GetRequestStreamAsync()
@@ -158,7 +161,7 @@ namespace RavenFS.Client
 					if (progress != null)
 						progress(filename, written);
 				})
-				                      	.ContinueWith(_ => task.Result.Close())
+										.ContinueWith(_ => task.Result.Close())
 				)
 				.Unwrap()
 				.ContinueWith(task =>
@@ -182,7 +185,7 @@ namespace RavenFS.Client
 					continue;
 				foreach (var value in values)
 				{
-					request.Headers.Add(key, value);
+					request.Headers[key] = value;
 				}
 			}
 		}

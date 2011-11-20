@@ -3,7 +3,7 @@ using System.Collections.Specialized;
 using System.IO;
 using Newtonsoft.Json;
 
-#if !CLIENT
+#if !CLIENT && !SILVERLIGHT
 namespace RavenFS.Util
 #else
 namespace RavenFS.Client
@@ -59,7 +59,7 @@ namespace RavenFS.Client
 				var key = (string)reader.Value;
 
 				if (reader.Read() == false)
-					throw new InvalidDataException("Expected PropertyName, got " + reader.TokenType);
+					throw new InvalidOperationException("Expected PropertyName, got " + reader.TokenType);
 
 				if (reader.TokenType == JsonToken.StartArray)
 				{
