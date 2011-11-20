@@ -2,6 +2,9 @@ using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
+#if SILVERLIGHT
+using System.Net.Browser;
+#endif
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -10,6 +13,14 @@ namespace RavenFS.Client
 	public class RavenFileSystemClient
 	{
 		private readonly string baseUrl;
+
+#if SILVERLIGHT
+		static RavenFileSystemClient()
+		{
+			WebRequest.RegisterPrefix("http://", WebRequestCreator.ClientHttp);
+			WebRequest.RegisterPrefix("https://", WebRequestCreator.ClientHttp);
+		}
+#endif
 
 		public RavenFileSystemClient(string baseUrl)
 		{

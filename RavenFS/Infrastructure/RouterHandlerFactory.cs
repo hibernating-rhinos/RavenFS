@@ -2,6 +2,7 @@ using System;
 using System.Collections.Specialized;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.IO;
 using System.Linq;
 using System.Web;
 using NLog;
@@ -64,7 +65,9 @@ namespace RavenFS.Infrastructure
 			logger.Debug("{0} {1} -> {2}", requestType, url, ((object)result ?? "Unhandled"));
 
 			if(result == null)
+			{
 				throw new InvalidOperationException("Could not find a handler for request: " + requestType + " " + url);
+			}
 
 			return result.Value;
 		}

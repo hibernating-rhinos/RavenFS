@@ -70,6 +70,7 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ClientAccessPolicy.xml" />
     <Content Include="ReadMe.txt" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
@@ -84,6 +85,7 @@
   <ItemGroup>
     <Compile Include="Extensions\MetadataExtensions.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
+    <Compile Include="Handlers\ClientAccessPolicy.cs" />
     <Compile Include="Handlers\FavIconHandler.cs" />
     <Compile Include="Handlers\FilesHandler.cs" />
     <Compile Include="Handlers\SearchHandler.cs" />

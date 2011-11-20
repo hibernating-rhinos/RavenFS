@@ -60,6 +60,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AsyncCtpLibrary_Silverlight">
+      <HintPath>..\packages\AsyncCtp\AsyncCtpLibrary_Silverlight.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows" />
@@ -75,6 +78,13 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Commands\BrowseCommand.cs" />
+    <Compile Include="Infrastructure\ApplicationModel.cs" />
+    <Compile Include="Infrastructure\BindableCollection.cs" />
+    <Compile Include="Models\HomePageModel.cs" />
+    <Compile Include="Infrastructure\ModelBase.cs" />
+    <Compile Include="Infrastructure\ModelResolver.cs" />
+    <Compile Include="Infrastructure\NotifyPropertyChangedBase.cs" />
     <Compile Include="Views\ErrorWindow.xaml.cs">
       <DependentUpon>ErrorWindow.xaml</DependentUpon>
     </Compile>
@@ -127,6 +137,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\logo-raven.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RavenFS.Client.Silverlight\RavenFS.Client.Silverlight.csproj">
+      <Project>{4FC11663-0B21-4AA2-B092-02F75AEB8CF6}</Project>
+      <Name>RavenFS.Client.Silverlight</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
