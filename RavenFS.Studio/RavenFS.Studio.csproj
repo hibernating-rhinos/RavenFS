@@ -60,10 +60,22 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AsyncCtpLibrary_Silverlight">
-      <HintPath>..\packages\AsyncCtp\AsyncCtpLibrary_Silverlight.dll</HintPath>
+    <Reference Include="AsyncCtpLibrary_Silverlight, Version=1.0.4107.18177, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\RavenDB.1.0.531\lib\sl40\AsyncCtpLibrary_Silverlight.dll</HintPath>
+    </Reference>
+    <Reference Include="MissingBitFromSilverlight">
+      <HintPath>..\packages\RavenDB.1.0.531\lib\sl40\MissingBitFromSilverlight.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
+    <Reference Include="Newtonsoft.Json.Silverlight, Version=4.0.2.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.4.0.2\lib\sl4\Newtonsoft.Json.Silverlight.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog">
+      <HintPath>..\packages\NLog.2.0.0.2000\lib\sl4\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="Raven.Client.Silverlight">
+      <HintPath>..\packages\RavenDB.1.0.531\lib\sl40\Raven.Client.Silverlight.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows" />
     <Reference Include="system" />
@@ -81,12 +93,27 @@
     </Compile>
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
     <Compile Include="Commands\BrowseCommand.cs" />
+    <Compile Include="Commands\DeleteCommand.cs" />
     <Compile Include="Commands\DownloadCommand.cs" />
     <Compile Include="Commands\InfoCommand.cs" />
     <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
     <Compile Include="Infrastructure\ApplicationModel.cs" />
     <Compile Include="Infrastructure\BindableCollection.cs" />
+    <Compile Include="Infrastructure\UrlUtil.cs" />
+    <Compile Include="Infrastructure\UrlParser.cs" />
+    <Compile Include="Infrastructure\Observable.cs" />
     <Compile Include="Infrastructure\FileInfoWrapper.cs" />
+    <Compile Include="Infrastructure\Input\AskUser.cs" />
+    <Compile Include="Infrastructure\Input\ConfirmModel.cs" />
+    <Compile Include="Infrastructure\Input\ConfirmWindow.xaml.cs">
+      <DependentUpon>ConfirmWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Infrastructure\Input\InputModel.cs" />
+    <Compile Include="Infrastructure\Input\InputWindow.xaml.cs">
+      <DependentUpon>InputWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Infrastructure\InvocationExtensions.cs" />
+    <Compile Include="Infrastructure\View.cs" />
     <Compile Include="Models\FileInfoModel.cs" />
     <Compile Include="Models\HomePageModel.cs" />
     <Compile Include="Infrastructure\ModelBase.cs" />
@@ -122,6 +149,14 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Infrastructure\Input\ConfirmWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Infrastructure\Input\InputWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\ErrorWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -144,6 +179,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="Properties\AppManifest.xml" />
   </ItemGroup>
   <ItemGroup>
