@@ -34,11 +34,18 @@
                    TextWrapping="Wrap"
                    Text="{Binding Metadata, Converter={StaticResource NameValueCollectionToMultiLineString}}" />
         <Button Content="Download"
-                HorizontalAlignment="Right"
+                HorizontalAlignment="Left"
                 Margin="0,8,30,0"
                 Grid.Row="2"
                 VerticalAlignment="Top"
                 Width="75"
                 Command="{Binding Download}" />
+        <Button Content="Delete"
+                HorizontalAlignment="Right"
+                Margin="0,8,30,0"
+                Grid.Row="2"
+                VerticalAlignment="Top"
+                Width="75"
+                Command="{Binding Delete}" />
     </Grid>
 </navigation:Page>
