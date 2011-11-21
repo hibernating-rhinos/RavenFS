@@ -32,7 +32,7 @@
 				Grid.Column="1"
 				Margin="109,8,154,4"
 				d:LayoutOverrides="Height"
-				Command="{Binding Browse}" />
+				Command="{Binding Upload}" />
 		<TextBlock TextWrapping="Wrap"
 				   Text="Upload Progress:"
 				   FontSize="12"
@@ -44,7 +44,8 @@
 					 Grid.Row="1"
 					 Grid.ColumnSpan="2"
 					 d:LayoutOverrides="GridBox" />
-		<ListBox Grid.ColumnSpan="3"
+		<ListBox x:Name="FilesList"
+                 Grid.ColumnSpan="3"
 				 Margin="10"
 				 Grid.Row="4"
 				 ItemsSource="{Binding Files, Mode=TwoWay}">
@@ -79,6 +80,8 @@
 				Grid.Column="2"
 				Margin="10,6"
 				Grid.Row="5"
-				d:LayoutOverrides="Height" />
+				d:LayoutOverrides="Height"
+                Command="{Binding Download}"
+                CommandParameter="{Binding SelectedItem, ElementName=FilesList}"/>
 	</Grid>
 </Infrastructure:View>

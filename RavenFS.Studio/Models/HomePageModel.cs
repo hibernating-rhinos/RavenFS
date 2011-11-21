@@ -8,7 +8,8 @@ namespace RavenFS.Studio.Models
 {
 	public class HomePageModel : Model
 	{
-		public ICommand Browse { get { return new BrowseCommand(); } }
+		public ICommand Upload { get { return new UploadCommand(); } }
+		public ICommand Download { get { return new DownloadCommand(); } }
 
 		public BindableCollection<FileInfoWrapper> Files { get; set; }
 

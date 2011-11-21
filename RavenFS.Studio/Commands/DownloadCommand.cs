@@ -15,6 +15,11 @@ namespace RavenFS.Studio.Commands
 	public class DownloadCommand :ICommand
 	{
 		private string FileName;
+
+		public DownloadCommand() : this("")
+		{	
+		}
+
 		public DownloadCommand(string fileName)
 		{
 			FileName = fileName;
@@ -26,6 +31,11 @@ namespace RavenFS.Studio.Commands
 
 		public void Execute(object parameter)
 		{
+			var item = parameter as FileInfoWrapper;
+			if (item != null)
+			{
+				FileName = item.File.Name;
+			}
 			var fileDialog = new SaveFileDialog();
 			var result = fileDialog.ShowDialog();
 			if (result != true)
