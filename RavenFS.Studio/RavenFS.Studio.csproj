@@ -81,10 +81,13 @@
     </Compile>
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
     <Compile Include="Commands\BrowseCommand.cs" />
+    <Compile Include="Commands\DownloadCommand.cs" />
     <Compile Include="Commands\InfoCommand.cs" />
+    <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
     <Compile Include="Infrastructure\ApplicationModel.cs" />
     <Compile Include="Infrastructure\BindableCollection.cs" />
     <Compile Include="Infrastructure\FileInfoWrapper.cs" />
+    <Compile Include="Models\FileInfoModel.cs" />
     <Compile Include="Models\HomePageModel.cs" />
     <Compile Include="Infrastructure\ModelBase.cs" />
     <Compile Include="Infrastructure\ModelResolver.cs" />
@@ -115,6 +118,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Resource>
+    <Page Include="Converters\Converters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\ErrorWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

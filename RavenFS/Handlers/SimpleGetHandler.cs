@@ -43,7 +43,7 @@ namespace RavenFS.Handlers
 
 			MetadataExtensions.AddHeaders(context, fileAndPages);
 
-			context.Response.AddHeader("Content-Length", (fileAndPages.TotalSize - (range ?? 0) ).ToString());
+			context.Response.AddHeader("Content-Length", Math.Abs(fileAndPages.TotalSize - (range ?? 0)).ToString());
 
 			context.Response.AddHeader("Content-Disposition", "attachment; filename=" + filename);
 			
