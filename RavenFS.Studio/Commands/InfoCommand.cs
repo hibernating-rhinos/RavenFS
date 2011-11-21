@@ -27,7 +27,7 @@ namespace RavenFS.Studio.Commands
 
 		public void Execute(object parameter)
 		{
-			Application.Current.Host.NavigationState = "/FileInfo?Name=" + fileName;
+			Application.Current.Host.NavigationState = "/fileInfo?name=" + fileName;
 		}
 
 		public event EventHandler CanExecuteChanged;

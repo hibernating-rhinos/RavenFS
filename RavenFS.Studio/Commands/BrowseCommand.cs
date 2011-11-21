@@ -23,13 +23,15 @@ namespace RavenFS.Studio.Commands
 
 			var stream = fileDialog.File.OpenRead();
 			var length = stream.Length;
-			ApplicationModel.Client.Upload(fileDialog.File.Name, new NameValueCollection(), stream, Progress)
+			ApplicationModel.Client.UploadAsync(fileDialog.File.Name, new NameValueCollection(), stream, Progress)
 				.ContinueWith(task =>
 				{
 					stream.Dispose();
 					task.Wait();
 					return task;
 				});
+
+			Application.Current.Host.NavigationState += "?" + Guid.NewGuid();
 		}
 
 		private void Progress(string file, int uploaded)
