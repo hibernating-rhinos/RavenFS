@@ -23,7 +23,7 @@ namespace Tryouts
 
 			try
 			{
-				fs.Upload("large-file-100mb", new NameValueCollection(), ms, (s, written) => Console.WriteLine("{0:#,#} kb", written/1024)).Wait();
+				fs.UploadAsync("large-file-100mb", new NameValueCollection(), ms, (s, written) => Console.WriteLine("{0:#,#} kb", written/1024)).Wait();
 			}
 			catch (AggregateException e)
 			{

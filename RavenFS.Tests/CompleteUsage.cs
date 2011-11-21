@@ -11,7 +11,7 @@ namespace RavenFS.Tests
 		public void HowToUseTheClient()
 		{
 			var client = new RavenFileSystemClient("http://localhost:9090");
-			var uploadTask = client.Upload("dragon.design", new NameValueCollection
+			var uploadTask = client.UploadAsync("dragon.design", new NameValueCollection
 			{
 				{"Customer", "Northwind"},
 				{"Preferred", "True"}
@@ -19,7 +19,7 @@ namespace RavenFS.Tests
 
 			uploadTask.Wait(); // or we can just let it run
 
-			var searchTask = client.Search("Customer:Northwind AND Preferred:True");
+			var searchTask = client.SearchAsync("Customer:Northwind AND Preferred:True");
 
 			searchTask.Wait();
 

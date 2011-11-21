@@ -29,7 +29,7 @@ namespace RavenFS.Client
 				this.baseUrl = this.baseUrl.Substring(0, this.baseUrl.Length - 1);
 		}
 
-		public Task Delete(string filename)
+		public Task DeleteAsync(string filename)
 		{
 			var requestUriString = baseUrl + "/files/" + Uri.EscapeDataString(filename);
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
@@ -38,7 +38,7 @@ namespace RavenFS.Client
 				.ContinueWith(task => task.Result.Close());
 		}
 
-		public Task<FileInfo[]> Browse(int start = 0, int pageSize = 25)
+		public Task<FileInfo[]> BrowseAsync(int start = 0, int pageSize = 25)
 		{
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files?start=" + start + "&pageSize=" + pageSize);
 			return request.GetResponseAsync()
@@ -59,7 +59,7 @@ namespace RavenFS.Client
 				});
 		}
 
-		public Task<FileInfo[]> Search(string query)
+		public Task<FileInfo[]> SearchAsync(string query)
 		{
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/search?query=" + Uri.EscapeUriString(query));
 			return request.GetResponseAsync()
@@ -80,7 +80,7 @@ namespace RavenFS.Client
 				});
 		}
 
-		public Task<NameValueCollection> GetMetadataFor(string filename)
+		public Task<NameValueCollection> GetMetadataForAsync(string filename)
 		{
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
 			request.Method = "HEAD";
@@ -88,12 +88,12 @@ namespace RavenFS.Client
 				.ContinueWith(task => new NameValueCollection(task.Result.Headers));
 		}
 
-		public Task<NameValueCollection> Download(string filename, Stream destination)
+		public Task<NameValueCollection> DownloadAsync(string filename, Stream destination)
 		{
-			return Download(filename, new NameValueCollection(), destination);
+			return DownloadAsync(filename, new NameValueCollection(), destination);
 		}
 
-		public Task<NameValueCollection> Download(string filename, NameValueCollection collection, Stream destination)
+		public Task<NameValueCollection> DownloadAsync(string filename, NameValueCollection collection, Stream destination)
 		{
 			if (destination.CanWrite == false)
 				throw new ArgumentException("Stream does not support writing");
@@ -122,7 +122,7 @@ namespace RavenFS.Client
 				.Unwrap();
 		}
 
-		public Task UpdateMetadata(string filename, NameValueCollection metadata)
+		public Task UpdateMetadataAsync(string filename, NameValueCollection metadata)
 		{
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
 			request.Method = "POST";
@@ -144,17 +144,17 @@ namespace RavenFS.Client
 				}).Unwrap();
 		}
 
-		public Task Upload(string filename, Stream source)
+		public Task UploadAsync(string filename, Stream source)
 		{
-			return Upload(filename, new NameValueCollection(), source, null);
+			return UploadAsync(filename, new NameValueCollection(), source, null);
 		}
 
-		public Task Upload(string filename, NameValueCollection metadata, Stream source)
+		public Task UploadAsync(string filename, NameValueCollection metadata, Stream source)
 		{
-			return Upload(filename, metadata, source, null);
+			return UploadAsync(filename, metadata, source, null);
 		}
 
-		public Task Upload(string filename, NameValueCollection metadata, Stream source, Action<string, int> progress)
+		public Task UploadAsync(string filename, NameValueCollection metadata, Stream source, Action<string, int> progress)
 		{
 			if (source.CanRead == false)
 				throw new AggregateException("Stream does not support reading");

@@ -19,19 +19,19 @@ namespace RavenFS.Tests
             streamWriter.Flush();
             ms.Position = 0;
 
-            client.Upload("abc.txt",new NameValueCollection
+            client.UploadAsync("abc.txt",new NameValueCollection
                                         {
                                             {"test", "1"}
                                         }, ms).Wait();
 
-            var updateMetadataTask = client.UpdateMetadata("abc.txt", new NameValueCollection
+            var updateMetadataTask = client.UpdateMetadataAsync("abc.txt", new NameValueCollection
                                                                       {
                                                                           {"test", "2"}
                                                                       });
             updateMetadataTask.Wait();
 
 
-            var metadata = client.GetMetadataFor("abc.txt");
+			var metadata = client.GetMetadataForAsync("abc.txt");
             Assert.Equal("2", metadata.Result["test"]);
             Assert.Equal(expected, webClient.DownloadString("/files/abc.txt"));
         }
@@ -45,7 +45,7 @@ namespace RavenFS.Tests
 			streamWriter.Flush();
 			ms.Position = 0;
 
-			client.Upload("abc.txt", ms).Wait();
+			client.UploadAsync("abc.txt", ms).Wait();
 
 			Assert.Equal(expected, webClient.DownloadString("/files/abc.txt"));
 		}
@@ -60,14 +60,14 @@ namespace RavenFS.Tests
 			streamWriter.Flush();
 			ms.Position = 0;
 
-			client.Upload("abc.txt",new NameValueCollection
+			client.UploadAsync("abc.txt", new NameValueCollection
 			{
 				{"test", "value"},
 				{"hello", "there"}
 			} ,ms).Wait();
 
 
-			var collection = client.GetMetadataFor("abc.txt").Result;
+			var collection = client.GetMetadataForAsync("abc.txt").Result;
 
 			Assert.Equal("value", collection["test"]);
 			Assert.Equal("there", collection["hello"]);
@@ -84,13 +84,13 @@ namespace RavenFS.Tests
 			streamWriter.Flush();
 			ms.Position = 0;
 
-			client.Upload("abc.txt", new NameValueCollection
+			client.UploadAsync("abc.txt", new NameValueCollection
 			{
 				{"Test", "value"},
 			}, ms).Wait();
 
 
-			var collection = client.Search("Test:value").Result;
+			var collection = client.SearchAsync("Test:value").Result;
 
 			Assert.Equal(1, collection.Length);
 			Assert.Equal("abc.txt", collection[0].Name);
@@ -108,10 +108,10 @@ namespace RavenFS.Tests
 			streamWriter.Flush();
 			ms.Position = 0;
 
-			client.Upload("abc.txt", ms).Wait();
+			client.UploadAsync("abc.txt", ms).Wait();
 
 			var ms2 = new MemoryStream();
-			client.Download("abc.txt", ms2).Wait();
+			client.DownloadAsync("abc.txt", ms2).Wait();
 
 			ms2.Position = 0;
 
@@ -130,14 +130,14 @@ namespace RavenFS.Tests
 			streamWriter.Flush();
 			ms.Position = 0;
 
-			client.Upload("abc.txt", ms).Wait();
+			client.UploadAsync("abc.txt", ms).Wait();
 
 			var ms2 = new MemoryStream();
 			streamWriter = new StreamWriter(ms2);
 			streamWriter.Write(new string('a', 1024));
 			streamWriter.Flush();
-			
-			client.Download("abc.txt", ms2).Wait();
+
+			client.DownloadAsync("abc.txt", ms2).Wait();
 			ms2.Position = 0;
 			var actual = new StreamReader(ms2).ReadToEnd();
 

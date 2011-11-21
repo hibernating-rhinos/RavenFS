@@ -20,17 +20,17 @@ namespace RavenFS.Tests.Bugs
 			streamWriter.Flush();
 			ms.Position = 0;
 
-			client.Upload("abc.txt", new NameValueCollection
+			client.UploadAsync("abc.txt", new NameValueCollection
 			{
 				{"test", "1"}
 			}, ms).Wait();
 
-			client.UpdateMetadata("abc.txt", new NameValueCollection
+			client.UpdateMetadataAsync("abc.txt", new NameValueCollection
 			{
 				{"test", "2"}
 			});
 
-			var metadataFor = client.GetMetadataFor("abc.txt");
+			var metadataFor = client.GetMetadataForAsync("abc.txt");
 
 
 			Assert.Equal("2", metadataFor.Result["test"]);

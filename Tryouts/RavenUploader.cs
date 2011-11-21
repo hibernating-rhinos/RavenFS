@@ -16,7 +16,7 @@ namespace Tryouts
 			Tuple<Stream, NameValueCollection> tuple;
 			while((tuple = parser.Next()) != null)
 			{
-				var upload = client.Upload(tuple.Item2["Content-Disposition"], tuple.Item2, tuple.Item1);
+				var upload = client.UploadAsync(tuple.Item2["Content-Disposition"], tuple.Item2, tuple.Item1);
 				upload.Wait();// we have to wait here because we are reading from a single stream
 			}
 		}
