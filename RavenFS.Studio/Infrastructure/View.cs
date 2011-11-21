@@ -55,15 +55,15 @@ namespace RavenFS.Studio.Infrastructure
 			InvokeOnModel(ctx, model => model.TimerTicked());
 		}
 
-		private static void InvokeOnModel(object ctx, Action<ModelBase> action)
+		private static void InvokeOnModel(object ctx, Action<Model> action)
 		{
-			var model = ctx as ModelBase;
+			var model = ctx as Model;
 			if (model == null)
 			{
 				var observable = ctx as IObservable;
 				if (observable == null)
 					return;
-				model = observable.Value as ModelBase; 
+				model = observable.Value as Model; 
 				if (model == null)
 				{
 					PropertyChangedEventHandler observableOnPropertyChanged = null;

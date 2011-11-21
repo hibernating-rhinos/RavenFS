@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace RavenFS.Studio.Models
 {
-	public class HomePageModel : ModelBase
+	public class HomePageModel : Model
 	{
 		public ICommand Browse { get { return new BrowseCommand(); } }
 
@@ -16,8 +16,13 @@ namespace RavenFS.Studio.Models
 		{
 			Files = new BindableCollection<FileInfoWrapper>(EqualityComparer<FileInfoWrapper>.Default);
 
-			ApplicationModel.Client.BrowseAsync()
-				.ContinueWith(task => Files.Match(task.Result.Select(x=>new FileInfoWrapper(x)).ToList()));
+			ForceTimerTicked();
+		}
+
+		protected override System.Threading.Tasks.Task TimerTickedAsync()
+		{
+			return ApplicationModel.Client.BrowseAsync()
+				.ContinueOnSuccess(result => Files.Match(result.Select(x => new FileInfoWrapper(x)).ToList()));
 		}
 	}
 }

@@ -5,7 +5,7 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Models
 {
-	public class FileInfoModel : ModelBase
+	public class FileInfoModel : Model
 	{
 		public string Name { get; set; }
 
