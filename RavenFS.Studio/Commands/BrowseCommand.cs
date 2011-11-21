@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using RavenFS.Client;
 using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Commands
@@ -21,13 +22,19 @@ namespace RavenFS.Studio.Commands
 				return;
 
 			var stream = fileDialog.File.OpenRead();
-			ApplicationModel.Client.Upload(fileDialog.File.Name, stream)
+			var length = stream.Length;
+			ApplicationModel.Client.Upload(fileDialog.File.Name, new NameValueCollection(), stream, Progress)
 				.ContinueWith(task =>
 				{
 					stream.Dispose();
 					task.Wait();
 					return task;
 				});
+		}
+
+		private void Progress(string file, int uploaded)
+		{
+			
 		}
 
 		public event EventHandler CanExecuteChanged = delegate { };

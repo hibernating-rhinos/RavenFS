@@ -3,8 +3,10 @@
 				 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 				 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 				 xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
-				 xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
-				 xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure" x:Class="RavenFS.Studio.Home"
+				 xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
+				 xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+				 xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors"
+				 x:Class="RavenFS.Studio.Home"
 				 mc:Ignorable="d"
 				 d:DesignWidth="640"
 				 d:DesignHeight="480"
@@ -30,7 +32,7 @@
 				Grid.Column="1"
 				Margin="109,8,154,4"
 				d:LayoutOverrides="Height"
-				Command="{Binding Browse}"/>
+				Command="{Binding Browse}" />
 		<TextBlock TextWrapping="Wrap"
 				   Text="Upload Progress:"
 				   FontSize="12"
@@ -49,14 +51,18 @@
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<StackPanel Orientation="Horizontal">
-						<TextBlock Text="{Binding Name}" />
+                        <i:Interaction.Behaviors>
+                            <Behaviors:DoubleClickBehavior Command="{Binding Info}" />
+                        </i:Interaction.Behaviors>
+                        <TextBlock Text="{Binding File.Name}" />
 						<TextBlock Text="     " />
-						<TextBlock Text="{Binding HumaneTotalSize}" />
+						<TextBlock Text="{Binding File.HumaneTotalSize}" />
 					</StackPanel>
-				</DataTemplate>
+                </DataTemplate>
+                
 			</ListBox.ItemTemplate>
 		</ListBox>
-			<Rectangle Grid.ColumnSpan="3"
+		<Rectangle Grid.ColumnSpan="3"
 				   Fill="#FF010104"
 				   Margin="0"
 				   Grid.Row="2"
