@@ -93,7 +93,7 @@ namespace RavenFS.Client
 			return DownloadAsync(filename, new NameValueCollection(), destination);
 		}
 
-		public Task<NameValueCollection> DownloadAsync(string filename, NameValueCollection collection, Stream destination)
+		public Task<NameValueCollection> DownloadAsync(string filename, NameValueCollection collection, Stream destination, Action<string, int> progress = null)
 		{
 			if (destination.CanWrite == false)
 				throw new ArgumentException("Stream does not support writing");
@@ -111,12 +111,16 @@ namespace RavenFS.Client
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
+					foreach (var header in task.Result.Headers.AllKeys)
+					{
+						collection[header] = task.Result.Headers[header];
+					}
 					var responseStream = task.Result.GetResponseStream();
-					return responseStream.CopyToAsync(destination)
+					return responseStream.CopyToAsync(destination, i => progress(filename, i))
 						.ContinueWith(_ =>
 						{
 							task.Result.Close();
-							return new NameValueCollection(task.Result.Headers);
+							return collection;
 						});
 				})
 				.Unwrap();
