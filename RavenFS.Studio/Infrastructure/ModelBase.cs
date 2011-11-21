@@ -1,23 +1,64 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace RavenFS.Studio.Infrastructure
 {
 	public class ModelBase : NotifyPropertyChangedBase
 	{
-		public string GetQueryParam(string name)
+		private Task currentTask;
+		private DateTime lastRefresh;
+		protected TimeSpan RefreshRate { get; set; }
+
+		protected ModelBase()
 		{
-			string url = ApplicationModel.NavigationState;
-			var indexOf = url.IndexOf('?');
-			if (indexOf == -1)
-				return null;
+			RefreshRate = TimeSpan.FromSeconds(5);
+		}
 
-			var options = url.Substring(indexOf + 1).Split(new[] { '&', }, StringSplitOptions.RemoveEmptyEntries);
+		internal void ForceTimerTicked()
+		{
+			lastRefresh = DateTime.MinValue;
+			TimerTicked();
+		}
 
-			return (from option in options
-					where option.StartsWith(name) && option.Length > name.Length && option[name.Length] == '='
-					select option.Substring(name.Length + 1))
-					.FirstOrDefault();
+		internal void TimerTicked()
+		{
+			if (currentTask != null)
+				return;
+
+			lock (this)
+			{
+				if (currentTask != null)
+					return;
+
+				if (DateTime.Now - lastRefresh < GetRefreshRate())
+					return;
+
+				currentTask = TimerTickedAsync();
+
+				if (currentTask == null)
+					return;
+
+				currentTask
+					.Catch()
+					.Finally(() =>
+					{
+						lastRefresh = DateTime.Now;
+						currentTask = null;
+					});
+			}
+		}
+
+		private TimeSpan GetRefreshRate()
+		{
+			//if (Debugger.IsAttached)
+			//    return RefreshRate.Add(TimeSpan.FromMinutes(5));
+			return RefreshRate;
+		}
+
+		protected virtual Task TimerTickedAsync()
+		{
+			return null;
 		}
 	}
 }

@@ -11,7 +11,7 @@ namespace RavenFS.Studio.Models
 
 		public FileInfoModel()
 		{
-			Name = GetQueryParam("name");
+			Name = new UrlParser(UrlUtil.Url).GetQueryParam("name");
 
 			ApplicationModel.Client.GetMetadataForAsync(Name)
 				.ContinueWith(task => Metadata = task.Result);
@@ -26,5 +26,6 @@ namespace RavenFS.Studio.Models
 		}
 
 		public ICommand Download { get { return new DownloadCommand(Name); } }
+		public ICommand Delete { get { return new DeleteCommand(Name); } }
 	}
 }
