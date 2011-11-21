@@ -14,7 +14,6 @@ namespace RavenFS.Studio.Infrastructure
 			if (view == null)
 				return;
 
-
 			view.Loaded += (sender, eventArgs) =>
 			{
 				var modelType = Type.GetType("RavenFS.Studio.Models." + args.NewValue);

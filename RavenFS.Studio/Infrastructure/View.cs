@@ -2,16 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace RavenFS.Studio.Infrastructure
@@ -79,7 +72,6 @@ namespace RavenFS.Studio.Infrastructure
 			}
 			action(model);
 		}
-
 
 		// Dependency property that is bound against the DataContext.
 		// When its value (i.e. the control's DataContext) changes,
