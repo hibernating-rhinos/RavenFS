@@ -92,7 +92,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
-    <Compile Include="Commands\BrowseCommand.cs" />
+    <Compile Include="Commands\UploadCommand.cs" />
     <Compile Include="Commands\DeleteCommand.cs" />
     <Compile Include="Commands\DownloadCommand.cs" />
     <Compile Include="Commands\InfoCommand.cs" />
