@@ -116,7 +116,7 @@
     <Compile Include="Infrastructure\View.cs" />
     <Compile Include="Models\FileInfoModel.cs" />
     <Compile Include="Models\HomePageModel.cs" />
-    <Compile Include="Infrastructure\ModelBase.cs" />
+    <Compile Include="Infrastructure\Model.cs" />
     <Compile Include="Infrastructure\ModelResolver.cs" />
     <Compile Include="Infrastructure\NotifyPropertyChangedBase.cs" />
     <Compile Include="Views\ErrorWindow.xaml.cs">

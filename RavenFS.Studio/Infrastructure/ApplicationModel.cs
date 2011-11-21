@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Windows;
 using System.Windows.Browser;
 using RavenFS.Client;
 
@@ -7,21 +6,10 @@ namespace RavenFS.Studio.Infrastructure
 {
 	public class ApplicationModel
 	{
-		private static string threadSafeNavigationState;
-
 		static ApplicationModel()
 		{
-			threadSafeNavigationState = Application.Current.Host.NavigationState;
-			Application.Current.Host.NavigationStateChanged +=
-				(sender, args) =>
-				{
-					threadSafeNavigationState = args.NewNavigationState;
-				};
 			Client = new RavenFileSystemClient(DetermineUri());
 		}
-
-		public static string NavigationState { get { return threadSafeNavigationState; } }
-
 
 		public static RavenFileSystemClient Client { get; private set; }
 

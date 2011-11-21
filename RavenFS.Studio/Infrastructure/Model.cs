@@ -4,13 +4,13 @@ using System.Threading.Tasks;
 
 namespace RavenFS.Studio.Infrastructure
 {
-	public class ModelBase : NotifyPropertyChangedBase
+	public class Model : NotifyPropertyChangedBase
 	{
 		private Task currentTask;
 		private DateTime lastRefresh;
 		protected TimeSpan RefreshRate { get; set; }
 
-		protected ModelBase()
+		protected Model()
 		{
 			RefreshRate = TimeSpan.FromSeconds(5);
 		}
