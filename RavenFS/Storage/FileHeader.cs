@@ -6,12 +6,17 @@ namespace RavenFS.Storage
 	public class FileHeader
 	{
 		public string Name { get; set; }
-		public long TotalSize { get; set; }
+		public long? TotalSize { get; set; }
 		public long UploadedSize { get; set; }
 
 		public string HumaneTotalSize
 		{
-			get { return Humane(TotalSize); }
+			get
+			{
+				if (TotalSize == null)
+					return "null";
+				return Humane(TotalSize.Value);
+			}
 		}
 
 

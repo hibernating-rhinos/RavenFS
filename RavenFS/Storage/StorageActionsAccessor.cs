@@ -15,7 +15,6 @@ using RavenFS.Util;
 
 namespace RavenFS.Storage
 {
-	[CLSCompliant(false)]
 	public class StorageActionsAccessor : IDisposable
 	{
 		private readonly TableColumnsCache tableColumnsCache;
@@ -105,12 +104,15 @@ namespace RavenFS.Storage
 			return key;
 		}
 
-		public void PutFile(string filename, long totalSize, NameValueCollection metadata)
+		public void PutFile(string filename, long? totalSize, NameValueCollection metadata)
 		{
 			using (var update = new Update(session, Files, JET_prep.Insert))
 			{
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["name"], filename, Encoding.Unicode);
-				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize));
+				if(totalSize!=null)
+				{
+					Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize.Value));
+				}
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"], BitConverter.GetBytes(0));
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
 
@@ -150,7 +152,7 @@ namespace RavenFS.Storage
 
 			using (var update = new Update(session, Files, JET_prep.Replace))
 			{
-				var totalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0);
+				var totalSize = GetTotalSize() ?? 0;
 				var uploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0);
 
 				if (totalSize > 0 && uploadedSize + pageSize > totalSize)
@@ -181,6 +183,14 @@ namespace RavenFS.Storage
 			}
 		}
 
+		private long? GetTotalSize()
+		{
+			var totalSize = Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]);
+			if (totalSize == null)
+				return null;
+			return BitConverter.ToInt64(totalSize, 0);
+		}
+
 		public int ReadPage(HashKey key, byte[] buffer)
 		{
 			Api.JetSetCurrentIndex(session, Pages, "by_keys");
@@ -208,7 +218,7 @@ namespace RavenFS.Storage
 			return new FileHeader
 			{
 				Name = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
-				TotalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0),
+				TotalSize = GetTotalSize(),
 				UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
 				Metadata = HttpUtility.ParseQueryString(metadata)
 			};
@@ -224,7 +234,7 @@ namespace RavenFS.Storage
 			var metadata = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"], Encoding.Unicode);
 			var fileInformation = new FileAndPages
 			{
-				TotalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0),
+				TotalSize = GetTotalSize(),
 				UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
 				Metadata = HttpUtility.ParseQueryString(metadata),
 				Name = filename,
@@ -275,7 +285,7 @@ namespace RavenFS.Storage
 				yield return new FileHeader
 				{
 					Name = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
-					TotalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0),
+					TotalSize = GetTotalSize(),
 					UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
 					Metadata = HttpUtility.ParseQueryString(metadata)
 				};
@@ -349,8 +359,8 @@ namespace RavenFS.Storage
 
 			using (var update = new Update(session, Files, JET_prep.Replace))
 			{
-				var totalSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]), 0);
-				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize * -1));
+				var totalSize = GetTotalSize() ?? 0;
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(Math.Abs(totalSize)));
 
 				update.Save();
 			}

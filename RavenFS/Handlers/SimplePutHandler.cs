@@ -20,9 +20,9 @@ namespace RavenFS.Handlers
 				accessor.Delete(filename);
 
 				var headers = context.Request.Headers.FilterHeaders();
-				var contentLength = context.Request.ContentLength;
+				long? contentLength = context.Request.ContentLength;
 				if (context.Request.Headers["Transfer-Encoding"] == "chunked")
-					contentLength = -1;
+					contentLength = null;
 				accessor.PutFile(filename,
 								 contentLength, 
 								 headers);
@@ -72,10 +72,7 @@ namespace RavenFS.Handlers
 					{
 						if (task.Result == 0) // nothing left to read
 						{
-							parent.Storage.Batch(accessor =>
-							{
-								accessor.CompleteFileUpload(filename);
-							});
+							parent.Storage.Batch(accessor => accessor.CompleteFileUpload(filename));
 							return parent.Completed;
 						}
 
