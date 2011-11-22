@@ -152,10 +152,10 @@ namespace RavenFS.Storage
 
 			using (var update = new Update(session, Files, JET_prep.Replace))
 			{
-				var totalSize = GetTotalSize() ?? 0;
+				var totalSize = GetTotalSize();
 				var uploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0);
 
-				if (totalSize > 0 && uploadedSize + pageSize > totalSize)
+				if (totalSize != null && totalSize >= 0 && uploadedSize + pageSize > totalSize)
 					throw new InvalidDataException("Try to upload more data than the file was allocated for (" + totalSize +
 												   ") and new size would be: " + (uploadedSize + pageSize));
 
@@ -163,9 +163,10 @@ namespace RavenFS.Storage
 
 				// using chunked encoding, we don't know what the size is
 				// we use negative values here for keeping track of the unknown size
-				if (totalSize < 0)
+				if (totalSize == null || totalSize < 0)
 				{
-					Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize - pageSize));
+					var actualSize = totalSize ?? 0;
+					Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(actualSize - pageSize));
 				}
 
 				update.Save();
