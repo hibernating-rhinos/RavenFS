@@ -107,7 +107,7 @@ namespace RavenFS.Client
 				request.AddRange(destination.Position);
 			}
 #endif
-
+			progress = progress ?? delegate { };
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -129,6 +129,7 @@ namespace RavenFS.Client
 		public Task UpdateMetadataAsync(string filename, NameValueCollection metadata)
 		{
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
+			
 			request.Method = "POST";
 			AddHeaders(metadata, request);
 			return request
@@ -167,6 +168,7 @@ namespace RavenFS.Client
 			request.Method = "PUT";
 #if !SILVERLIGHT
 			request.SendChunked = true;
+			request.AllowWriteStreamBuffering = false;
 #endif
 			AddHeaders(metadata, request);
 
