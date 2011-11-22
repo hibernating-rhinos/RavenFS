@@ -8,7 +8,6 @@ using Microsoft.Isam.Esent.Interop;
 
 namespace RavenFS.Storage
 {
-	[CLSCompliant(false)]
 	public static class EsentExtension
 	{
 		public static void WithDatabase(this JET_INSTANCE instance, string database, Action<Session, JET_DBID> action)
