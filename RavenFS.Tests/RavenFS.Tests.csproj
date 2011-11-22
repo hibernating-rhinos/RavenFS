@@ -59,11 +59,14 @@
     <Compile Include="CompleteUsage.cs" />
     <Compile Include="FileHandling.cs" />
     <Compile Include="HttpWebRequestExtensions.cs" />
+    <Compile Include="IisDeploymentUtil.cs" />
+    <Compile Include="IisExpressDriver.cs" />
+    <Compile Include="IisExpressTestClient.cs" />
+    <Compile Include="ProcessDriver.cs" />
     <Compile Include="RemoteFilesHandlerTests.cs" />
     <Compile Include="IOExtensions.cs" />
     <Compile Include="PagesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ServerTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

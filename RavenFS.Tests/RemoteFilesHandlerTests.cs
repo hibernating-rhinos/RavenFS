@@ -2,7 +2,7 @@
 
 namespace RavenFS.Tests
 {
-	public class RemoteFilesHandlerTests : ServerTest
+	public class RemoteFilesHandlerTests : IisExpressTestClient
 	{
 		[Fact]
 		public void CanGetFilesList_Empty()

@@ -5,12 +5,12 @@ using Xunit;
 
 namespace RavenFS.Tests
 {
-	public class CompleteUsage : ServerTest
+	public class CompleteUsage : IisExpressTestClient
 	{
 		[Fact]
 		public void HowToUseTheClient()
 		{
-			var client = new RavenFileSystemClient("http://localhost:9090");
+			var client = NewClient();
 			var uploadTask = client.UploadAsync("dragon.design", new NameValueCollection
 			{
 				{"Customer", "Northwind"},
