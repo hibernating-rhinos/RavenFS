@@ -13,9 +13,7 @@ namespace RavenFS.Storage
 		{
 			get
 			{
-				if (TotalSize == null)
-					return "null";
-				return Humane(TotalSize.Value);
+				return Humane(TotalSize);
 			}
 		}
 
@@ -25,9 +23,12 @@ namespace RavenFS.Storage
 			get { return Humane(UploadedSize); }
 		}
 
-		public static string Humane(long size)
+		public static string Humane(long? size)
 		{
-			var absSize = Math.Abs(size);
+			if (size == null)
+				return null;
+
+			var absSize = Math.Abs(size.Value);
 			const double GB = 1024 * 1024 * 1024;
 			const double MB = 1024 * 1024 ;
 			const double KB = 1024;
