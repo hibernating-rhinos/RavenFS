@@ -9,7 +9,6 @@ using Microsoft.Isam.Esent.Interop;
 
 namespace RavenFS.Storage
 {
-	[CLSCompliant(false)]
 	public class SchemaCreator
 	{
 		public const string SchemaVersion = "0.1";
@@ -222,7 +221,7 @@ namespace RavenFS.Storage
 			{
 				coltyp = JET_coltyp.Binary,
 				cbMax = 8,
-				grbit = ColumndefGrbit.ColumnFixed | ColumndefGrbit.ColumnNotNULL
+				grbit = ColumndefGrbit.ColumnFixed
 			}, null, 0, out columnid);
 
 			Api.JetAddColumn(session, tableid, "uploaded_size", new JET_COLUMNDEF

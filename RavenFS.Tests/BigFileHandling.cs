@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace RavenFS.Tests
 {
-	public class BigFileHandling : ServerTest
+	public class BigFileHandling : IisExpressTestClient
 	{
 		[Theory]
 		[InlineData(1024 * 1024)]		// 1 mb

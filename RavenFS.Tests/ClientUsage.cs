@@ -5,10 +5,8 @@ using Xunit;
 
 namespace RavenFS.Tests
 {
-	public class ClientUsage : ServerTest
+	public class ClientUsage : IisExpressTestClient
 	{
-		private readonly RavenFileSystemClient client = new RavenFileSystemClient("http://localhost:9090");
-
         [Fact]
         public void CanUpdateJustMetadata()
         {
@@ -18,7 +16,7 @@ namespace RavenFS.Tests
             streamWriter.Write(expected);
             streamWriter.Flush();
             ms.Position = 0;
-
+        	var client = NewClient();
             client.UploadAsync("abc.txt",new NameValueCollection
                                         {
                                             {"test", "1"}
@@ -45,9 +43,11 @@ namespace RavenFS.Tests
 			streamWriter.Flush();
 			ms.Position = 0;
 
+			var client = NewClient(); 
 			client.UploadAsync("abc.txt", ms).Wait();
 
-			Assert.Equal(expected, webClient.DownloadString("/files/abc.txt"));
+			var downloadString = webClient.DownloadString("/files/abc.txt");
+			Assert.Equal(expected, downloadString);
 		}
 
 		[Fact]
@@ -59,7 +59,7 @@ namespace RavenFS.Tests
 			streamWriter.Write(expected);
 			streamWriter.Flush();
 			ms.Position = 0;
-
+			var client = NewClient();
 			client.UploadAsync("abc.txt", new NameValueCollection
 			{
 				{"test", "value"},
@@ -83,7 +83,7 @@ namespace RavenFS.Tests
 			streamWriter.Write(expected);
 			streamWriter.Flush();
 			ms.Position = 0;
-
+			var client = NewClient();
 			client.UploadAsync("abc.txt", new NameValueCollection
 			{
 				{"Test", "value"},
@@ -107,7 +107,7 @@ namespace RavenFS.Tests
 			streamWriter.Write(expected);
 			streamWriter.Flush();
 			ms.Position = 0;
-
+			var client = NewClient();
 			client.UploadAsync("abc.txt", ms).Wait();
 
 			var ms2 = new MemoryStream();
@@ -129,7 +129,7 @@ namespace RavenFS.Tests
 			streamWriter.Write(expected);
 			streamWriter.Flush();
 			ms.Position = 0;
-
+			var client = NewClient();
 			client.UploadAsync("abc.txt", ms).Wait();
 
 			var ms2 = new MemoryStream();

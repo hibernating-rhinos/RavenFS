@@ -202,7 +202,6 @@ namespace RavenFS.Storage
 			}
 		}
 
-		[CLSCompliant(false)]
 		[DebuggerHidden, DebuggerNonUserCode, DebuggerStepThrough]
 		public void Batch(Action<StorageActionsAccessor> action)
 		{

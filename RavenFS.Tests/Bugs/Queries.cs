@@ -5,15 +5,12 @@ using Xunit;
 
 namespace RavenFS.Tests.Bugs
 {
-	public class Queries : ServerTest
+	public class Queries : IisExpressTestClient
 	{
-		private readonly RavenFileSystemClient client = new RavenFileSystemClient("http://localhost:9090");
-
-
 		[Fact]
 		public void CanQueryMultipleFiles()
 		{
-
+			var client = NewClient();
 			var ms = new MemoryStream();
 			var streamWriter = new StreamWriter(ms);
 			var expected = new string('a', 1024);
@@ -45,7 +42,7 @@ namespace RavenFS.Tests.Bugs
 		[Fact]
 		public void WillGetOneItemWhenSavingDocumentTwice()
 		{
-
+			var client = NewClient();
 			var ms = new MemoryStream();
 			var streamWriter = new StreamWriter(ms);
 			var expected = new string('a', 1024);
@@ -81,6 +78,7 @@ namespace RavenFS.Tests.Bugs
 		public void ShouldEncodeValues()
 		{
 
+			var client = NewClient(); 
 			var ms = new MemoryStream();
 			var streamWriter = new StreamWriter(ms);
 			var expected = new string('a', 1024);

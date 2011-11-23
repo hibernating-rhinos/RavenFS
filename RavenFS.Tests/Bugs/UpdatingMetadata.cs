@@ -5,14 +5,13 @@ using Xunit;
 
 namespace RavenFS.Tests.Bugs
 {
-	public class UpdatingMetadata : ServerTest
+	public class UpdatingMetadata : IisExpressTestClient
 	{
-		private readonly RavenFileSystemClient client = new RavenFileSystemClient("http://localhost:9090");
-
-
+		
 		[Fact]
 		public void CanUpdateMetadata()
 		{
+			var client = NewClient(); 
 			var ms = new MemoryStream();
 			var streamWriter = new StreamWriter(ms);
 			var expected = new string('a', 1024);

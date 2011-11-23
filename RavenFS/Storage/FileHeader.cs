@@ -6,12 +6,15 @@ namespace RavenFS.Storage
 	public class FileHeader
 	{
 		public string Name { get; set; }
-		public long TotalSize { get; set; }
+		public long? TotalSize { get; set; }
 		public long UploadedSize { get; set; }
 
 		public string HumaneTotalSize
 		{
-			get { return Humane(TotalSize); }
+			get
+			{
+				return Humane(TotalSize);
+			}
 		}
 
 
@@ -20,9 +23,12 @@ namespace RavenFS.Storage
 			get { return Humane(UploadedSize); }
 		}
 
-		public static string Humane(long size)
+		public static string Humane(long? size)
 		{
-			var absSize = Math.Abs(size);
+			if (size == null)
+				return null;
+
+			var absSize = Math.Abs(size.Value);
 			const double GB = 1024 * 1024 * 1024;
 			const double MB = 1024 * 1024 ;
 			const double KB = 1024;
