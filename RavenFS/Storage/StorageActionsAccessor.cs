@@ -288,7 +288,16 @@ namespace RavenFS.Storage
 			if (Api.TryMoveFirst(session, Files) == false)
 				yield break;
 
-			Api.JetMove(session, Files, start, MoveGrbit.None);
+			try
+			{
+				Api.JetMove(session, Files, start, MoveGrbit.None);
+			}
+			catch (EsentErrorException e)
+			{
+				if(e.Error==JET_err.NoCurrentRecord)
+					yield break;
+				throw;
+			}
 
 			int index = 0;
 
