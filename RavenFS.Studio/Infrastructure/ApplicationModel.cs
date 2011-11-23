@@ -30,5 +30,10 @@ namespace RavenFS.Studio.Infrastructure
 				Path = localPath
 			}.Uri.ToString();
 		}
+
+		public static Uri GetFileUrl(string fileName)
+		{
+			return new Uri(DetermineUri()+"/files/"+fileName);
+		}
 	}
 }
