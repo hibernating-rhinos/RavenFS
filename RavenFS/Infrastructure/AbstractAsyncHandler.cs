@@ -67,7 +67,7 @@ namespace RavenFS.Infrastructure
 					pos = (int)memoryStream.Position;
 				}
 				context.Response.ContentType = "application/json";
-
+				context.Response.Expires = -1; // we don't allow caching of the json responses
 				return context.Response.OutputStream.WriteAsync(buffer, 0, pos)
 					.ContinueWith(task => BufferPool.ReturnBuffer(buffer));
 			}
