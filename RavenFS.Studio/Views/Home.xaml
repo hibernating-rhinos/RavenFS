@@ -4,6 +4,7 @@
                      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                      xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
+                     xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
                      xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
                      xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
                      xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors"
@@ -44,7 +45,36 @@
 					 Grid.Row="1"
 					 Grid.ColumnSpan="2"
 					 d:LayoutOverrides="GridBox" />
-		<ListBox x:Name="FilesList"
+        
+        <StackPanel  Orientation="Horizontal"
+                     VerticalAlignment="Bottom" Grid.Column="2" Margin="8,0,18,8" Grid.Row="3">
+            <HyperlinkButton Command="{Binding Path=Pager.PrevPage}"
+                             
+                             ToolTipService.ToolTip="Previous Page">
+                <HyperlinkButton.Content>
+                    <Image Source="{StaticResource Image_PreviousPage_Tiny}"
+                           Stretch="None"
+                           VerticalAlignment="Center" />
+                </HyperlinkButton.Content>
+            </HyperlinkButton>
+            <TextBlock Text="Page "
+                       VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Path=Pager.CurrentPage}"
+                       VerticalAlignment="Center" />
+            <TextBlock Text=" of "
+                       VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Path=Pager.TotalPages}"
+                       VerticalAlignment="Center" />
+            <HyperlinkButton Command="{Binding Path=Pager.NextPage}"
+                             ToolTipService.ToolTip="Next Page">
+                <HyperlinkButton.Content>
+                    <Image Source="{StaticResource Image_NextPage_Tiny}"
+                           Stretch="None"
+                           VerticalAlignment="Center" />
+                </HyperlinkButton.Content>
+            </HyperlinkButton>
+        </StackPanel>
+        <ListBox x:Name="FilesList"
                  Grid.ColumnSpan="3"
 				 Margin="10"
 				 Grid.Row="4"

@@ -92,6 +92,8 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
+    <Compile Include="Commands\NavigateToNextPageCommand.cs" />
+    <Compile Include="Commands\NavigateToPrevPageCommand.cs" />
     <Compile Include="Commands\UploadCommand.cs" />
     <Compile Include="Commands\DeleteCommand.cs" />
     <Compile Include="Commands\DownloadCommand.cs" />
@@ -99,6 +101,8 @@
     <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
     <Compile Include="Infrastructure\ApplicationModel.cs" />
     <Compile Include="Infrastructure\BindableCollection.cs" />
+    <Compile Include="Infrastructure\Command.cs" />
+    <Compile Include="Infrastructure\PagerModel.cs" />
     <Compile Include="Infrastructure\UrlUtil.cs" />
     <Compile Include="Infrastructure\UrlParser.cs" />
     <Compile Include="Infrastructure\Observable.cs" />
@@ -145,6 +149,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Resource>
+    <Page Include="Assets\Images\Images.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Converters\Converters.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -190,6 +198,35 @@
       <Project>{4FC11663-0B21-4AA2-B092-02F75AEB8CF6}</Project>
       <Name>RavenFS.Client.Silverlight</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Images\add.png" />
+    <Resource Include="Assets\Images\BackgroundTexture.png" />
+    <Resource Include="Assets\Images\BackgroundTextureBottom.png" />
+    <Resource Include="Assets\Images\database.png" />
+    <Resource Include="Assets\Images\database_add.png" />
+    <Resource Include="Assets\Images\Debug.png" />
+    <Resource Include="Assets\Images\DeleteHS.png" />
+    <Resource Include="Assets\Images\document-index-icon.png" />
+    <Resource Include="Assets\Images\document-new.png" />
+    <Resource Include="Assets\Images\Document.png" />
+    <Resource Include="Assets\Images\document_page_next.png" />
+    <Resource Include="Assets\Images\document_page_previous.png" />
+    <Resource Include="Assets\Images\document_prepare.png" />
+    <Resource Include="Assets\Images\Edit.png" />
+    <Resource Include="Assets\Images\Error.png" />
+    <Resource Include="Assets\Images\FooterTexture.png" />
+    <Resource Include="Assets\Images\HtmlBalanceBracesHS.png" />
+    <Content Include="Assets\Images\ImageCredits.txt" />
+    <Resource Include="Assets\Images\Info.png" />
+    <Resource Include="Assets\Images\Query.png" />
+    <Resource Include="Assets\Images\RavenDBLogo.png" />
+    <Resource Include="Assets\Images\RefreshSmall.png" />
+    <Resource Include="Assets\Images\Remove.png" />
+    <Resource Include="Assets\Images\Save.png" />
+    <Resource Include="Assets\Images\Shortcut.png" />
+    <Resource Include="Assets\Images\Undo.png" />
+    <Resource Include="Assets\Images\Warning.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
