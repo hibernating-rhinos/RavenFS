@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio
 {
@@ -27,20 +28,12 @@ namespace RavenFS.Studio
             this.RootVisual = new MainPage();
         }
 
-        private void Application_UnhandledException(object sender, ApplicationUnhandledExceptionEventArgs e)
-        {
-            // If the app is running outside of the debugger then report the exception using
-            // a ChildWindow control.
-            if (!System.Diagnostics.Debugger.IsAttached)
-            {
-                // NOTE: This will allow the application to continue running after an exception has been thrown
-                // but not handled. 
-                // For production applications this error handling should be replaced with something that will 
-                // report the error to the website and stop the application.
-                e.Handled = true;
-                ChildWindow errorWin = new ErrorWindow(e.ExceptionObject);
-                errorWin.Show();
-            }
-        }
+		private void Application_UnhandledException(object sender, ApplicationUnhandledExceptionEventArgs e)
+		{
+			if (System.Diagnostics.Debugger.IsAttached) return;
+
+			e.Handled = true;
+			var ex = e.ExceptionObject;
+		}
     }
 }

@@ -102,6 +102,7 @@
     <Compile Include="Infrastructure\ApplicationModel.cs" />
     <Compile Include="Infrastructure\BindableCollection.cs" />
     <Compile Include="Infrastructure\Command.cs" />
+    <Compile Include="Infrastructure\ErrorPresenter.cs" />
     <Compile Include="Infrastructure\PagerModel.cs" />
     <Compile Include="Infrastructure\UrlUtil.cs" />
     <Compile Include="Infrastructure\UrlParser.cs" />
@@ -119,10 +120,10 @@
     <Compile Include="Infrastructure\InvocationExtensions.cs" />
     <Compile Include="Infrastructure\View.cs" />
     <Compile Include="Models\FileInfoModel.cs" />
-    <Compile Include="Models\HomePageModel.cs" />
     <Compile Include="Infrastructure\Model.cs" />
     <Compile Include="Infrastructure\ModelResolver.cs" />
     <Compile Include="Infrastructure\NotifyPropertyChangedBase.cs" />
+    <Compile Include="Models\HomePageModel.cs" />
     <Compile Include="Views\ErrorWindow.xaml.cs">
       <DependentUpon>ErrorWindow.xaml</DependentUpon>
     </Compile>

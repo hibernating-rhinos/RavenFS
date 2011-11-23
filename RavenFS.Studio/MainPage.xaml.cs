@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio
 {
@@ -41,11 +42,10 @@ namespace RavenFS.Studio
         }
 
         // If an error occurs during navigation, show an error window
-        private void ContentFrame_NavigationFailed(object sender, NavigationFailedEventArgs e)
-        {
-            e.Handled = true;
-            ChildWindow errorWin = new ErrorWindow(e.Uri);
-            errorWin.Show();
-        }
+		private void ContentFrame_NavigationFailed(object sender, NavigationFailedEventArgs e)
+		{
+			e.Handled = true;
+			ErrorPresenter.Show(e.Exception);
+		}
     }
 }
