@@ -1,10 +1,9 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Input;
+﻿using System.Windows;
+using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Commands
 {
-	public class InfoCommand:ICommand
+	public class InfoCommand : Command
 	{
 		private readonly string fileName;
 
@@ -13,16 +12,9 @@ namespace RavenFS.Studio.Commands
 			this.fileName = fileName;
 		}
 
-		public bool CanExecute(object parameter)
-		{
-			return true;
-		}
-
-		public void Execute(object parameter)
+		public override void Execute(object parameter)
 		{
 			Application.Current.Host.NavigationState = "/fileInfo?name=" + fileName;
 		}
-
-		public event EventHandler CanExecuteChanged;
 	}
 }

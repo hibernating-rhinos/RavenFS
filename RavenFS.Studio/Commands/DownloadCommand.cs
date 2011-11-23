@@ -6,7 +6,7 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Commands
 {
-	public class DownloadCommand :ICommand
+	public class DownloadCommand : Command
 	{
 		private string FileName;
 
@@ -18,12 +18,8 @@ namespace RavenFS.Studio.Commands
 		{
 			FileName = fileName;
 		}
-		public bool CanExecute(object parameter)
-		{
-			return true;
-		}
 
-		public void Execute(object parameter)
+		public override void Execute(object parameter)
 		{
 			var item = parameter as FileInfoWrapper;
 			if (item != null)
@@ -51,7 +47,5 @@ namespace RavenFS.Studio.Commands
 	
 			Application.Current.Host.NavigationState += "?" + Guid.NewGuid();
 		}
-
-		public event EventHandler CanExecuteChanged;
 	}
 }

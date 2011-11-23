@@ -7,14 +7,9 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Commands
 {
-	public class UploadCommand : ICommand
+	public class UploadCommand : Command
 	{
-		public bool CanExecute(object parameter)
-		{
-			return true;
-		}
-
-		public void Execute(object parameter)
+		public override void Execute(object parameter)
 		{
 			var fileDialog = new OpenFileDialog();
 			var result = fileDialog.ShowDialog();
@@ -38,7 +33,5 @@ namespace RavenFS.Studio.Commands
 		{
 			
 		}
-
-		public event EventHandler CanExecuteChanged = delegate { };
 	}
 }
