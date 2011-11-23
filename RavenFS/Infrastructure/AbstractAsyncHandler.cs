@@ -49,7 +49,7 @@ namespace RavenFS.Infrastructure
 			return Tuple.Create(start, pageSize);
 		}
 
-		protected Task WriteArray(HttpContext context, IEnumerable fileHeaders)
+		protected Task WriteJson(HttpContext context, object obj)
 		{
 			var buffer = TakeBuffer();
 			try
@@ -59,7 +59,7 @@ namespace RavenFS.Infrastructure
 				using (var streamWriter = new StreamWriter(memoryStream))
 				using (var jsonTextWriter = new JsonTextWriter(streamWriter))
 				{
-					JsonSerializerFactory.Create().Serialize(jsonTextWriter, fileHeaders);
+					JsonSerializerFactory.Create().Serialize(jsonTextWriter, obj);
 
 					jsonTextWriter.Flush();
 					streamWriter.Flush();
@@ -77,6 +77,7 @@ namespace RavenFS.Infrastructure
 				throw;
 			}
 		}
+
 
 		private Task ProcessRequestAsync(HttpContext context, AsyncCallback cb)
 		{

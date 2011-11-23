@@ -72,19 +72,11 @@ namespace RavenFS.Storage
 			}, bytes, bytes.Length, out fileCount);
 
 
-			JET_COLUMNID pageCount;
-			Api.JetAddColumn(session, tableid, "page_count", new JET_COLUMNDEF
-			{
-				coltyp = JET_coltyp.Long,
-				grbit = ColumndefGrbit.ColumnNotNULL | ColumndefGrbit.ColumnFixed | ColumndefGrbit.ColumnEscrowUpdate
-			}, bytes, bytes.Length, out pageCount);
-
 			using (var update = new Update(session, tableid, JET_prep.Insert))
 			{
 				Api.SetColumn(session, tableid, id, Guid.NewGuid().ToByteArray());
 				Api.SetColumn(session, tableid, schemaVersion, SchemaVersion, Encoding.Unicode);
 				Api.SetColumn(session, tableid, fileCount, 0);
-				Api.SetColumn(session, tableid, pageCount, 0);
 				update.Save();
 			}
 		}

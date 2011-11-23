@@ -21,7 +21,7 @@ namespace RavenFS.Storage
 		private readonly Session session;
 		private readonly JET_DBID database;
 
-		private Table files, usage, pages;
+		private Table files, usage, pages, details;
 		private readonly Transaction transaction;
 
 		private Table Files
@@ -38,6 +38,12 @@ namespace RavenFS.Storage
 		{
 			get { return pages ?? (pages = new Table(session, database, "pages", OpenTableGrbit.None)); }
 		}
+
+		private Table Details
+		{
+			get { return details ?? (details = new Table(session, database, "details", OpenTableGrbit.None)); }
+		}
+
 
 		public StorageActionsAccessor(TableColumnsCache tableColumnsCache, JET_INSTANCE instance, string databaseName)
 		{
@@ -57,6 +63,8 @@ namespace RavenFS.Storage
 
 		public void Dispose()
 		{
+			if (details != null)
+				details.Dispose();
 			if (pages != null)
 				pages.Dispose();
 			if (usage != null)
@@ -118,6 +126,10 @@ namespace RavenFS.Storage
 
 				update.Save();
 			}
+			if (Api.TryMoveFirst(session, Details) == false)
+				throw new InvalidOperationException("Could not find system metadata row");
+
+			Api.EscrowUpdate(session, Details, tableColumnsCache.DetailsColumns["file_count"], 1);
 		}
 
 		private static string ToQueryString(NameValueCollection metadata)
@@ -302,6 +314,11 @@ namespace RavenFS.Storage
 				return;
 			Api.JetDelete(session, Files);
 
+			if (Api.TryMoveFirst(session, Details) == false)
+				throw new InvalidOperationException("Could not find system metadata row");
+
+			Api.EscrowUpdate(session, Details, tableColumnsCache.DetailsColumns["file_count"], -1);
+
 			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
 			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			if (!Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
@@ -365,6 +382,14 @@ namespace RavenFS.Storage
 
 				update.Save();
 			}
+		}
+
+		public int GetFileCount()
+		{
+			if (Api.TryMoveFirst(session, Details) == false)
+				throw new InvalidOperationException("Could not find system metadata row");
+
+			return Api.RetrieveColumnAsInt32(session, Details, tableColumnsCache.DetailsColumns["file_count"]).Value;
 		}
 	}
 }

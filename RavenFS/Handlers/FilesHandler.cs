@@ -21,7 +21,7 @@ namespace RavenFS.Handlers
 			});
 
 
-			return WriteArray(context, fileHeaders);
+			return WriteJson(context, fileHeaders);
 		}
 	}
 }

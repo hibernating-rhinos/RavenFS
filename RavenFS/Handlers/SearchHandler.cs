@@ -21,7 +21,7 @@ namespace RavenFS.Handlers
 
 			Storage.Batch(accessor => list.AddRange(keys.Select(accessor.ReadFile)));
 
-			return WriteArray(context, list);
+			return WriteJson(context, list);
 		}
 	}
 }
