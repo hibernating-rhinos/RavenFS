@@ -7,7 +7,7 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Commands
 {
-	public class BrowseCommand : ICommand
+	public class UploadCommand : ICommand
 	{
 		public bool CanExecute(object parameter)
 		{

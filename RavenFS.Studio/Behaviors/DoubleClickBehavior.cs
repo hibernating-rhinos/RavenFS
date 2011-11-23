@@ -23,7 +23,6 @@ namespace RavenFS.Studio.Behaviors
 			set { SetValue(CommandParameterProperty, value); }
 		}
 
-
 		public static readonly DependencyProperty CommandProperty = DependencyProperty.Register
 			("Command", typeof(ICommand), typeof(DoubleClickBehavior), new PropertyMetadata(CommandChanged));
 

@@ -34,7 +34,6 @@ namespace RavenFS.Studio.Infrastructure
 			return parent.ContinueWith(task => action(task.Result));
 		}
 
-
 		public static Task<bool> ContinueWhenTrue(this Task<bool> parent, Action action)
 		{
 			return parent.ContinueWith(task =>

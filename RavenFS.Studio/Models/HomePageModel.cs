@@ -6,9 +6,11 @@ using System.Linq;
 
 namespace RavenFS.Studio.Models
 {
-	public class HomePageModel : Model
+	public class HomePageModel : PagerModel
 	{
-		public ICommand Browse { get { return new BrowseCommand(); } }
+		public ICommand Upload { get { return new UploadCommand(); } }
+		public ICommand Download { get { return new DownloadCommand(); } }
+		public PagerModel Pager { get; private set; }
 
 		public BindableCollection<FileInfoWrapper> Files { get; set; }
 
@@ -16,12 +18,17 @@ namespace RavenFS.Studio.Models
 		{
 			Files = new BindableCollection<FileInfoWrapper>(EqualityComparer<FileInfoWrapper>.Default);
 
-			ForceTimerTicked();
+			var NumberOfItems = new Observable<long>();
+			NumberOfItems.Value = 6;
+
+			Pager = new PagerModel();
+			Pager.SetTotalResults(NumberOfItems);
+			Pager.Navigated += (sender, args) => ForceTimerTicked();		
 		}
 
 		protected override System.Threading.Tasks.Task TimerTickedAsync()
 		{
-			return ApplicationModel.Client.BrowseAsync()
+			return ApplicationModel.Client.BrowseAsync(Pager.CurrentPage,Pager.PageSize)
 				.ContinueOnSuccess(result => Files.Match(result.Select(x => new FileInfoWrapper(x)).ToList()));
 		}
 	}
