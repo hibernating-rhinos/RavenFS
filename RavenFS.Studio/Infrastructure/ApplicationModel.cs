@@ -17,7 +17,7 @@ namespace RavenFS.Studio.Infrastructure
 		{
 			if (HtmlPage.Document.DocumentUri.Scheme == "file")
 			{
-				return "http://ipv4.fiddler";
+				return "http://localhost";
 			}
 			var localPath = HtmlPage.Document.DocumentUri.LocalPath;
 			var lastIndexOfRaven = localPath.LastIndexOf("/raven/");
