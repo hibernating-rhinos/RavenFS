@@ -33,7 +33,7 @@ namespace RavenFS.Studio
 			if (System.Diagnostics.Debugger.IsAttached) return;
 
 			e.Handled = true;
-			var ex = e.ExceptionObject;
+			ErrorPresenter.Show(e.ExceptionObject);
 		}
     }
 }

@@ -29,6 +29,20 @@ namespace RavenFS.Client
 				this.baseUrl = this.baseUrl.Substring(0, this.baseUrl.Length - 1);
 		}
 
+		public Task<ServerStats> StatsAsync()
+		{
+			var requestUriString = baseUrl + "/stats";
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+			return request.GetResponseAsync()
+				.ContinueWith(task =>
+				{
+					using (var stream = task.Result.GetResponseStream())
+					{
+						return new JsonSerializer().Deserialize<ServerStats>(new JsonTextReader(new StreamReader(stream)));
+					}
+				});
+		}
+
 		public Task DeleteAsync(string filename)
 		{
 			var requestUriString = baseUrl + "/files/" + Uri.EscapeDataString(filename);

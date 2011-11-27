@@ -10,7 +10,7 @@ namespace RavenFS.Studio.Infrastructure
 
 		public PagerModel()
 		{
-			PageSize = 2;
+			PageSize = 25;
 			SetTotalResults(new Observable<long>());
 		}
 
@@ -26,15 +26,21 @@ namespace RavenFS.Studio.Infrastructure
 
 		public int PageSize { get; set; }
 
+		public int Start
+		{
+			get { return (CurrentPage - 1) * PageSize; }
+		}
+
 		public int CurrentPage
 		{
 			get { return Skip / PageSize + 1; }
 		}
 
 		public Observable<long> TotalResults { get; private set; }
+
 		public long TotalPages
 		{
-			get { return TotalResults.Value / PageSize + 1; }
+			get { return TotalResults.Value / PageSize +  (TotalResults.Value % PageSize == 0 ? 0 : 1); }
 		}
 
 		private ushort? skip;
