@@ -44,7 +44,10 @@
 					 Margin="10"
 					 Grid.Row="1"
 					 Grid.ColumnSpan="2"
-					 d:LayoutOverrides="GridBox" />
+					 d:LayoutOverrides="GridBox"
+                     Value="{Binding TotalBytesUploaded}"
+                     Minimum="0"
+                     Maximum="{Binding TotalUploadFileSize}"/>
         
         <StackPanel  Orientation="Horizontal"
                      VerticalAlignment="Bottom" Grid.Column="2" Margin="8,0,18,8" Grid.Row="3">
