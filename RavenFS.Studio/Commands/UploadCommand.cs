@@ -9,6 +9,15 @@ namespace RavenFS.Studio.Commands
 {
 	public class UploadCommand : Command
 	{
+		private readonly Observable<long> totalUploadFileSize;
+		private readonly Observable<long> totalBytesUploaded;
+
+		public UploadCommand(Observable<long> totalUploadFileSize, Observable<long> totalBytesUploaded)
+		{
+			this.totalUploadFileSize = totalUploadFileSize;
+			this.totalBytesUploaded = totalBytesUploaded;
+		}
+
 		public override void Execute(object parameter)
 		{
 			var fileDialog = new OpenFileDialog();
@@ -17,7 +26,7 @@ namespace RavenFS.Studio.Commands
 				return;
 
 			var stream = fileDialog.File.OpenRead();
-			var length = stream.Length;
+			totalUploadFileSize.Value = stream.Length;
 			ApplicationModel.Client.UploadAsync(fileDialog.File.Name, new NameValueCollection(), stream, Progress)
 				.ContinueWith(task =>
 				{
@@ -31,7 +40,7 @@ namespace RavenFS.Studio.Commands
 
 		private void Progress(string file, int uploaded)
 		{
-			
+			totalBytesUploaded.Value = uploaded;
 		}
 	}
 }
