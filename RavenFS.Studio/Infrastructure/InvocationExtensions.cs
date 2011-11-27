@@ -114,7 +114,10 @@ namespace RavenFS.Studio.Infrastructure
 			parent.ContinueWith(task =>
 			{
 				if (task.IsFaulted == false)
+				{
+					ErrorPresenter.Hide();
 					return;
+				}
 
 				var ex = task.Exception.ExtractSingleInnerException();
 				Deployment.Current.Dispatcher.InvokeAsync(() => ErrorPresenter.Show(ex, stackTrace))

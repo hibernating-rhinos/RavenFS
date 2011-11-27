@@ -5,7 +5,7 @@ namespace RavenFS.Studio.Infrastructure
 {
 	public static class ErrorPresenter
 	{
-		private static bool isErrorWindowVisible;
+		private static ErrorWindow window;
 
 		public static void Show(Uri uri, Exception e)
 		{
@@ -29,13 +29,20 @@ namespace RavenFS.Studio.Infrastructure
 
 		public static void Show(string message, string details)
 		{
-			if (isErrorWindowVisible)
+			if (window != null)
 				return;
 
-			isErrorWindowVisible = true;
-			var window = new ErrorWindow(message, details);
-			window.Closed += (sender, args) => isErrorWindowVisible = false;
+			window = new ErrorWindow(message, details);
+			window.Closed += (sender, args) => window = null;
 			window.Show();
+		}
+
+		public static void Hide()
+		{
+			if (window == null)
+				return;
+
+			window.Dispatcher.InvokeAsync(window.Close);
 		}
 	}
 }
