@@ -1,7 +1,4 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
+﻿using System.Windows.Controls;
 using RavenFS.Client;
 using RavenFS.Studio.Infrastructure;
 
@@ -34,8 +31,6 @@ namespace RavenFS.Studio.Commands
 					task.Wait();
 					return task;
 				});
-
-			Application.Current.Host.NavigationState += "?" + Guid.NewGuid();
 		}
 
 		private void Progress(string file, int uploaded)
