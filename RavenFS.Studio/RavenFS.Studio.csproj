@@ -102,6 +102,7 @@
     <Compile Include="Infrastructure\ApplicationModel.cs" />
     <Compile Include="Infrastructure\BindableCollection.cs" />
     <Compile Include="Infrastructure\Command.cs" />
+    <Compile Include="Infrastructure\ErrorHandler.cs" />
     <Compile Include="Infrastructure\ErrorPresenter.cs" />
     <Compile Include="Infrastructure\PagerModel.cs" />
     <Compile Include="Infrastructure\UrlUtil.cs" />

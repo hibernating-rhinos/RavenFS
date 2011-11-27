@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Infrastructure;
@@ -24,7 +26,7 @@ namespace RavenFS.Studio.Models
 
 			Pager = new PagerModel();
 			Pager.SetTotalResults(NumberOfItems);
-			Pager.Navigated += (sender, args) => ForceTimerTicked();
+			Pager.Navigated += (sender, args) => TimerTickedAsync();
 		}
 
 		protected override System.Threading.Tasks.Task TimerTickedAsync()

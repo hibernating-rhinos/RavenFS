@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Threading.Tasks;
 using Raven.Client.Extensions;
@@ -105,15 +106,19 @@ namespace RavenFS.Studio.Infrastructure
 			return parent.Catch(e => { });
 		}
 
-		public static Task Catch(this Task parent, Action<Exception> action)
+		
+
+		public static Task Catch(this Task parent, Action<AggregateException> action)
 		{
+			var stackTrace = new StackTrace();
 			parent.ContinueWith(task =>
 			{
 				if (task.IsFaulted == false)
 					return;
 
-				Deployment.Current.Dispatcher.InvokeAsync(() => new ErrorWindow(task.Exception.ExtractSingleInnerException()).Show())
-					.ContinueWith(_ => action(task.Exception));
+				var ex = task.Exception.ExtractSingleInnerException();
+				Deployment.Current.Dispatcher.InvokeAsync(() => ErrorPresenter.Show(ex, stackTrace))
+						.ContinueWith(_ => action(task.Exception));
 			});
 
 			return parent;
