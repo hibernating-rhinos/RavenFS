@@ -9,7 +9,9 @@ properties {
   $release_dir = "$base_dir\Release"
   $uploader = "..\Uploader\S3Uploader.exe"
   
-  $ravenfs_web = @( "RavenFS.???" );
+  $ravenfs_web = @( "RavenFS.???", "AsyncCtpLibrary.???", "Esent.Interop.???", "Lucene.Net.???", "Newtonsoft.Json.???", "NLog.??" );
+  $ravenfs_client = @( "RavenFS.Client.???", "AsyncCtpLibrary.???", "Newtonsoft.Json.???" );
+  $ravenfs_silverlight = @( "RavenFS.Client.Silverlight.???", "AsyncCtpLibrary_Silverlight.???", "Newtonsoft.Json.Silverlight.???" );
       
   $test_prjs = @("RavenFS.Tests.dll" );
 }
@@ -61,9 +63,9 @@ task Init -depends Verify40, Clean {
 		Generate-Assembly-Info `
 			-file $asmInfo `
 			-title "$projectName $version.0.0" `
-			-description "A linq enabled document database for .NET" `
+			-description "A distributed, replicated, file server for .NET" `
 			-company "Hibernating Rhinos" `
-			-product "RavenDB $version.0.0" `
+			-product "RavenFS $version.0.0" `
 			-version "$version.0" `
 			-fileversion "1.0.$env:buildlabel.0" `
 			-copyright "Copyright © Hibernating Rhinos and Ayende Rahien 2004 - 2010" `
@@ -137,10 +139,35 @@ task ZipOutput {
 
 }
 
+task CleanOutputDirectory { 
+	remove-item $build_dir\Output -Recurse -Force  -ErrorAction SilentlyContinue
+}
+
+task PrepareForZip -depends CleanOutputDirectory {
+    mkdir $build_dir\Output
+    mkdir $build_dir\Output\Web
+    mkdir $build_dir\Output\Web\bin
+    mkdir $build_dir\Output\Silverlight
+    mkdir $build_dir\Output\Client
+
+  foreach($file in $ravenfs_web) {
+    cp "$build_dir\$file" $build_dir\Output\Web\bin
+  }
+  cp "$base_dir\DefaultConfigs\Web.config" $build_dir\Output\Web
+
+  foreach($client_dll in $ravenfs_client) {
+    cp "$build_dir\$client_dll" $build_dir\Output\Client
+  }
+
+  foreach($client_dll in $ravenfs_silverlight) {
+    cp "$build_dir\$client_dll" $build_dir\Output\Silverlight
+  }
+}
+
 task DoRelease -depends Compile, `
-	ZipOutput, `
-	ResetBuildArtifcats {	
-	Write-Host "Done building RavenDB"
+    PrepareForZip, `
+	ZipOutput {	
+	Write-Host "Done building RavenFS"
 }
 
 

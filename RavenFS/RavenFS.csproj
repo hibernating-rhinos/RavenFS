@@ -70,8 +70,6 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ClientAccessPolicy.xml" />
-    <Content Include="ReadMe.txt" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
