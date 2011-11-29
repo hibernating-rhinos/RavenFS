@@ -27,7 +27,7 @@ namespace RavenFS.Tests.Bugs
 			client.UpdateMetadataAsync("abc.txt", new NameValueCollection
 			{
 				{"test", "2"}
-			});
+			}).Wait();
 
 			var metadataFor = client.GetMetadataForAsync("abc.txt");
 
