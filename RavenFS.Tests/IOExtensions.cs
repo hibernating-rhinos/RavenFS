@@ -6,17 +6,18 @@
 using System;
 using System.IO;
 using System.Threading;
+using System.Linq;
 
 namespace Raven.Database.Extensions
 {
     public static class IOExtensions
     {
 
-		public static void CopyDirectory(string from, string to)
+		public static void CopyDirectory(string from, string to, string[] skip)
 		{
 			try
 			{
-				CopyDirectory(new DirectoryInfo(from), new DirectoryInfo(to));
+				CopyDirectory(new DirectoryInfo(from), new DirectoryInfo(to), skip);
 			}
 			catch (Exception e)
 			{
@@ -24,7 +25,7 @@ namespace Raven.Database.Extensions
 			}
 		}
 
-		static void CopyDirectory(DirectoryInfo source, DirectoryInfo target)
+		static void CopyDirectory(DirectoryInfo source, DirectoryInfo target, string[] skip)
 		{
 			if (!target.Exists)
 			{
@@ -40,8 +41,10 @@ namespace Raven.Database.Extensions
 			// and recurse
 			foreach (DirectoryInfo diSourceDir in source.GetDirectories())
 			{
+				if(skip.Contains(diSourceDir.Name))
+					continue;
 				DirectoryInfo nextTargetDir = target.CreateSubdirectory(diSourceDir.Name);
-				CopyDirectory(diSourceDir, nextTargetDir);
+				CopyDirectory(diSourceDir, nextTargetDir, skip);
 			}
 		}
         public static void DeleteDirectory(string directory)

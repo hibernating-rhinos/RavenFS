@@ -16,7 +16,7 @@ namespace RavenFS.Tests
 				IOExtensions.DeleteDirectory(fullPath);
 			}
 
-			IOExtensions.CopyDirectory(GetRavenWebSource(), WebDirectory);
+			IOExtensions.CopyDirectory(GetRavenWebSource(), WebDirectory, new[]{"Data.ravenfs", "Index.ravenfs"});
 
 			IOExtensions.DeleteDirectory(Path.Combine(fullPath, "Data.ravenfs"));
 			IOExtensions.DeleteDirectory(Path.Combine(fullPath, "Index.ravenfs"));
@@ -26,7 +26,7 @@ namespace RavenFS.Tests
 
 		private static string GetRavenWebSource()
 		{
-			foreach (var path in new[] { @"../../../RavenFS" })
+			foreach (var path in new[] { @"../../../RavenFS", "../RavenFS" })
 			{
 				var fullPath = Path.GetFullPath(path);
 
