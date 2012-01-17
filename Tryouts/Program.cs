@@ -12,9 +12,9 @@ namespace Tryouts
 		{
 			var fs = new RavenFileSystemClient("http://localhost");
 
-			using(var f = File.OpenRead(@"C:\Users\Ayende\Downloads\Rhino.ServiceBus.dll"))
+			using(var f = File.OpenRead(@"C:\temp\text.txt"))
 			{
-				fs.UploadAsync("Rhino.ServiceBus.dll", f).Wait();
+                fs.UploadAsync("text.txt", f).Wait();
 			}
 		}
 		
