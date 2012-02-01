@@ -143,5 +143,14 @@ namespace RavenFS.Tests
 
 			Assert.Equal(new string('a', 2048), actual);
 		}
+
+        [Fact]
+        public void CanCheckRdcStats()
+        {
+            var client = NewClient();
+            var result = client.RdcStatsAsync().Result;
+            Assert.NotNull(result);
+            Assert.Equal(0x010000, result.Version);
+        }
 	}
 }

@@ -15,4 +15,9 @@ namespace RavenFS.Client
 		public string HumaneTotalSize { get; set; }
 		public NameValueCollection Metadata { get; set; }
 	}
+
+    public class RdcStats
+    {
+        public int Version { get; set; }
+    }
 }

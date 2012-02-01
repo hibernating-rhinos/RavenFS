@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
 using RavenFS.Util;
+using Rdc.Wrapper;
 
 namespace RavenFS.Infrastructure
 {
@@ -102,6 +103,10 @@ namespace RavenFS.Infrastructure
 
 		public Regex Url { protected get; set; }
 
+	    public SigGenerator SigGenerator { get; private set; }
+
+        public NeedListGenerator NeedListGenerator { get; private set; }
+
 		public IAsyncResult BeginProcessRequest(HttpContext context, AsyncCallback cb, object extraData)
 		{
 			return ProcessRequestAsync(context, cb);
@@ -117,12 +122,15 @@ namespace RavenFS.Infrastructure
 			task.Dispose();
 		}
 
-		public void Initialize(BufferPool bufferPool, Regex url, Storage.TransactionalStorage storage, Search.IndexStorage search)
+		public void Initialize(BufferPool bufferPool, Regex url, Storage.TransactionalStorage storage, Search.IndexStorage search, 
+            SigGenerator sigGenerator, NeedListGenerator needListGenerator)
 		{
 			Url = url;
 			BufferPool = bufferPool;
 			Storage = storage;
 			Search = search;
+		    SigGenerator = sigGenerator;
+		    NeedListGenerator = needListGenerator;
 		}
 	}
 }

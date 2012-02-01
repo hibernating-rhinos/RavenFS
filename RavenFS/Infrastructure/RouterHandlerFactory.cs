@@ -8,6 +8,7 @@ using System.Web;
 using NLog;
 using RavenFS.Search;
 using RavenFS.Util;
+using Rdc.Wrapper;
 
 namespace RavenFS.Infrastructure
 {
@@ -23,10 +24,15 @@ namespace RavenFS.Infrastructure
 
 		private readonly static Storage.TransactionalStorage storage;
 		private static readonly Search.IndexStorage search;
-		static RouterHandlerFactory()
+	    private static SigGenerator sigGenerator;
+	    private static NeedListGenerator needListGenerator;
+		
+        static RouterHandlerFactory()
 		{
 			storage = new Storage.TransactionalStorage("Data.ravenfs", new NameValueCollection());
 			search = new IndexStorage("Index.ravenfs", new NameValueCollection());
+            sigGenerator = new SigGenerator(new SimpleFileAccess(Path.GetTempPath()));
+            needListGenerator = new NeedListGenerator();
 			storage.Initialize();
 			search.Initialize();
 
@@ -34,6 +40,8 @@ namespace RavenFS.Infrastructure
 			{
 				storage.Dispose();
 				search.Dispose();
+                sigGenerator.Dispose();
+                needListGenerator.Dispose();
 			};
 		}
 
@@ -44,7 +52,7 @@ namespace RavenFS.Infrastructure
 
 			foreach (var handler in Handlers)
 			{
-				handler.Value.Initialize(globalBufferPool, handler.Metadata.Url, storage, search);
+				handler.Value.Initialize(globalBufferPool, handler.Metadata.Url, storage, search, sigGenerator, needListGenerator);
 			}
 		}
 

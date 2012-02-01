@@ -94,7 +94,7 @@
     <Compile Include="Handlers\SimplePostHandler.cs" />
     <Compile Include="Handlers\SimplePutHandler.cs" />
     <Compile Include="Handlers\StatsHandler.cs" />
-    <Compile Include="Handlers\SyncVersionHandler.cs" />
+    <Compile Include="Handlers\RdcStatsHandler.cs" />
     <Compile Include="Infrastructure\AbstractAsyncHandler.cs" />
     <Compile Include="Search\IndexStorage.cs" />
     <Compile Include="Search\LowerCaseKeywordAnalyzer.cs" />
@@ -121,6 +121,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\rdc-service\Rdc.Wrapper\Rdc.Wrapper.csproj">
+      <Project>{E5A918C7-8FB7-4172-A11F-0E7219B1FD08}</Project>
+      <Name>Rdc.Wrapper</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />
