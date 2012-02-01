@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenFS.Client.Silverlight"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenFS.Studio", "RavenFS.Studio\RavenFS.Studio.csproj", "{4E9DB486-66C3-48FE-B750-78C5E1C2FAB1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenFS.Rdc", "RavenFS.Rdc\RavenFS.Rdc.csproj", "{2430B3A9-4CBA-42E1-9E33-4A939A4D3A2C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,16 @@ Global
 		{4E9DB486-66C3-48FE-B750-78C5E1C2FAB1}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{4E9DB486-66C3-48FE-B750-78C5E1C2FAB1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{4E9DB486-66C3-48FE-B750-78C5E1C2FAB1}.Release|x86.ActiveCfg = Release|Any CPU
+		{2430B3A9-4CBA-42E1-9E33-4A939A4D3A2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2430B3A9-4CBA-42E1-9E33-4A939A4D3A2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2430B3A9-4CBA-42E1-9E33-4A939A4D3A2C}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{2430B3A9-4CBA-42E1-9E33-4A939A4D3A2C}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{2430B3A9-4CBA-42E1-9E33-4A939A4D3A2C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2430B3A9-4CBA-42E1-9E33-4A939A4D3A2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2430B3A9-4CBA-42E1-9E33-4A939A4D3A2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2430B3A9-4CBA-42E1-9E33-4A939A4D3A2C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{2430B3A9-4CBA-42E1-9E33-4A939A4D3A2C}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{2430B3A9-4CBA-42E1-9E33-4A939A4D3A2C}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

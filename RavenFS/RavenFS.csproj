@@ -94,6 +94,7 @@
     <Compile Include="Handlers\SimplePostHandler.cs" />
     <Compile Include="Handlers\SimplePutHandler.cs" />
     <Compile Include="Handlers\StatsHandler.cs" />
+    <Compile Include="Handlers\SyncVersionHandler.cs" />
     <Compile Include="Infrastructure\AbstractAsyncHandler.cs" />
     <Compile Include="Search\IndexStorage.cs" />
     <Compile Include="Search\LowerCaseKeywordAnalyzer.cs" />
