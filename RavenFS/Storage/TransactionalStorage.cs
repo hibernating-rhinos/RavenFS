@@ -202,7 +202,7 @@ namespace RavenFS.Storage
 			}
 		}
 
-		[DebuggerHidden, DebuggerNonUserCode, DebuggerStepThrough]
+	    [DebuggerHidden, DebuggerNonUserCode, DebuggerStepThrough]
 		public void Batch(Action<StorageActionsAccessor> action)
 		{
 			if(Id == Guid.Empty)

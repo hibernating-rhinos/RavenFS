@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using RavenFS.Client;
 using RavenFS.Infrastructure;
 
 namespace RavenFS.Handlers
@@ -12,9 +13,9 @@ namespace RavenFS.Handlers
     {
         protected override Task ProcessRequestAsync(HttpContext context)
         {
-            return WriteJson(context, new
+            return WriteJson(context, new RdcStats 
             {
-                Version = Rdc.Wrapper.Msrdc.Version,
+                Version = (int)Rdc.Wrapper.Msrdc.Version
             });
         }
     }

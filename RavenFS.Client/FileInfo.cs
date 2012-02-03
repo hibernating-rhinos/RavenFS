@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Specialized;
 
 namespace RavenFS.Client
@@ -19,5 +20,18 @@ namespace RavenFS.Client
     public class RdcStats
     {
         public int Version { get; set; }
+    }
+
+    public class SignatureManifest
+    {
+        public string FileName { get; set; }
+        public IList<Signature> Signatures { get; set; }
+        public long FileLength { get; set; }
+    }
+
+    public class Signature
+    {     
+        public string Name { get; set; }     
+        public long Length { get; set; }
     }
 }

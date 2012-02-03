@@ -72,12 +72,15 @@
   <ItemGroup>
     <Content Include="Web.config">
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
@@ -86,6 +89,7 @@
     <Compile Include="Handlers\ClientAccessPolicy.cs" />
     <Compile Include="Handlers\FavIconHandler.cs" />
     <Compile Include="Handlers\FilesHandler.cs" />
+    <Compile Include="Handlers\RdcManifestHandler.cs" />
     <Compile Include="Handlers\SearchHandler.cs" />
     <Compile Include="Handlers\RootHanlder.cs" />
     <Compile Include="Handlers\SimpleDeleteHandler.cs" />
@@ -126,6 +130,10 @@
     <ProjectReference Include="..\..\rdc-service\Rdc.Wrapper\Rdc.Wrapper.csproj">
       <Project>{E5A918C7-8FB7-4172-A11F-0E7219B1FD08}</Project>
       <Name>Rdc.Wrapper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RavenFS.Client\RavenFS.Client.csproj">
+      <Project>{E37467ED-F680-423E-964A-60988A90F76E}</Project>
+      <Name>RavenFS.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

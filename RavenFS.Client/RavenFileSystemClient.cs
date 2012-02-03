@@ -207,7 +207,7 @@ namespace RavenFS.Client
 				});
 		}
 
-        public Task<RdcStats> RdcStatsAsync()
+        public Task<RdcStats> GetRdcStatsAsync()
         {
             var requestUriString = baseUrl + "/rdc/stats";
             var request = (HttpWebRequest)WebRequest.Create(requestUriString);
@@ -217,6 +217,20 @@ namespace RavenFS.Client
                     using (var stream = task.Result.GetResponseStream())
                     {
                         return new JsonSerializer().Deserialize<RdcStats>(new JsonTextReader(new StreamReader(stream)));
+                    }
+                });
+        }
+
+        public Task<SignatureManifest> GetRdcManifestAsync(string path)
+        {
+            var requestUriString = baseUrl + "/rdc/manifest/" + StringUtils.UrlEncode(path);
+            var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+            return request.GetResponseAsync()
+                .ContinueWith(task =>
+                {
+                    using (var stream = task.Result.GetResponseStream())
+                    {
+                        return new JsonSerializer().Deserialize<SignatureManifest>(new JsonTextReader(new StreamReader(stream)));
                     }
                 });
         }
@@ -233,6 +247,6 @@ namespace RavenFS.Client
 					request.Headers[key] = value;
 				}
 			}
-		}
+		}	    
 	}    
 }

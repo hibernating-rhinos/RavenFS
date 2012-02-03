@@ -148,9 +148,31 @@ namespace RavenFS.Tests
         public void CanCheckRdcStats()
         {
             var client = NewClient();
-            var result = client.RdcStatsAsync().Result;
+            var result = client.GetRdcStatsAsync().Result;
             Assert.NotNull(result);
             Assert.Equal(0x010000, result.Version);
+        }
+
+        [Fact]
+        public void CanGetrdcManifest()
+        {
+            var client = NewClient();
+
+            var ms = new MemoryStream();
+            var streamWriter = new StreamWriter(ms);
+            var expected = new string('a', 2048);
+            streamWriter.Write(expected);
+            streamWriter.Flush();
+            ms.Position = 0;
+            client.UploadAsync("abc.txt", ms).Wait();
+
+            var ms2 = new MemoryStream();
+            streamWriter = new StreamWriter(ms2);
+            streamWriter.Write(new string('a', 1024));
+            streamWriter.Flush();
+
+            var result = client.GetRdcManifestAsync("abc.txt");
+            Assert.NotNull(result);
         }
 	}
 }

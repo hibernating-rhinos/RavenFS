@@ -49,7 +49,7 @@ namespace RavenFS.Tests
 		public IisExpressTestClient()
 		{
 			_iisExpress = new IisExpressDriver();
-			_iisExpress.Start(IisDeploymentUtil.DeployWebProjectToTestDirectory(), 8085);
+			_iisExpress.Start(IisDeploymentUtil.DeployWebProjectToTestDirectory(), 8084);
 			webClient = new WebClient
 			{
 				BaseAddress = _iisExpress.Url
