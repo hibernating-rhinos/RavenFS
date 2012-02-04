@@ -21,9 +21,11 @@ namespace RavenFS.Handlers
 
 				var headers = context.Request.Headers.FilterHeaders();
 				long? contentLength = context.Request.ContentLength;
-				if (context.Request.Headers["Transfer-Encoding"] == "chunked")
-					contentLength = null;
-				accessor.PutFile(filename,
+                if (context.Request.Headers["Transfer-Encoding"] == "chunked")
+                {
+                    contentLength = null;
+                }
+			    accessor.PutFile(filename,
 								 contentLength, 
 								 headers);
 
@@ -33,7 +35,7 @@ namespace RavenFS.Handlers
 			var readFileToDatabase = new ReadFileToDatabase(this, context, filename);
 			try
 			{
-				return readFileToDatabase.Execute()
+				return readFileToDatabase.__Execute()
 					.ContinueWith(task =>
 					{
 						readFileToDatabase.Dispose();
@@ -65,7 +67,29 @@ namespace RavenFS.Handlers
 				inputStream = context.Request.GetBufferlessInputStream();
 			}
 
-			public Task Execute()
+            public Task Execute()
+            {
+                return inputStream.ReadAsync(buffer, (myBuffer, readBytes) =>
+                {
+                    if (readBytes != 0)
+                    {
+                        parent.Storage.Batch(accessor =>
+                        {
+                            var hashKey = accessor.InsertPage(buffer, readBytes);
+                            accessor.AssociatePage(filename, hashKey, pos, readBytes);
+                        });
+                    }
+                    pos++;
+                })
+                .ContinueWith(action =>
+                {
+                    parent.Storage.Batch(accessor => accessor.CompleteFileUpload(filename));
+                    return parent.Completed;
+                })
+                .Unwrap();
+            }
+
+			public Task __Execute()
 			{
 				return inputStream.ReadAsync(buffer)
 					.ContinueWith(task =>
@@ -83,7 +107,7 @@ namespace RavenFS.Handlers
 						});
 
 						pos++;
-						return Execute();
+						return __Execute();
 					})
 					.Unwrap();
 			}
