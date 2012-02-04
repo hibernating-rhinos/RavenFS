@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -17,10 +18,11 @@ namespace RavenFS.Extensions
 						return stream.ReadAsync(buffer, start + task.Result);
 					}
 					return task;
-				}).Unwrap()
-				.ContinueWith(task => task.Result + start);
+				})
+                .Unwrap()
+				.ContinueWith(task => task.Result == 0 ? start : task.Result);
 		}
-
+        
 		public static Task<int> ReadAsync(this Stream stream, byte[] buffer)
 		{
 			return stream.ReadAsync(buffer, 0);

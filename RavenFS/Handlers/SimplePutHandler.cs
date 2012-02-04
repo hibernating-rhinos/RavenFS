@@ -21,9 +21,11 @@ namespace RavenFS.Handlers
 
 				var headers = context.Request.Headers.FilterHeaders();
 				long? contentLength = context.Request.ContentLength;
-				if (context.Request.Headers["Transfer-Encoding"] == "chunked")
-					contentLength = null;
-				accessor.PutFile(filename,
+                if (context.Request.Headers["Transfer-Encoding"] == "chunked")
+                {
+                    contentLength = null;
+                }
+			    accessor.PutFile(filename,
 								 contentLength, 
 								 headers);
 
@@ -93,6 +95,5 @@ namespace RavenFS.Handlers
 				parent.BufferPool.ReturnBuffer(buffer);
 			}
 		}
-
 	}
 }
