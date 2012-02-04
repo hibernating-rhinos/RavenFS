@@ -16,9 +16,9 @@ namespace RavenFS.Tests
 	{
 		[Theory]
 		[InlineData(1024 * 1024)]		// 1 mb
-		//[InlineData(1024 * 1024 * 2)]	// 2 mb
-		//[InlineData(1024 * 1024 * 4)]	// 4 mb
-		//[InlineData(1024 * 1024 * 8)]	// 8 mb
+		[InlineData(1024 * 1024 * 2)]	// 2 mb
+		[InlineData(1024 * 1024 * 4)]	// 4 mb
+		[InlineData(1024 * 1024 * 8)]	// 8 mb
 		public void CanHandleBigFiles(int size)
 		{
 			var buffer = new byte[size];

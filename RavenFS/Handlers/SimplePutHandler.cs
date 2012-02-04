@@ -35,7 +35,7 @@ namespace RavenFS.Handlers
 			var readFileToDatabase = new ReadFileToDatabase(this, context, filename);
 			try
 			{
-				return readFileToDatabase.__Execute()
+				return readFileToDatabase.Execute()
 					.ContinueWith(task =>
 					{
 						readFileToDatabase.Dispose();
@@ -67,29 +67,7 @@ namespace RavenFS.Handlers
 				inputStream = context.Request.GetBufferlessInputStream();
 			}
 
-            public Task Execute()
-            {
-                return inputStream.ReadAsync(buffer, (myBuffer, readBytes) =>
-                {
-                    if (readBytes != 0)
-                    {
-                        parent.Storage.Batch(accessor =>
-                        {
-                            var hashKey = accessor.InsertPage(buffer, readBytes);
-                            accessor.AssociatePage(filename, hashKey, pos, readBytes);
-                        });
-                    }
-                    pos++;
-                })
-                .ContinueWith(action =>
-                {
-                    parent.Storage.Batch(accessor => accessor.CompleteFileUpload(filename));
-                    return parent.Completed;
-                })
-                .Unwrap();
-            }
-
-			public Task __Execute()
+			public Task Execute()
 			{
 				return inputStream.ReadAsync(buffer)
 					.ContinueWith(task =>
@@ -107,7 +85,7 @@ namespace RavenFS.Handlers
 						});
 
 						pos++;
-						return __Execute();
+						return Execute();
 					})
 					.Unwrap();
 			}
@@ -117,6 +95,5 @@ namespace RavenFS.Handlers
 				parent.BufferPool.ReturnBuffer(buffer);
 			}
 		}
-
 	}
 }
