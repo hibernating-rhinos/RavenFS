@@ -28,8 +28,8 @@ namespace RavenFS.Handlers
         {
             /*
             FileHeader fileHeader = null;
-            Storage.Batch(accessor => fileHeader = accessor. .ReadFile(filePath));
-            fileHeader.
+            Storage.Batch(accessor => fileHeader = accessor.ReadFile());
+            fileHeader.            
              * */
         }
     }

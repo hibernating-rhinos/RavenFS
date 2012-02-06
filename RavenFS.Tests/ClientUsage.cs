@@ -154,7 +154,7 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void CanGetrdcManifest()
+        public void CanGetRdcManifest()
         {
             var client = NewClient();
 
