@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Specialized;
 using System.IO;
 using RavenFS.Client;
@@ -158,20 +159,13 @@ namespace RavenFS.Tests
         {
             var client = NewClient();
 
-            var ms = new MemoryStream();
-            var streamWriter = new StreamWriter(ms);
-            var expected = new string('a', 2048);
-            streamWriter.Write(expected);
-            streamWriter.Flush();
-            ms.Position = 0;
-            client.UploadAsync("abc.txt", ms).Wait();
+            var buffer = new byte[1024 * 1024 * 32];
+            new Random().NextBytes(buffer);
 
-            var ms2 = new MemoryStream();
-            streamWriter = new StreamWriter(ms2);
-            streamWriter.Write(new string('a', 1024));
-            streamWriter.Flush();
+            webClient.UploadData("/files/mb.bin", "PUT", buffer);
 
-            var result = client.GetRdcManifestAsync("abc.txt");
+
+            var result = client.GetRdcManifestAsync("mb.bin").Result;
             Assert.NotNull(result);
         }
 	}

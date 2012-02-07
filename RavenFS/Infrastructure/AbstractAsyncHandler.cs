@@ -105,6 +105,8 @@ namespace RavenFS.Infrastructure
 
 	    public SigGenerator SigGenerator { get; private set; }
 
+        public IFileAccess FileAccess { get; private set; }
+
         public NeedListGenerator NeedListGenerator { get; private set; }
 
 		public IAsyncResult BeginProcessRequest(HttpContext context, AsyncCallback cb, object extraData)
@@ -123,13 +125,14 @@ namespace RavenFS.Infrastructure
 		}
 
 		public void Initialize(BufferPool bufferPool, Regex url, Storage.TransactionalStorage storage, Search.IndexStorage search, 
-            SigGenerator sigGenerator, NeedListGenerator needListGenerator)
+            SigGenerator sigGenerator, NeedListGenerator needListGenerator, IFileAccess fileAccess)
 		{
 			Url = url;
 			BufferPool = bufferPool;
 			Storage = storage;
 			Search = search;
 		    SigGenerator = sigGenerator;
+		    FileAccess = fileAccess;
 		    NeedListGenerator = needListGenerator;
 		}
 	}
