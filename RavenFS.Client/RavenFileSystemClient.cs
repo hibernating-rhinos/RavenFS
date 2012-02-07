@@ -104,15 +104,15 @@ namespace RavenFS.Client
 
 		public Task<NameValueCollection> DownloadAsync(string filename, Stream destination)
 		{
-			return DownloadAsync(filename, new NameValueCollection(), destination);
+			return DownloadAsync("/files/", filename, new NameValueCollection(), destination);
 		}
 
-		public Task<NameValueCollection> DownloadAsync(string filename, NameValueCollection collection, Stream destination, Action<string, int> progress = null)
+		public Task<NameValueCollection> DownloadAsync(string path, string filename, NameValueCollection collection, Stream destination, Action<string, int> progress = null)
 		{
 			if (destination.CanWrite == false)
 				throw new ArgumentException("Stream does not support writing");
 
-			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
+			var request = (HttpWebRequest)WebRequest.Create(baseUrl + path + filename);
 
 #if !SILVERLIGHT
 			if (destination.CanSeek)
@@ -235,6 +235,11 @@ namespace RavenFS.Client
                 });
         }
 
+        public Task DownloadSignatureAsync(string sigName, Stream destination)
+        {
+            return DownloadAsync("/rdc/signatures/", sigName, new NameValueCollection(),  destination);
+        }
+
 	    private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
 		{
 			foreach (var key in metadata.AllKeys)
@@ -247,6 +252,6 @@ namespace RavenFS.Client
 					request.Headers[key] = value;
 				}
 			}
-		}	    
+		}	            
 	}    
 }

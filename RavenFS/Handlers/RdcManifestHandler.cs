@@ -15,7 +15,7 @@ namespace RavenFS.Handlers
     [HandlerMetadata("^/rdc/manifest/(.+)", "GET")]
     public class RdcManifestHandler : AbstractAsyncHandler
     {
-        private FileAccessTool fileAccessTool;
+        private readonly FileAccessTool fileAccessTool;
 
         public RdcManifestHandler()
         {

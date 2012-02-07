@@ -90,6 +90,7 @@
     <Compile Include="Handlers\FavIconHandler.cs" />
     <Compile Include="Handlers\FilesHandler.cs" />
     <Compile Include="Handlers\RdcManifestHandler.cs" />
+    <Compile Include="Handlers\RdcSignatureHandler.cs" />
     <Compile Include="Handlers\SearchHandler.cs" />
     <Compile Include="Handlers\RootHanlder.cs" />
     <Compile Include="Handlers\SimpleDeleteHandler.cs" />
