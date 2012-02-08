@@ -2,6 +2,7 @@ using System.Collections.Specialized;
 using System.IO;
 using RavenFS.Client;
 using Xunit;
+using Xunit.Extensions;
 
 namespace RavenFS.Tests
 {
@@ -33,12 +34,14 @@ namespace RavenFS.Tests
             Assert.Equal("2", metadata.Result["test"]);
             Assert.Equal(expected, webClient.DownloadString("/files/abc.txt"));
         }
-		[Fact]
-		public void CanUpload()
+		[Theory]
+        [InlineData(1024 * 1024)]		// 1 mb
+        [InlineData(1024 * 1024 * 8)]	// 8 mb
+		public void CanUpload(int size)
 		{
 			var ms = new MemoryStream();
 			var streamWriter = new StreamWriter(ms);
-			var expected = new string('a',1024);
+			var expected = new string('a', size);
 			streamWriter.Write(expected);
 			streamWriter.Flush();
 			ms.Position = 0;
@@ -142,6 +145,6 @@ namespace RavenFS.Tests
 			var actual = new StreamReader(ms2).ReadToEnd();
 
 			Assert.Equal(new string('a', 2048), actual);
-		}
+		}        
 	}
 }

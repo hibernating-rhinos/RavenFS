@@ -185,26 +185,28 @@ namespace RavenFS.Client
 			request.AllowWriteStreamBuffering = false;
 #endif
 			AddHeaders(metadata, request);
-
-			return request.GetRequestStreamAsync()
-				.ContinueWith(task => source.CopyToAsync(task.Result, written =>
-				{
-					if (progress != null)
-						progress(filename, written);
-				})
-										.ContinueWith(_ => task.Result.Close())
-				)
-				.Unwrap()
-				.ContinueWith(task =>
-				{
-					task.Wait();
-					return request.GetResponseAsync();
-				})
-				.Unwrap()
-				.ContinueWith(task =>
-				{
-					task.Result.Close();
-				});
+            return request.GetRequestStreamAsync()
+                .ContinueWith(
+                    task => source.CopyToAsync(
+                        task.Result,
+                        written =>
+                            {
+                                if (progress != null)
+                                    progress(filename, written);
+                            })
+                .ContinueWith(_ => task.Result.Close())
+                )
+                .Unwrap()
+                .ContinueWith(task =>
+                {
+                    task.Wait();
+                    return request.GetResponseAsync();
+                })
+                .Unwrap()
+                .ContinueWith(task =>
+                {
+                    task.Result.Close();
+                });
 		}
 
 		private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
