@@ -15,9 +15,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenFS.Studio", "RavenFS.S
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rdc", "Rdc", "{6FEF722A-1DE3-44A9-A15E-C76DEAAFE395}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rdc.Wrapper", "..\rdc-service\Rdc.Wrapper\Rdc.Wrapper.csproj", "{E5A918C7-8FB7-4172-A11F-0E7219B1FD08}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rdc.Wrapper", "External\rdc-service\Rdc.Wrapper\Rdc.Wrapper.csproj", "{E5A918C7-8FB7-4172-A11F-0E7219B1FD08}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rdc.Wrapper.Test", "..\rdc-service\Rdc.Wrapper.Test\Rdc.Wrapper.Test.csproj", "{ED38C538-6C12-4ECC-9A05-7F85378DAE5D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rdc.Wrapper.Test", "External\rdc-service\Rdc.Wrapper.Test\Rdc.Wrapper.Test.csproj", "{ED38C538-6C12-4ECC-9A05-7F85378DAE5D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -129,7 +129,7 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\rdc-service\Rdc.Wrapper\Rdc.Wrapper.csproj">
+    <ProjectReference Include="..\External\rdc-service\Rdc.Wrapper\Rdc.Wrapper.csproj">
       <Project>{E5A918C7-8FB7-4172-A11F-0E7219B1FD08}</Project>
       <Name>Rdc.Wrapper</Name>
     </ProjectReference>
