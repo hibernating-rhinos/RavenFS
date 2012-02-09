@@ -36,16 +36,15 @@ namespace RavenFS.Handlers
                 context.Response.StatusCode = 404;
                 return Completed;
             }
-            return GenerateSignatures(context, fileAndPages)
+            return GenerateSignatures(fileAndPages)
                 .ContinueWith(task =>
                     WriteJson(context, task.Result)
                 );
         }
 
-        private Task<SignatureManifest> GenerateSignatures(HttpContext context, FileAndPages fileAndPages)
+        private Task<SignatureManifest> GenerateSignatures(FileAndPages fileAndPages)
         {
-            FileHeader fileHeader = null;
-            Storage.Batch(accessor => fileHeader = accessor.ReadFile(fileAndPages.Name));
+            Storage.Batch(accessor => accessor.ReadFile(fileAndPages.Name));
 
             // TODO: We need to add some cache logic and create Stream own implementation to access FSFiles
             var fileName = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
@@ -60,9 +59,9 @@ namespace RavenFS.Handlers
                                 return SigGenerator.GenerateSignatures(inputFile);
                             }
                         })
-                    .ContinueWith(
+                .ContinueWith(
                     task =>
-                        {                            
+                        {
                             var signatures =
                                 from item in task.Result
                                 select

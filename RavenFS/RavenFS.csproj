@@ -89,6 +89,7 @@
     <Compile Include="Handlers\ClientAccessPolicy.cs" />
     <Compile Include="Handlers\FavIconHandler.cs" />
     <Compile Include="Handlers\FilesHandler.cs" />
+    <Compile Include="Handlers\RdcGetFile.cs" />
     <Compile Include="Handlers\RdcManifestHandler.cs" />
     <Compile Include="Handlers\RdcSignatureHandler.cs" />
     <Compile Include="Handlers\SearchHandler.cs" />
@@ -124,6 +125,7 @@
     <Compile Include="Util\JsonSerializerFactory.cs" />
     <Compile Include="Util\NameValueCollectionJsonConverter.cs" />
     <Compile Include="Util\RabinKarpHasher.cs" />
+    <Compile Include="Util\StorageStream.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
