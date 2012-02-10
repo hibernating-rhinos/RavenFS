@@ -63,7 +63,7 @@ namespace RavenFS.Util
         private void MovePageFrame(long offset)
         {
             offset = Math.Min(Size - 1, offset);
-            if (offset < currentPageFrameOffset)
+            if (offset < currentPageFrameOffset || fileAndPages == null)
             {
                 TransactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(Name, 0, PagesBatchSize));
                 currentPageFrameOffset = 0;

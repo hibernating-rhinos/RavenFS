@@ -213,9 +213,10 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long>(0, 6)).Result;
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long>(0, 5)).Result;
             var sr = new StreamReader(downloadedStream);
-            Assert.Equal("000000", sr.ReadToEnd());
+            var result = sr.ReadToEnd();
+            Assert.Equal("000000", result);
             Assert.Equal("bytes: 0-5/6000000", nameValues["Content-Range"]);
         }
     }

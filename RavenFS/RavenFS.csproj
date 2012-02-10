@@ -124,6 +124,7 @@
     <Compile Include="Util\IBufferPool.cs" />
     <Compile Include="Util\JsonSerializerFactory.cs" />
     <Compile Include="Util\NameValueCollectionJsonConverter.cs" />
+    <Compile Include="Util\NarrowedStream.cs" />
     <Compile Include="Util\RabinKarpHasher.cs" />
     <Compile Include="Util\StorageStream.cs" />
   </ItemGroup>

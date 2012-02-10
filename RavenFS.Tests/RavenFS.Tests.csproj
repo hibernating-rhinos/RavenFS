@@ -62,6 +62,7 @@
     <Compile Include="IisDeploymentUtil.cs" />
     <Compile Include="IisExpressDriver.cs" />
     <Compile Include="IisExpressTestClient.cs" />
+    <Compile Include="NarrowedStreamTests.cs" />
     <Compile Include="ProcessDriver.cs" />
     <Compile Include="RemoteFilesHandlerTests.cs" />
     <Compile Include="IOExtensions.cs" />
