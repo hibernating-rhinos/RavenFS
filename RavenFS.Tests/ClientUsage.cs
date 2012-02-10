@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
-using RavenFS.Client;
 using Xunit;
 using Xunit.Extensions;
 
 namespace RavenFS.Tests
 {
-	public class ClientUsage : IisExpressTestClient
-	{
+    public class ClientUsage : IisExpressTestClient
+    {
         [Fact]
         public void CanUpdateJustMetadata()
         {
@@ -18,8 +17,8 @@ namespace RavenFS.Tests
             streamWriter.Write(expected);
             streamWriter.Flush();
             ms.Position = 0;
-        	var client = NewClient();
-            client.UploadAsync("abc.txt",new NameValueCollection
+            var client = NewClient();
+            client.UploadAsync("abc.txt", new NameValueCollection
                                         {
                                             {"test", "1"}
                                         }, ms).Wait();
@@ -31,122 +30,122 @@ namespace RavenFS.Tests
             updateMetadataTask.Wait();
 
 
-			var metadata = client.GetMetadataForAsync("abc.txt");
+            var metadata = client.GetMetadataForAsync("abc.txt");
             Assert.Equal("2", metadata.Result["test"]);
             Assert.Equal(expected, webClient.DownloadString("/files/abc.txt"));
         }
-		[Theory]
+        [Theory]
         [InlineData(1024 * 1024)]		// 1 mb
         [InlineData(1024 * 1024 * 8)]	// 8 mb
-		public void CanUpload(int size)
-		{
-			var ms = new MemoryStream();
-			var streamWriter = new StreamWriter(ms);
-			var expected = new string('a', size);
-			streamWriter.Write(expected);
-			streamWriter.Flush();
-			ms.Position = 0;
+        public void CanUpload(int size)
+        {
+            var ms = new MemoryStream();
+            var streamWriter = new StreamWriter(ms);
+            var expected = new string('a', size);
+            streamWriter.Write(expected);
+            streamWriter.Flush();
+            ms.Position = 0;
 
-			var client = NewClient(); 
-			client.UploadAsync("abc.txt", ms).Wait();
+            var client = NewClient();
+            client.UploadAsync("abc.txt", ms).Wait();
 
-			var downloadString = webClient.DownloadString("/files/abc.txt");
-			Assert.Equal(expected, downloadString);
-		}
+            var downloadString = webClient.DownloadString("/files/abc.txt");
+            Assert.Equal(expected, downloadString);
+        }
 
-		[Fact]
-		public void CanUploadMetadata_And_HeadMetadata()
-		{
-			var ms = new MemoryStream();
-			var streamWriter = new StreamWriter(ms);
-			var expected = new string('a', 1024);
-			streamWriter.Write(expected);
-			streamWriter.Flush();
-			ms.Position = 0;
-			var client = NewClient();
-			client.UploadAsync("abc.txt", new NameValueCollection
+        [Fact]
+        public void CanUploadMetadata_And_HeadMetadata()
+        {
+            var ms = new MemoryStream();
+            var streamWriter = new StreamWriter(ms);
+            var expected = new string('a', 1024);
+            streamWriter.Write(expected);
+            streamWriter.Flush();
+            ms.Position = 0;
+            var client = NewClient();
+            client.UploadAsync("abc.txt", new NameValueCollection
 			{
 				{"test", "value"},
 				{"hello", "there"}
-			} ,ms).Wait();
+			}, ms).Wait();
 
 
-			var collection = client.GetMetadataForAsync("abc.txt").Result;
+            var collection = client.GetMetadataForAsync("abc.txt").Result;
 
-			Assert.Equal("value", collection["test"]);
-			Assert.Equal("there", collection["hello"]);
-		}
+            Assert.Equal("value", collection["test"]);
+            Assert.Equal("there", collection["hello"]);
+        }
 
 
-		[Fact]
-		public void CanQueryMetadata()
-		{
-			var ms = new MemoryStream();
-			var streamWriter = new StreamWriter(ms);
-			var expected = new string('a', 1024);
-			streamWriter.Write(expected);
-			streamWriter.Flush();
-			ms.Position = 0;
-			var client = NewClient();
-			client.UploadAsync("abc.txt", new NameValueCollection
+        [Fact]
+        public void CanQueryMetadata()
+        {
+            var ms = new MemoryStream();
+            var streamWriter = new StreamWriter(ms);
+            var expected = new string('a', 1024);
+            streamWriter.Write(expected);
+            streamWriter.Flush();
+            ms.Position = 0;
+            var client = NewClient();
+            client.UploadAsync("abc.txt", new NameValueCollection
 			{
 				{"Test", "value"},
 			}, ms).Wait();
 
 
-			var collection = client.SearchAsync("Test:value").Result;
+            var collection = client.SearchAsync("Test:value").Result;
 
-			Assert.Equal(1, collection.Length);
-			Assert.Equal("abc.txt", collection[0].Name);
-			Assert.Equal("value", collection[0].Metadata["Test"]);
-		}
+            Assert.Equal(1, collection.Length);
+            Assert.Equal("abc.txt", collection[0].Name);
+            Assert.Equal("value", collection[0].Metadata["Test"]);
+        }
 
 
-		[Fact]
-		public void CanDownload()
-		{
-			var ms = new MemoryStream();
-			var streamWriter = new StreamWriter(ms);
-			var expected = new string('a', 1024);
-			streamWriter.Write(expected);
-			streamWriter.Flush();
-			ms.Position = 0;
-			var client = NewClient();
-			client.UploadAsync("abc.txt", ms).Wait();
+        [Fact]
+        public void CanDownload()
+        {
+            var ms = new MemoryStream();
+            var streamWriter = new StreamWriter(ms);
+            var expected = new string('a', 1024);
+            streamWriter.Write(expected);
+            streamWriter.Flush();
+            ms.Position = 0;
+            var client = NewClient();
+            client.UploadAsync("abc.txt", ms).Wait();
 
-			var ms2 = new MemoryStream();
-			client.DownloadAsync("abc.txt", ms2).Wait();
+            var ms2 = new MemoryStream();
+            client.DownloadAsync("abc.txt", ms2).Wait();
 
-			ms2.Position = 0;
+            ms2.Position = 0;
 
-			var actual = new StreamReader(ms2).ReadToEnd();
+            var actual = new StreamReader(ms2).ReadToEnd();
 
-			Assert.Equal(expected, actual);
-		}
+            Assert.Equal(expected, actual);
+        }
 
-		[Fact]
-		public void CanDownloadPartial()
-		{
-			var ms = new MemoryStream();
-			var streamWriter = new StreamWriter(ms);
-			var expected = new string('a', 2048);
-			streamWriter.Write(expected);
-			streamWriter.Flush();
-			ms.Position = 0;
-			var client = NewClient();
-			client.UploadAsync("abc.txt", ms).Wait();
+        [Fact]
+        public void CanDownloadPartial()
+        {
+            var ms = new MemoryStream();
+            var streamWriter = new StreamWriter(ms);
+            var expected = new string('a', 2048);
+            streamWriter.Write(expected);
+            streamWriter.Flush();
+            ms.Position = 0;
+            var client = NewClient();
+            client.UploadAsync("abc.txt", ms).Wait();
 
-			var ms2 = new MemoryStream();
-			streamWriter = new StreamWriter(ms2);
-			streamWriter.Write(new string('a', 1024));
-			streamWriter.Flush();
+            var ms2 = new MemoryStream();
+            streamWriter = new StreamWriter(ms2);
+            streamWriter.Write(new string('a', 1024));
+            streamWriter.Flush();
 
-			client.DownloadAsync("abc.txt", ms2).Wait();
-			ms2.Position = 0;
-			var actual = new StreamReader(ms2).ReadToEnd();
+            client.DownloadAsync("abc.txt", ms2).Wait();
+            ms2.Position = 0;
+            var actual = new StreamReader(ms2).ReadToEnd();
 
-			Assert.Equal(new string('a', 2048), actual);
-		}
+            Assert.Equal(new string('a', 2048), actual);
+        }
 
         [Fact]
         public void CanCheckRdcStats()
@@ -189,10 +188,35 @@ namespace RavenFS.Tests
 
             foreach (var item in result.Signatures)
             {
-                var ms = new MemoryStream();                
+                var ms = new MemoryStream();
                 client.DownloadSignatureAsync(item.Name, ms).Wait();
                 Assert.True(ms.Length == item.Length);
-            }                        
+            }
         }
-	}
+
+        [Fact]
+        public void CanGetPartialContent()
+        {
+            var ms = new MemoryStream();
+            var uploadedStream = new StreamWriter(ms);
+            for (var i = 0; i < 1000000; i++)
+            {
+                uploadedStream.Write(i.ToString("D6"));
+            }
+            uploadedStream.Flush();
+            ms.Position = 0;
+            var client = NewClient();
+            client.UploadAsync("abc.txt",
+                               new NameValueCollection
+                                   {
+                                       {"test", "1"}
+                                   }, ms)
+                .Wait();
+            var downloadedStream = new MemoryStream();
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long>(0, 6)).Result;
+            var sr = new StreamReader(downloadedStream);
+            Assert.Equal("000000", sr.ReadToEnd());
+            Assert.Equal("bytes: 0-5/6000000", nameValues["Content-Range"]);
+        }
+    }
 }

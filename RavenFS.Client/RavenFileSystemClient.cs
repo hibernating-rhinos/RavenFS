@@ -107,22 +107,39 @@ namespace RavenFS.Client
 			return DownloadAsync("/files/", filename, destination);
 		}
 
-		public Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, Action<string, int> progress = null)
+        public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long from, long to)
+        {
+            return DownloadAsync("/files/", filename, destination, new Tuple<long, long>(from, to));
+        }
+
+		public Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, Tuple<long, long> fromTo = null,
+            Action<string, int> progress = null)
 		{
-            NameValueCollection collection = new NameValueCollection();
+#if SILVERLIGHT
+            if (fromTo != null)
+            {
+                throw new NotSupportedException("Silverlight doesn't support partial requests");
+            }
+#endif
+
+            var collection = new NameValueCollection();
 			if (destination.CanWrite == false)
 				throw new ArgumentException("Stream does not support writing");
 
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + path + filename);
 
 #if !SILVERLIGHT
-			if (destination.CanSeek)
+            if (fromTo != null)
+            {
+                request.AddRange(fromTo.Item1, fromTo.Item2);
+            } 
+            else if (destination.CanSeek)
 			{
 				destination.Position = destination.Length;
 				request.AddRange(destination.Position);
 			}
 #endif
-			progress = progress ?? delegate { };
+            progress = progress ?? delegate { };
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -141,7 +158,7 @@ namespace RavenFS.Client
 				.Unwrap();
 		}
 
-		public Task UpdateMetadataAsync(string filename, NameValueCollection metadata)
+	    public Task UpdateMetadataAsync(string filename, NameValueCollection metadata)
 		{
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
 			
