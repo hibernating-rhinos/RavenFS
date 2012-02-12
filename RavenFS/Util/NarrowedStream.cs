@@ -48,8 +48,11 @@ namespace RavenFS.Util
                 default:
                     throw new ArgumentOutOfRangeException("origin", origin, "Unknown SeekOrigin");
             }
-            offset = Math.Max(From, offset);
-            offset = Math.Min(To, offset);
+            if (offset < From)
+            {
+                throw new ArgumentOutOfRangeException("offset",
+                                                      "An attempt was made to move the file pointer before the beginning of the file.");
+            }
             Source.Seek(offset, SeekOrigin.Begin);
             return Position;
         }
@@ -66,8 +69,8 @@ namespace RavenFS.Util
                 return 0;
             }
             var startingPosition = Position;
-            Source.Read(buffer, offset, count);
-            var preResult = Position - startingPosition;
+            var read = Source.Read(buffer, offset, count);
+            var preResult = Math.Min(Length - startingPosition, read);
             return Convert.ToInt32(preResult);
         }
 
@@ -98,8 +101,15 @@ namespace RavenFS.Util
 
         public override long Position
         {
-            get { return Math.Min(Source.Position - From, Length); }
-            set { Seek(value, SeekOrigin.Begin); }
+            get { return Source.Position - From; }
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentOutOfRangeException("value", "Non-negative number required");
+                }
+                Seek(value, SeekOrigin.Begin);
+            }
         }
     }
 }

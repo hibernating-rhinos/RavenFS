@@ -30,6 +30,8 @@ namespace RavenFS.Handlers
 
             context.Response.AddHeader("Content-Length", (to - from + 1).ToString());
             context.Response.AddHeader("Content-Disposition", "attachment; filename=" + storageStream.Name);
+            var contentRange = string.Format("bytes {0}-{1}/{2}", from, to, storageStream.Length);
+            context.Response.AddHeader("Content-Range",  contentRange);
             
             return storageStream.CopyToAsync(context.Response.OutputStream, from, to)
                 .ContinueWith(task => storageStream.Dispose());

@@ -109,10 +109,10 @@ namespace RavenFS.Client
 
         public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long from, long to)
         {
-            return DownloadAsync("/files/", filename, destination, new Tuple<long, long>(from, to));
+            return DownloadAsync("/files/", filename, destination, new Tuple<long, long?>(from, to));
         }
 
-		public Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, Tuple<long, long> fromTo = null,
+		public Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, Tuple<long, long?> fromTo = null,
             Action<string, int> progress = null)
 		{
 #if SILVERLIGHT
@@ -131,13 +131,20 @@ namespace RavenFS.Client
 #if !SILVERLIGHT
             if (fromTo != null)
             {
-                request.AddRange(fromTo.Item1, fromTo.Item2);
-            } 
+                if (fromTo.Item2 != null)
+                {
+                    request.AddRange(fromTo.Item1, fromTo.Item2.Value);
+                }
+                else
+                {
+                    request.AddRange(fromTo.Item1);
+                }
+            }
             else if (destination.CanSeek)
-			{
-				destination.Position = destination.Length;
-				request.AddRange(destination.Position);
-			}
+            {
+                destination.Position = destination.Length;
+                request.AddRange(destination.Position);
+            }
 #endif
             progress = progress ?? delegate { };
 			return request.GetResponseAsync()

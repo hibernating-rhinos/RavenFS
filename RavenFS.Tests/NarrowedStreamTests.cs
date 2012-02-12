@@ -44,6 +44,18 @@ namespace RavenFS.Tests
             Assert.Equal(500000 * 6, tested.Length);
         }
 
+        [Fact]
+        public void Check_copy_async()
+        {
+            var ms = PrepareSourceStream();
+            var tested = new NarrowedStream(ms, 0, ms.Length - 1);
+
+            var reader = new StreamReader(tested);
+            var result = new MemoryStream();
+            tested.CopyToAsync(result).Wait();
+            Assert.Equal(500000*6, result.Length);
+        }
+
         private static MemoryStream PrepareSourceStream()
         {
             var ms = new MemoryStream();

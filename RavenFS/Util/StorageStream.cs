@@ -16,7 +16,6 @@ namespace RavenFS.Util
         {
             get { return fileHeader.Name; }
         }
-        public long Size { get { return fileHeader.TotalSize.Value; } }
 
         private const int MaxPageSize = 64 * 1024;
         private const int PagesBatchSize = 64;
@@ -51,7 +50,7 @@ namespace RavenFS.Util
                     offset = currentOffset + offset;
                     break;
                 case SeekOrigin.End:
-                    offset = Size - offset - 1;
+                    offset = Length - offset - 1;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("origin");
@@ -62,7 +61,7 @@ namespace RavenFS.Util
 
         private void MovePageFrame(long offset)
         {
-            offset = Math.Min(Size - 1, offset);
+            offset = Math.Min(Length, offset);
             if (offset < currentPageFrameOffset || fileAndPages == null)
             {
                 TransactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(Name, 0, PagesBatchSize));
@@ -72,6 +71,10 @@ namespace RavenFS.Util
             {
                 var nextPageIndex = fileAndPages.Start + fileAndPages.Pages.Count;
                 TransactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(Name, nextPageIndex, PagesBatchSize));
+                if (fileAndPages.Pages.Count < 1)
+                {
+                    break;
+                }
                 currentPageFrameOffset += currentPageFrameSize;
             }
             currentOffset = offset;
@@ -84,13 +87,14 @@ namespace RavenFS.Util
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (currentOffset >= Size)
+            if (currentOffset >= Length)
             {
                 return 0;
             }
             var innerBuffer = new byte[MaxPageSize];
             var pageOffset = currentPageFrameOffset;
             var length = 0;
+            var startingOffset = currentOffset;
             foreach (var page in fileAndPages.Pages)
             {
                 if (pageOffset <= currentOffset && currentOffset < pageOffset + page.Size)
@@ -104,7 +108,7 @@ namespace RavenFS.Util
                 pageOffset += page.Size;
             }
             MovePageFrame(currentOffset + length);
-            return length;
+            return Convert.ToInt32(currentOffset - startingOffset);
         }
 
         public override void Write(byte[] buffer, int offset, int count)

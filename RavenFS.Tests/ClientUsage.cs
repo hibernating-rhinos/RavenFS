@@ -195,15 +195,9 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void CanGetPartialContent()
+        public void CanGetPartialContent_from_beggining()
         {
-            var ms = new MemoryStream();
-            var uploadedStream = new StreamWriter(ms);
-            for (var i = 0; i < 1000000; i++)
-            {
-                uploadedStream.Write(i.ToString("D6"));
-            }
-            uploadedStream.Flush();
+            var ms = PrepareSourceStream();
             ms.Position = 0;
             var client = NewClient();
             client.UploadAsync("abc.txt",
@@ -213,11 +207,92 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long>(0, 5)).Result;
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long?>(0, 5)).Result;
             var sr = new StreamReader(downloadedStream);
+            downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
-            Assert.Equal("000000", result);
-            Assert.Equal("bytes: 0-5/6000000", nameValues["Content-Range"]);
+            Assert.Equal("000001", result);
+            Assert.Equal("bytes 0-5/3000000", nameValues["Content-Range"]);
+            Assert.Equal("6", nameValues["Content-Length"]);
+        }
+
+        [Fact]
+        public void CanGetPartialContent_from_middle()
+        {
+            var ms = PrepareSourceStream();
+            ms.Position = 0;
+            var client = NewClient();
+            client.UploadAsync("abc.txt",
+                               new NameValueCollection
+                                   {
+                                       {"test", "1"}
+                                   }, ms)
+                .Wait();
+            var downloadedStream = new MemoryStream();
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long?>(3006, 3017)).Result;
+            var sr = new StreamReader(downloadedStream);
+            downloadedStream.Position = 0;
+            var result = sr.ReadToEnd();
+            Assert.Equal("000502000503", result);
+            Assert.Equal("bytes 3006-3017/3000000", nameValues["Content-Range"]);
+            Assert.Equal("12", nameValues["Content-Length"]);
+        }
+
+        [Fact]
+        public void CanGetPartialContent_from_end_explicitely()
+        {
+            var ms = PrepareSourceStream();
+            ms.Position = 0;
+            var client = NewClient();
+            client.UploadAsync("abc.txt",
+                               new NameValueCollection
+                                   {
+                                       {"test", "1"}
+                                   }, ms)
+                .Wait();
+            var downloadedStream = new MemoryStream();
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long?>(ms.Length - 6, ms.Length - 1)).Result;
+            var sr = new StreamReader(downloadedStream);
+            downloadedStream.Position = 0;
+            var result = sr.ReadToEnd();
+            Assert.Equal("500000", result);
+            Assert.Equal("bytes 2999994-2999999/3000000", nameValues["Content-Range"]);
+            Assert.Equal("6", nameValues["Content-Length"]);
+        }
+
+        [Fact]
+        public void CanGetPartialContent_from_end()
+        {
+            var ms = PrepareSourceStream();
+            ms.Position = 0;
+            var client = NewClient();
+            client.UploadAsync("abc.txt",
+                               new NameValueCollection
+                                   {
+                                       {"test", "1"}
+                                   }, ms)
+                .Wait();
+            var downloadedStream = new MemoryStream();
+            //var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long>(ms.Length - 7, ms.Length - 2)).Result;
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long?>(ms.Length - 7, null)).Result;
+            var sr = new StreamReader(downloadedStream);
+            downloadedStream.Position = 0;
+            var result = sr.ReadToEnd();
+            Assert.Equal("9500000", result);
+            Assert.Equal("bytes 2999993-2999999/3000000", nameValues["Content-Range"]);
+            Assert.Equal("7", nameValues["Content-Length"]);
+        }
+
+        private static MemoryStream PrepareSourceStream()
+        {
+            var ms = new MemoryStream();
+            var writer = new StreamWriter(ms);
+            for (var i = 1; i <= 500000; i++)
+            {
+                writer.Write(i.ToString("D6"));
+            }
+            writer.Flush();
+            return ms;
         }
     }
 }
