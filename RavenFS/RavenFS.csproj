@@ -112,6 +112,7 @@
     <Compile Include="Storage\StorageActionsAccessor.cs" />
     <Compile Include="Storage\StorageConfigurator.cs" />
     <Compile Include="Storage\TableColumnsCache.cs" />
+    <Compile Include="Util\CombinedStream.cs" />
     <Compile Include="Util\DispsableAction.cs" />
     <Compile Include="Infrastructure\HandlerMetadataAttribute.cs" />
     <Compile Include="Infrastructure\IHandlerMetadata.cs" />

@@ -7,7 +7,7 @@ using System;
 
 namespace RavenFS.Tests
 {
-	internal class IisExpressDriver : ProcessDriver
+	public class IisExpressDriver : ProcessDriver
 	{
 		public string Url { get; private set; }
 

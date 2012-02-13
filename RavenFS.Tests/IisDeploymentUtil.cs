@@ -4,19 +4,20 @@ using Raven.Database.Extensions;
 
 namespace RavenFS.Tests
 {
-	public class IisDeploymentUtil
+	public static class IisDeploymentUtil
 	{
-		protected const string WebDirectory = @".\RavenIISTestWeb\";
+		private const string WebDirectoryTemplate = @".\RavenIISTestWeb_{0}\";
 
-		public static string DeployWebProjectToTestDirectory()
+		public static string DeployWebProjectToTestDirectory(int port)
 		{
-			var fullPath = Path.GetFullPath(WebDirectory);
+		    var webDirectory = String.Format(WebDirectoryTemplate, port);
+			var fullPath = Path.GetFullPath(webDirectory);
 			if (Directory.Exists(fullPath))
 			{
 				IOExtensions.DeleteDirectory(fullPath);
 			}
 
-			IOExtensions.CopyDirectory(GetRavenWebSource(), WebDirectory, new[]{"Data.ravenfs", "Index.ravenfs"});
+			IOExtensions.CopyDirectory(GetRavenWebSource(), webDirectory, new[]{"Data.ravenfs", "Index.ravenfs"});
 
 			IOExtensions.DeleteDirectory(Path.Combine(fullPath, "Data.ravenfs"));
 			IOExtensions.DeleteDirectory(Path.Combine(fullPath, "Index.ravenfs"));
