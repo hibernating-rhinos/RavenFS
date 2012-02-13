@@ -24,15 +24,15 @@ namespace RavenFS.Tests
 			var buffer = new byte[size];
 			new Random().NextBytes(buffer);
 
-			webClient.UploadData("/files/mb.bin", "PUT", buffer);
+			WebClient.UploadData("/files/mb.bin", "PUT", buffer);
 
-			var files = JsonConvert.DeserializeObject<List<FileHeader>>(webClient.DownloadString("/files/"), new NameValueCollectionJsonConverter());
+			var files = JsonConvert.DeserializeObject<List<FileHeader>>(WebClient.DownloadString("/files/"), new NameValueCollectionJsonConverter());
 			Assert.Equal(1, files.Count);
 			Assert.Equal(buffer.Length, files[0].TotalSize);
 			Assert.Equal(buffer.Length, files[0].UploadedSize);
 
 
-			var downloadData = webClient.DownloadData("/files/mb.bin");
+			var downloadData = WebClient.DownloadData("/files/mb.bin");
 
 			Assert.Equal(buffer.Length, downloadData.Length);
 			Assert.Equal(buffer, downloadData);
@@ -45,9 +45,9 @@ namespace RavenFS.Tests
 			var buffer = new byte[size];
 			new Random().NextBytes(buffer);
 
-			webClient.UploadData("/files/mb.bin", "PUT", buffer);
+			WebClient.UploadData("/files/mb.bin", "PUT", buffer);
 
-			var files = JsonConvert.DeserializeObject<List<FileHeader>>(webClient.DownloadString("/files/"),
+			var files = JsonConvert.DeserializeObject<List<FileHeader>>(WebClient.DownloadString("/files/"),
 			                                                            new NameValueCollectionJsonConverter());
 			Assert.Equal(1, files.Count);
 			Assert.Equal(buffer.Length, files[0].TotalSize);

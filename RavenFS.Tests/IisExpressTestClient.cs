@@ -8,9 +8,9 @@ namespace RavenFS.Tests
 	{
 		public static int Port = 8084;
 
-		private IisExpressDriver _iisExpress;
+		private IisExpressDriver iisExpress;
 
-		protected WebClient webClient;
+		protected WebClient WebClient;
 
 		static IisExpressTestClient()
 		{
@@ -18,29 +18,29 @@ namespace RavenFS.Tests
 			{
 				new Uri("http://localhost/?query=Customer:Northwind%20AND%20Preferred:True");
 			}
-			catch (Exception)
+			catch
 			{
 			}
 		}
 
 		protected HttpWebRequest CreateWebRequest(string url)
 		{
-			return (HttpWebRequest)WebRequest.Create(_iisExpress.Url + url);
+			return (HttpWebRequest)WebRequest.Create(iisExpress.Url + url);
 		}
 
 		protected RavenFileSystemClient NewClient()
 		{
-			return new RavenFileSystemClient(_iisExpress.Url);
+			return new RavenFileSystemClient(iisExpress.Url);
 		}
 
 		#region IDisposable Members
 
 		public void Dispose()
 		{
-			if (_iisExpress != null)
+			if (iisExpress != null)
 			{
-				_iisExpress.Dispose();
-				_iisExpress = null;
+				iisExpress.Dispose();
+				iisExpress = null;
 			}
 		}
 
@@ -48,11 +48,11 @@ namespace RavenFS.Tests
 
 		public IisExpressTestClient()
 		{
-			_iisExpress = new IisExpressDriver();
-			_iisExpress.Start(IisDeploymentUtil.DeployWebProjectToTestDirectory(), 8084);
-			webClient = new WebClient
+			iisExpress = new IisExpressDriver();
+			iisExpress.Start(IisDeploymentUtil.DeployWebProjectToTestDirectory(), 8084);
+			WebClient = new WebClient
 			{
-				BaseAddress = _iisExpress.Url
+				BaseAddress = iisExpress.Url
 			};
 		}
 	}

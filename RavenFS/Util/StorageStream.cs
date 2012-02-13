@@ -23,7 +23,6 @@ namespace RavenFS.Util
         private long currentOffset;
         private long currentPageFrameSize { get { return fileAndPages.Pages.Sum(item => item.Size); } }
         private long currentPageFrameOffset;
-        private bool EndOfPages { get { return fileAndPages.Pages.Count < PagesBatchSize; } }
 
         public StorageStream(TransactionalStorage transactionalStorage, string fileName)
         {

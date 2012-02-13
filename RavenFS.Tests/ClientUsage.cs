@@ -32,7 +32,7 @@ namespace RavenFS.Tests
 
             var metadata = client.GetMetadataForAsync("abc.txt");
             Assert.Equal("2", metadata.Result["test"]);
-            Assert.Equal(expected, webClient.DownloadString("/files/abc.txt"));
+            Assert.Equal(expected, WebClient.DownloadString("/files/abc.txt"));
         }
         [Theory]
         [InlineData(1024 * 1024)]		// 1 mb
@@ -49,7 +49,7 @@ namespace RavenFS.Tests
             var client = NewClient();
             client.UploadAsync("abc.txt", ms).Wait();
 
-            var downloadString = webClient.DownloadString("/files/abc.txt");
+            var downloadString = WebClient.DownloadString("/files/abc.txt");
             Assert.Equal(expected, downloadString);
         }
 
@@ -164,7 +164,7 @@ namespace RavenFS.Tests
             var buffer = new byte[1024 * 1024 * 2];
             new Random().NextBytes(buffer);
 
-            webClient.UploadData("/files/mb.bin", "PUT", buffer);
+            WebClient.UploadData("/files/mb.bin", "PUT", buffer);
 
 
             var result = client.GetRdcManifestAsync("mb.bin").Result;
@@ -179,7 +179,7 @@ namespace RavenFS.Tests
             var buffer = new byte[1024 * 1024 * 2];
             new Random().NextBytes(buffer);
 
-            webClient.UploadData("/files/mb.bin", "PUT", buffer);
+            WebClient.UploadData("/files/mb.bin", "PUT", buffer);
 
 
             var result = client.GetRdcManifestAsync("mb.bin").Result;
