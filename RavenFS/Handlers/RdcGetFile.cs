@@ -21,7 +21,7 @@ namespace RavenFS.Handlers
         protected override Task ProcessRequestAsync(HttpContext context)
         {
             context.Response.BufferOutput = false;
-            var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;            
+            var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
 
             var storageStream = new StorageStream(Storage, fileName);
             var range = GetRangeFromHeader(context);

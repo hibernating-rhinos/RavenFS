@@ -10,7 +10,7 @@ namespace RavenFS.Tests
 {
     public class SynchronizationTests : MultiIisExpressTestBase
     {
-        //[Fact]
+        [Fact]
         public void Synchronize_file_with_different_beginning()
         {
             var differenceChunk = new MemoryStream();

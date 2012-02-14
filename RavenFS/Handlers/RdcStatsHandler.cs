@@ -12,10 +12,10 @@ namespace RavenFS.Handlers
     public class RdcStatsHandler : AbstractAsyncHandler
     {
         protected override Task ProcessRequestAsync(HttpContext context)
-        {
+        {            
             return WriteJson(context, new RdcStats 
-            {
-                Version = (int)Rdc.Wrapper.Msrdc.Version
+            {                
+                Version = (int)global::Rdc.Wrapper.Msrdc.Version
             });
         }
     }
