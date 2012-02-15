@@ -36,19 +36,20 @@ namespace RavenFS.Handlers
             var seedSignatureInfo = new SignatureInfo(FileAccess, seedSignatureManifest.Signatures.Last().Name);
             var needList = NeedListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);            
             
-            ParseNeedList(fileName, fileName, fileName + ".rsult", needList, sourceRdcAccess);
+            ParseNeedList(fileName, fileName, fileName + ".result", needList, sourceRdcAccess);
 
-            return null;
+            return Completed;
         }
 
-        private void ParseNeedList(string sourceFileName, string seedFileName, string outpuFileName, 
+        private void ParseNeedList(string sourceFileName, string seedFileName, string outputFileName, 
             IEnumerable<RdcNeed> needList, IRdcAccess sourceRdcAccess)
         {            
             // Currently it copies whole file but it should only replace changed pages
             // TODO: This cast from ulong to long can be dangerous
             // TODO: Improve writting logic by replacing only those pages which was changed
-            using (Stream seedFile = StorageStream.Reading(Storage, seedFileName), 
-                outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, outpuFileName, null)) // TODO: Remebber to copy metadata
+            using (StorageStream seedFile = StorageStream.Reading(Storage, seedFileName),
+                // TODO: Remember to copy metadata from SOURCE
+                outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, outputFileName, seedFile.Metadata)) 
             {
                 foreach (var item in needList)
                 {

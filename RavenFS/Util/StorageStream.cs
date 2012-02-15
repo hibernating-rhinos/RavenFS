@@ -5,6 +5,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Web;
+using RavenFS.Search;
 using RavenFS.Storage;
 using System.Security.AccessControl;
 
@@ -21,6 +22,8 @@ namespace RavenFS.Util
             get { return fileHeader.Name; }
         }
 
+        public NameValueCollection Metadata { get; private set; }
+
         private const int MaxPageSize = 64 * 1024;
         private const int PagesBatchSize = 64;
         private FileAndPages fileAndPages;
@@ -33,18 +36,20 @@ namespace RavenFS.Util
             return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.Read, null, null);
         }
 
-        public static StorageStream CreatingNewAndWritting(TransactionalStorage transactionalStorage, Search.IndexStorage indexStorage, string fileName, NameValueCollection metadata)
+        public static StorageStream CreatingNewAndWritting(TransactionalStorage transactionalStorage, IndexStorage indexStorage, string fileName, NameValueCollection metadata)
         {            
             Contract.Requires<ArgumentNullException>(indexStorage != null, "indexStorage == null");            
             return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.CreateAndWrite, metadata, indexStorage);
         }
 
-        protected StorageStream(TransactionalStorage transactionalStorage, string fileName, StorageStreamAccess storageStreamAccess, 
+        private StorageStream(TransactionalStorage transactionalStorage, string fileName, StorageStreamAccess storageStreamAccess, 
             NameValueCollection metadata, Search.IndexStorage indexStorage)
         {
             Contract.Requires<ArgumentNullException>(transactionalStorage != null, "transactionalStorage == null");
+
             TransactionalStorage = transactionalStorage;
             StorageStreamAccess = storageStreamAccess;
+            
             switch (storageStreamAccess)
             {
                 case StorageStreamAccess.Read:
@@ -53,6 +58,7 @@ namespace RavenFS.Util
                     {
                         throw new FileNotFoundException("File is not uploaded yet");
                     }
+                    Metadata = fileHeader.Metadata;
                     break;
                 case StorageStreamAccess.CreateAndWrite:
                     TransactionalStorage.Batch(accessor =>
@@ -61,6 +67,7 @@ namespace RavenFS.Util
                         accessor.PutFile(fileName, null, metadata);
                         indexStorage.Index(fileName, metadata);
                     });
+                    Metadata = metadata;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("storageStreamAccess", storageStreamAccess, "Unknown value");
@@ -145,10 +152,24 @@ namespace RavenFS.Util
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            //TransactionalStorage.Batch(
-            //    accessor => 
-            //);
+            var innerOffset = 0;
+            var innerBuffer = new byte[MaxPageSize];
+            while (innerOffset >= count)
+            {
+                var toCopy = Math.Min(MaxPageSize, count - innerOffset);
+                Array.Copy(buffer, offset + innerOffset, innerBuffer, 0, toCopy);
+                TransactionalStorage.Batch(
+                    accessor =>
+                        {
+                            var hashKey = accessor.InsertPage(innerBuffer, toCopy);
+                            accessor.AssociatePage(Name, hashKey, writtingPagePosition, toCopy);
+                        });
+                innerOffset += toCopy;
+                writtingPagePosition++;
+            }
         }
+
+        private int writtingPagePosition = 0;
 
         public override bool CanRead
         {
@@ -178,6 +199,10 @@ namespace RavenFS.Util
 
         public override void Close()
         {
+            if (StorageStreamAccess == StorageStreamAccess.CreateAndWrite)
+            {
+                TransactionalStorage.Batch(accessor => accessor.CompleteFileUpload(Name));
+            }
             base.Close();
         }
     }
