@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,13 +15,27 @@ namespace RavenFS.Handlers
 {
     [HandlerMetadata("^/synchronize/(.+)/(.+)", "GET")]
     public class SynchonizationHandler : AbstractAsyncHandler
-    {        
+    {
+        private static NameValueCollection KnownServers
+        {
+            get
+            {
+                return (NameValueCollection)ConfigurationManager.GetSection("knownServers");
+            }
+        }
         protected override Task ProcessRequestAsync(HttpContext context)
         {
             context.Response.BufferOutput = false;            
-            var sourceServer = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
+            var sourceServerName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
+            var sourceServerUrl = KnownServers[sourceServerName];
+
+            if (String.IsNullOrEmpty(sourceServerUrl))
+            {
+                throw new Exception("Unknown server identifier " + sourceServerName);
+            }
+            
             var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[2].Value;
-            var sourceRdcAccess = new RemoteRdcAccess(sourceServer);
+            var sourceRdcAccess = new RemoteRdcAccess(sourceServerUrl);            
 
             var seedRdcAccess = new LocalRdcAccess(new FileAccessTool(this), Storage, FileAccess, SigGenerator);
             var seedSignatureManifest = seedRdcAccess.GetRdcManifestAsync(fileName).Result;            
