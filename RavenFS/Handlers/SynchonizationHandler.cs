@@ -47,7 +47,8 @@ namespace RavenFS.Handlers
             // Currently it copies whole file but it should only replace changed pages
             // TODO: This cast from ulong to long can be dangerous
             // TODO: Improve writting logic by replacing only those pages which was changed
-            using (Stream seedFile = new StorageStream(Storage, seedFileName), outputFile = new StorageStream(Storage, outpuFileName))
+            using (Stream seedFile = StorageStream.Reading(Storage, seedFileName), 
+                outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, outpuFileName, null)) // TODO: Remebber to copy metadata
             {
                 foreach (var item in needList)
                 {

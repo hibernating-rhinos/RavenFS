@@ -23,7 +23,7 @@ namespace RavenFS.Handlers
             context.Response.BufferOutput = false;
             var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
 
-            var storageStream = new StorageStream(Storage, fileName);
+            var storageStream = StorageStream.Reading(Storage, fileName);
             var range = GetRangeFromHeader(context);
             var from = range.Item1;
             var to = range.Item2 ?? storageStream.Length - 1;

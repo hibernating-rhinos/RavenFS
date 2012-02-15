@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Web;
 using RavenFS.Storage;
+using System.Security.AccessControl;
 
 namespace RavenFS.Util
 {
     public class StorageStream : Stream
     {
         public TransactionalStorage TransactionalStorage { get; private set; }
+        public StorageStreamAccess StorageStreamAccess { get; private set; }
 
         private FileHeader fileHeader;
         public string Name
@@ -24,20 +28,44 @@ namespace RavenFS.Util
         private long currentPageFrameSize { get { return fileAndPages.Pages.Sum(item => item.Size); } }
         private long currentPageFrameOffset;
 
-        public StorageStream(TransactionalStorage transactionalStorage, string fileName)
+        public static StorageStream Reading(TransactionalStorage transactionalStorage, string fileName)
         {
-            TransactionalStorage = transactionalStorage;
-            TransactionalStorage.Batch(accessor => fileHeader = accessor.ReadFile(fileName));
-            if (fileHeader.TotalSize == null)
-            {
-                throw new FileNotFoundException("File is not uploaded yet");
-            }
+            return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.Read, null, null);
         }
 
-        public override void Flush()
-        {
-            throw new NotImplementedException();
+        public static StorageStream CreatingNewAndWritting(TransactionalStorage transactionalStorage, Search.IndexStorage indexStorage, string fileName, NameValueCollection metadata)
+        {            
+            Contract.Requires<ArgumentNullException>(indexStorage != null, "indexStorage == null");            
+            return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.CreateAndWrite, metadata, indexStorage);
         }
+
+        protected StorageStream(TransactionalStorage transactionalStorage, string fileName, StorageStreamAccess storageStreamAccess, 
+            NameValueCollection metadata, Search.IndexStorage indexStorage)
+        {
+            Contract.Requires<ArgumentNullException>(transactionalStorage != null, "transactionalStorage == null");
+            TransactionalStorage = transactionalStorage;
+            StorageStreamAccess = storageStreamAccess;
+            switch (storageStreamAccess)
+            {
+                case StorageStreamAccess.Read:
+                    TransactionalStorage.Batch(accessor => fileHeader = accessor.ReadFile(fileName));
+                    if (fileHeader.TotalSize == null)
+                    {
+                        throw new FileNotFoundException("File is not uploaded yet");
+                    }
+                    break;
+                case StorageStreamAccess.CreateAndWrite:
+                    TransactionalStorage.Batch(accessor =>
+                    {
+                        accessor.Delete(fileName);                                                
+                        accessor.PutFile(fileName, null, metadata);
+                        indexStorage.Index(fileName, metadata);
+                    });
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("storageStreamAccess", storageStreamAccess, "Unknown value");
+            }  
+        }        
 
         public override long Seek(long offset, SeekOrigin origin)
         {
@@ -110,9 +138,16 @@ namespace RavenFS.Util
             return Convert.ToInt32(currentOffset - startingOffset);
         }
 
-        public override void Write(byte[] buffer, int offset, int count)
+        public override void Flush()
         {
             throw new NotImplementedException();
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            //TransactionalStorage.Batch(
+            //    accessor => 
+            //);
         }
 
         public override bool CanRead
@@ -140,5 +175,16 @@ namespace RavenFS.Util
             get { return currentOffset; }
             set { Seek(value, SeekOrigin.Begin); }
         }
+
+        public override void Close()
+        {
+            base.Close();
+        }
+    }
+
+    public enum StorageStreamAccess
+    {
+        Read,
+        CreateAndWrite
     }
 }
