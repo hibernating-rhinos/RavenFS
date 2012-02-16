@@ -80,7 +80,8 @@ namespace RavenFS.Handlers
                                                                 (long)item.blockLength).Wait();
                             break;
                         case RdcNeedType.Seed:
-                            new NarrowedStream(seedFile, (long)item.fileOffset, (long)item.blockLength).CopyToAsync(
+                            // TODO: Some problem with writting to the end
+                            new NarrowedStream(seedFile, (long)item.fileOffset, (long)item.fileOffset + (long)item.blockLength - 1).CopyToAsync(
                                 outputFile).Wait();
                             break;
                         default:

@@ -22,15 +22,36 @@ namespace RavenFS.Tests
             var sourceContent = PrepareSourceStream();
             sourceContent.Position = 0;
             var seedContent = new CombinedStream(differenceChunk, sourceContent);
-            var seed = NewClient(0);
-            var source = NewClient(1);
+            var seedClient = NewClient(0);
+            var sourceClient = NewClient(1);
 
-            seed.UploadAsync("test.txt", seedContent).Wait();
+            seedClient.UploadAsync("test.txt", seedContent).Wait();
             sourceContent.Position = 0;
-            source.UploadAsync("test.txt", sourceContent).Wait();
+            sourceClient.UploadAsync("test.txt", sourceContent).Wait();
 
-            var result = seed.StartSynchronizationAsync("server1", "test.txt").Result;
-            Assert.NotNull(result);
+            seedClient.StartSynchronizationAsync("server1", "test.txt").Wait();
+                  
+            using(var f = File.Create(@"c:\temp\result.txt"))
+            using(var result = new MemoryStream())
+            {
+                
+                result.Position = 0;
+                seedClient.DownloadAsync("test.txt.result", result).Wait();
+                result.Position = 0;
+                result.CopyTo(f);
+            }
+            using (var f = File.Create(@"c:\temp\source.txt"))
+            {
+                sourceContent.Position = 0;
+                sourceContent.CopyTo(f);
+            }
+            using (var f = File.Create(@"c:\temp\seed.txt"))
+            {
+                seedContent.Position = 0;
+                seedContent.CopyTo(f);
+            }
+            sourceContent.Position = 0;
+
         }
 
         private static MemoryStream PrepareSourceStream()
@@ -38,9 +59,13 @@ namespace RavenFS.Tests
             var ms = new MemoryStream();
             var writer = new StreamWriter(ms);
 
-            for (var i = 1; i <= 500000; i++)
+            for (var i = 1; i <= 5000; i++)
             {
-                writer.Write(i.ToString("D6"));
+                for (var j = 0; j < 100; j++)
+                {
+                    writer.Write(i.ToString("D4"));
+                }
+                writer.Write("\n");
             }
             writer.Flush();
 

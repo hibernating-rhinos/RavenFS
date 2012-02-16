@@ -42,7 +42,7 @@ namespace RavenFS.Rdc
         public Task GetFileContentAsync(string fileName, Stream destination, long from, long length)
         {
             Contract.Requires(length > 0);
-            return client.DownloadAsync(fileName, destination, from, from + length - 1);            
+            return client.DownloadAsync("/rdc/files/", fileName, destination, new Tuple<long, long?>(from, from + length - 1));            
         }
     }
 }
