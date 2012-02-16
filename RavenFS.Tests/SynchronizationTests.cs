@@ -27,10 +27,10 @@ namespace RavenFS.Tests
 
             seed.UploadAsync("test.txt", seedContent).Wait();
             sourceContent.Position = 0;
-            source.UploadAsync("test.txt", sourceContent);
+            source.UploadAsync("test.txt", sourceContent).Wait();
 
-            var result = seed.StartSynchronizationAsync(IisExpresses[1].Url, "test.txt").Result;
-            Assert.True(result);
+            var result = seed.StartSynchronizationAsync("server1", "test.txt").Result;
+            Assert.NotNull(result);
         }
 
         private static MemoryStream PrepareSourceStream()

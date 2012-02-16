@@ -17,10 +17,7 @@ namespace RavenFS.Util
         public StorageStreamAccess StorageStreamAccess { get; private set; }
 
         private FileHeader fileHeader;
-        public string Name
-        {
-            get { return fileHeader.Name; }
-        }
+        public string Name { get; private set; }
 
         public NameValueCollection Metadata { get; private set; }
 
@@ -49,16 +46,18 @@ namespace RavenFS.Util
 
             TransactionalStorage = transactionalStorage;
             StorageStreamAccess = storageStreamAccess;
+            Name = fileName;
             
             switch (storageStreamAccess)
             {
                 case StorageStreamAccess.Read:
-                    TransactionalStorage.Batch(accessor => fileHeader = accessor.ReadFile(fileName));
+                    TransactionalStorage.Batch(accessor => fileHeader = accessor.ReadFile(fileName));                    
                     if (fileHeader.TotalSize == null)
                     {
                         throw new FileNotFoundException("File is not uploaded yet");
                     }
                     Metadata = fileHeader.Metadata;
+                    Seek(0, SeekOrigin.Begin);
                     break;
                 case StorageStreamAccess.CreateAndWrite:
                     TransactionalStorage.Batch(accessor =>
@@ -71,8 +70,8 @@ namespace RavenFS.Util
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("storageStreamAccess", storageStreamAccess, "Unknown value");
-            }  
-        }        
+            }            
+        }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
@@ -127,15 +126,17 @@ namespace RavenFS.Util
             }
             var innerBuffer = new byte[MaxPageSize];
             var pageOffset = currentPageFrameOffset;
-            var length = 0;
+            var length = 0L;
             var startingOffset = currentOffset;
             foreach (var page in fileAndPages.Pages)
             {
                 if (pageOffset <= currentOffset && currentOffset < pageOffset + page.Size)
                 {
-                    TransactionalStorage.Batch(accessor => length = accessor.ReadPage(page.Key, innerBuffer));
+                    var pageLength = 0;
+                    TransactionalStorage.Batch(accessor => pageLength = accessor.ReadPage(page.Key, innerBuffer));
                     var sourceIndex = currentOffset - pageOffset;
-                    length = Math.Min(length, Math.Min(buffer.Length - offset, count));
+                    length = Math.Min(innerBuffer.Length - sourceIndex, Math.Min(pageLength, Math.Min(buffer.Length - offset, count)));
+                    
                     Array.Copy(innerBuffer, sourceIndex, buffer, offset, length);
                     break;
                 }
@@ -173,17 +174,17 @@ namespace RavenFS.Util
 
         public override bool CanRead
         {
-            get { return fileHeader.TotalSize.HasValue; }
+            get { return StorageStreamAccess == StorageStreamAccess.Read && fileHeader.TotalSize.HasValue; }
         }
 
         public override bool CanSeek
         {
-            get { return fileHeader.TotalSize.HasValue; }
+            get { return StorageStreamAccess == StorageStreamAccess.Read && fileHeader.TotalSize.HasValue; }
         }
 
         public override bool CanWrite
         {
-            get { return false; }
+            get { return StorageStreamAccess == StorageStreamAccess.CreateAndWrite; }
         }
 
         public override long Length

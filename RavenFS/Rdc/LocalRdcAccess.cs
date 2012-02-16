@@ -15,15 +15,13 @@ namespace RavenFS.Rdc
     {
         protected TransactionalStorage Storage { get; set; }
         protected IFileAccess FileAccess { get; set; }
-        protected SigGenerator SigGenerator { get; set; }
-        private readonly FileAccessTool fileAccessTool;        
+        protected SigGenerator SigGenerator { get; set; }  
 
-        public LocalRdcAccess(FileAccessTool fileAccessTool, TransactionalStorage storage, IFileAccess fileAccess, SigGenerator sigGenerator)
+        public LocalRdcAccess(TransactionalStorage storage, IFileAccess fileAccess, SigGenerator sigGenerator)
         {
             Storage = storage;
             FileAccess = fileAccess;
             SigGenerator = sigGenerator;
-            this.fileAccessTool = fileAccessTool;
         }
 
         public Task<RdcStats> GetRdcStatsAsync()
@@ -36,40 +34,29 @@ namespace RavenFS.Rdc
             FileAndPages fileAndPages = null;
             Storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, 0, 0));
             Storage.Batch(accessor => accessor.ReadFile(fileAndPages.Name));
-
-            // TODO: We need to add some cache logic and create Stream own implementation to access FSFiles
-            var fileName = Path.Combine(Path.GetTempPath(), Path.GetTempFileName());
-            var file = FileAccess.Create(fileName);
-            return fileAccessTool.WriteFile(file, fileAndPages.Name, 0, null)
-                .ContinueWith(task => file.Close())
-                .ContinueWith(
-                    task =>
-                        {
-                            using (var inputFile = FileAccess.OpenRead(fileName))
-                            {
-                                return SigGenerator.GenerateSignatures(inputFile);
-                            }
-                        })
-                .ContinueWith(
-                    task =>
-                        {
-                            var signatures =
-                                from item in task.Result
-                                select
-                                    new Signature()
-                                        {
-                                            Length = item.Length,
-                                            Name = item.Name
-                                        };
-                            return
-                                new SignatureManifest()
+            var result = new Task<SignatureManifest>(
+                () =>
+                    {
+                        var input = StorageStream.Reading(Storage, fileAndPages.Name);
+                        var signatureInfos = SigGenerator.GenerateSignatures(input);
+                        var signatures =
+                            from item in signatureInfos
+                            select
+                                new Signature()
                                     {
-                                        FileName = fileAndPages.Name,
-                                        FileLength = fileAndPages.TotalSize ?? 0,
-                                        Signatures = signatures.ToList()
+                                        Length = item.Length,
+                                        Name = item.Name
                                     };
-
-                        });
+                        return
+                            new SignatureManifest()
+                                {
+                                    FileName = fileAndPages.Name,
+                                    FileLength = fileAndPages.TotalSize ?? 0,
+                                    Signatures = signatures.ToList()
+                                };
+                    });
+            result.Start();
+            return result;
         }
 
         public SignatureInfo GetSignatureInfo(string sigName)

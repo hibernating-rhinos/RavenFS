@@ -281,16 +281,16 @@ namespace RavenFS.Client
 			}
 		}
 
-	    public Task<bool> StartSynchronizationAsync(string url, string fileName)
+	    public Task<string> StartSynchronizationAsync(string serverIdentifier, string fileName)
 	    {
-            var requestUriString = baseUrl + "/synchronize/" + Uri.EscapeDataString(url) + "/" + Uri.EscapeDataString(fileName); ;
+            var requestUriString = baseUrl + "/synchronize/" + Uri.EscapeDataString(serverIdentifier) + "/" + Uri.EscapeDataString(fileName); ;
             var request = (HttpWebRequest)WebRequest.Create(requestUriString);
             return request.GetResponseAsync()
                 .ContinueWith(task =>
                 {
                     using (var stream = task.Result.GetResponseStream())
                     {
-                        return new StreamReader(stream).ReadToEnd() == "True";
+                        return new StreamReader(stream).ReadToEnd();
                     }
                 });
 	    }

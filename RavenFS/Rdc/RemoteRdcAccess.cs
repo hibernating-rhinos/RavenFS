@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -40,8 +41,8 @@ namespace RavenFS.Rdc
 
         public Task GetFileContentAsync(string fileName, Stream destination, long from, long length)
         {
-            // TODO: 
-            throw new NotImplementedException();
+            Contract.Requires(length > 0);
+            return client.DownloadAsync(fileName, destination, from, from + length - 1);            
         }
     }
 }

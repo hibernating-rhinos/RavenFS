@@ -18,7 +18,7 @@ namespace RavenFS.Handlers
             context.Response.BufferOutput = false;
             var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
 
-            var localRdcAccess = new LocalRdcAccess(new FileAccessTool(this), Storage, FileAccess, SigGenerator);
+            var localRdcAccess = new LocalRdcAccess(Storage, FileAccess, SigGenerator);
             var signatureInfo = localRdcAccess.GetSignatureInfo(fileName);
             var sigFile = signatureInfo.OpenRead();
 
