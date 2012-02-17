@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using RavenFS.Util;
 using Xunit;
+using Raven.Database.Extensions;
 
 namespace RavenFS.Tests
 {
@@ -30,27 +31,19 @@ namespace RavenFS.Tests
             sourceClient.UploadAsync("test.txt", sourceContent).Wait();
 
             seedClient.StartSynchronizationAsync("server1", "test.txt").Wait();
-                  
-            using(var f = File.Create(@"c:\temp\result.txt"))
+
+            string resultMD5 = null;
             using(var result = new MemoryStream())
-            {
-                
-                result.Position = 0;
+            {                
                 seedClient.DownloadAsync("test.txt.result", result).Wait();
                 result.Position = 0;
-                result.CopyTo(f);
+                resultMD5 = result.GetMD5Hash();
             }
-            using (var f = File.Create(@"c:\temp\source.txt"))
-            {
-                sourceContent.Position = 0;
-                sourceContent.CopyTo(f);
-            }
-            using (var f = File.Create(@"c:\temp\seed.txt"))
-            {
-                seedContent.Position = 0;
-                seedContent.CopyTo(f);
-            }
+            
             sourceContent.Position = 0;
+            var sourceMD5 = sourceContent.GetMD5Hash();
+            
+            Assert.True(resultMD5 == sourceMD5);
 
         }
 

@@ -5,6 +5,8 @@
 //-----------------------------------------------------------------------
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Linq;
 
@@ -92,6 +94,20 @@ namespace Raven.Database.Extensions
 				path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path.Substring(2));
 
             return Path.IsPathRooted(path) ? path : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
+        }
+
+        public static string GetMD5Hash(this Stream stream)
+        {
+            MD5 md5 = new MD5CryptoServiceProvider();
+            var retVal = md5.ComputeHash(stream);
+
+            var sb = new StringBuilder();
+            for (var i = 0; i < retVal.Length; i++)
+            {
+                sb.Append(retVal[i].ToString("x2"));
+            }
+
+            return sb.ToString();
         }
     }
 }
