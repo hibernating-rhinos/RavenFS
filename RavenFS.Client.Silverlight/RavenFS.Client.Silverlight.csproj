@@ -77,6 +77,18 @@
     <Compile Include="..\RavenFS.Client\RavenFileSystemClient.cs">
       <Link>RavenFileSystemClient.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\RdcStats.cs">
+      <Link>RdcStats.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\ServerStats.cs">
+      <Link>ServerStats.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Signature.cs">
+      <Link>Signature.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\SignatureManifest.cs">
+      <Link>SignatureManifest.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS\Util\NameValueCollectionJsonConverter.cs">
       <Link>NameValueCollectionJsonConverter.cs</Link>
     </Compile>

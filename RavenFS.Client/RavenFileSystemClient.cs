@@ -7,6 +7,7 @@ using System.Net.Browser;
 #endif
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using RavenFS.Client;
 
 namespace RavenFS.Client
 {
