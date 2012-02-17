@@ -207,7 +207,7 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long?>(0, 5)).Result;
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, 0, 5).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
@@ -229,7 +229,7 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long?>(3006, 3017)).Result;
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, 3006, 3017).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
@@ -251,7 +251,7 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long?>(ms.Length - 6, ms.Length - 1)).Result;
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, ms.Length - 6, ms.Length - 1).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
@@ -274,7 +274,7 @@ namespace RavenFS.Tests
                 .Wait();
             var downloadedStream = new MemoryStream();
             //var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long>(ms.Length - 7, ms.Length - 2)).Result;
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long?>(ms.Length - 7, null)).Result;
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, ms.Length - 7, null).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();

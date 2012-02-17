@@ -110,14 +110,14 @@ namespace RavenFS.Client
 
         public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long from, long to)
         {
-            return DownloadAsync("/files/", filename, destination, new Tuple<long, long?>(from, to));
+            return DownloadAsync("/files/", filename, destination, from, to);
         }
 
-		public Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, Tuple<long, long?> fromTo = null,
+		public Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, long? from = null, long? to = null,
             Action<string, int> progress = null)
 		{
 #if SILVERLIGHT
-            if (fromTo != null)
+            if (from != null || to != null)
             {
                 throw new NotSupportedException("Silverlight doesn't support partial requests");
             }
@@ -130,15 +130,15 @@ namespace RavenFS.Client
 			var request = (HttpWebRequest)WebRequest.Create(baseUrl + path + filename);
 
 #if !SILVERLIGHT
-            if (fromTo != null)
+            if (from != null)
             {
-                if (fromTo.Item2 != null)
+                if (to != null)
                 {
-                    request.AddRange(fromTo.Item1, fromTo.Item2.Value);
+                    request.AddRange(from.Value, to.Value);
                 }
                 else
                 {
-                    request.AddRange(fromTo.Item1);
+                    request.AddRange(from.Value);
                 }
             }
             else if (destination.CanSeek)
