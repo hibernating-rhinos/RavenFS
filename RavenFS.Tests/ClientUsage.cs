@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
+using NLog;
 using Xunit;
 using Xunit.Extensions;
 
@@ -8,6 +9,8 @@ namespace RavenFS.Tests
 {
     public class ClientUsage : IisExpressTestClient
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+
         [Fact]
         public void CanUpdateJustMetadata()
         {
@@ -128,7 +131,7 @@ namespace RavenFS.Tests
         {
             var ms = new MemoryStream();
             var streamWriter = new StreamWriter(ms);
-            var expected = new string('a', 2048);
+            var expected = new string('a', 2000048);
             streamWriter.Write(expected);
             streamWriter.Flush();
             ms.Position = 0;
@@ -140,7 +143,35 @@ namespace RavenFS.Tests
             streamWriter.Write(new string('a', 1024));
             streamWriter.Flush();
 
-            client.DownloadAsync("abc.txt", ms2).Wait();
+            var downloadTime = TimeMeasure.HowLong(
+                () => client.DownloadAsync("abc.txt", ms2).Wait());
+            logger.Info("CanDownloadPartial: timespan={0}", downloadTime.TotalMilliseconds);
+            ms2.Position = 0;
+            var actual = new StreamReader(ms2).ReadToEnd();
+
+            Assert.Equal(new string('a', 2048), actual);
+        }
+
+        [Fact]
+        public void CanDownloadPartialFromRdc()
+        {
+            var ms = new MemoryStream();
+            var streamWriter = new StreamWriter(ms);
+            var expected = new string('a', 2000048);
+            streamWriter.Write(expected);
+            streamWriter.Flush();
+            ms.Position = 0;
+            var client = NewClient();
+            client.UploadAsync("abc.txt", ms).Wait();
+
+            var ms2 = new MemoryStream();
+            streamWriter = new StreamWriter(ms2);
+            streamWriter.Write(new string('a', 1024));
+            streamWriter.Flush();
+
+            var downloadTime = TimeMeasure.HowLong(
+                () => client.DownloadAsync("/rdc/files/", "abc.txt", ms2, null, null).Wait());
+            logger.Info("CanDownloadPartialFromRdc: timespan={0}", downloadTime.TotalMilliseconds);
             ms2.Position = 0;
             var actual = new StreamReader(ms2).ReadToEnd();
 

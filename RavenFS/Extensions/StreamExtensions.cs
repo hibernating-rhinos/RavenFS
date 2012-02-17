@@ -32,7 +32,7 @@ namespace RavenFS.Extensions
         public static Task CopyToAsync(this Stream self, Stream destination, long from, long to)
         {            
             var limitedStream = new NarrowedStream(self, from, to);
-            return limitedStream.CopyToAsync(destination);
+            return limitedStream.CopyToAsync(destination, StorageStream.MaxPageSize);
         }
 
     }
