@@ -26,15 +26,15 @@ namespace RavenFS.Infrastructure
 		private static readonly Search.IndexStorage search;
 	    private static SigGenerator sigGenerator;
 	    private static NeedListGenerator needListGenerator;
-	    private static IFileAccess fileAccess;
+        private static ISignatureRepository signatureRepository;
 		
         static RouterHandlerFactory()
 		{
 			storage = new Storage.TransactionalStorage("Data.ravenfs", new NameValueCollection());
 			search = new IndexStorage("Index.ravenfs", new NameValueCollection());
-            fileAccess = new SimpleFileAccess(Path.GetTempPath());
-            sigGenerator = new SigGenerator(fileAccess);
-            needListGenerator = new NeedListGenerator();
+            signatureRepository = new SimpleSignatureRepository(Path.GetTempPath());
+            sigGenerator = new SigGenerator(signatureRepository);
+            needListGenerator = new NeedListGenerator(signatureRepository);
 			storage.Initialize();
 			search.Initialize();
 
@@ -54,7 +54,7 @@ namespace RavenFS.Infrastructure
 
 			foreach (var handler in Handlers)
 			{
-				handler.Value.Initialize(globalBufferPool, handler.Metadata.Url, storage, search, sigGenerator, needListGenerator, fileAccess);
+				handler.Value.Initialize(globalBufferPool, handler.Metadata.Url, storage, search, sigGenerator, needListGenerator, signatureRepository);
 			}
 		}
 

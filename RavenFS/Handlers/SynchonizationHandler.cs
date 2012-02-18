@@ -16,6 +16,8 @@ namespace RavenFS.Handlers
     [HandlerMetadata("^/synchronize/(.+?)/(.+)$", "GET")]
     public class SynchonizationHandler : AbstractAsyncHandler
     {
+        private IDictionary<string, ISignatureRepository> remoteSignatureCaches;
+
         private static NameValueCollection KnownServers
         {
             get
@@ -23,6 +25,15 @@ namespace RavenFS.Handlers
                 return (NameValueCollection)ConfigurationManager.GetSection("knownServers");
             }
         }
+
+        public SynchonizationHandler()
+        {
+            foreach (var item in KnownServers.AllKeys)
+            {
+                remoteSignatureCaches[item] = new SimpleSignatureRepository(Path.Combine(Directory.GetCurrentDirectory(), item));
+            }
+        }
+
         protected override Task ProcessRequestAsync(HttpContext context)
         {
             context.Response.BufferOutput = false;
@@ -37,7 +48,7 @@ namespace RavenFS.Handlers
             var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[2].Value;
             var sourceRdcAccess = new RemoteRdcAccess(sourceServerUrl);
 
-            var seedRdcAccess = new LocalRdcAccess(Storage, FileAccess, SigGenerator);
+            var seedRdcAccess = new LocalRdcAccess(Storage, SignatureRepository, SigGenerator);
             var seedSignatureManifest = seedRdcAccess.GetRdcManifestAsync(fileName).Result;
             var sourceSignatureManifest = sourceRdcAccess.GetRdcManifestAsync(fileName).Result;
 
@@ -45,11 +56,11 @@ namespace RavenFS.Handlers
             // TODO: Recursive signature download
             var sourceSignature = sourceSignatureManifest.Signatures.Last();
 
-            var sourceSignatureInfo = new SignatureInfo(FileAccess, sourceSignature.Name + ".sourcecopy");
-            var signatureContent = sourceSignatureInfo.OpenWrite();
+            var sourceSignatureInfo = new SignatureInfo(sourceSignature.Name);
+            var signatureContent = remoteSignatureCaches[sourceServerName].CreateContent(sourceSignatureInfo.Name);
             sourceRdcAccess.GetSignatureContentAsync(sourceSignature.Name, signatureContent)
-                .ContinueWith(_ => signatureContent.Close()).Wait();
-            var seedSignatureInfo = new SignatureInfo(FileAccess, seedSignatureManifest.Signatures.Last().Name);
+                .ContinueWith(_ => signatureContent.Close()).Wait();             
+            var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
             var needList = NeedListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 
             ParseNeedList(fileName, fileName, fileName + ".result", needList, sourceRdcAccess);

@@ -14,10 +14,10 @@ namespace RavenFS.Rdc
     public class LocalRdcAccess : IRdcAccess
     {
         protected TransactionalStorage Storage { get; set; }
-        protected IFileAccess FileAccess { get; set; }
-        protected SigGenerator SigGenerator { get; set; }  
+        protected ISignatureRepository FileAccess { get; set; }
+        protected SigGenerator SigGenerator { get; set; }
 
-        public LocalRdcAccess(TransactionalStorage storage, IFileAccess fileAccess, SigGenerator sigGenerator)
+        public LocalRdcAccess(TransactionalStorage storage, ISignatureRepository fileAccess, SigGenerator sigGenerator)
         {
             Storage = storage;
             FileAccess = fileAccess;
@@ -61,7 +61,7 @@ namespace RavenFS.Rdc
 
         public SignatureInfo GetSignatureInfo(string sigName)
         {
-            return new SignatureInfo(FileAccess, sigName);
+            return new SignatureInfo(sigName);
         }
 
         public Task GetSignatureContentAsync(string sigName, Stream destination)

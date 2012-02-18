@@ -18,9 +18,9 @@ namespace RavenFS.Handlers
             context.Response.BufferOutput = false;
             var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
 
-            var localRdcAccess = new LocalRdcAccess(Storage, FileAccess, SigGenerator);
+            var localRdcAccess = new LocalRdcAccess(Storage, SignatureRepository, SigGenerator);
             var signatureInfo = localRdcAccess.GetSignatureInfo(fileName);
-            var sigFile = signatureInfo.OpenRead();
+            var sigFile = SignatureRepository.GetContentForReading(signatureInfo.Name);
 
             context.Response.AddHeader("Content-Length", sigFile.Length.ToString());
             context.Response.AddHeader("Content-Disposition", "attachment; filename=" + fileName);
