@@ -16,6 +16,7 @@ namespace RavenFS.Handlers
 			var filename = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
 
             var headers = context.Request.Headers.FilterHeaders();
+            headers.Add("Last-Modified", DateTime.UtcNow.ToString("O"));
             try
             {
                 Storage.Batch(accessor => accessor.UpdateFileMetadata(filename, headers));

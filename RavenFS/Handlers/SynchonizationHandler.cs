@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Web;
 using RavenFS.Infrastructure;
 using RavenFS.Rdc;
+using RavenFS.Storage;
 using RavenFS.Util;
 using Rdc.Wrapper;
 
@@ -16,7 +17,7 @@ namespace RavenFS.Handlers
     [HandlerMetadata("^/synchronize/(.+?)/(.+)$", "GET")]
     public class SynchonizationHandler : AbstractAsyncHandler
     {
-        private IDictionary<string, ISignatureRepository> remoteSignatureCaches;
+        private IDictionary<string, ISignatureRepository> remoteSignatureCaches = new Dictionary<string, ISignatureRepository>();
 
         private static NameValueCollection KnownServers
         {
@@ -48,8 +49,8 @@ namespace RavenFS.Handlers
             var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[2].Value;
             var sourceRdcAccess = new RemoteRdcAccess(sourceServerUrl);
 
-            var seedRdcAccess = new LocalRdcAccess(Storage, SignatureRepository, SigGenerator);
-            var seedSignatureManifest = seedRdcAccess.PrepareSignaturesAsync(fileName).Result;
+            var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
+            var seedSignatureManifest = localRdcManager.GetSignatureManifest(GetLocalFileDataInfo(fileName));
             var sourceSignatureManifest = sourceRdcAccess.PrepareSignaturesAsync(fileName).Result;
 
             // download last signature
@@ -59,7 +60,7 @@ namespace RavenFS.Handlers
             var sourceSignatureInfo = new SignatureInfo(sourceSignature.Name);
             var signatureContent = remoteSignatureCaches[sourceServerName].CreateContent(sourceSignatureInfo.Name);
             sourceRdcAccess.GetSignatureContentAsync(sourceSignature.Name, signatureContent)
-                .ContinueWith(_ => signatureContent.Close()).Wait();             
+                .ContinueWith(_ => signatureContent.Close()).Wait();
             var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
             var needList = NeedListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 
@@ -70,6 +71,18 @@ namespace RavenFS.Handlers
                                               sourceServerUrl,
                                               fileName
                                           });
+        }
+
+        private DataInfo GetLocalFileDataInfo(string fileName)
+        {
+            FileAndPages fileAndPages = null;
+            Storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0, 0));
+            return new DataInfo
+                       {
+                           CreatedAt = Convert.ToDateTime(fileAndPages.Metadata["Last-Modified"]),
+                           Length = fileAndPages.TotalSize ?? 0,
+                           Name = fileAndPages.Name
+                       };
         }
 
         private void ParseNeedList(string sourceFileName, string seedFileName, string outputFileName,

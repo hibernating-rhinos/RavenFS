@@ -14,13 +14,13 @@ namespace RavenFS.Rdc
     public class LocalRdcAccess : IRdcAccess
     {
         protected TransactionalStorage Storage { get; set; }
-        protected ISignatureRepository FileAccess { get; set; }
+        protected ISignatureRepository SignatureRepository { get; set; }
         protected SigGenerator SigGenerator { get; set; }
 
-        public LocalRdcAccess(TransactionalStorage storage, ISignatureRepository fileAccess, SigGenerator sigGenerator)
+        public LocalRdcAccess(TransactionalStorage storage, ISignatureRepository signatureRepository, SigGenerator sigGenerator)
         {
             Storage = storage;
-            FileAccess = fileAccess;
+            SignatureRepository = signatureRepository;
             SigGenerator = sigGenerator;
         }
 
