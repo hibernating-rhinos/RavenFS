@@ -29,7 +29,7 @@ namespace RavenFS.Rdc
             throw new NotImplementedException();
         }
 
-        public Task<SignatureManifest> GetRdcManifestAsync(string filename)
+        public Task<SignatureManifest> PrepareSignaturesAsync(string filename)
         {
             FileAndPages fileAndPages = null;
             Storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, 0, 0));

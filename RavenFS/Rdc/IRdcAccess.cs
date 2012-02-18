@@ -12,7 +12,7 @@ namespace RavenFS.Rdc
     public interface IRdcAccess
     {
         Task<RdcStats> GetRdcStatsAsync();
-        Task<SignatureManifest> GetRdcManifestAsync(string fileName);
+        Task<SignatureManifest> PrepareSignaturesAsync(string fileName);
         SignatureInfo GetSignatureInfo(string sigName);
         Task GetSignatureContentAsync(string sigName, Stream destination);
         Task GetFileContentAsync(string fileName, Stream destination, long from, long length);

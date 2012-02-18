@@ -38,7 +38,7 @@ namespace RavenFS.Handlers
         private Task<SignatureManifest> GenerateSignatures(string fileName)
         {
             var rdcAccess = new LocalRdcAccess(Storage, SignatureRepository, SigGenerator);
-            return rdcAccess.GetRdcManifestAsync(fileName);
+            return rdcAccess.PrepareSignaturesAsync(fileName);
         }
     }
 }

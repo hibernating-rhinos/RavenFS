@@ -24,7 +24,7 @@ namespace RavenFS.Rdc
             return client.GetRdcStatsAsync();
         }
 
-        public Task<SignatureManifest> GetRdcManifestAsync(string fileName)
+        public Task<SignatureManifest> PrepareSignaturesAsync(string fileName)
         {
             return client.GetRdcManifestAsync(fileName);
         }

@@ -49,8 +49,8 @@ namespace RavenFS.Handlers
             var sourceRdcAccess = new RemoteRdcAccess(sourceServerUrl);
 
             var seedRdcAccess = new LocalRdcAccess(Storage, SignatureRepository, SigGenerator);
-            var seedSignatureManifest = seedRdcAccess.GetRdcManifestAsync(fileName).Result;
-            var sourceSignatureManifest = sourceRdcAccess.GetRdcManifestAsync(fileName).Result;
+            var seedSignatureManifest = seedRdcAccess.PrepareSignaturesAsync(fileName).Result;
+            var sourceSignatureManifest = sourceRdcAccess.PrepareSignaturesAsync(fileName).Result;
 
             // download last signature
             // TODO: Recursive signature download

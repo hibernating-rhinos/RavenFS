@@ -34,6 +34,9 @@
     <Reference Include="AsyncCtpLibrary, Version=1.0.4107.18181, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\AsyncCTP.0.3\lib\net40\AsyncCtpLibrary.dll</HintPath>
     </Reference>
+    <Reference Include="Moq">
+      <HintPath>..\packages\Moq.4.0.10827\lib\NET40\Moq.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.0.2.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL" />
     <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -69,6 +72,7 @@
     <Compile Include="IisDeploymentUtil.cs" />
     <Compile Include="IisExpressDriver.cs" />
     <Compile Include="IisExpressTestClient.cs" />
+    <Compile Include="LocalRdcManagerTest.cs" />
     <Compile Include="MultiIisExpressTestBase.cs" />
     <Compile Include="NarrowedStreamTests.cs" />
     <Compile Include="ProcessDriver.cs" />
@@ -86,6 +90,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\External\rdc-service\Rdc.Wrapper\Rdc.Wrapper.csproj">
+      <Project>{E5A918C7-8FB7-4172-A11F-0E7219B1FD08}</Project>
+      <Name>Rdc.Wrapper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RavenFS.Client\RavenFS.Client.csproj">
       <Project>{E37467ED-F680-423E-964A-60988A90F76E}</Project>
       <Name>RavenFS.Client</Name>

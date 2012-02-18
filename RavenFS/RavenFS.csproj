@@ -136,8 +136,10 @@
     <Compile Include="Handlers\RdcStatsHandler.cs" />
     <Compile Include="Handlers\SynchonizationHandler.cs" />
     <Compile Include="Infrastructure\AbstractAsyncHandler.cs" />
+    <Compile Include="Rdc\DataInfo.cs" />
     <Compile Include="Rdc\IRdcAccess.cs" />
     <Compile Include="Rdc\LocalRdcAccess.cs" />
+    <Compile Include="Rdc\LocalRdcManager.cs" />
     <Compile Include="Rdc\RemoteRdcAccess.cs" />
     <Compile Include="Search\IndexStorage.cs" />
     <Compile Include="Search\LowerCaseKeywordAnalyzer.cs" />
