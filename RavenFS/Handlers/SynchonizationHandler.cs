@@ -18,6 +18,7 @@ namespace RavenFS.Handlers
     public class SynchonizationHandler : AbstractAsyncHandler
     {
         private IDictionary<string, ISignatureRepository> remoteSignatureCaches = new Dictionary<string, ISignatureRepository>();
+        private NeedListParser _needListParser = new NeedListParser();
 
         private static NameValueCollection KnownServers
         {
@@ -64,7 +65,16 @@ namespace RavenFS.Handlers
             var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
             var needList = NeedListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 
-            ParseNeedList(fileName, fileName, fileName + ".result", needList, sourceRdcAccess);
+
+            // TODO: Copy source Metadata except update time
+            using(var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
+                                                                                new NameValueCollection()))
+            {
+                _needListParser.Parse(                    
+                    new RemotePartialAccess(sourceServerUrl, fileName),
+                    new StoragePartialAccess(Storage, fileName),
+                    outputFile, needList);
+            }
 
             return WriteJson(context, new
                                           {
@@ -83,36 +93,6 @@ namespace RavenFS.Handlers
                            Length = fileAndPages.TotalSize ?? 0,
                            Name = fileAndPages.Name
                        };
-        }
-
-        private void ParseNeedList(string sourceFileName, string seedFileName, string outputFileName,
-            IEnumerable<RdcNeed> needList, IRdcAccess sourceRdcAccess)
-        {
-            // Currently it copies whole file but it should only replace changed pages
-            // TODO: This cast from ulong to long can be dangerous
-            // TODO: Improve writting logic by replacing only those pages which was changed
-            using (var seedFile = StorageStream.Reading(Storage, seedFileName))
-            using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, outputFileName,
-                                                                                seedFile.Metadata))
-            {
-                foreach (var item in needList)
-                {
-                    switch (item.blockType)
-                    {
-                        case RdcNeedType.Source:
-                            sourceRdcAccess.GetFileContentAsync(sourceFileName, outputFile, (long)item.fileOffset,
-                                                                (long)item.blockLength).Wait();
-                            break;
-                        case RdcNeedType.Seed:
-                            // TODO: Some problem with writting to the end
-                            new NarrowedStream(seedFile, (long)item.fileOffset, (long)item.fileOffset + (long)item.blockLength - 1).CopyToAsync(
-                                outputFile).Wait();
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-        }
+        }        
     }
 }

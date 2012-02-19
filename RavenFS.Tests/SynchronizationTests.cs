@@ -38,10 +38,20 @@ namespace RavenFS.Tests
                 seedClient.DownloadAsync("test.txt.result", result).Wait();
                 result.Position = 0;
                 resultMD5 = result.GetMD5Hash();
+                result.Position = 0;
+                using(var f = File.Create(@"c:\temp\result.txt"))
+                {
+                    result.CopyTo(f);
+                }
             }
             
             sourceContent.Position = 0;
             var sourceMD5 = sourceContent.GetMD5Hash();
+            sourceContent.Position = 0;
+            using (var f = File.Create(@"c:\temp\source.txt"))
+            {
+                sourceContent.CopyTo(f);
+            }
             
             Assert.True(resultMD5 == sourceMD5);
 
