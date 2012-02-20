@@ -29,14 +29,17 @@ namespace RavenFS.Rdc
         /// <returns></returns>
         public SignatureManifest SynchronizeSignatures(DataInfo dataInfo)
         {
-            // TODO 
-            // 1. Get maximal sig for both sig lists
-            // 2. Create list of sig names pairs
-            // 3. Iterate over list to synchronize whole cache.
-
             var remoteSignatureManifest = _ravenFileSystemClient.GetRdcManifestAsync(dataInfo.Name).Result;
-            var sigPairs = PrepareSigPairs(dataInfo, remoteSignatureManifest);
+            if (remoteSignatureManifest.Signatures.Count > 0)
+            {
+                InternalSynchronizeSignatures(dataInfo, remoteSignatureManifest);
+            }
+            return remoteSignatureManifest;
+        }
 
+        private void InternalSynchronizeSignatures(DataInfo dataInfo, SignatureManifest remoteSignatureManifest)
+        {
+            var sigPairs = PrepareSigPairs(dataInfo, remoteSignatureManifest);
 
             var highestSigName = sigPairs.First().Remote;
             using (var highestSigContent = _remoteCacheSignatureRepository.CreateContent(highestSigName))
@@ -49,7 +52,6 @@ namespace RavenFS.Rdc
                 var prev = sigPairs[i - 1];
                 Synchronize(curr.Local, prev.Local, curr.Remote, prev.Remote);
             }
-            return remoteSignatureManifest;
         }
 
         private class LocalRemotePair

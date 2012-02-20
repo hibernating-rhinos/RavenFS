@@ -105,9 +105,7 @@ namespace RavenFS.Infrastructure
 
 	    public SigGenerator SigGenerator { get; private set; }
 
-        public ISignatureRepository SignatureRepository { get; private set; }
-
-        public NeedListGenerator NeedListGenerator { get; private set; }
+        public ISignatureRepository SignatureRepository { get; private set; }        
 
 		public IAsyncResult BeginProcessRequest(HttpContext context, AsyncCallback cb, object extraData)
 		{
@@ -125,7 +123,7 @@ namespace RavenFS.Infrastructure
 		}
 
 		public void Initialize(BufferPool bufferPool, Regex url, Storage.TransactionalStorage storage, Search.IndexStorage search,
-            SigGenerator sigGenerator, NeedListGenerator needListGenerator, ISignatureRepository signatureRepository)
+            SigGenerator sigGenerator, ISignatureRepository signatureRepository)
 		{
 			Url = url;
 			BufferPool = bufferPool;
@@ -133,7 +131,6 @@ namespace RavenFS.Infrastructure
 			Search = search;
 		    SigGenerator = sigGenerator;
             SignatureRepository = signatureRepository;
-		    NeedListGenerator = needListGenerator;
 		}
 	}
 }

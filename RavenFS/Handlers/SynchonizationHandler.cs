@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using RavenFS.Client;
 using RavenFS.Infrastructure;
 using RavenFS.Rdc;
 using RavenFS.Storage;
@@ -55,20 +56,33 @@ namespace RavenFS.Handlers
             var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
             var sourceSignatureManifest = remoteRdcManager.SynchronizeSignatures(localFileDataInfo);
 
-            var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
-            var sourceSignatureInfo = new SignatureInfo(sourceSignatureManifest.Signatures.Last().Name);
-
-            // TODO: Copy source Metadata except update time
-            // TODO: Return synchronization report
-            using (var needListGenerator = new NeedListGenerator(SignatureRepository, _remoteSignatureCaches[sourceServerName]))
-            using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
-                                                                                new NameValueCollection()))
+            if (sourceSignatureManifest.Signatures.Count > 0)
             {
-                var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
-                _needListParser.Parse(
-                    new RemotePartialAccess(sourceServerUrl, fileName),
-                    new StoragePartialAccess(Storage, fileName),
-                    outputFile, needList);
+                var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
+                var sourceSignatureInfo = new SignatureInfo(sourceSignatureManifest.Signatures.Last().Name);
+
+                // TODO: Copy source Metadata except update time
+                // TODO: Return synchronization report
+                using (
+                    var needListGenerator = new NeedListGenerator(SignatureRepository,
+                                                                  _remoteSignatureCaches[sourceServerName]))
+                using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
+                                                                             new NameValueCollection()))
+                {
+                    var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
+                    _needListParser.Parse(
+                        new RemotePartialAccess(sourceServerUrl, fileName),
+                        new StoragePartialAccess(Storage, fileName),
+                        outputFile, needList);
+                }
+            } 
+            else
+            {
+                using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
+                                                                             new NameValueCollection()))
+                {
+                    new RavenFileSystemClient(sourceServerUrl).DownloadAsync(fileName, outputFile).Wait();
+                }
             }
 
             return WriteJson(context, new
