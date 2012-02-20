@@ -17,7 +17,7 @@ namespace RavenFS.Handlers
     [HandlerMetadata("^/synchronize/(.+?)/(.+)$", "GET")]
     public class SynchonizationHandler : AbstractAsyncHandler
     {
-        private IDictionary<string, ISignatureRepository> remoteSignatureCaches = new Dictionary<string, ISignatureRepository>();
+        private readonly IDictionary<string, ISignatureRepository> _remoteSignatureCaches = new Dictionary<string, ISignatureRepository>();
         private NeedListParser _needListParser = new NeedListParser();
 
         private static NameValueCollection KnownServers
@@ -32,7 +32,7 @@ namespace RavenFS.Handlers
         {
             foreach (var item in KnownServers.AllKeys)
             {
-                remoteSignatureCaches[item] = new SimpleSignatureRepository(Path.Combine(Directory.GetCurrentDirectory(), item));
+                _remoteSignatureCaches[item] = new SimpleSignatureRepository(Path.Combine(Directory.GetCurrentDirectory(), item));
             }
         }
 
@@ -41,6 +41,8 @@ namespace RavenFS.Handlers
             context.Response.BufferOutput = false;
             var sourceServerName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
             var sourceServerUrl = KnownServers[sourceServerName];
+            var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
+            var remoteRdcManager = new RemoteRdcManager(sourceServerUrl, SignatureRepository, _remoteSignatureCaches[sourceServerName]);
 
             if (String.IsNullOrEmpty(sourceServerUrl))
             {
@@ -48,39 +50,32 @@ namespace RavenFS.Handlers
             }
 
             var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[2].Value;
-            var sourceRdcAccess = new RemoteRdcAccess(sourceServerUrl);
+            var localFileDataInfo = GetLocalFileDataInfo(fileName);
 
-            var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
-            var seedSignatureManifest = localRdcManager.GetSignatureManifest(GetLocalFileDataInfo(fileName));
-            var sourceSignatureManifest = sourceRdcAccess.PrepareSignaturesAsync(fileName).Result;
+            var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
+            var sourceSignatureManifest = remoteRdcManager.SynchronizeSignatures(localFileDataInfo);
 
-            // download last signature
-            // TODO: Recursive signature download
-            var sourceSignature = sourceSignatureManifest.Signatures.Last();
-
-            var sourceSignatureInfo = new SignatureInfo(sourceSignature.Name);
-            var signatureContent = remoteSignatureCaches[sourceServerName].CreateContent(sourceSignatureInfo.Name);
-            sourceRdcAccess.GetSignatureContentAsync(sourceSignature.Name, signatureContent)
-                .ContinueWith(_ => signatureContent.Close()).Wait();
             var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
-            var needList = NeedListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
-
+            var sourceSignatureInfo = new SignatureInfo(sourceSignatureManifest.Signatures.Last().Name);
 
             // TODO: Copy source Metadata except update time
-            using(var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
+            // TODO: Return synchronization report
+            using (var needListGenerator = new NeedListGenerator(SignatureRepository, _remoteSignatureCaches[sourceServerName]))
+            using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
                                                                                 new NameValueCollection()))
             {
-                _needListParser.Parse(                    
+                var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
+                _needListParser.Parse(
                     new RemotePartialAccess(sourceServerUrl, fileName),
                     new StoragePartialAccess(Storage, fileName),
                     outputFile, needList);
             }
 
             return WriteJson(context, new
-                                          {
-                                              sourceServerUrl,
-                                              fileName
-                                          });
+            {
+                sourceServerUrl,
+                fileName
+            });
         }
 
         private DataInfo GetLocalFileDataInfo(string fileName)
@@ -93,6 +88,6 @@ namespace RavenFS.Handlers
                            Length = fileAndPages.TotalSize ?? 0,
                            Name = fileAndPages.Name
                        };
-        }        
+        }
     }
 }

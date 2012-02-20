@@ -34,7 +34,7 @@ namespace RavenFS.Infrastructure
 			search = new IndexStorage("Index.ravenfs", new NameValueCollection());
             signatureRepository = new SimpleSignatureRepository(Path.GetTempPath());
             sigGenerator = new SigGenerator(signatureRepository);
-            needListGenerator = new NeedListGenerator(signatureRepository);
+            needListGenerator = new NeedListGenerator(signatureRepository, signatureRepository);
 			storage.Initialize();
 			search.Initialize();
 
