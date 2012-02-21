@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Web;
+using RavenFS.Util;
 using Rdc.Wrapper;
 
 namespace RavenFS.Rdc
@@ -20,7 +21,7 @@ namespace RavenFS.Rdc
 
         public void CopyTo(Stream target, long from, long length)
         {
-            _signatureRepository.GetContentForReading(_sigName).CopyTo(target);
+            new NarrowedStream(_signatureRepository.GetContentForReading(_sigName), from, from + length - 1).CopyTo(target);
         }
     }
 }

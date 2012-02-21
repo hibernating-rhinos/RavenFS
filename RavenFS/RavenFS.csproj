@@ -141,6 +141,7 @@
     <Compile Include="Rdc\IRdcAccess.cs" />
     <Compile Include="Rdc\RemotePartialAccess.cs" />
     <Compile Include="Rdc\RemoteRdcManager.cs" />
+    <Compile Include="Rdc\RemoteSignaturePartialAccess.cs" />
     <Compile Include="Rdc\SignaturePartialAccess.cs" />
     <Compile Include="Rdc\StoragePartialAccess.cs" />
     <Compile Include="Rdc\LocalRdcManager.cs" />
