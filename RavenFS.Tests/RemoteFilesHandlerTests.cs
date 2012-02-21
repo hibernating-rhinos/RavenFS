@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Text.RegularExpressions;
+using Xunit;
 
 namespace RavenFS.Tests
 {
@@ -25,7 +26,8 @@ namespace RavenFS.Tests
 		{
 			WebClient.UploadString("/files/abc.txt", "PUT", "abc");
 			var str = WebClient.DownloadString("/files");
-			Assert.Equal("[{\"Name\":\"abc.txt\",\"TotalSize\":3,\"UploadedSize\":3,\"HumaneTotalSize\":\"3 Bytes\",\"HumaneUploadedSize\":\"3 Bytes\",\"Metadata\":{}}]", str);
+			Assert.True(Regex.IsMatch(str, "[{\"Name\":\"abc.txt\",\"TotalSize\":3,\"UploadedSize\":3,\"HumaneTotalSize\":\"3 Bytes\",\"HumaneUploadedSize\":\"3 Bytes\","
+                + "\"Metadata\":{\"Last\\-Modified\":\"(.+?)\"}}]"));
 		}
 
 		[Fact]
@@ -34,7 +36,9 @@ namespace RavenFS.Tests
 			WebClient.Headers["Test"] = "Value";
 			WebClient.UploadString("/files/abc.txt", "PUT", "abc");
 			var str = WebClient.DownloadString("/files");
-			Assert.Equal("[{\"Name\":\"abc.txt\",\"TotalSize\":3,\"UploadedSize\":3,\"HumaneTotalSize\":\"3 Bytes\",\"HumaneUploadedSize\":\"3 Bytes\",\"Metadata\":{\"Test\":\"Value\"}}]", str);
+		    Assert.True(Regex.IsMatch(str,
+		                  "[{\"Name\":\"abc.txt\",\"TotalSize\":3,\"UploadedSize\":3,\"HumaneTotalSize\":\"3 Bytes\",\"HumaneUploadedSize\":\"3 Bytes\"," 
+                          + "\"Metadata\":{\"Test\":\"Value\",\"Last\\-Modified\":\"(.+?)\"}}]"));
 		}
 
 		[Fact]
