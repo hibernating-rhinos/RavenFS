@@ -7,44 +7,55 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using RavenFS.Infrastructure;
+using RavenFS.Rdc;
 using RavenFS.Util;
 using RavenFS.Extensions;
 using Rdc.Wrapper;
 
 namespace RavenFS.Handlers
 {
-    [HandlerMetadata("^/rdc/files/(.+)", "GET")]
+    [HandlerMetadata("^/rdc/(?<fileType>files|signatures)/(?<fileName>.+)", "GET")]
     public class RdcFileHandler : AbstractAsyncHandler
     {
         private static readonly Regex startRange = new Regex(@"^bytes=(\d+)-(\d+)?$", RegexOptions.Compiled);
 
         protected override Task ProcessRequestAsync(HttpContext context)
         {
-            Task result = null;
+            Task result;
             context.Response.BufferOutput = false;
-            var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
+            var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups["fileName"].Value;
+            var fileType = Url.Match(context.Request.CurrentExecutionFilePath).Groups["fileType"].Value;
 
-            var storageStream = StorageStream.Reading(Storage, fileName);
+            Stream resultContent = null;
+            if (fileType == "files")
+            {
+                resultContent = StorageStream.Reading(Storage, fileName);
+            } 
+            else if (fileType == "signatures")
+            {
+                var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
+                resultContent = localRdcManager.GetSignatureContentForReading(fileName);
+            } 
             var range = GetRangeFromHeader(context);
             if (range != null)
             {
                 var from = range.Item1;
-                var to = range.Item2 ?? storageStream.Length - 1;
+                var to = range.Item2 ?? resultContent.Length - 1;
 
                 context.Response.AddHeader("Content-Length", (to - from + 1).ToString());
-                context.Response.AddHeader("Content-Disposition", "attachment; filename=" + storageStream.Name);
-                var contentRange = string.Format("bytes {0}-{1}/{2}", from, to, storageStream.Length);
+                context.Response.AddHeader("Content-Disposition", "attachment; filename=" + fileName);
+                var contentRange = string.Format("bytes {0}-{1}/{2}", from, to, resultContent.Length);
                 context.Response.AddHeader("Content-Range", contentRange);
-                result = storageStream.CopyToAsync(context.Response.OutputStream, from, to)
-                    .ContinueWith(task => storageStream.Dispose());
+                result = resultContent.CopyToAsync(context.Response.OutputStream, from, to)
+                    .ContinueWith(task => resultContent.Dispose());
             }
             else
             {
-                context.Response.AddHeader("Content-Length", storageStream.Length.ToString());
-                context.Response.AddHeader("Content-Disposition", "attachment; filename=" + storageStream.Name);
-                result = storageStream.CopyToAsync(context.Response.OutputStream, StorageStream.MaxPageSize)
-                    .ContinueWith(task => storageStream.Dispose());
-            }
+                context.Response.AddHeader("Content-Length", resultContent.Length.ToString());
+                context.Response.AddHeader("Content-Disposition", "attachment; filename=" + fileName);
+                result = resultContent.CopyToAsync(context.Response.OutputStream, StorageStream.MaxPageSize)
+                .ContinueWith(task => resultContent.Dispose());
+            }            
             return result;
         }
 

@@ -263,9 +263,9 @@ namespace RavenFS.Client
                 });
         }
 
-        public Task DownloadSignatureAsync(string sigName, Stream destination)
+        public Task DownloadSignatureAsync(string sigName, Stream destination, long? from = null, long? to = null)
         {
-            return DownloadAsync("/rdc/signatures/", sigName, destination);
+            return DownloadAsync("/rdc/signatures/", sigName, destination, from, to);
         }
 
 	    private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)

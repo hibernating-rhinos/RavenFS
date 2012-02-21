@@ -103,13 +103,14 @@ namespace RavenFS.Util
             }
             while (currentPageFrameOffset + currentPageFrameSize - 1 < offset)
             {
+                var lastPageFrameSize = currentPageFrameSize;
                 var nextPageIndex = fileAndPages.Start + fileAndPages.Pages.Count;
                 TransactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(Name, nextPageIndex, PagesBatchSize));
                 if (fileAndPages.Pages.Count < 1)
                 {
                     break;
                 }
-                currentPageFrameOffset += currentPageFrameSize;
+                currentPageFrameOffset += lastPageFrameSize;
             }
             currentOffset = offset;
         }

@@ -127,55 +127,27 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void CanDownloadPartial()
+        public void Compare_downloading_methods()
         {
             var ms = new MemoryStream();
             var streamWriter = new StreamWriter(ms);
-            var expected = new string('a', 2000048);
+            var expected = new string('a', 1024*1024*100);
             streamWriter.Write(expected);
             streamWriter.Flush();
             ms.Position = 0;
             var client = NewClient();
             client.UploadAsync("abc.txt", ms).Wait();
 
-            var ms2 = new MemoryStream();
-            streamWriter = new StreamWriter(ms2);
-            streamWriter.Write(new string('a', 1024));
-            streamWriter.Flush();
+            for (var i = 0; i < 5; i++)
+            {
+                var downloadTime = TimeMeasure.HowLong(
+                    () => client.DownloadAsync("abc.txt", Stream.Null).Wait());
+                logger.Info("CanDownloadPartial: timespan={0}", downloadTime.TotalMilliseconds);
 
-            var downloadTime = TimeMeasure.HowLong(
-                () => client.DownloadAsync("abc.txt", ms2).Wait());
-            logger.Info("CanDownloadPartial: timespan={0}", downloadTime.TotalMilliseconds);
-            ms2.Position = 0;
-            var actual = new StreamReader(ms2).ReadToEnd();
-
-            Assert.Equal(new string('a', 2048), actual);
-        }
-
-        [Fact]
-        public void CanDownloadPartialFromRdc()
-        {
-            var ms = new MemoryStream();
-            var streamWriter = new StreamWriter(ms);
-            var expected = new string('a', 2000048);
-            streamWriter.Write(expected);
-            streamWriter.Flush();
-            ms.Position = 0;
-            var client = NewClient();
-            client.UploadAsync("abc.txt", ms).Wait();
-
-            var ms2 = new MemoryStream();
-            streamWriter = new StreamWriter(ms2);
-            streamWriter.Write(new string('a', 1024));
-            streamWriter.Flush();
-
-            var downloadTime = TimeMeasure.HowLong(
-                () => client.DownloadAsync("/rdc/files/", "abc.txt", ms2, null, null).Wait());
-            logger.Info("CanDownloadPartialFromRdc: timespan={0}", downloadTime.TotalMilliseconds);
-            ms2.Position = 0;
-            var actual = new StreamReader(ms2).ReadToEnd();
-
-            Assert.Equal(new string('a', 2048), actual);
+                downloadTime = TimeMeasure.HowLong(
+                    () => client.DownloadAsync("/rdc/files/", "abc.txt", Stream.Null, null, null).Wait());
+                logger.Info("CanDownloadPartialFromRdc: timespan={0}", downloadTime.TotalMilliseconds);
+            }
         }
 
         [Fact]
@@ -223,6 +195,22 @@ namespace RavenFS.Tests
                 client.DownloadSignatureAsync(item.Name, ms).Wait();
                 Assert.True(ms.Length == item.Length);
             }
+        }
+
+        [Fact]
+        public void CanGetRdcSignaturePartialy()
+        {
+            var client = NewClient();
+
+            var buffer = new byte[1024 * 1024 * 4];
+            new Random().NextBytes(buffer);
+
+            WebClient.UploadData("/files/mb.bin", "PUT", buffer);
+            var signatureManifest = client.GetRdcManifestAsync("mb.bin").Result;
+
+            var ms = new MemoryStream();
+            client.DownloadSignatureAsync(signatureManifest.Signatures[0].Name, ms, 5, 10).Wait();
+            Assert.Equal(6, ms.Length);
         }
 
         [Fact]
