@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Storage;
 using RavenFS.Util;
@@ -44,6 +46,43 @@ namespace RavenFS.Rdc
             return result;
         }
 
+        public Stream GetSignatureContentForReading(string sigName)
+        {
+            return _signatureRepository.GetContentForReading(sigName);
+        }
+
+        /* TODO Remove
+        public Task<SignatureManifest> PrepareSignaturesAsync(string filename)
+        {
+            FileAndPages fileAndPages = null;
+            _transactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(filename, 0, 0));
+            _transactionalStorage.Batch(accessor => accessor.ReadFile(fileAndPages.Name));
+            var result = new Task<SignatureManifest>(
+                () =>
+                {
+                    var input = StorageStream.Reading(_transactionalStorage, fileAndPages.Name);
+                    var signatureInfos = _sigGenerator.GenerateSignatures(input);
+                    var signatures =
+                        from item in signatureInfos
+                        select
+                            new Signature()
+                            {
+                                Length = item.Length,
+                                Name = item.Name
+                            };
+                    return
+                        new SignatureManifest()
+                        {
+                            FileName = fileAndPages.Name,
+                            FileLength = fileAndPages.TotalSize ?? 0,
+                            Signatures = signatures.ToList()
+                        };
+                });
+            result.Start();
+            return result;
+        }
+        */
+          
         private IEnumerable<SignatureInfo> PrepareSignatures(string filename)
         {
             FileAndPages fileAndPages = null;

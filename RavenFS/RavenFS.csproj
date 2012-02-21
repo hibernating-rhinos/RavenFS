@@ -143,10 +143,8 @@
     <Compile Include="Rdc\RemoteRdcManager.cs" />
     <Compile Include="Rdc\SignaturePartialAccess.cs" />
     <Compile Include="Rdc\StoragePartialAccess.cs" />
-    <Compile Include="Rdc\LocalRdcAccess.cs" />
     <Compile Include="Rdc\LocalRdcManager.cs" />
     <Compile Include="Rdc\NeedListParser.cs" />
-    <Compile Include="Rdc\RemoteRdcAccess.cs" />
     <Compile Include="Search\IndexStorage.cs" />
     <Compile Include="Search\LowerCaseKeywordAnalyzer.cs" />
     <Compile Include="Storage\EsentExtension.cs" />

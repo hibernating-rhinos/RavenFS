@@ -77,8 +77,8 @@ namespace RavenFS.Rdc
         {
             using (var needListGenerator = new NeedListGenerator(_localSignatureRepository, _remoteCacheSignatureRepository))            
             {
-                var source = new SignaturePartialAccess(remoteSigSigName, _remoteCacheSignatureRepository);
-                var seed = new SignaturePartialAccess(localSigSigName, _localSignatureRepository);
+                var source = new SignaturePartialAccess(remoteSigName, _remoteCacheSignatureRepository);
+                var seed = new SignaturePartialAccess(localSigName, _localSignatureRepository);
                 var needList = needListGenerator.CreateNeedsList(new SignatureInfo(localSigSigName),
                                                                   new SignatureInfo(remoteSigSigName));
                 using (var output = _remoteCacheSignatureRepository.CreateContent(remoteSigName))

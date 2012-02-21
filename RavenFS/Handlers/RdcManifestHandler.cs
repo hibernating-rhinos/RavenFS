@@ -28,7 +28,9 @@ namespace RavenFS.Handlers
             {
                 context.Response.StatusCode = 404;
                 return Completed;
-            }            
+            }
+            var rdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
+
             return GenerateSignatures(filename)
                 .ContinueWith(task =>
                     WriteJson(context, task.Result)
@@ -37,8 +39,11 @@ namespace RavenFS.Handlers
 
         private Task<SignatureManifest> GenerateSignatures(string fileName)
         {
-            var rdcAccess = new LocalRdcAccess(Storage, SignatureRepository, SigGenerator);
-            return rdcAccess.PrepareSignaturesAsync(fileName);
+            var rdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
+            var result =
+                new Task<SignatureManifest>(() => rdcManager.GetSignatureManifest(new DataInfo() {Name = fileName}));            
+            result.Start();
+            return result;
         }
     }
 }

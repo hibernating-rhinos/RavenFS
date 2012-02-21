@@ -16,14 +16,13 @@ namespace RavenFS.Handlers
         protected override Task ProcessRequestAsync(HttpContext context)
         {
             context.Response.BufferOutput = false;
-            var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
+            var sigName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
 
-            var localRdcAccess = new LocalRdcAccess(Storage, SignatureRepository, SigGenerator);
-            var signatureInfo = localRdcAccess.GetSignatureInfo(fileName);
-            var sigFile = SignatureRepository.GetContentForReading(signatureInfo.Name);
+            var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
+            var sigFile = localRdcManager.GetSignatureContentForReading(sigName);
 
             context.Response.AddHeader("Content-Length", sigFile.Length.ToString());
-            context.Response.AddHeader("Content-Disposition", "attachment; filename=" + fileName);
+            context.Response.AddHeader("Content-Disposition", "attachment; filename=" + sigName);
 
 
             return sigFile.CopyToAsync(context.Response.OutputStream)
