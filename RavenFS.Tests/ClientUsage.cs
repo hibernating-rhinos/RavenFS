@@ -9,8 +9,6 @@ namespace RavenFS.Tests
 {
     public class ClientUsage : IisExpressTestClient
     {
-        //private static Logger logger = LogManager.GetCurrentClassLogger();
-
         [Fact]
         public void CanUpdateJustMetadata()
         {
@@ -129,6 +127,8 @@ namespace RavenFS.Tests
         [Fact]
         public void Compare_downloading_methods()
         {
+            var logger = LogManager.GetLogger("Compare_downloading_methods");
+
             var ms = new MemoryStream();
             var streamWriter = new StreamWriter(ms);
             var expected = new string('a', 1024*1024*100);
@@ -136,17 +136,17 @@ namespace RavenFS.Tests
             streamWriter.Flush();
             ms.Position = 0;
             var client = NewClient();
-            client.UploadAsync("abc.txt", ms).Wait();
+            client.UploadAsync("abc.txt", ms).Wait();            
 
             for (var i = 0; i < 5; i++)
             {
                 var downloadTime = TimeMeasure.HowLong(
                     () => client.DownloadAsync("abc.txt", Stream.Null).Wait());
-                //logger.Info("CanDownloadPartial: timespan={0}", downloadTime.TotalMilliseconds);
+                logger.Info("CanDownloadPartial: timespan={0}", downloadTime.TotalMilliseconds);
 
                 downloadTime = TimeMeasure.HowLong(
                     () => client.DownloadAsync("/rdc/files/", "abc.txt", Stream.Null, null, null).Wait());
-                //logger.Info("CanDownloadPartialFromRdc: timespan={0}", downloadTime.TotalMilliseconds);
+                logger.Info("CanDownloadPartialFromRdc: timespan={0}", downloadTime.TotalMilliseconds);
             }
         }
 

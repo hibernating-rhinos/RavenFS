@@ -12,8 +12,6 @@ namespace RavenFS.Rdc
     {
         public void Parse(IPartialDataAccess source, IPartialDataAccess seed, Stream output, IEnumerable<RdcNeed> needList)
         {
-            // Currently it copies whole file but it should only replace changed pages
-            // TODO: This cast from ulong to long can be dangerous     
             {
                 foreach (var item in needList)
                 {

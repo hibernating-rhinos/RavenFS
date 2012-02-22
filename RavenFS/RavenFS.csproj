@@ -14,7 +14,7 @@
     <AssemblyName>RavenFS</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <UseIISExpress>false</UseIISExpress>
-    <CodeContractsAssemblyMode>1</CodeContractsAssemblyMode>
+    <CodeContractsAssemblyMode>0</CodeContractsAssemblyMode>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,12 +24,12 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeContractsEnableRuntimeChecking>True</CodeContractsEnableRuntimeChecking>
+    <CodeContractsEnableRuntimeChecking>False</CodeContractsEnableRuntimeChecking>
     <CodeContractsRuntimeOnlyPublicSurface>False</CodeContractsRuntimeOnlyPublicSurface>
     <CodeContractsRuntimeThrowOnFailure>True</CodeContractsRuntimeThrowOnFailure>
     <CodeContractsRuntimeCallSiteRequires>False</CodeContractsRuntimeCallSiteRequires>
     <CodeContractsRuntimeSkipQuantifiers>False</CodeContractsRuntimeSkipQuantifiers>
-    <CodeContractsRunCodeAnalysis>True</CodeContractsRunCodeAnalysis>
+    <CodeContractsRunCodeAnalysis>False</CodeContractsRunCodeAnalysis>
     <CodeContractsNonNullObligations>False</CodeContractsNonNullObligations>
     <CodeContractsBoundsObligations>False</CodeContractsBoundsObligations>
     <CodeContractsArithmeticObligations>False</CodeContractsArithmeticObligations>
@@ -55,7 +55,7 @@
     <CodeContractsBaseLineFile />
     <CodeContractsCacheAnalysisResults>False</CodeContractsCacheAnalysisResults>
     <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
-    <CodeContractsReferenceAssembly>Build</CodeContractsReferenceAssembly>
+    <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
     <CodeContractsAnalysisWarningLevel>2</CodeContractsAnalysisWarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -124,7 +124,6 @@
     <Compile Include="Handlers\FilesHandler.cs" />
     <Compile Include="Handlers\RdcGetFile.cs" />
     <Compile Include="Handlers\RdcManifestHandler.cs" />
-    <Compile Include="Handlers\RdcSignatureHandler.cs" />
     <Compile Include="Handlers\SearchHandler.cs" />
     <Compile Include="Handlers\RootHanlder.cs" />
     <Compile Include="Handlers\SimpleDeleteHandler.cs" />
@@ -138,7 +137,6 @@
     <Compile Include="Infrastructure\AbstractAsyncHandler.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
     <Compile Include="Rdc\IPartialDataAccess.cs" />
-    <Compile Include="Rdc\IRdcAccess.cs" />
     <Compile Include="Rdc\RemotePartialAccess.cs" />
     <Compile Include="Rdc\RemoteRdcManager.cs" />
     <Compile Include="Rdc\RemoteSignaturePartialAccess.cs" />

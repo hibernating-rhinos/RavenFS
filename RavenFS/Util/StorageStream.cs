@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -36,15 +35,16 @@ namespace RavenFS.Util
 
         public static StorageStream CreatingNewAndWritting(TransactionalStorage transactionalStorage, IndexStorage indexStorage, string fileName, NameValueCollection metadata)
         {
-            Contract.Requires<ArgumentNullException>(indexStorage != null, "indexStorage == null");
+            if (indexStorage == null)
+            {
+                throw new ArgumentNullException("indexStorage", "indexStorage == null");
+            }
             return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.CreateAndWrite, metadata, indexStorage);
         }
 
         private StorageStream(TransactionalStorage transactionalStorage, string fileName, StorageStreamAccess storageStreamAccess,
             NameValueCollection metadata, Search.IndexStorage indexStorage)
         {
-            Contract.Requires<ArgumentNullException>(transactionalStorage != null, "transactionalStorage == null");
-
             TransactionalStorage = transactionalStorage;
             StorageStreamAccess = storageStreamAccess;
             Name = fileName;

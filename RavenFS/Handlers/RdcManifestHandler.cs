@@ -7,9 +7,6 @@ using System.Web;
 using RavenFS.Client;
 using RavenFS.Infrastructure;
 using RavenFS.Rdc;
-using RavenFS.Storage;
-using RavenFS.Util;
-using Rdc.Wrapper;
 
 namespace RavenFS.Handlers
 {
