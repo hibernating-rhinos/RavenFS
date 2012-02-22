@@ -61,12 +61,12 @@ namespace RavenFS.Handlers
             var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
             var sourceSignatureManifest = remoteRdcManager.SynchronizeSignatures(localFileDataInfo);
 
+            var report = new SynchronizationReport {FileName = fileName};
             if (sourceSignatureManifest.Signatures.Count > 0)
             {
                 var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
                 var sourceSignatureInfo = new SignatureInfo(sourceSignatureManifest.Signatures.Last().Name);
                 
-                // TODO: Return synchronization report
                 using (
                     var needListGenerator = new NeedListGenerator(SignatureRepository,
                                                                   _remoteSignatureCaches[sourceServerName]))
@@ -78,6 +78,10 @@ namespace RavenFS.Handlers
                         new RemotePartialAccess(sourceServerUrl, fileName),
                         new StoragePartialAccess(Storage, fileName),
                         outputFile, needList);
+                    report.BytesTransfered =
+                        needList.Sum(item => item.blockType == RdcNeedType.Source ? (long)item.blockLength : 0L);
+                    report.BytesCopied =
+                        needList.Sum(item => item.blockType == RdcNeedType.Seed ? (long)item.blockLength : 0L);
                 }
             } 
             else
@@ -87,13 +91,10 @@ namespace RavenFS.Handlers
                 {
                     sourceRavenFileSystemClient.DownloadAsync(fileName, outputFile).Wait();
                 }
+                report.BytesCopied = StorageStream.Reading(Storage, fileName + ".result").Length;
             }
 
-            return WriteJson(context, new
-            {
-                sourceServerUrl,
-                fileName
-            });
+            return WriteJson(context, report);
         }
 
         private DataInfo GetLocalFileDataInfo(string fileName)

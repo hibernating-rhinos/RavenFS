@@ -282,7 +282,7 @@ namespace RavenFS.Client
 			}
 		}
 
-	    public Task<string> StartSynchronizationAsync(string serverIdentifier, string fileName)
+	    public Task<SynchronizationReport> StartSynchronizationAsync(string serverIdentifier, string fileName)
 	    {
             var requestUriString = baseUrl + "/synchronize/" + Uri.EscapeDataString(serverIdentifier) + "/" + Uri.EscapeDataString(fileName); ;
             var request = (HttpWebRequest)WebRequest.Create(requestUriString);
@@ -291,7 +291,7 @@ namespace RavenFS.Client
                 {
                     using (var stream = task.Result.GetResponseStream())
                     {
-                        return new StreamReader(stream).ReadToEnd();
+                        return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
                     }
                 });
 	    }

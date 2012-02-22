@@ -1,18 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using RavenFS.Util;
 using Xunit;
 using Raven.Database.Extensions;
+using Xunit.Extensions;
 
 namespace RavenFS.Tests
 {
     public class SynchronizationTests : MultiIisExpressTestBase
     {
-        [Fact]
-        public void Synchronize_file_with_different_beginning()
+        [Theory]
+        [InlineData(1)]
+        [InlineData(5000)]
+        public void Synchronize_file_with_different_beginning(int size)
         {
             var differenceChunk = new MemoryStream();
             var sw = new StreamWriter(differenceChunk);
@@ -20,28 +26,38 @@ namespace RavenFS.Tests
             sw.Write("Coconut is Stupid");
             sw.Flush();
 
-            var sourceContent = PrepareSourceStream(5000);
+            var sourceContent = PrepareSourceStream(size);
             sourceContent.Position = 0;
             var seedContent = new CombinedStream(differenceChunk, sourceContent);
             var seedClient = NewClient(0);
             var sourceClient = NewClient(1);
+            var sourceMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "some-value"}
+                               };
+            var seedMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "should-be-overwritten"}
+                               };
 
-            seedClient.UploadAsync("test.txt", seedContent).Wait();
+            seedClient.UploadAsync("test.txt", seedMetadata, seedContent).Wait();
             sourceContent.Position = 0;
-            sourceClient.UploadAsync("test.txt", sourceContent).Wait();
+            sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-            seedClient.StartSynchronizationAsync("server1", "test.txt").Wait();
+            var result = seedClient.StartSynchronizationAsync("server1", "test.txt").Result;
+            Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
             string resultMD5 = null;
-            using(var result = new MemoryStream())
+            using(var resultFileContent = new MemoryStream())
             {                
-                seedClient.DownloadAsync("test.txt.result", result).Wait();
-                result.Position = 0;
-                resultMD5 = result.GetMD5Hash();
-                result.Position = 0;
+                var metadata = seedClient.DownloadAsync("test.txt.result", resultFileContent).Result;
+                Assert.Equal("some-value", metadata["SomeTest-metadata"]);
+                resultFileContent.Position = 0;
+                resultMD5 = resultFileContent.GetMD5Hash();
+                resultFileContent.Position = 0;
                 using(var f = File.Create(@"c:\temp\result.txt"))
                 {
-                    result.CopyTo(f);
+                    resultFileContent.CopyTo(f);
                 }
             }
             
@@ -55,53 +71,7 @@ namespace RavenFS.Tests
             
             Assert.True(resultMD5 == sourceMD5);
 
-        }
-
-        [Fact]
-        public void Synchronize_small_file()
-        {
-            var differenceChunk = new MemoryStream();
-            var sw = new StreamWriter(differenceChunk);
-
-            sw.Write("Coconut is Stupid");
-            sw.Flush();
-
-            var sourceContent = PrepareSourceStream(1);
-            sourceContent.Position = 0;
-            var seedContent = new CombinedStream(differenceChunk, sourceContent);
-            var seedClient = NewClient(0);
-            var sourceClient = NewClient(1);
-
-            seedClient.UploadAsync("test.txt", seedContent).Wait();
-            sourceContent.Position = 0;
-            sourceClient.UploadAsync("test.txt", sourceContent).Wait();
-
-            seedClient.StartSynchronizationAsync("server1", "test.txt").Wait();
-
-            string resultMD5 = null;
-            using (var result = new MemoryStream())
-            {
-                seedClient.DownloadAsync("test.txt.result", result).Wait();
-                result.Position = 0;
-                resultMD5 = result.GetMD5Hash();
-                result.Position = 0;
-                using (var f = File.Create(@"c:\temp\result.txt"))
-                {
-                    result.CopyTo(f);
-                }
-            }
-
-            sourceContent.Position = 0;
-            var sourceMD5 = sourceContent.GetMD5Hash();
-            sourceContent.Position = 0;
-            using (var f = File.Create(@"c:\temp\source.txt"))
-            {
-                sourceContent.CopyTo(f);
-            }
-
-            Assert.True(resultMD5 == sourceMD5);
-
-        }
+        }        
 
         private static MemoryStream PrepareSourceStream(int lines)
         {
