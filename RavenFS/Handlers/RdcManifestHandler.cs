@@ -29,7 +29,6 @@ namespace RavenFS.Handlers
                 context.Response.StatusCode = 404;
                 return Completed;
             }
-            var rdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
 
             return GenerateSignatures(filename)
                 .ContinueWith(task =>

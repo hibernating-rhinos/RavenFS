@@ -6,12 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
+using Raven.Abstractions.Extensions;
 using RavenFS.Client;
 using RavenFS.Infrastructure;
 using RavenFS.Rdc;
 using RavenFS.Storage;
 using RavenFS.Util;
 using Rdc.Wrapper;
+using RavenFS.Extensions;
 
 namespace RavenFS.Handlers
 {
@@ -39,11 +41,12 @@ namespace RavenFS.Handlers
 
         protected override Task ProcessRequestAsync(HttpContext context)
         {
-            context.Response.BufferOutput = false;
+            context.Response.BufferOutput = false;            
             var sourceServerName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[1].Value;
             var sourceServerUrl = KnownServers[sourceServerName];
+            var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
             var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
-            var remoteRdcManager = new RemoteRdcManager(sourceServerUrl, SignatureRepository, _remoteSignatureCaches[sourceServerName]);
+            var remoteRdcManager = new RemoteRdcManager(sourceRavenFileSystemClient, SignatureRepository, _remoteSignatureCaches[sourceServerName]);            
 
             if (String.IsNullOrEmpty(sourceServerUrl))
             {
@@ -51,6 +54,8 @@ namespace RavenFS.Handlers
             }
 
             var fileName = Url.Match(context.Request.CurrentExecutionFilePath).Groups[2].Value;
+            var sourceMetadataAsync = sourceRavenFileSystemClient.GetMetadataForAsync(fileName)
+                .ContinueWith(task => task.Result.UpdateLastModified());
             var localFileDataInfo = GetLocalFileDataInfo(fileName);
 
             var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
@@ -60,14 +65,13 @@ namespace RavenFS.Handlers
             {
                 var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
                 var sourceSignatureInfo = new SignatureInfo(sourceSignatureManifest.Signatures.Last().Name);
-
-                // TODO: Copy source Metadata except update time
+                
                 // TODO: Return synchronization report
                 using (
                     var needListGenerator = new NeedListGenerator(SignatureRepository,
                                                                   _remoteSignatureCaches[sourceServerName]))
                 using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
-                                                                             new NameValueCollection()))
+                                                                             sourceMetadataAsync.Result))
                 {
                     var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
                     _needListParser.Parse(
@@ -79,9 +83,9 @@ namespace RavenFS.Handlers
             else
             {
                 using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
-                                                                             new NameValueCollection()))
+                                                                             sourceMetadataAsync.Result))
                 {
-                    new RavenFileSystemClient(sourceServerUrl).DownloadAsync(fileName, outputFile).Wait();
+                    sourceRavenFileSystemClient.DownloadAsync(fileName, outputFile).Wait();
                 }
             }
 

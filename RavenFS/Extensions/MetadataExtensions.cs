@@ -34,7 +34,7 @@ namespace Raven.Abstractions.Extensions
 
 				}
 			}
-		}
+		}        
 
         private static readonly HashSet<string> HeadersToIgnoreClient = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
@@ -138,7 +138,13 @@ namespace Raven.Abstractions.Extensions
         	return metadata;
         }
 
-		private static string CaptureHeaderName(string header)
+        public static NameValueCollection UpdateLastModified(this NameValueCollection self)
+        {
+            self["Last-Modified"] = DateTime.UtcNow.ToString("O");
+            return self;
+        }
+
+        private static string CaptureHeaderName(string header)
         {
             var lastWasDash = true;
             var sb = new StringBuilder(header.Length);

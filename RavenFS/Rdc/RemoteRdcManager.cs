@@ -14,13 +14,15 @@ namespace RavenFS.Rdc
         private readonly RavenFileSystemClient _ravenFileSystemClient;
         private readonly NeedListParser _needListParser;
 
-        public RemoteRdcManager(string baseUrl, ISignatureRepository localSignatureRepository, ISignatureRepository remoteCacheSignatureRepository)
+        public RemoteRdcManager(RavenFileSystemClient ravenFileSystemClient, ISignatureRepository localSignatureRepository, ISignatureRepository remoteCacheSignatureRepository)
         {
             _localSignatureRepository = localSignatureRepository;
             _remoteCacheSignatureRepository = remoteCacheSignatureRepository;
-            _ravenFileSystemClient = new RavenFileSystemClient(baseUrl);
+            _ravenFileSystemClient = ravenFileSystemClient;
             _needListParser = new NeedListParser();
         }
+
+
 
         /// <summary>
         /// Returns signature manifest and synchronizes remote cache sig repository

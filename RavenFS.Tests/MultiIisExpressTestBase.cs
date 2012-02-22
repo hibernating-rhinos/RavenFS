@@ -42,7 +42,7 @@ namespace RavenFS.Tests
         {
             if (IisExpresses != null)
             {
-                foreach (var item in WebClients)
+                foreach (var item in IisExpresses)
                 {
                     item.Dispose();
                 }

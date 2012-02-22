@@ -20,7 +20,7 @@ namespace RavenFS.Handlers
 				accessor.Delete(filename);
 
 				var headers = context.Request.Headers.FilterHeaders();
-                headers.Add("Last-Modified", DateTime.UtcNow.ToString("O"));
+			    headers.UpdateLastModified();
 				long? contentLength = context.Request.ContentLength;
                 if (context.Request.Headers["Transfer-Encoding"] == "chunked")
                 {
