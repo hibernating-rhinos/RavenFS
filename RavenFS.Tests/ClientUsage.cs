@@ -2,6 +2,7 @@ using System;
 using System.Collections.Specialized;
 using System.IO;
 using NLog;
+using RavenFS.Tests.Tools;
 using Xunit;
 using Xunit.Extensions;
 
@@ -10,7 +11,7 @@ namespace RavenFS.Tests
     public class ClientUsage : IisExpressTestClient
     {
         [Fact]
-        public void CanUpdateJustMetadata()
+        public void Can_update_just_metadata()
         {
             var ms = new MemoryStream();
             var streamWriter = new StreamWriter(ms);
@@ -38,7 +39,7 @@ namespace RavenFS.Tests
         [Theory]
         [InlineData(1024 * 1024)]		// 1 mb
         [InlineData(1024 * 1024 * 8)]	// 8 mb
-        public void CanUpload(int size)
+        public void Can_upload(int size)
         {
             var ms = new MemoryStream();
             var streamWriter = new StreamWriter(ms);
@@ -55,7 +56,7 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void CanUploadMetadata_And_HeadMetadata()
+        public void Can_upload_metadata_and_head_metadata()
         {
             var ms = new MemoryStream();
             var streamWriter = new StreamWriter(ms);
@@ -79,7 +80,7 @@ namespace RavenFS.Tests
 
 
         [Fact]
-        public void CanQueryMetadata()
+        public void Can_query_metadata()
         {
             var ms = new MemoryStream();
             var streamWriter = new StreamWriter(ms);
@@ -103,7 +104,7 @@ namespace RavenFS.Tests
 
 
         [Fact]
-        public void CanDownload()
+        public void Can_download()
         {
             var ms = new MemoryStream();
             var streamWriter = new StreamWriter(ms);
@@ -128,30 +129,24 @@ namespace RavenFS.Tests
         public void Compare_downloading_methods()
         {
             var logger = LogManager.GetLogger("Compare_downloading_methods");
-
-            var ms = new MemoryStream();
-            var streamWriter = new StreamWriter(ms);
-            var expected = new string('a', 1024*1024*100);
-            streamWriter.Write(expected);
-            streamWriter.Flush();
-            ms.Position = 0;
+            
             var client = NewClient();
-            client.UploadAsync("abc.txt", ms).Wait();            
+            client.UploadAsync("abc.bin", PrepareRandomSourceStream(1024 * 1024 * 20)).Wait();            
 
             for (var i = 0; i < 5; i++)
             {
                 var downloadTime = TimeMeasure.HowLong(
-                    () => client.DownloadAsync("abc.txt", Stream.Null).Wait());
+                    () => client.DownloadAsync("abc.bin", Stream.Null).Wait());
                 logger.Info("CanDownloadPartial: timespan={0}", downloadTime.TotalMilliseconds);
 
                 downloadTime = TimeMeasure.HowLong(
-                    () => client.DownloadAsync("/rdc/files/", "abc.txt", Stream.Null, null, null).Wait());
+                    () => client.DownloadAsync("/rdc/files/", "abc.bin", Stream.Null, null, null).Wait());
                 logger.Info("CanDownloadPartialFromRdc: timespan={0}", downloadTime.TotalMilliseconds);
             }
         }
 
         [Fact]
-        public void CanCheckRdcStats()
+        public void Can_check_rdc_stats()
         {
             var client = NewClient();
             var result = client.GetRdcStatsAsync().Result;
@@ -160,11 +155,11 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void CanGetRdcManifest()
+        public void Can_get_rdc_manifest()
         {
             var client = NewClient();
 
-            var buffer = new byte[1024 * 1024 * 2];
+            var buffer = new byte[1024 * 1024];
             new Random().NextBytes(buffer);
 
             WebClient.UploadData("/files/mb.bin", "PUT", buffer);
@@ -175,7 +170,7 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void CanGetRdcSignatures()
+        public void Can_get_rdc_signatures()
         {
             var client = NewClient();
 
@@ -198,10 +193,9 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void CanGetRdcSignaturePartialy()
+        public void Can_get_rdc_signature_partialy()
         {
             var client = NewClient();
-
             var buffer = new byte[1024 * 1024 * 4];
             new Random().NextBytes(buffer);
 
@@ -214,10 +208,9 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void CanGetPartialContent_from_beggining()
+        public void Can_get_partial_content_from_the_begin()
         {
-            var ms = PrepareSourceStream();
-            ms.Position = 0;
+            var ms = PrepareTextSourceStream();
             var client = NewClient();
             client.UploadAsync("abc.txt",
                                new NameValueCollection
@@ -236,10 +229,9 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void CanGetPartialContent_from_middle()
+        public void Can_get_partial_content_from_the_middle()
         {
-            var ms = PrepareSourceStream();
-            ms.Position = 0;
+            var ms = PrepareTextSourceStream();
             var client = NewClient();
             client.UploadAsync("abc.txt",
                                new NameValueCollection
@@ -258,10 +250,9 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void CanGetPartialContent_from_end_explicitely()
+        public void Can_get_partial_content_from_the_end_explicitely()
         {
-            var ms = PrepareSourceStream();
-            ms.Position = 0;
+            var ms = PrepareTextSourceStream();
             var client = NewClient();
             client.UploadAsync("abc.txt",
                                new NameValueCollection
@@ -280,20 +271,18 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void CanGetPartialContent_from_end()
+        public void Can_get_partial_content_from_the_end()
         {
-            var ms = PrepareSourceStream();
-            ms.Position = 0;
+            var ms = PrepareTextSourceStream();
             var client = NewClient();
-            client.UploadAsync("abc.txt",
+            client.UploadAsync("abc.bin",
                                new NameValueCollection
                                    {
                                        {"test", "1"}
                                    }, ms)
                 .Wait();
-            var downloadedStream = new MemoryStream();
-            //var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, new Tuple<long, long>(ms.Length - 7, ms.Length - 2)).Result;
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, ms.Length - 7, null).Result;
+            var downloadedStream = new MemoryStream();            
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.bin", downloadedStream, ms.Length - 7, null).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
@@ -302,7 +291,12 @@ namespace RavenFS.Tests
             Assert.Equal("7", nameValues["Content-Length"]);
         }
 
-        private static MemoryStream PrepareSourceStream()
+        private static Stream PrepareRandomSourceStream(long size = 3 * 1024 * 1024)
+        {
+            return new RandomStream(size, 1);
+        }
+
+        private static MemoryStream PrepareTextSourceStream()
         {
             var ms = new MemoryStream();
             var writer = new StreamWriter(ms);
@@ -311,6 +305,7 @@ namespace RavenFS.Tests
                 writer.Write(i.ToString("D6"));
             }
             writer.Flush();
+            ms.Position = 0;
             return ms;
         }
     }

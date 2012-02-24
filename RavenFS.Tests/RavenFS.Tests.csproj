@@ -68,26 +68,29 @@
     <Compile Include="ClientUsage.cs" />
     <Compile Include="CompleteUsage.cs" />
     <Compile Include="FileHandling.cs" />
-    <Compile Include="HttpWebRequestExtensions.cs" />
-    <Compile Include="IisDeploymentUtil.cs" />
-    <Compile Include="IisExpressDriver.cs" />
+    <Compile Include="Tools\HttpWebRequestExtensions.cs" />
+    <Compile Include="Tools\IisDeploymentUtil.cs" />
+    <Compile Include="Infrastructure\IisExpressDriver.cs" />
     <Compile Include="IisExpressTestClient.cs" />
-    <Compile Include="LocalRdcManagerTest.cs" />
     <Compile Include="MultiIisExpressTestBase.cs" />
     <Compile Include="NarrowedStreamTests.cs" />
-    <Compile Include="ProcessDriver.cs" />
+    <Compile Include="Infrastructure\ProcessDriver.cs" />
+    <Compile Include="Tools\RandomlyModifiedStream.cs" />
+    <Compile Include="Tools\RandomStream.cs" />
     <Compile Include="RemoteFilesHandlerTests.cs" />
-    <Compile Include="IOExtensions.cs" />
+    <Compile Include="Tools\IOExtensions.cs" />
     <Compile Include="PagesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SynchronizationTests.cs" />
-    <Compile Include="TimeMeasure.cs" />
+    <Compile Include="Tools\TimeMeasure.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\External\rdc-service\Rdc.Wrapper\Rdc.Wrapper.csproj">

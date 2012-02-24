@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Web;
 using RavenFS.Util;
 using Rdc.Wrapper;
@@ -24,7 +25,7 @@ namespace RavenFS.Rdc
                             seed.CopyTo(output, Convert.ToInt64(item.fileOffset), Convert.ToInt64(item.blockLength));
                             break;
                         default:
-                            break;
+                            throw new NotSupportedException();
                     }
                 }
             }

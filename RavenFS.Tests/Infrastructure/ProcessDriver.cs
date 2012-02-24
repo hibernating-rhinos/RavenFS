@@ -5,7 +5,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace RavenFS.Tests
+namespace RavenFS.Tests.Infrastructure
 {
 	public abstract class ProcessDriver
 	{

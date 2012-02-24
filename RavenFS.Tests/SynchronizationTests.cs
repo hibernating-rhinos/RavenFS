@@ -6,9 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using RavenFS.Tests.Tools;
 using RavenFS.Util;
 using Xunit;
-using Raven.Database.Extensions;
 using Xunit.Extensions;
 
 namespace RavenFS.Tests
@@ -70,8 +70,31 @@ namespace RavenFS.Tests
             }
             
             Assert.True(resultMD5 == sourceMD5);
+        }
 
-        }        
+        [Theory]
+        [InlineData(1024 * 1024 * 20)]
+        public void Big_file_test(long size)
+        {
+            var sourceContent = new RandomStream(size, 1);
+            var seedContent = new RandomlyModifiedStream(new RandomStream(size, 1), 0.001);
+            var seedClient = NewClient(0);
+            var sourceClient = NewClient(1);
+            var sourceMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "some-value"}
+                               };
+            var seedMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "should-be-overwritten"}
+                               };
+
+            seedClient.UploadAsync("test.bin", seedMetadata, seedContent).Wait();           
+            sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();            
+
+            var result = seedClient.StartSynchronizationAsync("server1", "test.bin").Result;            
+            Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);            
+        }
 
         private static MemoryStream PrepareSourceStream(int lines)
         {

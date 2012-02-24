@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
 using Newtonsoft.Json;
-using Raven.Tests.Security.OAuth;
+using RavenFS.Tests.Tools;
 using RavenFS.Util;
 using RavenFS.Storage;
 using Xunit;
@@ -16,8 +16,6 @@ namespace RavenFS.Tests
 	{
 		[Theory]
         [InlineData(1024 * 1024)]		// 1 mb        
-        [InlineData(1024 * 1024 * 2)]	// 2 mb
-        [InlineData(1024 * 1024 * 4)]	// 4 mb
         [InlineData(1024 * 1024 * 8)]	// 8 mb
 		public void CanHandleBigFiles(int size)
 		{

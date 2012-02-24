@@ -4,8 +4,9 @@
 // // </copyright>
 // //-----------------------------------------------------------------------
 using System;
+using RavenFS.Tests.Infrastructure;
 
-namespace RavenFS.Tests
+namespace RavenFS.Tests.Infrastructure
 {
 	public class IisExpressDriver : ProcessDriver
 	{

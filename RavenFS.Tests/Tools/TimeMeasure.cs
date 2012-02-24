@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RavenFS.Tests
+namespace RavenFS.Tests.Tools
 {
     public static class TimeMeasure
     {

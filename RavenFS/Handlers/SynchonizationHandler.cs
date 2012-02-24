@@ -61,41 +61,57 @@ namespace RavenFS.Handlers
             var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
             var sourceSignatureManifest = remoteRdcManager.SynchronizeSignatures(localFileDataInfo);
 
-            var report = new SynchronizationReport {FileName = fileName};
+            SynchronizationReport report = null;
             if (sourceSignatureManifest.Signatures.Count > 0)
             {
-                var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
-                var sourceSignatureInfo = new SignatureInfo(sourceSignatureManifest.Signatures.Last().Name);
-                
-                using (
-                    var needListGenerator = new NeedListGenerator(SignatureRepository,
-                                                                  _remoteSignatureCaches[sourceServerName]))
-                using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
-                                                                             sourceMetadataAsync.Result))
-                {
-                    var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
-                    _needListParser.Parse(
-                        new RemotePartialAccess(sourceServerUrl, fileName),
-                        new StoragePartialAccess(Storage, fileName),
-                        outputFile, needList);
-                    report.BytesTransfered =
-                        needList.Sum(item => item.blockType == RdcNeedType.Source ? (long)item.blockLength : 0L);
-                    report.BytesCopied =
-                        needList.Sum(item => item.blockType == RdcNeedType.Seed ? (long)item.blockLength : 0L);
-                }
+                report = Synchronize(sourceServerName, sourceServerUrl, fileName, sourceSignatureManifest, seedSignatureManifest, sourceMetadataAsync.Result);
             } 
             else
             {
-                using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
-                                                                             sourceMetadataAsync.Result))
-                {
-                    sourceRavenFileSystemClient.DownloadAsync(fileName, outputFile).Wait();
-                }
-                report.BytesCopied = StorageStream.Reading(Storage, fileName + ".result").Length;
+                report = Download(sourceRavenFileSystemClient, fileName, sourceMetadataAsync);
             }
 
             return WriteJson(context, report);
         }
+
+        private SynchronizationReport Synchronize(string sourceServerName, string sourceServerUrl, string fileName, SignatureManifest sourceSignatureManifest, SignatureManifest seedSignatureManifest, NameValueCollection sourceMetadata)
+        {
+            var result = new SynchronizationReport { FileName = fileName };
+            var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
+            var sourceSignatureInfo = new SignatureInfo(sourceSignatureManifest.Signatures.Last().Name);
+                
+            using (
+                var needListGenerator = new NeedListGenerator(SignatureRepository,
+                                                              _remoteSignatureCaches[sourceServerName]))
+            using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
+                                                                         sourceMetadata))
+            {
+                var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
+                _needListParser.Parse(
+                    new RemotePartialAccess(sourceServerUrl, fileName),
+                    new StoragePartialAccess(Storage, fileName),
+                    outputFile, needList);
+                result.BytesTransfered =
+                    needList.Sum(item => item.blockType == RdcNeedType.Source ? (long)item.blockLength : 0L);
+                result.BytesCopied =
+                    needList.Sum(item => item.blockType == RdcNeedType.Seed ? (long)item.blockLength : 0L);
+                result.NeedListLength = needList.Count;
+            }
+            return result;
+        }
+
+        private SynchronizationReport Download(RavenFileSystemClient sourceRavenFileSystemClient, string fileName, Task<NameValueCollection> sourceMetadataAsync)
+        {
+            var result = new SynchronizationReport { FileName = fileName };
+            using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
+                                                                         sourceMetadataAsync.Result))
+            {
+                sourceRavenFileSystemClient.DownloadAsync(fileName, outputFile).Wait();
+            }
+            result.BytesCopied = StorageStream.Reading(Storage, fileName + ".result").Length;
+            return result;
+        }
+
 
         private DataInfo GetLocalFileDataInfo(string fileName)
         {

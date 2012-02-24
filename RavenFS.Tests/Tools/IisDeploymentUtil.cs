@@ -1,8 +1,7 @@
 ﻿using System;
 using System.IO;
-using Raven.Database.Extensions;
 
-namespace RavenFS.Tests
+namespace RavenFS.Tests.Tools
 {
 	public static class IisDeploymentUtil
 	{

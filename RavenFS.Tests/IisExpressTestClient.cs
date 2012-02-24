@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Net;
 using RavenFS.Client;
+using RavenFS.Tests.Infrastructure;
+using RavenFS.Tests.Tools;
 
 namespace RavenFS.Tests
 {
