@@ -56,7 +56,7 @@ namespace RavenFS.Tests.Tools
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public override bool CanRead
