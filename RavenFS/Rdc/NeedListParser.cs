@@ -16,13 +16,13 @@ namespace RavenFS.Rdc
             {
                 foreach (var item in needList)
                 {
-                    switch (item.blockType)
+                    switch (item.BlockType)
                     {
                         case RdcNeedType.Source:
-                            source.CopyTo(output, Convert.ToInt64(item.fileOffset), Convert.ToInt64(item.blockLength));
+                            source.CopyTo(output, Convert.ToInt64(item.FileOffset), Convert.ToInt64(item.BlockLength));
                             break;
                         case RdcNeedType.Seed:
-                            seed.CopyTo(output, Convert.ToInt64(item.fileOffset), Convert.ToInt64(item.blockLength));
+                            seed.CopyTo(output, Convert.ToInt64(item.FileOffset), Convert.ToInt64(item.BlockLength));
                             break;
                         default:
                             throw new NotSupportedException();

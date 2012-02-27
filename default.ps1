@@ -9,7 +9,7 @@ properties {
   $release_dir = "$base_dir\Release"
   $uploader = "..\Uploader\S3Uploader.exe"
   
-  $ravenfs_web = @( "RavenFS.???", "AsyncCtpLibrary.???", "Esent.Interop.???", "Lucene.Net.???", "Newtonsoft.Json.???", "NLog.??" );
+  $ravenfs_web = @( "RavenFS.???", "AsyncCtpLibrary.???", "Esent.Interop.???", "Lucene.Net.???", "Newtonsoft.Json.???", "NLog.???" );
   $ravenfs_client = @( "RavenFS.Client.???", "AsyncCtpLibrary.???", "Newtonsoft.Json.???" );
   $ravenfs_silverlight = @( "RavenFS.Client.Silverlight.???", "AsyncCtpLibrary_Silverlight.???", "Newtonsoft.Json.Silverlight.???" );
       

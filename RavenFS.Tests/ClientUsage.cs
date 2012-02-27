@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
-using NLog;
 using RavenFS.Tests.Tools;
 using Xunit;
 using Xunit.Extensions;
@@ -123,26 +122,6 @@ namespace RavenFS.Tests
             var actual = new StreamReader(ms2).ReadToEnd();
 
             Assert.Equal(expected, actual);
-        }
-
-        [Fact]
-        public void Compare_downloading_methods()
-        {
-            var logger = LogManager.GetLogger("Compare_downloading_methods");
-            
-            var client = NewClient();
-            client.UploadAsync("abc.bin", PrepareRandomSourceStream(1024 * 1024 * 20)).Wait();            
-
-            for (var i = 0; i < 5; i++)
-            {
-                var downloadTime = TimeMeasure.HowLong(
-                    () => client.DownloadAsync("abc.bin", Stream.Null).Wait());
-                logger.Info("CanDownloadPartial: timespan={0}", downloadTime.TotalMilliseconds);
-
-                downloadTime = TimeMeasure.HowLong(
-                    () => client.DownloadAsync("/rdc/files/", "abc.bin", Stream.Null, null, null).Wait());
-                logger.Info("CanDownloadPartialFromRdc: timespan={0}", downloadTime.TotalMilliseconds);
-            }
         }
 
         [Fact]
@@ -282,18 +261,13 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();            
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.bin", downloadedStream, ms.Length - 7, null).Result;
+            var nameValues = client.DownloadAsync("/rdc/files/", "abc.bin", downloadedStream, ms.Length - 7).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
             Assert.Equal("9500000", result);
             Assert.Equal("bytes 2999993-2999999/3000000", nameValues["Content-Range"]);
             Assert.Equal("7", nameValues["Content-Length"]);
-        }
-
-        private static Stream PrepareRandomSourceStream(long size = 3 * 1024 * 1024)
-        {
-            return new RandomStream(size, 1);
         }
 
         private static MemoryStream PrepareTextSourceStream()

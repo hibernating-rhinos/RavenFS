@@ -92,9 +92,9 @@ namespace RavenFS.Handlers
                     new StoragePartialAccess(Storage, fileName),
                     outputFile, needList);
                 result.BytesTransfered =
-                    needList.Sum(item => item.blockType == RdcNeedType.Source ? (long)item.blockLength : 0L);
+                    needList.Sum(item => item.BlockType == RdcNeedType.Source ? (long)item.BlockLength : 0L);
                 result.BytesCopied =
-                    needList.Sum(item => item.blockType == RdcNeedType.Seed ? (long)item.blockLength : 0L);
+                    needList.Sum(item => item.BlockType == RdcNeedType.Seed ? (long)item.BlockLength : 0L);
                 result.NeedListLength = needList.Count;
             }
             return result;
