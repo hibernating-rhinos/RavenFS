@@ -15,20 +15,21 @@ namespace RavenFS.Studio.Infrastructure
 
 		private static string DetermineUri()
 		{
-			if (HtmlPage.Document.DocumentUri.Scheme == "file")
+		    var documentUri = HtmlPage.Document.DocumentUri;
+		    if (documentUri.Scheme == "file")
 			{
 				return "http://localhost";
 			}
-			var localPath = HtmlPage.Document.DocumentUri.LocalPath;
-			var lastIndexOfRaven = localPath.LastIndexOf("/raven/");
-			if (lastIndexOfRaven != -1)
+		    var path = documentUri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
+            var lastIndexOfUI = path.LastIndexOf("ui");
+            if (lastIndexOfUI != -1)
 			{
-				localPath = localPath.Substring(0, lastIndexOfRaven);
+                path = path.Substring(0, lastIndexOfUI);
 			}
-			return new UriBuilder(HtmlPage.Document.DocumentUri)
-			{
-				Path = localPath
-			}.Uri.ToString();
+
+		    var uriBuilder = new UriBuilder(documentUri.Scheme, documentUri.DnsSafeHost, documentUri.Port, path);
+
+		    return uriBuilder.Uri.ToString();
 		}
 
 		public static Uri GetFileUrl(string fileName)
