@@ -61,7 +61,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AsyncCtpLibrary_Silverlight, Version=1.0.4107.18177, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\RavenDB.1.0.531\lib\sl40\AsyncCtpLibrary_Silverlight.dll</HintPath>
+      <HintPath>..\packages\AsyncCTP.0.3\lib\sl40\AsyncCtpLibrary_Silverlight.dll</HintPath>
     </Reference>
     <Reference Include="MissingBitFromSilverlight">
       <HintPath>..\packages\RavenDB.1.0.531\lib\sl40\MissingBitFromSilverlight.dll</HintPath>
