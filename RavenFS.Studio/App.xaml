@@ -8,6 +8,7 @@
                 <ResourceDictionary Source="Assets/Styles.xaml" />
                 <ResourceDictionary Source="Converters/Converters.xaml" />
                 <ResourceDictionary Source="Assets/Images/Images.xaml" />
+                <ResourceDictionary Source="Commands/Commands.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

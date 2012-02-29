@@ -9,7 +9,7 @@
                  d:DesignWidth="640"
                  d:DesignHeight="480"
                  Title="FileInfo Page"
-                 Style="{StaticResource PageStyle}"
+                 Style="{StaticResource Style_Page}"
                  Infrastructure:ModelResolver.AttachModel="FileInfoModel">
 
     <Grid x:Name="LayoutRoot">
