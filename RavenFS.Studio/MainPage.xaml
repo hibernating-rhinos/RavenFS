@@ -71,11 +71,11 @@
                 <HyperlinkButton Grid.Column="1"
 								 HorizontalAlignment="Left"
 								 Margin="0,5,5,1">
-                    <StackPanel x:Name="BrandingStackPanel">
+                    <StackPanel x:Name="BrandingStackPanel" Orientation="Horizontal">
                         <Image Source="{StaticResource Image_RavenLogo}"
 						   Stretch="Uniform"
 						   Height="25" />
-                        <TextBlock Text="RavenFS Client"/>
+                        <TextBlock Text="RavenFS" VerticalAlignment="Center" Foreground="Black"/>
                     </StackPanel>
                 </HyperlinkButton>
 

@@ -6,113 +6,90 @@
                      xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
                      xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
                      xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors"
-                     mc:Ignorable="d"
+                     xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
+                     xmlns:Models="clr-namespace:RavenFS.Studio.Models"
+                     xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" mc:Ignorable="d"
                      d:DesignWidth="640"
                      d:DesignHeight="480"
                      Title="Home"
                      Style="{StaticResource Style_Page}"
-                     Infrastructure:ModelResolver.AttachModel="FilesPageModel">
+                     Infrastructure:ModelResolver.AttachModel="FilesPageModel" d:DataContext="{d:DesignInstance Models:FilesPageModel}">
 
-    <Grid x:Name="LayoutRoot">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="0.1*" />
-			<RowDefinition Height="0.1*" />
-			<RowDefinition Height="4" />
-			<RowDefinition Height="0.1*" />
-			<RowDefinition Height="0.6*" />
-			<RowDefinition Height="0.1*" />
-		</Grid.RowDefinitions>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="0.18*" />
-			<ColumnDefinition Width="0.6*" />
-			<ColumnDefinition Width="0.22*" />
-		</Grid.ColumnDefinitions>
-		<Button Content="Upload"
-				Grid.Column="1"
-				Margin="109,8,154,4"
-				d:LayoutOverrides="Height"
-				Command="{Binding Upload}" />
-		<TextBlock TextWrapping="Wrap"
-				   Text="Upload Progress:"
-				   FontSize="12"
-				   HorizontalAlignment="Center"
-				   Grid.Row="1"
-				   VerticalAlignment="Center" />
-		<ProgressBar Grid.Column="1"
-					 Margin="10"
-					 Grid.Row="1"
-					 Grid.ColumnSpan="2"
-					 d:LayoutOverrides="GridBox"
-                     Value="{Binding TotalBytesUploaded}"
-                     Minimum="0"
-                     Maximum="{Binding TotalUploadFileSize}"/>
+    <Grid Margin="{StaticResource Margin_ContentPage}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
         
-        <StackPanel  Orientation="Horizontal"
-                     VerticalAlignment="Bottom" Grid.Column="2" Margin="8,0,18,8" Grid.Row="3">
-            <HyperlinkButton Command="{Binding Path=Pager.PrevPage}"
+        <Border Style="{StaticResource Style_Border_Header}">
+            <toolkit:DockPanel Margin="4" LastChildFill="False">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Files" Style="{StaticResource Style_TextBlock_Breadcrumb}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                         VerticalAlignment="Center"
+                            Margin="5,0,5,0" 
+                            toolkit:DockPanel.Dock="Right">
+                    <Button Content="Upload" 
+                            Style="{StaticResource Style_Button_MouseOverChrome}"
+                            VerticalAlignment="Center"
+				            Command="{Binding Upload}" />
+                    <Button Content="Download"
+                            Style="{StaticResource Style_Button_MouseOverChrome}"
+                            VerticalAlignment="Center"
+                            Command="{Binding Download}"/>
+                    <StackPanel  Orientation="Horizontal"
+                         VerticalAlignment="Center" Margin="5,0,5,0">
+                        <HyperlinkButton Command="{Binding Path=Pager.PrevPage}"
                              
-                             ToolTipService.ToolTip="Previous Page">
-                <HyperlinkButton.Content>
-                    <Image Source="{StaticResource Image_PreviousPage_Tiny}"
-                           Stretch="None"
+                                 ToolTipService.ToolTip="Previous Page">
+                            <HyperlinkButton.Content>
+                                <Image Source="{StaticResource Image_PreviousPage_Tiny}"
+                               Stretch="None"
+                               VerticalAlignment="Center" />
+                            </HyperlinkButton.Content>
+                        </HyperlinkButton>
+                        <TextBlock Text="Page "
                            VerticalAlignment="Center" />
-                </HyperlinkButton.Content>
-            </HyperlinkButton>
-            <TextBlock Text="Page "
-                       VerticalAlignment="Center" />
-            <TextBlock Text="{Binding Path=Pager.CurrentPage}"
-                       VerticalAlignment="Center" />
-            <TextBlock Text=" of "
-                       VerticalAlignment="Center" />
-            <TextBlock Text="{Binding Path=Pager.TotalPages}"
-                       VerticalAlignment="Center" />
-            <HyperlinkButton Command="{Binding Path=Pager.NextPage}"
-                             ToolTipService.ToolTip="Next Page">
-                <HyperlinkButton.Content>
-                    <Image Source="{StaticResource Image_NextPage_Tiny}"
-                           Stretch="None"
+                        <TextBlock Text="{Binding Path=Pager.CurrentPage}"
                            VerticalAlignment="Center" />
-                </HyperlinkButton.Content>
-            </HyperlinkButton>
-        </StackPanel>
-        <ListBox x:Name="FilesList"
-                 Grid.ColumnSpan="3"
-				 Margin="10"
-				 Grid.Row="4"
-				 ItemsSource="{Binding Files, Mode=TwoWay}">
-			<ListBox.ItemTemplate>
-				<DataTemplate>
-					<StackPanel Orientation="Horizontal">
-                        <i:Interaction.Behaviors>
-                            <Behaviors:DoubleClickBehavior Command="{Binding Info}" />
-                        </i:Interaction.Behaviors>
-                        <TextBlock Text="{Binding File.Name}" />
-						<TextBlock Text="     " />
-						<TextBlock Text="{Binding File.HumaneTotalSize}" />
-					</StackPanel>
-                </DataTemplate>
-                
-			</ListBox.ItemTemplate>
-		</ListBox>
-		<Rectangle Grid.ColumnSpan="3"
-				   Fill="#FF010104"
-				   Margin="0"
-				   Grid.Row="2"
-				   Stroke="Black" />
-		<TextBlock Margin="10,0,0,0"
-				   TextWrapping="Wrap"
-				   Text="Aveilable Files:"
-				   FontSize="18.667"
-				   HorizontalAlignment="Left"
-				   Grid.Row="3"
-				   VerticalAlignment="Center"
-				   Grid.ColumnSpan="2" />
-		<Button Content="Download"
-				Grid.Column="2"
-				Margin="10,6"
-				Grid.Row="5"
-				d:LayoutOverrides="Height"
-                Command="{Binding Download}"
-                CommandParameter="{Binding SelectedItem, ElementName=FilesList}"/>
-	</Grid>
+                        <TextBlock Text=" of "
+                           VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Path=Pager.TotalPages}"
+                           VerticalAlignment="Center" />
+                        <HyperlinkButton Command="{Binding Path=Pager.NextPage}"
+                                 ToolTipService.ToolTip="Next Page">
+                            <HyperlinkButton.Content>
+                                <Image Source="{StaticResource Image_NextPage_Tiny}"
+                               Stretch="None"
+                               VerticalAlignment="Center" />
+                            </HyperlinkButton.Content>
+                        </HyperlinkButton>
+                    </StackPanel>
+                </StackPanel>
+            </toolkit:DockPanel>
+        </Border>
+        
+        <sdk:DataGrid x:Name="DataGrid" Grid.Row="1" 
+                      AutoGenerateColumns="False" 
+                      IsReadOnly="True" 
+                      ItemsSource="{Binding Files}"
+                      Margin="0,10"
+                      SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}">
+            <sdk:DataGrid.Columns>
+                <sdk:DataGridTextColumn Header="Name" Width="*" Binding="{Binding File.Name}"/>
+                <sdk:DataGridTextColumn Header="Size" Width="100" Binding="{Binding File.HumaneTotalSize}"/>
+                <sdk:DataGridTextColumn Header="Last Modified" Width="150" Binding="{Binding File.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDate}}"/>
+                <sdk:DataGridTemplateColumn Width="25" CanUserResize="False">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding Info}" Style="{StaticResource Style_Button_MouseOverChrome}" VerticalAlignment="Center">
+                                <Image Source="{StaticResource Image_Info_Tiny}" Stretch="None"/>
+                            </Button>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+    </Grid>
 </Infrastructure:View>

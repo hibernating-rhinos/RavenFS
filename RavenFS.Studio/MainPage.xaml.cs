@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Markup;
 using System.Windows.Navigation;
 using RavenFS.Studio.Behaviors;
 using RavenFS.Studio.Infrastructure;
@@ -12,6 +14,9 @@ namespace RavenFS.Studio
     {
         public MainPage()
         {
+            // make sure that converters in the app use the users current culture
+            this.Language = XmlLanguage.GetLanguage(Thread.CurrentThread.CurrentCulture.Name);
+
             InitializeComponent();
         }
 

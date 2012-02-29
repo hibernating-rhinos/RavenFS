@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Browser;
 using System.Windows.Input;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Infrastructure;
@@ -10,13 +11,18 @@ namespace RavenFS.Studio.Models
 {
 	public class FilesPageModel : PagerModel
 	{
-		public ICommand Upload { get { return new UploadCommand(TotalUploadFileSize, TotalBytesUploaded); } }
-		public ICommand Download { get { return new DownloadCommand(); } }
-		public PagerModel Pager { get; private set; }
+	    private ActionCommand _downloadCommand;
+
+	    public ICommand Upload { get { return new UploadCommand(TotalUploadFileSize, TotalBytesUploaded); } }
+        public ICommand Download { get { return _downloadCommand ?? (_downloadCommand = new ActionCommand(HandleDownload)); } }
+
+	   
+
+	    public PagerModel Pager { get; private set; }
 
 		public Observable<long> TotalUploadFileSize { get; set; }
 		public Observable<long> TotalBytesUploaded { get; set; }
-
+        public Observable<FileInfoWrapper> SelectedFile { get; private set; }
 		private Observable<long> NumberOfItems { get; set; }
 
 		public BindableCollection<FileInfoWrapper> Files { get; set; }
@@ -27,6 +33,7 @@ namespace RavenFS.Studio.Models
 			TotalBytesUploaded = new Observable<long>();
 			TotalUploadFileSize = new Observable<long>();
 			NumberOfItems = new Observable<long>();
+		    SelectedFile = new Observable<FileInfoWrapper>();
 
 			Pager = new PagerModel();
 			Pager.SetTotalResults(NumberOfItems);
@@ -40,5 +47,16 @@ namespace RavenFS.Studio.Models
 				.ContinueWith(_ => ApplicationModel.Client.StatsAsync())
 				.ContinueOnSuccess(task=> NumberOfItems.Value = task.Result.FileCount);
 		}
+
+        private void HandleDownload()
+        {
+            if (SelectedFile.Value == null)
+            {
+                return;
+            }
+
+            var url = ApplicationModel.GetFileUrl(SelectedFile.Value.File.Name);
+            HtmlPage.Window.Navigate(url);
+        }
 	}
 }
