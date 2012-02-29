@@ -8,7 +8,7 @@ using System.Web;
 using NLog;
 using RavenFS.Search;
 using RavenFS.Util;
-using Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper;
 
 namespace RavenFS.Infrastructure
 {

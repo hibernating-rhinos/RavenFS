@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
-namespace Rdc.Wrapper
+namespace RavenFS.Rdc.Wrapper
 {
     public class SimpleSignatureRepository : ISignatureRepository
     {

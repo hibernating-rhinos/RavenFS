@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
 using RavenFS.Util;
-using Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper;
 
 namespace RavenFS.Infrastructure
 {

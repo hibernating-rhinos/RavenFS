@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit;
 using NUnit.Framework;
-using Rdc.Utils.IO;
+using RavenFS.Rdc.Utils.IO;
 
-namespace Rdc.Wrapper.Test
+namespace RavenFS.Rdc.Wrapper.Test
 {
     [TestFixture]
     public class SigGeneratorTest

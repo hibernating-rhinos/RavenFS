@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Storage;
 using RavenFS.Util;
-using Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper;
 
 namespace RavenFS.Rdc
 {

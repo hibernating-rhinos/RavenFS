@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Rdc.Utils.IO
+namespace RavenFS.Rdc.Utils.IO
 {
     public class RandomStream : Stream
     {

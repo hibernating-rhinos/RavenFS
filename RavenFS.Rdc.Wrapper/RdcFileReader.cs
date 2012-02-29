@@ -5,9 +5,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Text;
-using Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper;
 
-namespace Rdc.Wrapper
+namespace RavenFS.Rdc.Wrapper
 {
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A89-9DBC-11DA-9E3F-0011114AE311")]

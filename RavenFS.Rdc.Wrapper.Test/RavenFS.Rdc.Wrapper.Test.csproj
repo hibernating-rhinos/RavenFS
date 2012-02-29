@@ -94,11 +94,11 @@
     <Compile Include="SigGeneratorTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Rdc.Utils\RavenFS.Rdc.Utils.csproj">
+    <ProjectReference Include="..\RavenFS.Rdc.Utils\RavenFS.Rdc.Utils.csproj">
       <Project>{8D2C4989-F806-4AAB-81C8-FEDD150C5B41}</Project>
       <Name>RavenFS.Rdc.Utils</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Rdc.Wrapper\RavenFS.Rdc.Wrapper.csproj">
+    <ProjectReference Include="..\RavenFS.Rdc.Wrapper\RavenFS.Rdc.Wrapper.csproj">
       <Project>{E5A918C7-8FB7-4172-A11F-0E7219B1FD08}</Project>
       <Name>RavenFS.Rdc.Wrapper</Name>
     </ProjectReference>

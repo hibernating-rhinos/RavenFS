@@ -179,7 +179,7 @@
       <Project>{E37467ED-F680-423E-964A-60988A90F76E}</Project>
       <Name>RavenFS.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Rdc.Wrapper\RavenFS.Rdc.Wrapper.csproj">
+    <ProjectReference Include="..\RavenFS.Rdc.Wrapper\RavenFS.Rdc.Wrapper.csproj">
       <Project>{E5A918C7-8FB7-4172-A11F-0E7219B1FD08}</Project>
       <Name>RavenFS.Rdc.Wrapper</Name>
     </ProjectReference>

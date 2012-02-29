@@ -5,7 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Rdc.Utils.IO
+namespace RavenFS.Rdc.Utils.IO
 {
     public static class TestUtils
     {

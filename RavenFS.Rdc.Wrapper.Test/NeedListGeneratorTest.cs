@@ -3,13 +3,13 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using Rdc.Utils.IO;
-using Rdc.Wrapper;
+using RavenFS.Rdc.Utils.IO;
+using RavenFS.Rdc.Wrapper;
 using NUnit;
 using NUnit.Framework;
 
 
-namespace Rdc.Wrapper.Test
+namespace RavenFS.Rdc.Wrapper.Test
 {
     [TestFixture]
     public class NeedListGeneratorTest

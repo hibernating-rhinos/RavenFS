@@ -12,7 +12,7 @@ using RavenFS.Infrastructure;
 using RavenFS.Rdc;
 using RavenFS.Storage;
 using RavenFS.Util;
-using Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper;
 using RavenFS.Extensions;
 
 namespace RavenFS.Handlers

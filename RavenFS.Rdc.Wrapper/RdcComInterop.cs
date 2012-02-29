@@ -7,7 +7,7 @@ using System.Security.Permissions;
 
 using HRESULT = System.Int32;
 
-namespace Rdc.Wrapper
+namespace RavenFS.Rdc.Wrapper
 {
     /// <summary>
     /// Internal MSRDC definitions

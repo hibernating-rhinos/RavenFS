@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using RavenFS.Client;
-using Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper;
 
 namespace RavenFS.Rdc
 {

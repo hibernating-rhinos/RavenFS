@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Rdc.Wrapper
+namespace RavenFS.Rdc.Wrapper
 {
     public interface ISignatureRepository
     {

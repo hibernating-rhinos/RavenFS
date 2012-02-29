@@ -5,9 +5,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper;
 
-namespace Rdc.Wrapper
+namespace RavenFS.Rdc.Wrapper
 {
     public static class RdcBufferTools
     {        

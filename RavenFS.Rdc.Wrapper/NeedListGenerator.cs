@@ -8,9 +8,8 @@ using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using Rdc.Wrapper;
 
-namespace Rdc.Wrapper
+namespace RavenFS.Rdc.Wrapper
 {
     public class NeedListGenerator : CriticalFinalizerObject, IDisposable
     {

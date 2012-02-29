@@ -7,9 +7,9 @@ using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper;
 
-namespace Rdc.Wrapper
+namespace RavenFS.Rdc.Wrapper
 {
     public class SigGenerator : CriticalFinalizerObject, IDisposable
     {

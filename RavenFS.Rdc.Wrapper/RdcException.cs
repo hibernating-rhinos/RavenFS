@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper;
 
-namespace Rdc.Wrapper
+namespace RavenFS.Rdc.Wrapper
 {
     public class RdcException : Exception
     {
