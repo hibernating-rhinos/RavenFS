@@ -93,10 +93,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\External\rdc-service\Rdc.Wrapper\Rdc.Wrapper.csproj">
-      <Project>{E5A918C7-8FB7-4172-A11F-0E7219B1FD08}</Project>
-      <Name>Rdc.Wrapper</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RavenFS.Client\RavenFS.Client.csproj">
       <Project>{E37467ED-F680-423E-964A-60988A90F76E}</Project>
       <Name>RavenFS.Client</Name>
