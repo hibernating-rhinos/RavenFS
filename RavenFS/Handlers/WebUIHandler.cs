@@ -17,6 +17,12 @@ namespace RavenFS.Handlers
         protected override Task ProcessRequestAsync(HttpContext context)
         {
             var requestUrl = context.GetRequestUrl();
+            if (requestUrl.Equals("/ui", StringComparison.InvariantCultureIgnoreCase))
+            {
+                context.Response.Redirect(context.Request.Url + "/");
+                return Completed;
+            }
+
             var doc = Url.Match(requestUrl).Groups[1].Value;
 
             var basePath = HttpRuntime.AppDomainAppPath;
