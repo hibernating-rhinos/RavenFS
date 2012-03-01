@@ -107,6 +107,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
+    <Compile Include="Behaviors\ExecuteCommandOnFileDrop.cs" />
     <Compile Include="Behaviors\LinkHighlighter.cs" />
     <Compile Include="Commands\NavigateToCommand.cs" />
     <Compile Include="Commands\NavigateToNextPageCommand.cs" />

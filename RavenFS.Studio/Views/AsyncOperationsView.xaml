@@ -73,6 +73,12 @@
                         <DataTemplate>
                             <Image x:Name="StatusImage" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2">
                                 <i:Interaction.Triggers>
+                                    <ei:DataTrigger Binding="{Binding Status}" Value="Processing" Comparison="Equal">
+                                        <ei:ChangePropertyAction TargetName="StatusImage" PropertyName="Source" Value="{x:Null}"/>
+                                    </ei:DataTrigger>
+                                    <ei:DataTrigger Binding="{Binding Status}" Value="Queued" Comparison="Equal">
+                                        <ei:ChangePropertyAction TargetName="StatusImage" PropertyName="Source" Value="{x:Null}"/>
+                                    </ei:DataTrigger>
                                     <ei:DataTrigger Binding="{Binding Status}" Value="Completed" Comparison="Equal">
                                         <ei:ChangePropertyAction TargetName="StatusImage" PropertyName="Source" Value="{StaticResource Image_Success_Tiny}"/>
                                     </ei:DataTrigger>

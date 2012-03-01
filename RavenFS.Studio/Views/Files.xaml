@@ -78,6 +78,9 @@
                       ItemsSource="{Binding Files}"
                       Margin="0,10"
                       SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}">
+            <i:Interaction.Behaviors>
+                <Behaviors:ExecuteCommandOnFileDrop Command="{Binding Upload}"/>
+            </i:Interaction.Behaviors>
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="Name" Width="*" Binding="{Binding File.Name}"/>
                 <sdk:DataGridTextColumn Header="Size" Width="100" Binding="{Binding File.HumaneTotalSize}"/>
