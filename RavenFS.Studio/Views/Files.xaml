@@ -19,6 +19,7 @@
     <Grid Margin="{StaticResource Margin_ContentPage}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
           <RowDefinition Height="*"/>
           <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -32,14 +33,7 @@
                          VerticalAlignment="Center"
                             Margin="5,0,5,0" 
                             toolkit:DockPanel.Dock="Right">
-                    <Button Content="Upload" 
-                            Style="{StaticResource Style_Button_MouseOverChrome}"
-                            VerticalAlignment="Center"
-				            Command="{Binding Upload}" />
-                    <Button Content="Download"
-                            Style="{StaticResource Style_Button_MouseOverChrome}"
-                            VerticalAlignment="Center"
-                            Command="{Binding Download}"/>
+                   
                     <StackPanel  Orientation="Horizontal"
                          VerticalAlignment="Center" Margin="5,0,5,0">
                         <HyperlinkButton Command="{Binding Path=Pager.PrevPage}"
@@ -71,8 +65,26 @@
                 </StackPanel>
             </toolkit:DockPanel>
         </Border>
-        
-        <sdk:DataGrid x:Name="DataGrid" Grid.Row="1" 
+
+        <Border Grid.Row="1" Style="{StaticResource Style_Border_Header}">
+            <toolkit:DockPanel Margin="4" LastChildFill="False">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Upload" 
+                            VerticalAlignment="Center"
+				            Command="{Binding Upload}" />
+                    <Button Content="Download"
+                            VerticalAlignment="Center"
+                            Command="{Binding Download}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                         VerticalAlignment="Center"
+                            Margin="5,0,5,0" 
+                            toolkit:DockPanel.Dock="Right">
+                </StackPanel>
+            </toolkit:DockPanel>
+        </Border>
+
+        <sdk:DataGrid x:Name="DataGrid" Grid.Row="2" 
                       AutoGenerateColumns="False" 
                       IsReadOnly="True" 
                       ItemsSource="{Binding Files}"
@@ -97,6 +109,6 @@
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
         
-        <Views:AsyncOperationsView Grid.Row="2"/>
+        <Views:AsyncOperationsView Grid.Row="3"/>
     </Grid>
 </Infrastructure:View>
