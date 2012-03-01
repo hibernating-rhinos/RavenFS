@@ -18,13 +18,16 @@ namespace RavenFS.Studio.Infrastructure
 		static View()
 		{
 			CurrentViews = new List<View>();
-			dispatcherTimer = new DispatcherTimer
-			{
-				Interval = TimeSpan.FromSeconds(1),
-			};
-			dispatcherTimer.Tick += DispatcherTimerOnTick;
-			dispatcherTimer.Start();
 
+            if (!DesignerProperties.IsInDesignTool)
+            {
+                dispatcherTimer = new DispatcherTimer
+                                      {
+                                          Interval = TimeSpan.FromSeconds(1),
+                                      };
+                dispatcherTimer.Tick += DispatcherTimerOnTick;
+                dispatcherTimer.Start();
+            }
 		}
 
 		private static void DispatcherTimerOnTick(object sender, EventArgs eventArgs)
@@ -73,27 +76,14 @@ namespace RavenFS.Studio.Infrastructure
 			action(model);
 		}
 
-		// Dependency property that is bound against the DataContext.
-		// When its value (i.e. the control's DataContext) changes,
-		// call DataContextWatcher_Changed.
-		public static DependencyProperty DataContextWatcherProperty = DependencyProperty.Register(
-		  "DataContextWatcher",
-		  typeof(object),
-		  typeof(View),
-			  new PropertyMetadata(DataContextWatcherChanged));
-
-		private static void DataContextWatcherChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-		{
-			InvokeTimerTicked(e.NewValue);
-		}
-
 		public View()
 		{
-			SetBinding(DataContextWatcherProperty, new Binding());
-
-			Loaded += (sender, args) => CurrentViews.Add(this);
-
-			Unloaded += (sender, args) => CurrentViews.Remove(this);
+            if (!DesignerProperties.IsInDesignTool)
+            {
+                Loaded += (sender, args) => CurrentViews.Add(this);
+                DataContextChanged += (sender, args) => InvokeTimerTicked(args.NewValue);
+                Unloaded += (sender, args) => CurrentViews.Remove(this);
+            }
 		}
 	}
 }
