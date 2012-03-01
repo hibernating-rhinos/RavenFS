@@ -27,7 +27,7 @@ namespace RavenFS.Studio.Infrastructure
             // check for a server UI in the InitParams of the Silverlight Host
             // this allows us to configure a debug page on the local file system that we can load in
             // SilverlightSpy to inspect the XAP
-            if (!string.IsNullOrEmpty(Application.Current.Host.InitParams["ServerUri"]))
+            if (Application.Current.Host.InitParams.ContainsKey("ServerUri"))
             {
                 return Application.Current.Host.InitParams["ServerUri"];
             }
