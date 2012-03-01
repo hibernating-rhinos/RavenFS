@@ -30,5 +30,7 @@ namespace RavenFS.Studio.Models
         public ICommand HidePaneCommand {get { return hidePaneCommand ?? (hidePaneCommand = new ActionCommand(() => IsPaneVisible.Value = false)); }}
 
         public Observable<bool> IsPaneVisible { get; private set; }
+
+        public Observable<bool> ClearCompletedOperationsAutomatically { get { return ApplicationModel.Current.AsyncOperations.ClearCompletedOperationsAutomatically; } } 
     }
 }

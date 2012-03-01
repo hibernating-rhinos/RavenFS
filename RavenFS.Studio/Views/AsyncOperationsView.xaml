@@ -35,13 +35,17 @@
 
         <Border Style="{StaticResource Style_Border_Header}">
             <toolkit:DockPanel Margin="4" LastChildFill="False">
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="Pending Operations" Style="{StaticResource Style_TextBlock_Breadcrumb}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal"
                          VerticalAlignment="Center"
                             Margin="0,0,0,0" 
                             toolkit:DockPanel.Dock="Right">
+                    <CheckBox IsChecked="{Binding ClearCompletedOperationsAutomatically.Value, Mode=TwoWay}" 
+                              Content="Automatically clear finished operations"
+                              VerticalAlignment="Center"
+                              Margin="5,0" />
                     <Button Command="{Binding HidePaneCommand}"
                             ToolTipService.ToolTip="Hide"
                             Style="{StaticResource Style_Button_MouseOverChrome}">

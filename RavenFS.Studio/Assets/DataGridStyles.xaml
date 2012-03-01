@@ -824,5 +824,6 @@
     <Style x:Key="Style_DataGrid_NoHeader" TargetType="sdk:DataGrid" BasedOn="{StaticResource Style_DataGrid_Default}">
         <Setter Property="HeadersVisibility" Value="None"/>
         <Setter Property="GridLinesVisibility" Value="None"/>
+        <Setter Property="IsReadOnly" Value="True"/>
     </Style>
 </ResourceDictionary>
