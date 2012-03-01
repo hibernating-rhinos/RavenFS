@@ -1,18 +1,15 @@
 ﻿using System.Windows.Controls;
 using RavenFS.Client;
 using RavenFS.Studio.Infrastructure;
+using RavenFS.Studio.Models;
+using RavenFS.Studio.Extensions;
 
 namespace RavenFS.Studio.Commands
 {
 	public class UploadCommand : Command
 	{
-		private readonly Observable<long> totalUploadFileSize;
-		private readonly Observable<long> totalBytesUploaded;
-
-		public UploadCommand(Observable<long> totalUploadFileSize, Observable<long> totalBytesUploaded)
+		public UploadCommand()
 		{
-			this.totalUploadFileSize = totalUploadFileSize;
-			this.totalBytesUploaded = totalBytesUploaded;
 		}
 
 		public override void Execute(object parameter)
@@ -23,19 +20,34 @@ namespace RavenFS.Studio.Commands
 				return;
 
 			var stream = fileDialog.File.OpenRead();
-			totalUploadFileSize.Value = stream.Length;
-			ApplicationModel.Current.Client.UploadAsync(fileDialog.File.Name, new NameValueCollection(), stream, Progress)
-				.ContinueWith(task =>
-				{
-					stream.Dispose();
-					task.Wait();
-					return task;
-				});
-		}
+			var fileSize = stream.Length;
 
-		private void Progress(string file, int uploaded)
-		{
-			totalBytesUploaded.Value = uploaded;
+		    var filename = fileDialog.File.Name;
+		    var operation = new AsyncOperationModel()
+		                        {
+		                            Name = "Uploading " + filename,
+		                        };
+
+		    ApplicationModel.Current.Client.UploadAsync(
+		        filename,
+		        new NameValueCollection(),
+		        stream,
+		        (file, bytesUploaded) => operation.ProgressChanged(bytesUploaded,fileSize))
+		        .ContinueWith(task =>
+		                          {
+		                              stream.Dispose();
+
+                                      if (task.IsFaulted)
+                                      {
+                                          operation.Faulted(task.Exception.ExtractSingleInnerException());
+                                      }
+                                      else
+                                      {
+                                          operation.Completed();
+                                      }
+		                          });
+
+            ApplicationModel.Current.AsyncOperations.RegisterOperation(operation);
 		}
 	}
 }

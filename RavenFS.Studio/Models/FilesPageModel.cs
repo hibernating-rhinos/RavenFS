@@ -13,7 +13,7 @@ namespace RavenFS.Studio.Models
 	{
 	    private ActionCommand _downloadCommand;
 
-	    public ICommand Upload { get { return new UploadCommand(TotalUploadFileSize, TotalBytesUploaded); } }
+	    public ICommand Upload { get { return new UploadCommand(); } }
         public ICommand Download { get { return _downloadCommand ?? (_downloadCommand = new ActionCommand(HandleDownload)); } }
 
 	   

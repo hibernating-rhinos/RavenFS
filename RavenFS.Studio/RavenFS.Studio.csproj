@@ -64,6 +64,9 @@
     <Reference Include="AsyncCtpLibrary_Silverlight5">
       <HintPath>..\packages\AsyncCTP.0.3\lib\sl50\AsyncCtpLibrary_Silverlight5.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Expression.Interactions">
+      <HintPath>..\SharedLibs\Silverlight\Microsoft.Expression.Interactions.dll</HintPath>
+    </Reference>
     <Reference Include="MissingBitFromSilverlight">
       <HintPath>..\packages\RavenDB.1.0.531\lib\sl40\MissingBitFromSilverlight.dll</HintPath>
     </Reference>
@@ -112,11 +115,13 @@
     <Compile Include="Commands\DeleteCommand.cs" />
     <Compile Include="Commands\DownloadCommand.cs" />
     <Compile Include="Commands\InfoCommand.cs" />
+    <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
     <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
-    <Compile Include="Infrastructure\ApplicationModel.cs" />
+    <Compile Include="Infrastructure\MarkupExtensions\TypeExtension.cs" />
+    <Compile Include="Models\ApplicationModel.cs" />
     <Compile Include="Infrastructure\BindableCollection.cs" />
     <Compile Include="Infrastructure\Command.cs" />
     <Compile Include="Infrastructure\ErrorPresenter.cs" />
@@ -136,11 +141,18 @@
     </Compile>
     <Compile Include="Infrastructure\InvocationExtensions.cs" />
     <Compile Include="Infrastructure\View.cs" />
+    <Compile Include="Models\AsyncOperationModel.cs" />
+    <Compile Include="Models\AsyncOperationsModel.cs" />
+    <Compile Include="Models\AsyncOperationStatus.cs" />
+    <Compile Include="Models\AsyncOperationsViewModel.cs" />
     <Compile Include="Models\FileInfoModel.cs" />
     <Compile Include="Infrastructure\Model.cs" />
     <Compile Include="Infrastructure\ModelResolver.cs" />
     <Compile Include="Infrastructure\NotifyPropertyChangedBase.cs" />
     <Compile Include="Models\FilesPageModel.cs" />
+    <Compile Include="Views\AsyncOperationsView.xaml.cs">
+      <DependentUpon>AsyncOperationsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ErrorWindow.xaml.cs">
       <DependentUpon>ErrorWindow.xaml</DependentUpon>
     </Compile>
@@ -183,6 +195,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Assets\ProgressBarStyles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Converters\Converters.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -192,6 +208,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Infrastructure\Input\InputWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\AsyncOperationsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

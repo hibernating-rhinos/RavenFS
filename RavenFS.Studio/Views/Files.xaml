@@ -8,7 +8,8 @@
                      xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors"
                      xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
                      xmlns:Models="clr-namespace:RavenFS.Studio.Models"
-                     xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" mc:Ignorable="d"
+                     xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
+                     xmlns:Views="clr-namespace:RavenFS.Studio.Views" mc:Ignorable="d"
                      d:DesignWidth="640"
                      d:DesignHeight="480"
                      Title="Home"
@@ -18,7 +19,8 @@
     <Grid Margin="{StaticResource Margin_ContentPage}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
         <Border Style="{StaticResource Style_Border_Header}">
@@ -91,5 +93,7 @@
                 </sdk:DataGridTemplateColumn>
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
+        
+        <Views:AsyncOperationsView Grid.Row="2"/>
     </Grid>
 </Infrastructure:View>

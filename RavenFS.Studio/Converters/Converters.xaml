@@ -1,7 +1,11 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:Converters="clr-namespace:RavenFS.Studio.Converters">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:Converters="clr-namespace:RavenFS.Studio.Converters"
+    xmlns:Models="clr-namespace:RavenFS.Studio.Models"
+    xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions">
     
     <Converters:NameValueCollectionToMultiLineStringConverter x:Key="NameValueCollectionToMultiLineString" />
     <Converters:DateStringToFormattedDateConverter x:Key="Converter_DateStringToFormattedDate"/>
+    <Converters:EnumToVisibilityConverter x:Key="Converter_VisibileOnlyWhenAsyncOperationStatusIsProcessing" Type="{z:Type Name=Models:AsyncOperationStatus}" ValuesWhenVisibile="Processing"/>
+    <Converters:EnumToVisibilityConverter x:Key="Converter_VisibileExceptWhenAsyncOperationStatusIsProcessing" Type="{z:Type Name=Models:AsyncOperationStatus}" ValuesWhenCollapsed="Processing"/>
 </ResourceDictionary>

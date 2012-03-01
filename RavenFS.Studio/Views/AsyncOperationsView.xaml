@@ -1,0 +1,47 @@
+﻿<UserControl x:Class="RavenFS.Studio.Views.AsyncOperationsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Models="clr-namespace:RavenFS.Studio.Models"
+    xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+    xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
+             xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" mc:Ignorable="d"
+    d:DesignHeight="300" d:DesignWidth="400"
+    Infrastructure:ModelResolver.AttachModel="AsyncOperationsViewModel" d:DataContext="{d:DesignInstance Models:AsyncOperationsViewModel}">
+    <UserControl.Resources>
+        <Storyboard x:Key="HidePanel">
+            <DoubleAnimation Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="Height" To="0" Duration="0:0:0.25"/>
+        </Storyboard>
+        <Storyboard x:Key="ShowPanel">
+            <DoubleAnimation Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="Height" To="200" Duration="0:0:0.25"/>
+        </Storyboard>
+    </UserControl.Resources>
+    <Grid x:Name="LayoutRoot" Background="White" Height="0" d:DesignHeight="100">
+        <i:Interaction.Triggers>
+            <ei:DataTrigger Binding="{Binding IsPaneVisible.Value}" Value="True" Comparison="Equal">
+                <ei:ControlStoryboardAction Storyboard="{StaticResource ShowPanel}" ControlStoryboardOption="Play"/>
+            </ei:DataTrigger>
+            <ei:DataTrigger Binding="{Binding IsPaneVisible.Value}" Value="False" Comparison="Equal">
+                <ei:ControlStoryboardAction Storyboard="{StaticResource HidePanel}" ControlStoryboardOption="Play"/>
+            </ei:DataTrigger>
+        </i:Interaction.Triggers>
+
+        <sdk:DataGrid ItemsSource="{Binding Operations}" AutoGenerateColumns="False" Style="{StaticResource Style_DataGrid_NoHeader}">
+            <sdk:DataGrid.Columns>
+                <sdk:DataGridTextColumn Binding="{Binding Name}" Width="*"/>
+                <sdk:DataGridTemplateColumn Width="150">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <ProgressBar Value="{Binding Progress}" Visibility="{Binding Status, Converter={StaticResource Converter_VisibileOnlyWhenAsyncOperationStatusIsProcessing}}" VerticalAlignment="Center" Height="10" Margin="4,0"/>
+                                <TextBlock Text="{Binding Status}" Margin="2" VerticalAlignment="Center" Visibility="{Binding Status, Converter={StaticResource Converter_VisibileExceptWhenAsyncOperationStatusIsProcessing}}"/>
+                            </Grid>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+    </Grid>
+</UserControl>

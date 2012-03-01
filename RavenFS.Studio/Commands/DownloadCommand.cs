@@ -4,6 +4,7 @@ using System.Windows.Browser;
 using System.Windows.Controls;
 using System.Windows.Input;
 using RavenFS.Studio.Infrastructure;
+using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio.Commands
 {

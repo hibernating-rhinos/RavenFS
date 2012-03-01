@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using RavenFS.Studio.Infrastructure.Input;
 using RavenFS.Studio.Infrastructure;
+using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio.Commands
 {
