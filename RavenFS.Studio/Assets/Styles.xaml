@@ -10,6 +10,7 @@
         <ResourceDictionary Source="Images/Images.xaml" />
         <ResourceDictionary Source="DataGridStyles.xaml" />
         <ResourceDictionary Source="ProgressBarStyles.xaml" />
+        <ResourceDictionary Source="ScrollBarStyles.xaml" />
     </ResourceDictionary.MergedDictionaries>
     
     <Thickness x:Key="Margin_MainPageLeftRight">15,0</Thickness>
