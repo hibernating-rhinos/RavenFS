@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk">
 
-    <Style TargetType="sdk:DataGrid">
+    <Style x:Key="Style_DataGrid_Default" TargetType="sdk:DataGrid">
         <Setter Property="RowBackground" Value="#FFF8F8F8" />
         <Setter Property="AlternatingRowBackground" Value="#00FFFFFF" />
         <Setter Property="Background" Value="#FCFDFDFD" />
@@ -201,6 +201,8 @@
         </Setter>
     </Style>
 
+    <Style TargetType="sdk:DataGrid" BasedOn="{StaticResource Style_DataGrid_Default}"/>
+    
     <Style TargetType="sdk:DataGridRow">
         <Setter Property="IsTabStop" Value="False" />
         <Setter Property="Template">
@@ -587,7 +589,6 @@
                                 <VisualState x:Name="Regular" />
                                 <VisualState x:Name="Current">
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="FocusVisual" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
                                     </Storyboard>
                                 </VisualState>
                             </VisualStateGroup>
@@ -610,9 +611,6 @@
                             <ColumnDefinition />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-
-                        <Rectangle x:Name="FocusVisual" Stroke="#FF9F2145" StrokeThickness="1" Fill="#66FFFFFF" HorizontalAlignment="Stretch" 
-							VerticalAlignment="Stretch" IsHitTestVisible="false" Opacity="0" />
 
                         <ContentPresenter
 							Content="{TemplateBinding Content}"
@@ -823,7 +821,7 @@
         </Setter>
     </Style>
 
-    <Style x:Key="Style_DataGrid_NoHeader" TargetType="sdk:DataGrid">
+    <Style x:Key="Style_DataGrid_NoHeader" TargetType="sdk:DataGrid" BasedOn="{StaticResource Style_DataGrid_Default}">
         <Setter Property="HeadersVisibility" Value="None"/>
         <Setter Property="GridLinesVisibility" Value="None"/>
     </Style>
