@@ -1,5 +1,8 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Windows;
 using System.Windows.Browser;
+using System.Windows.Interop;
 using RavenFS.Client;
 
 namespace RavenFS.Studio.Infrastructure
@@ -8,6 +11,12 @@ namespace RavenFS.Studio.Infrastructure
 	{
 		static ApplicationModel()
 		{
+            if (DesignerProperties.IsInDesignTool)
+            {
+                // we don't want our pages crashing when loaded in the designer
+                return;
+            }
+
 			Client = new RavenFileSystemClient(DetermineUri());
 		}
 
@@ -15,6 +24,14 @@ namespace RavenFS.Studio.Infrastructure
 
 		private static string DetermineUri()
 		{
+            // check for a server UI in the InitParams of the Silverlight Host
+            // this allows us to configure a debug page on the local file system that we can load in
+            // SilverlightSpy to inspect the XAP
+            if (!string.IsNullOrEmpty(Application.Current.Host.InitParams["ServerUri"]))
+            {
+                return Application.Current.Host.InitParams["ServerUri"];
+            }
+
 		    var documentUri = HtmlPage.Document.DocumentUri;
 		    if (documentUri.Scheme == "file")
 			{
