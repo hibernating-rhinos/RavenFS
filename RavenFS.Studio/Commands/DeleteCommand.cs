@@ -19,7 +19,7 @@ namespace RavenFS.Studio.Commands
 			AskUser.ConfirmationAsync("Delete", "Are you sure you want to delete the file?").ContinueWhenTrueInTheUIThread(
 				() =>
 				{
-					ApplicationModel.Client.DeleteAsync(Name);
+					ApplicationModel.Current.Client.DeleteAsync(Name);
 					Application.Current.Host.NavigationState = "/home";
 				});	
 		}

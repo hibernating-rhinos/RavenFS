@@ -26,13 +26,18 @@ namespace RavenFS.Client
 		public RavenFileSystemClient(string baseUrl)
 		{
 			this.baseUrl = baseUrl;
-			if (this.baseUrl.EndsWith("/"))
-				this.baseUrl = this.baseUrl.Substring(0, this.baseUrl.Length - 1);
+			if (this.ServerUrl.EndsWith("/"))
+				this.baseUrl = this.ServerUrl.Substring(0, this.ServerUrl.Length - 1);
 		}
 
-		public Task<ServerStats> StatsAsync()
+	    public string ServerUrl
+	    {
+	        get { return baseUrl; }
+	    }
+
+	    public Task<ServerStats> StatsAsync()
 		{
-			var requestUriString = baseUrl + "/stats";
+			var requestUriString = ServerUrl + "/stats";
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
@@ -46,7 +51,7 @@ namespace RavenFS.Client
 
 		public Task DeleteAsync(string filename)
 		{
-			var requestUriString = baseUrl + "/files/" + Uri.EscapeDataString(filename);
+			var requestUriString = ServerUrl + "/files/" + Uri.EscapeDataString(filename);
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 			request.Method = "DELETE";
 			return request.GetResponseAsync()
@@ -55,7 +60,7 @@ namespace RavenFS.Client
 
 		public Task<FileInfo[]> BrowseAsync(int start = 0, int pageSize = 25)
 		{
-			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files?start=" + start + "&pageSize=" + pageSize);
+			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files?start=" + start + "&pageSize=" + pageSize);
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -76,7 +81,7 @@ namespace RavenFS.Client
 
 		public Task<FileInfo[]> SearchAsync(string query)
 		{
-			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/search?query=" + Uri.EscapeUriString(query));
+			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/search?query=" + Uri.EscapeUriString(query));
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -97,7 +102,7 @@ namespace RavenFS.Client
 
 		public Task<NameValueCollection> GetMetadataForAsync(string filename)
 		{
-			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
+			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename);
 			request.Method = "HEAD";
 			return request.GetResponseAsync()
 				.ContinueWith(task => new NameValueCollection(task.Result.Headers));
@@ -127,7 +132,7 @@ namespace RavenFS.Client
 			if (destination.CanWrite == false)
 				throw new ArgumentException("Stream does not support writing");
 
-			var request = (HttpWebRequest)WebRequest.Create(baseUrl + path + filename);
+			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + path + filename);
 
 #if !SILVERLIGHT
             if (from != null)
@@ -168,7 +173,7 @@ namespace RavenFS.Client
 
 	    public Task UpdateMetadataAsync(string filename, NameValueCollection metadata)
 		{
-			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
+			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename);
 			
 			request.Method = "POST";
 			AddHeaders(metadata, request);
@@ -204,7 +209,7 @@ namespace RavenFS.Client
 			if (source.CanRead == false)
 				throw new AggregateException("Stream does not support reading");
 
-			var request = (HttpWebRequest)WebRequest.Create(baseUrl + "/files/" + filename);
+			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename);
 			request.Method = "PUT";
 #if !SILVERLIGHT
 			request.SendChunked = true;
@@ -237,7 +242,7 @@ namespace RavenFS.Client
 
         public Task<RdcStats> GetRdcStatsAsync()
         {
-            var requestUriString = baseUrl + "/rdc/stats";
+            var requestUriString = ServerUrl + "/rdc/stats";
             var request = (HttpWebRequest)WebRequest.Create(requestUriString);
             return request.GetResponseAsync()
                 .ContinueWith(task =>
@@ -251,7 +256,7 @@ namespace RavenFS.Client
 
         public Task<SignatureManifest> GetRdcManifestAsync(string path)
         {
-            var requestUriString = baseUrl + "/rdc/manifest/" + StringUtils.UrlEncode(path);
+            var requestUriString = ServerUrl + "/rdc/manifest/" + StringUtils.UrlEncode(path);
             var request = (HttpWebRequest)WebRequest.Create(requestUriString);
             return request.GetResponseAsync()
                 .ContinueWith(task =>
@@ -284,7 +289,7 @@ namespace RavenFS.Client
 
 	    public Task<SynchronizationReport> StartSynchronizationAsync(string serverIdentifier, string fileName)
 	    {
-            var requestUriString = baseUrl + "/synchronize/" + Uri.EscapeDataString(serverIdentifier) + "/" + Uri.EscapeDataString(fileName); ;
+            var requestUriString = ServerUrl + "/synchronize/" + Uri.EscapeDataString(serverIdentifier) + "/" + Uri.EscapeDataString(fileName); ;
             var request = (HttpWebRequest)WebRequest.Create(requestUriString);
             return request.GetResponseAsync()
                 .ContinueWith(task =>

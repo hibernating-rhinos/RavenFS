@@ -9,7 +9,9 @@ namespace RavenFS.Studio.Infrastructure
 {
 	public class ApplicationModel
 	{
-		static ApplicationModel()
+        public static readonly ApplicationModel Current = new ApplicationModel();
+
+		public ApplicationModel()
 		{
             if (DesignerProperties.IsInDesignTool)
             {
@@ -20,7 +22,7 @@ namespace RavenFS.Studio.Infrastructure
 			Client = new RavenFileSystemClient(DetermineUri());
 		}
 
-		public static RavenFileSystemClient Client { get; private set; }
+		public RavenFileSystemClient Client { get; private set; }
 
 		private static string DetermineUri()
 		{
@@ -49,9 +51,9 @@ namespace RavenFS.Studio.Infrastructure
 		    return uriBuilder.Uri.ToString();
 		}
 
-		public static Uri GetFileUrl(string fileName)
+		public Uri GetFileUrl(string fileName)
 		{
-			return new Uri(DetermineUri()+"/files/"+fileName);
+			return new Uri(Client.ServerUrl+"/files/"+fileName);
 		}
 	}
 }

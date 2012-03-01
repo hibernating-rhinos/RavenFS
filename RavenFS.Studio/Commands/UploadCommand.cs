@@ -24,7 +24,7 @@ namespace RavenFS.Studio.Commands
 
 			var stream = fileDialog.File.OpenRead();
 			totalUploadFileSize.Value = stream.Length;
-			ApplicationModel.Client.UploadAsync(fileDialog.File.Name, new NameValueCollection(), stream, Progress)
+			ApplicationModel.Current.Client.UploadAsync(fileDialog.File.Name, new NameValueCollection(), stream, Progress)
 				.ContinueWith(task =>
 				{
 					stream.Dispose();

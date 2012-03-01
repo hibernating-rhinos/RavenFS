@@ -22,7 +22,7 @@ namespace RavenFS.Studio.Commands
 
 		public override void Execute(object parameter)
 		{
-			var url = ApplicationModel.GetFileUrl(FileName);
+			var url = ApplicationModel.Current.GetFileUrl(FileName);
 			HtmlPage.Window.Navigate(url);
 		}
 	}

@@ -42,9 +42,9 @@ namespace RavenFS.Studio.Models
 
 		protected override System.Threading.Tasks.Task TimerTickedAsync()
 		{
-			return ApplicationModel.Client.BrowseAsync(Pager.Start, Pager.PageSize)
+            return ApplicationModel.Current.Client.BrowseAsync(Pager.Start, Pager.PageSize)
 				.ContinueOnSuccess(result => Files.Match(result.Select(x => new FileInfoWrapper(x)).ToList()))
-				.ContinueWith(_ => ApplicationModel.Client.StatsAsync())
+				.ContinueWith(_ => ApplicationModel.Current.Client.StatsAsync())
 				.ContinueOnSuccess(task=> NumberOfItems.Value = task.Result.FileCount);
 		}
 
@@ -55,7 +55,7 @@ namespace RavenFS.Studio.Models
                 return;
             }
 
-            var url = ApplicationModel.GetFileUrl(SelectedFile.Value.File.Name);
+            var url = ApplicationModel.Current.GetFileUrl(SelectedFile.Value.File.Name);
             HtmlPage.Window.Navigate(url);
         }
 	}

@@ -13,7 +13,7 @@ namespace RavenFS.Studio.Models
 		{
 			Name = new UrlParser(UrlUtil.Url).GetQueryParam("name");
 
-			ApplicationModel.Client.GetMetadataForAsync(Name)
+            ApplicationModel.Current.Client.GetMetadataForAsync(Name)
 				.ContinueWith(task => Metadata = task.Result);
 		}
 
