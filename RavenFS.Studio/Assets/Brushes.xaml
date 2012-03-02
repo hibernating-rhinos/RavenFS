@@ -38,8 +38,11 @@
         <GradientStop Color="#C5F7F7F7" Offset="0.049"/>
         <GradientStop Color="#C1E8E8E8" Offset="0.74"/>
     </LinearGradientBrush>
-	
-	<LinearGradientBrush x:Key="Brush_SubtleBackground1" EndPoint="0.5,1" StartPoint="0.5,0">
+    
+    <SolidColorBrush x:Key="Brush_ToolbarBackground" Color="#EEEEEE"/>
+    <Color x:Key="Brush_Button_PressedColor">#F9F2F4</Color>
+    
+    <LinearGradientBrush x:Key="Brush_SubtleBackground1" EndPoint="0.5,1" StartPoint="0.5,0">
 							<GradientStop Color="#FFF9F9F9" Offset="0"/>
 							<GradientStop Color="#FFF2F2F2" Offset="1"/>
 						</LinearGradientBrush>
