@@ -87,6 +87,9 @@
                          VerticalAlignment="Center"
                             Margin="5,0,5,0" 
                             toolkit:DockPanel.Dock="Right">
+                    <Button Content="Pending Operations"
+                            VerticalAlignment="Center"
+                            Command="{StaticResource ShowOperationsPaneCommand}" Margin="5,0,0,0"/>
                 </StackPanel>
             </toolkit:DockPanel>
         </Border>

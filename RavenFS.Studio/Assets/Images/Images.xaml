@@ -60,5 +60,6 @@
                  UriSource="Upload.png" />
     <BitmapImage x:Key="Image_Close"
                  UriSource="Close.png"/>
-
+    <BitmapImage x:Key="Image_Clear_Tiny"
+                 UriSource="ClearList.png"/>
 </ResourceDictionary>

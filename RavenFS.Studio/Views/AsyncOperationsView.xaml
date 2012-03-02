@@ -25,10 +25,10 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <i:Interaction.Triggers>
-            <ei:DataTrigger Binding="{Binding IsPaneVisible.Value}" Value="True" Comparison="Equal">
+            <ei:DataTrigger Binding="{Binding Model.IsPaneVisible.Value}" Value="True" Comparison="Equal">
                 <ei:ControlStoryboardAction Storyboard="{StaticResource ShowPanel}" ControlStoryboardOption="Play"/>
             </ei:DataTrigger>
-            <ei:DataTrigger Binding="{Binding IsPaneVisible.Value}" Value="False" Comparison="Equal">
+            <ei:DataTrigger Binding="{Binding Model.IsPaneVisible.Value}" Value="False" Comparison="Equal">
                 <ei:ControlStoryboardAction Storyboard="{StaticResource HidePanel}" ControlStoryboardOption="Play"/>
             </ei:DataTrigger>
         </i:Interaction.Triggers>
@@ -42,11 +42,16 @@
                          VerticalAlignment="Center"
                             Margin="0,0,0,0" 
                             toolkit:DockPanel.Dock="Right">
-                    <CheckBox IsChecked="{Binding ClearCompletedOperationsAutomatically.Value, Mode=TwoWay}" 
+                  <CheckBox IsChecked="{Binding Model.ClearCompletedOperationsAutomatically.Value, Mode=TwoWay}" 
                               Content="Automatically clear finished operations"
                               VerticalAlignment="Center"
                               Margin="5,0" />
-                    <Button Command="{Binding HidePaneCommand}"
+                  <Button Command="{StaticResource ClearCompletedOperationsCommand}"
+                          ToolTipService.ToolTip="Clear list"
+                          Style="{StaticResource Style_Button_MouseOverChrome}">
+                    <Image Source="{StaticResource Image_Clear_Tiny}" Stretch="None"/>
+                  </Button>
+                  <Button Command="{StaticResource HideOperationsPaneCommand}"
                             ToolTipService.ToolTip="Hide"
                             Style="{StaticResource Style_Button_MouseOverChrome}">
                         <Image Source="{StaticResource Image_Close}" Stretch="None"/>
@@ -57,7 +62,7 @@
         
         <sdk:DataGrid 
             Grid.Row="1"
-            ItemsSource="{Binding Operations}" 
+            ItemsSource="{Binding Model.Operations}" 
             AutoGenerateColumns="False" 
             Style="{StaticResource Style_DataGrid_NoHeader}">
             <sdk:DataGrid.Columns>

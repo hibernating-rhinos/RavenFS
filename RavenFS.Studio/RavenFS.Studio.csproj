@@ -109,9 +109,12 @@
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
     <Compile Include="Behaviors\ExecuteCommandOnFileDrop.cs" />
     <Compile Include="Behaviors\LinkHighlighter.cs" />
+    <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
+    <Compile Include="Commands\HideOperationsPaneCommand.cs" />
     <Compile Include="Commands\NavigateToCommand.cs" />
     <Compile Include="Commands\NavigateToNextPageCommand.cs" />
     <Compile Include="Commands\NavigateToPrevPageCommand.cs" />
+    <Compile Include="Commands\ShowOperationsPaneCommand.cs" />
     <Compile Include="Commands\UploadCommand.cs" />
     <Compile Include="Commands\DeleteCommand.cs" />
     <Compile Include="Commands\DownloadCommand.cs" />
@@ -276,6 +279,7 @@
     <Resource Include="Assets\Images\HtmlBalanceBracesHS.png" />
     <Resource Include="Assets\Images\Success.png" />
     <Resource Include="Assets\Images\Close.png" />
+    <Resource Include="Assets\Images\ClearList.png" />
     <Content Include="Assets\Images\ImageCredits.txt" />
     <Resource Include="Assets\Images\Info.png" />
     <Resource Include="Assets\Images\Query.png" />

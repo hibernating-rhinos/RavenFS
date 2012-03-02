@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
@@ -26,6 +27,10 @@ namespace RavenFS.Studio.Models
             operations = new ObservableCollection<AsyncOperationModel>();
             operationsWrapper = new ReadOnlyObservableCollection<AsyncOperationModel>(operations);
 
+            operations.CollectionChanged += HandleOperationsChanged;
+
+            IsPaneVisible = new Observable<bool>();
+
             ClearCompletedOperationsAutomatically = new Observable<bool> {Value = true};
             ClearCompletedOperationsAutomatically.PropertyChanged += HandleClearCompletedOperationsAutomaticallyChanged;
         }
@@ -34,11 +39,24 @@ namespace RavenFS.Studio.Models
         {
             if (ClearCompletedOperationsAutomatically.Value)
             {
-                var completedOperations = Operations.Where(o => o.Status == AsyncOperationStatus.Completed).ToList();
-                foreach (var operation in completedOperations)
-                {
-                    RemoveOperation(operation);
-                }
+                ClearOperations(o => o.Status == AsyncOperationStatus.Completed);
+            }
+        }
+
+        private void ClearOperations(Func<AsyncOperationModel, bool> predicate)
+        {
+            var completedOperations = Operations.Where(predicate).ToList();
+            foreach (var operation in completedOperations)
+            {
+                RemoveOperation(operation);
+            }
+        }
+
+        private void HandleOperationsChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                IsPaneVisible.Value = true;
             }
         }
 
@@ -54,6 +72,11 @@ namespace RavenFS.Studio.Models
             operation.PropertyChanged += HandleOperationPropertyChanged;
         }
 
+        public void ClearCompletedOperations()
+        {
+            ClearOperations(o => o.Status != AsyncOperationStatus.Queued && o.Status != AsyncOperationStatus.Processing);
+        }
+
         private void HandleOperationPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             var operation = (sender as AsyncOperationModel);
@@ -65,6 +88,8 @@ namespace RavenFS.Studio.Models
                 RemoveOperation(operation);
             }
         }
+
+        public Observable<bool> IsPaneVisible { get; private set; }
 
         public Observable<bool> ClearCompletedOperationsAutomatically { get; private set; }
  
