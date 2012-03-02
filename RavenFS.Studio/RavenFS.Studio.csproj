@@ -256,6 +256,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Assets\Images\Upload.png" />
     <Resource Include="Assets\Images\add.png" />
     <Resource Include="Assets\Images\BackgroundTexture.png" />
     <Resource Include="Assets\Images\BackgroundTextureBottom.png" />

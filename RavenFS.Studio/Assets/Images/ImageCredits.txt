@@ -36,3 +36,7 @@ Document.png
 The following icons came from Paul Aurmstrong via iconfinder (http://www.iconfinder.com/search/?q=iconset%3Abwpx)
 
 Close.png
+
+The following icons cme from SEM Labs (http://semlabs.co.uk ) via iconarchive.com (http://www.iconarchive.com/show/web-blog-icons-by-semlabs.html)
+
+Upload.png

@@ -55,7 +55,9 @@
                  UriSource="database_add.png" />
     <BitmapImage x:Key="Image_AddIndex_Tiny"
                  UriSource="document_prepare.png" />
-    
+
+    <BitmapImage x:Key="Image_Upload_Small"
+                 UriSource="Upload.png" />
     <BitmapImage x:Key="Image_Close"
                  UriSource="Close.png"/>
 

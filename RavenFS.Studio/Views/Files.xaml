@@ -69,10 +69,17 @@
         <Border Grid.Row="1" Style="{StaticResource Style_Border_Toolbar}">
             <toolkit:DockPanel Margin="4" LastChildFill="False">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="Upload" 
-                            VerticalAlignment="Center"
-				            Command="{Binding Upload}" />
-                    <Button Content="Download"
+                    <Button VerticalAlignment="Center"
+				            Command="{Binding Upload}">
+
+                      <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="{StaticResource Image_Upload_Small}" Stretch="None" Margin="0,0,2,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Upload" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                  <Button Content="Download"
                             VerticalAlignment="Center"
                             Command="{Binding Download}" Margin="5,0,0,0"/>
                 </StackPanel>
