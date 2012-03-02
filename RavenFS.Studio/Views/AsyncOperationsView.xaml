@@ -8,7 +8,10 @@
     xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
              xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
              xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
-             xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit" mc:Ignorable="d"
+             xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
+             xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors" 
+             xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions" 
+             mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="400"
     Infrastructure:ModelResolver.AttachModel="AsyncOperationsViewModel" d:DataContext="{d:DesignInstance Models:AsyncOperationsViewModel}">
     <UserControl.Resources>
@@ -72,7 +75,15 @@
                         <DataTemplate>
                             <Grid>
                                 <ProgressBar Value="{Binding Progress}" Visibility="{Binding Status, Converter={StaticResource Converter_VisibileOnlyWhenAsyncOperationStatusIsProcessing}}" VerticalAlignment="Center" Height="10" Margin="4,0"/>
-                                <TextBlock Text="{Binding Status}" Margin="2" VerticalAlignment="Center" Visibility="{Binding Status, Converter={StaticResource Converter_VisibileExceptWhenAsyncOperationStatusIsProcessing}}"/>
+                                <TextBlock x:Name="StatusText" Text="{Binding Status}" Margin="2" VerticalAlignment="Center" Visibility="{Binding Status, Converter={StaticResource Converter_VisibileExceptWhenAsyncOperationStatusIsProcessing}}"/>
+                                <i:Interaction.Triggers>
+                                    <ei:DataTrigger Binding="{Binding Status}" Value="Error" Comparison="Equal">
+                                        <Behaviors:ChangeDependencyPropertyAction TargetName="StatusText" Property="{z:Static Member=ToolTipService.ToolTipProperty}" Value="{Binding Error, StringFormat='Error: {0}'}"/>
+                                    </ei:DataTrigger>
+                                    <ei:DataTrigger Binding="{Binding Status}" Value="Error" Comparison="NotEqual">
+                                        <Behaviors:ChangeDependencyPropertyAction TargetName="StatusText" Property="{z:Static Member=ToolTipService.ToolTipProperty}" Value="{x:Null}"/>
+                                    </ei:DataTrigger>
+                                </i:Interaction.Triggers>
                             </Grid>
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
@@ -93,6 +104,10 @@
                                     </ei:DataTrigger>
                                     <ei:DataTrigger Binding="{Binding Status}" Value="Error" Comparison="Equal">
                                         <ei:ChangePropertyAction TargetName="StatusImage" PropertyName="Source" Value="{StaticResource Image_Error_Tiny}"/>
+                                        <Behaviors:ChangeDependencyPropertyAction TargetName="StatusImage" Property="{z:Static Member=ToolTipService.ToolTipProperty}" Value="{Binding Error, StringFormat='Error: {0}'}"/>
+                                    </ei:DataTrigger>
+                                    <ei:DataTrigger Binding="{Binding Status}" Value="Error" Comparison="NotEqual">
+                                        <Behaviors:ChangeDependencyPropertyAction TargetName="StatusText" Property="{z:Static Member=ToolTipService.ToolTipProperty}" Value="{x:Null}"/>
                                     </ei:DataTrigger>
                                 </i:Interaction.Triggers>
                             </Image>

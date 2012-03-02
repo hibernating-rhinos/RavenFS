@@ -23,7 +23,7 @@ namespace RavenFS.Studio.Infrastructure.MarkupExtensions
 
         public Type ProvideValue(IServiceProvider serviceProvider)
         {
-            IXamlTypeResolver resolver = serviceProvider.GetService(typeof(IXamlTypeResolver)) as IXamlTypeResolver;
+            var resolver = serviceProvider.GetService(typeof(IXamlTypeResolver)) as IXamlTypeResolver;
             var type = resolver.Resolve(Name);
 
             return type;
