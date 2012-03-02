@@ -15,13 +15,8 @@ namespace RavenFS.Studio.Models
 
 	    public ICommand Upload { get { return new UploadCommand(); } }
         public ICommand Download { get { return _downloadCommand ?? (_downloadCommand = new ActionCommand(HandleDownload)); } }
-
-	   
-
 	    public PagerModel Pager { get; private set; }
 
-		public Observable<long> TotalUploadFileSize { get; set; }
-		public Observable<long> TotalBytesUploaded { get; set; }
         public Observable<FileInfoWrapper> SelectedFile { get; private set; }
 		private Observable<long> NumberOfItems { get; set; }
 
@@ -30,8 +25,7 @@ namespace RavenFS.Studio.Models
 		public FilesPageModel()
 		{
 			Files = new BindableCollection<FileInfoWrapper>(EqualityComparer<FileInfoWrapper>.Default);
-			TotalBytesUploaded = new Observable<long>();
-			TotalUploadFileSize = new Observable<long>();
+
 			NumberOfItems = new Observable<long>();
 		    SelectedFile = new Observable<FileInfoWrapper>();
 

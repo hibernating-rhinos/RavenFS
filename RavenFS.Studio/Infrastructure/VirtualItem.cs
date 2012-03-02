@@ -1,0 +1,61 @@
+﻿using System.ComponentModel;
+
+namespace RavenFS.Studio.Infrastructure
+{
+    public class VirtualItem<T> : INotifyPropertyChanged where T:class
+    {
+        private readonly LazyLoadingCollection<T> _parent;
+        private readonly int _index;
+        private T _item;
+        private bool _isStale;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public VirtualItem(LazyLoadingCollection<T> parent, int index)
+        {
+            _parent = parent;
+            _index = index;
+        }
+
+        public T Item
+        {
+            get
+            {
+                if (!IsRealized)
+                {
+                    _parent.RealizeItemRequested(Index);
+                }
+                return _item;
+            }
+            set
+            {
+                _item = value;
+                OnPropertyChanged(new PropertyChangedEventArgs("Item"));
+                IsStale = false;
+            }
+        }
+
+        public bool IsStale
+        {
+            get { return _isStale; }
+            set
+            {
+                _isStale = value;
+                OnPropertyChanged(new PropertyChangedEventArgs("IsStale"));
+            }
+        }
+
+        public bool IsRealized { get { return _item != null; } }
+
+        public int Index
+        {
+            get { return _index; }
+        }
+
+        protected void OnPropertyChanged(PropertyChangedEventArgs e)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null) handler(this, e);
+        }
+    }
+}
