@@ -61,11 +61,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <Reference Include="AsyncCtpLibrary_Silverlight5">
       <HintPath>..\packages\AsyncCTP.0.3\lib\sl50\AsyncCtpLibrary_Silverlight5.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Expression.Interactions">
       <HintPath>..\SharedLibs\Silverlight\Microsoft.Expression.Interactions.dll</HintPath>
+=======
+    <Reference Include="AsyncCtpLibrary_Silverlight, Version=1.0.4107.18177, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\AsyncCTP.0.3\lib\sl40\AsyncCtpLibrary_Silverlight.dll</HintPath>
+>>>>>>> origin/replication
     </Reference>
     <Reference Include="MissingBitFromSilverlight">
       <HintPath>..\packages\RavenDB.1.0.531\lib\sl40\MissingBitFromSilverlight.dll</HintPath>

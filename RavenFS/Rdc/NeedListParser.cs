@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Web;
 using RavenFS.Util;
-using Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper;
 
 namespace RavenFS.Rdc
 {

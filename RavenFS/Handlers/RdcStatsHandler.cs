@@ -15,7 +15,7 @@ namespace RavenFS.Handlers
         {            
             return WriteJson(context, new RdcStats 
             {                
-                Version = (int)global::Rdc.Wrapper.Msrdc.Version
+                Version = (int)global::RavenFS.Rdc.Wrapper.Msrdc.Version
             });
         }
     }

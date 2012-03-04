@@ -1,3 +1,0 @@
-[submodule "External/rdc-service"]
-	path = External/rdc-service
-	url = git@bitbucket.org:bozy/rdc-service.git
