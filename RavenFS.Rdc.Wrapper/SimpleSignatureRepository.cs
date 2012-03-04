@@ -22,7 +22,8 @@ namespace RavenFS.Rdc.Wrapper
             }
         }
 
-        public SimpleSignatureRepository() : this(Directory.GetCurrentDirectory())
+		public SimpleSignatureRepository()
+			: this(AppDomain.CurrentDomain.BaseDirectory)
         {
         }
 

@@ -35,7 +35,7 @@ namespace RavenFS.Handlers
         {
             foreach (var item in KnownServers.AllKeys)
             {
-                _remoteSignatureCaches[item] = new SimpleSignatureRepository(Path.Combine(Directory.GetCurrentDirectory(), item));
+				_remoteSignatureCaches[item] = new SimpleSignatureRepository(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, item));
             }
         }
 
