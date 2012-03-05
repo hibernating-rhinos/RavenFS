@@ -5,19 +5,16 @@ using System.Collections.Generic;
 using System.Linq;
 using RavenFS.Rdc.Utils.IO;
 using RavenFS.Rdc.Wrapper;
-using NUnit;
-using NUnit.Framework;
+using Xunit;
 
 
 namespace RavenFS.Rdc.Wrapper.Test
 {
-    [TestFixture]
     public class NeedListGeneratorTest
     {
         private readonly ISignatureRepository _signatureRepository = new SimpleSignatureRepository();
 
-        [TestFixtureSetUp]
-        public void Init()
+        public NeedListGeneratorTest()
         {
 
             using (Stream file = File.Create("source.bin"))
@@ -31,16 +28,16 @@ namespace RavenFS.Rdc.Wrapper.Test
             }
         }
 
-        [Test]
+        [Fact]
         public void ctor_and_dispose()
         {
             using (var tested = new NeedListGenerator(_signatureRepository, _signatureRepository))
             {
-                Assert.IsNotNull(tested);
+                Assert.NotNull(tested);
             }
         }
 
-        [Test]
+        [Fact]
         public void Generate_check()
         {
             IList<SignatureInfo> sourceSignatureInfos;
@@ -64,9 +61,9 @@ namespace RavenFS.Rdc.Wrapper.Test
             using (var tested = new NeedListGenerator(_signatureRepository, _signatureRepository))
             {
                 var result = tested.CreateNeedsList(seedSignatureInfos.Last(), sourceSignatureInfos.Last());
-                Assert.IsNotNull(result);
+                Assert.NotNull(result);
 
-                Assert.AreEqual(0, sourceSize - result.Sum(x => Convert.ToInt32(x.BlockLength)));
+                Assert.Equal(0, sourceSize - result.Sum(x => Convert.ToInt32(x.BlockLength)));
             }
         }
     }

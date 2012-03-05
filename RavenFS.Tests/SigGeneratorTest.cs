@@ -3,19 +3,16 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using NUnit;
-using NUnit.Framework;
 using RavenFS.Rdc.Utils.IO;
+using Xunit;
 
 namespace RavenFS.Rdc.Wrapper.Test
 {
-    [TestFixture]
     public class SigGeneratorTest
     {
         private readonly ISignatureRepository _signatureRepository = new SimpleSignatureRepository();
-
-        [TestFixtureSetUp]
-        public void Initi()
+        
+        public SigGeneratorTest()
         {
             using (Stream file = File.Create("test.txt"))
             {
@@ -23,25 +20,25 @@ namespace RavenFS.Rdc.Wrapper.Test
             }
         }
 
-        [Test]
+        [Fact]
         public void Ctor_and_dispose()
         {
             using (var tested = new SigGenerator(_signatureRepository))
             {
-                Assert.IsNotNull(tested);
+                Assert.NotNull(tested);
             }
         }
 
-        [Test]
+        [Fact]
         public void Generate_check()
         {
             using (Stream file = File.OpenRead("test.txt"))
             using (var rested = new SigGenerator(_signatureRepository))
             {
                 var result = rested.GenerateSignatures(file);
-                Assert.AreEqual(2, result.Count);
-                Assert.AreEqual("91b64180c75ef27213398979cc20bfb7", _signatureRepository.GetContentForReading(result[0].Name).GetMD5Hash());
-                Assert.AreEqual("9fe9d408aed35769e25ece3a56f2d12f", _signatureRepository.GetContentForReading(result[1].Name).GetMD5Hash());
+                Assert.Equal(2, result.Count);
+                Assert.Equal("91b64180c75ef27213398979cc20bfb7", _signatureRepository.GetContentForReading(result[0].Name).GetMD5Hash());
+                Assert.Equal("9fe9d408aed35769e25ece3a56f2d12f", _signatureRepository.GetContentForReading(result[1].Name).GetMD5Hash());
             }
         }
     }
