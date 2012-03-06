@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
-using RavenFS.Tests.Tools;
 using Xunit;
 using Xunit.Extensions;
 
 namespace RavenFS.Tests
 {
-    public class ClientUsage : IisExpressTestClient
+    public class ClientUsage : WebApiTest
     {
-        [Fact]
+		[Fact]
         public void Can_update_just_metadata()
         {
             var ms = new MemoryStream();
@@ -35,6 +34,7 @@ namespace RavenFS.Tests
             Assert.Equal("2", metadata.Result["test"]);
             Assert.Equal(expected, WebClient.DownloadString("/files/abc.txt"));
         }
+
         [Theory]
         [InlineData(1024 * 1024)]		// 1 mb
         [InlineData(1024 * 1024 * 8)]	// 8 mb

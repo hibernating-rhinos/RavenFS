@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Security.Permissions;
 
 using HRESULT = System.Int32;
@@ -36,7 +33,8 @@ namespace RavenFS.Rdc.Wrapper
     }
 
     #region Enums
-    internal enum GeneratorParametersType
+
+	public enum GeneratorParametersType
     {
         Unused = 0,
         FilterMax = 1
@@ -103,7 +101,7 @@ namespace RavenFS.Rdc.Wrapper
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    internal struct RdcNeedPointer
+    public struct RdcNeedPointer
     {
         public uint Size;
         public uint Used;
@@ -111,14 +109,14 @@ namespace RavenFS.Rdc.Wrapper
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    internal struct RdcSignature
+    public struct RdcSignature
     {
         public IntPtr Signature;
         public ushort BlockLength;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    internal struct RdcSignaturePointer
+    public struct RdcSignaturePointer
     {
         public uint Size;
         public uint Used;
@@ -127,7 +125,7 @@ namespace RavenFS.Rdc.Wrapper
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    internal struct SimilarityMappedViewInfo
+    public struct SimilarityMappedViewInfo
     {
         public string Data;
         public uint Length;
@@ -147,14 +145,14 @@ namespace RavenFS.Rdc.Wrapper
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    internal struct SimilarityDumpData
+    public struct SimilarityDumpData
     {
         public uint FileIndex;
         public SimilarityData Data;
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 4)]
-    internal struct SimilarityFileId
+    public struct SimilarityFileId
     {
         public byte[] FileId;   // m_FileId[32]
     }
@@ -165,8 +163,8 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A78-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
-    internal interface IRdcLibrary
+    [ComImport]
+    public interface IRdcLibrary
     {
         HRESULT ComputeDefaultRecursionDepth(Int64 fileSize, out int depth);
 
@@ -190,16 +188,16 @@ namespace RavenFS.Rdc.Wrapper
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A85-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
-    internal class RdcLibrary { }
+    public class RdcLibrary { }
 
     #endregion
 
     #region RdcSimilarityGenerator
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A80-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     internal interface IRdcSimilarityGenerator
     {
         HRESULT EnableSimilarity();
@@ -209,7 +207,7 @@ namespace RavenFS.Rdc.Wrapper
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A92-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class RdcSimilarityGenerator { }
 
@@ -219,8 +217,8 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A71-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
-    internal interface IRdcGeneratorParameters
+    [ComImport]
+    public interface IRdcGeneratorParameters
     {
         HRESULT GetGeneratorParametersType([Out] out GeneratorParametersType parametersType);
 
@@ -234,7 +232,7 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A72-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     internal interface IRdcGeneratorFilterMaxParameters
     {
         HRESULT GetHorizonSize(out uint horizonSize);
@@ -249,8 +247,8 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A73-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
-    internal interface IRdcGenerator
+    [ComImport]
+    public interface IRdcGenerator
     {
         HRESULT GetGeneratorParameters(uint level, [Out] out IRdcGeneratorParameters iGeneratorParameters);
 
@@ -261,8 +259,8 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A74-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
-    internal interface IRdcFileReader
+    [ComImport]
+    public interface IRdcFileReader
     {
         void GetFileSize([Out] out UInt64 fileSize);
 
@@ -274,7 +272,7 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A75-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     internal interface IRdcFileWriter   // inherits IRdcFileReader
     {
         void Write(UInt64 offsetFileStart, uint bytesToWrite, [In, Out] ref IntPtr buffer);
@@ -286,8 +284,8 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A76-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
-    internal interface IRdcSignatureReader
+    [ComImport]
+    public interface IRdcSignatureReader
     {
         HRESULT ReaderHeader(out RdcError errorCode);
 
@@ -298,8 +296,8 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A77-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]    
-    internal interface IRdcComparator
+    [ComImport]
+    public interface IRdcComparator
     {
         [PreserveSig]
         HRESULT Process([In, MarshalAs(UnmanagedType.Bool)] bool endOfInput, [In, Out, MarshalAs(UnmanagedType.Bool)] ref bool endOfOutput, [In, Out] ref RdcBufferPointer inputBuffer,
@@ -308,15 +306,15 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A7A-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
-    internal interface ISimilarityReportProgress
+    [ComImport]
+    public interface ISimilarityReportProgress
     {
         HRESULT ReportProgress(uint percentCompleted);
     }
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A7B-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     internal interface ISimilarityTableDumpState
     {
         HRESULT GetNextData(uint resultsSize, out uint resultsUsed, out bool eof, ref SimilarityDumpData results);
@@ -324,7 +322,7 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A7C-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     internal interface ISimilarityTraitsMappedView
     {
         HRESULT Flush();
@@ -338,7 +336,7 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A7D-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     internal interface ISimilarityTraitsMapping
     {
         HRESULT CloseMapping();
@@ -359,7 +357,7 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A7E-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     internal interface ISimilarityTraitsTable
     {
         HRESULT CreateTable([MarshalAs(UnmanagedType.LPWStr)] string path, bool truncate,
@@ -382,7 +380,7 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A7F-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     internal interface ISimilarityFileIdTable
     {
         HRESULT CreateTable([MarshalAs(UnmanagedType.LPWStr)] string path, bool truncate,
@@ -404,7 +402,7 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A81-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     internal interface IFindSimilarResults
     {
         HRESULT GetSize(out uint size);
@@ -414,7 +412,7 @@ namespace RavenFS.Rdc.Wrapper
 
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [Guid("96236A83-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     internal interface ISimilarity
     {
         HRESULT CreateTable([MarshalAs(UnmanagedType.LPWStr)] string path, bool truncate,
@@ -441,79 +439,79 @@ namespace RavenFS.Rdc.Wrapper
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A86-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class RdcGeneratorParameters { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A87-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class RdcGeneratorFilterMaxParameters { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A88-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class RdcGenerator { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A8A-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class RdcSignatureReader { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A8B-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class RdcComparator { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A8D-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class SimilarityReportProgress { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A8E-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class SimilarityTableDumpState { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A8F-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class SimilarityTraitsTable { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A90-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class SimilarityFileIdTable { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A91-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class Similarity { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A93-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class FindSimilarResults { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A94-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class SimilarityTraitsMapping { }
 
     [ClassInterface(ClassInterfaceType.None)]
     [Guid("96236A95-9DBC-11DA-9E3F-0011114AE311")]
-    [ComImport()]
+    [ComImport]
     [SecurityPermission(SecurityAction.Demand, UnmanagedCode = true)]
     internal class SimilarityTraitsMappedView { }
 

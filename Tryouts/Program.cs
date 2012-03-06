@@ -2,20 +2,18 @@
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
+using System.Threading;
 using RavenFS.Client;
+using RavenFS.Rdc.Wrapper;
 
 namespace Tryouts
 {
 	class Program
 	{
+		[STAThread]
 		static void Main(string[] args)
 		{
-			var fs = new RavenFileSystemClient("http://localhost");
-
-			using(var f = File.OpenRead(@"C:\temp\text.txt"))
-			{
-                fs.UploadAsync("text.txt", f).Wait();
-			}
+			IRdcLibrary x = (IRdcLibrary)new RdcLibrary();
 		}
 		
 	}

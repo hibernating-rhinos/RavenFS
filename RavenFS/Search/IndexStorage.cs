@@ -8,6 +8,7 @@ using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using RavenFS.Infrastructure;
 using Version = Lucene.Net.Util.Version;
 
 namespace RavenFS.Search
@@ -36,6 +37,7 @@ namespace RavenFS.Search
 
 			analyzer = new LowerCaseKeywordAnalyzer();
 			writer = new IndexWriter(directory, analyzer, IndexWriter.MaxFieldLength.UNLIMITED);
+			writer.SetMergeScheduler(new ErrorLoggingConcurrentMergeScheduler());
 			searcher = new IndexSearcher(writer.GetReader());
 		}
 

@@ -67,12 +67,9 @@
     <Reference Include="Microsoft.Expression.Interactions">
       <HintPath>..\SharedLibs\Silverlight\Microsoft.Expression.Interactions.dll</HintPath>
     </Reference>
-    <Reference Include="MissingBitFromSilverlight">
-      <HintPath>..\packages\RavenDB.1.0.531\lib\sl40\MissingBitFromSilverlight.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib" />
-    <Reference Include="Newtonsoft.Json.Silverlight, Version=4.0.2.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.4.0.2\lib\sl4\Newtonsoft.Json.Silverlight.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\sl4\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog">
       <HintPath>..\packages\NLog.2.0.0.2000\lib\sl4\NLog.dll</HintPath>
@@ -123,7 +120,6 @@
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
     <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
-    <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
     <Compile Include="Infrastructure\LazyLoadingCollection.cs" />
     <Compile Include="Infrastructure\LruList.cs" />

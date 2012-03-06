@@ -4,7 +4,6 @@ using System.Windows.Controls;
 using RavenFS.Client;
 using RavenFS.Studio.Infrastructure;
 using RavenFS.Studio.Models;
-using RavenFS.Studio.Extensions;
 using FileInfo = System.IO.FileInfo;
 
 namespace RavenFS.Studio.Commands
