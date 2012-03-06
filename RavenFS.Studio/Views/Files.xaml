@@ -53,6 +53,9 @@
                   <Button Content="Download"
                             VerticalAlignment="Center"
                             Command="{Binding Download}" Margin="5,0,0,0"/>
+                    <Button Content="Delete"
+                            VerticalAlignment="Center"
+                            Command="{Binding Delete}" Margin="5,0,0,0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal"
                          VerticalAlignment="Center"

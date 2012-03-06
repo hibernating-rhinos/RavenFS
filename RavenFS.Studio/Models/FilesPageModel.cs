@@ -14,10 +14,12 @@ namespace RavenFS.Studio.Models
 	{
 	    private const int DefaultPageSize = 50;
 
-	    private ActionCommand _downloadCommand;
+	    private ICommand downloadCommand;
+	    private ICommand deleteCommand;
 
 	    public ICommand Upload { get { return new UploadCommand(); } }
-        public ICommand Download { get { return _downloadCommand ?? (_downloadCommand = new ActionCommand(HandleDownload)); } }
+        public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedFile)); } }
+        public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedFile)); } }
 
         public Observable<VirtualItem<FileInfo>> SelectedFile { get; private set; }
 
@@ -39,16 +41,5 @@ namespace RavenFS.Studio.Models
             Files.Refresh();
 		    return Completed;
 		}
-
-        private void HandleDownload()
-        {
-            if (SelectedFile.Value == null || !SelectedFile.Value.IsRealized)
-            {
-                return;
-            }
-
-            var url = ApplicationModel.Current.GetFileUrl(SelectedFile.Value.Item.Name);
-            HtmlPage.Window.Navigate(url);
-        }
 	}
 }

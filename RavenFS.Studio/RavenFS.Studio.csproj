@@ -122,11 +122,13 @@
     <Compile Include="Commands\DeleteCommand.cs" />
     <Compile Include="Commands\DownloadCommand.cs" />
     <Compile Include="Commands\InfoCommand.cs" />
+    <Compile Include="Commands\VirtualItemCommand.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
     <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
+    <Compile Include="Infrastructure\Schedulers.cs" />
     <Compile Include="Infrastructure\VirtualCollection.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\StaticExtension.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\TypeExtension.cs" />

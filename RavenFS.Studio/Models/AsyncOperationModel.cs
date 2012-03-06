@@ -14,9 +14,10 @@ namespace RavenFS.Studio.Models
 {
     public class AsyncOperationModel : Model
     {
-        string name;
+        string description;
         int progress;
         string error;
+        bool reportsProgress;
         AsyncOperationStatus status;
 
         public AsyncOperationModel()
@@ -24,12 +25,12 @@ namespace RavenFS.Studio.Models
             Status = AsyncOperationStatus.Queued;
         }
 
-        public string Name
+        public string Description
         {
-            get { return name; }
+            get { return description; }
             set
             {
-                name = value;
+                description = value;
                 OnPropertyChanged("Name");
             }
         }
@@ -41,6 +42,16 @@ namespace RavenFS.Studio.Models
             {
                 progress = value;
                 OnPropertyChanged("Progress");
+            }
+        }
+
+        public bool ReportsProgress
+        {
+            get { return reportsProgress; }
+            set
+            {
+                reportsProgress = value;
+                OnPropertyChanged("ReportsProgress");
             }
         }
 
@@ -73,10 +84,15 @@ namespace RavenFS.Studio.Models
         {
             if (Status == AsyncOperationStatus.Queued)
             {
-                Status = AsyncOperationStatus.Processing;
+                Started();
             }
 
             Progress = progress;
+        }
+
+        public void Started()
+        {
+            Status = AsyncOperationStatus.Processing;
         }
 
         public void Completed()

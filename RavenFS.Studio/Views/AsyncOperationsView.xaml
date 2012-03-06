@@ -69,7 +69,7 @@
             AutoGenerateColumns="False" 
             Style="{StaticResource Style_DataGrid_NoHeader}">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Binding="{Binding Name}" Width="*"/>
+                <sdk:DataGridTextColumn Binding="{Binding Description}" Width="*"/>
                 <sdk:DataGridTemplateColumn Width="150">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

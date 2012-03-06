@@ -25,7 +25,5 @@ namespace RavenFS.Studio.Models
 			set { metadata = value; OnPropertyChanged();}
 		}
 
-		public ICommand Download { get { return new DownloadCommand(Name); } }
-		public ICommand Delete { get { return new DeleteCommand(Name); } }
 	}
 }
