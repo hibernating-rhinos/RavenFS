@@ -33,35 +33,6 @@
                          VerticalAlignment="Center"
                             Margin="5,0,5,0" 
                             toolkit:DockPanel.Dock="Right">
-                   
-                    <StackPanel  Orientation="Horizontal"
-                         VerticalAlignment="Center" Margin="5,0,5,0">
-                        <HyperlinkButton Command="{Binding Path=Pager.PrevPage}"
-                             
-                                 ToolTipService.ToolTip="Previous Page">
-                            <HyperlinkButton.Content>
-                                <Image Source="{StaticResource Image_PreviousPage_Tiny}"
-                               Stretch="None"
-                               VerticalAlignment="Center" />
-                            </HyperlinkButton.Content>
-                        </HyperlinkButton>
-                        <TextBlock Text="Page "
-                           VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding Path=Pager.CurrentPage}"
-                           VerticalAlignment="Center" />
-                        <TextBlock Text=" of "
-                           VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding Path=Pager.TotalPages}"
-                           VerticalAlignment="Center" />
-                        <HyperlinkButton Command="{Binding Path=Pager.NextPage}"
-                                 ToolTipService.ToolTip="Next Page">
-                            <HyperlinkButton.Content>
-                                <Image Source="{StaticResource Image_NextPage_Tiny}"
-                               Stretch="None"
-                               VerticalAlignment="Center" />
-                            </HyperlinkButton.Content>
-                        </HyperlinkButton>
-                    </StackPanel>
                 </StackPanel>
             </toolkit:DockPanel>
         </Border>
@@ -104,9 +75,9 @@
                 <Behaviors:ExecuteCommandOnFileDrop Command="{Binding Upload}"/>
             </i:Interaction.Behaviors>
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Header="Name" Width="*" Binding="{Binding File.Name}"/>
-                <sdk:DataGridTextColumn Header="Size" Width="100" Binding="{Binding File.HumaneTotalSize}"/>
-                <sdk:DataGridTextColumn Header="Last Modified" Width="150" Binding="{Binding File.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDate}}"/>
+                <sdk:DataGridTextColumn Header="Name" Width="*" Binding="{Binding Item.Name}"/>
+                <sdk:DataGridTextColumn Header="Size" Width="100" Binding="{Binding Item.HumaneTotalSize}"/>
+                <sdk:DataGridTextColumn Header="Last Modified" Width="150" Binding="{Binding Item.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDate}}"/>
                 <sdk:DataGridTemplateColumn Width="25" CanUserResize="False">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

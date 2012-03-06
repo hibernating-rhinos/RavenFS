@@ -3,53 +3,51 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Browser;
 using System.Windows.Input;
+using RavenFS.Client;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Infrastructure;
 using System.Linq;
 
 namespace RavenFS.Studio.Models
 {
-	public class FilesPageModel : PagerModel
+	public class FilesPageModel : Model
 	{
+	    private const int DefaultPageSize = 50;
+
 	    private ActionCommand _downloadCommand;
 
 	    public ICommand Upload { get { return new UploadCommand(); } }
         public ICommand Download { get { return _downloadCommand ?? (_downloadCommand = new ActionCommand(HandleDownload)); } }
-	    public PagerModel Pager { get; private set; }
 
-        public Observable<FileInfoWrapper> SelectedFile { get; private set; }
-		private Observable<long> NumberOfItems { get; set; }
+        public Observable<VirtualItem<FileInfo>> SelectedFile { get; private set; }
 
-		public BindableCollection<FileInfoWrapper> Files { get; set; }
+		public VirtualCollection<FileInfo> Files { get; private set; }
 
 		public FilesPageModel()
 		{
-			Files = new BindableCollection<FileInfoWrapper>(EqualityComparer<FileInfoWrapper>.Default);
+			Files = new VirtualCollection<FileInfo>(DefaultPageSize)
+			            {
+                            RowCountFetcher = () => ApplicationModel.Current.Client.StatsAsync().ContinueOnSuccess(t => (int)t.FileCount),
+                            PageFetcher = (start, pageSize) => ApplicationModel.Current.Client.BrowseAsync(start, pageSize).ContinueOnSuccess(t => (IList<FileInfo>)t)
+			            };
 
-			NumberOfItems = new Observable<long>();
-		    SelectedFile = new Observable<FileInfoWrapper>();
-
-			Pager = new PagerModel();
-			Pager.SetTotalResults(NumberOfItems);
-			Pager.Navigated += (sender, args) => TimerTickedAsync();
+		    SelectedFile = new Observable<VirtualItem<FileInfo>>();
 		}
 
-		protected override System.Threading.Tasks.Task TimerTickedAsync()
+		protected override Task TimerTickedAsync()
 		{
-            return ApplicationModel.Current.Client.BrowseAsync(Pager.Start, Pager.PageSize)
-				.ContinueOnSuccess(result => Files.Match(result.Select(x => new FileInfoWrapper(x)).ToList()))
-				.ContinueWith(_ => ApplicationModel.Current.Client.StatsAsync())
-				.ContinueOnSuccess(task=> NumberOfItems.Value = task.Result.FileCount);
+            Files.Refresh();
+		    return Completed;
 		}
 
         private void HandleDownload()
         {
-            if (SelectedFile.Value == null)
+            if (SelectedFile.Value == null || !SelectedFile.Value.IsRealized)
             {
                 return;
             }
 
-            var url = ApplicationModel.Current.GetFileUrl(SelectedFile.Value.File.Name);
+            var url = ApplicationModel.Current.GetFileUrl(SelectedFile.Value.Item.Name);
             HtmlPage.Window.Navigate(url);
         }
 	}

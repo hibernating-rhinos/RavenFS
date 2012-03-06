@@ -125,10 +125,10 @@
     <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
-    <Compile Include="Infrastructure\LazyLoadingCollection.cs" />
-    <Compile Include="Infrastructure\LruList.cs" />
+    <Compile Include="Infrastructure\VirtualCollection.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\StaticExtension.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\TypeExtension.cs" />
+    <Compile Include="Infrastructure\SparseList.cs" />
     <Compile Include="Infrastructure\VirtualItem.cs" />
     <Compile Include="Models\ApplicationModel.cs" />
     <Compile Include="Infrastructure\BindableCollection.cs" />
