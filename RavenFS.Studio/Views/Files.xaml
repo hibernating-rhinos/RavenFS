@@ -9,7 +9,8 @@
                      xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
                      xmlns:Models="clr-namespace:RavenFS.Studio.Models"
                      xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
-                     xmlns:Views="clr-namespace:RavenFS.Studio.Views" mc:Ignorable="d"
+                     xmlns:Views="clr-namespace:RavenFS.Studio.Views"
+                     xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" mc:Ignorable="d"
                      d:DesignWidth="640"
                      d:DesignHeight="480"
                      Title="Home"
@@ -77,6 +78,11 @@
             <i:Interaction.Behaviors>
                 <Behaviors:ExecuteCommandOnFileDrop Command="{Binding Upload}"/>
             </i:Interaction.Behaviors>
+            <i:Interaction.Triggers>
+                <Behaviors:StudioKeyTrigger Key="Delete">
+                    <i:InvokeCommandAction Command="{Binding Delete}"/>
+                </Behaviors:StudioKeyTrigger>
+            </i:Interaction.Triggers>
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="Name" Width="*" Binding="{Binding Item.Name}"/>
                 <sdk:DataGridTextColumn Header="Size" Width="100" Binding="{Binding Item.HumaneTotalSize}"/>
