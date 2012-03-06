@@ -4,7 +4,7 @@
                     xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                    mc:Ignorable="d">
+                    xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" mc:Ignorable="d">
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="Brushes.xaml" />
         <ResourceDictionary Source="Images/Images.xaml" />
@@ -293,4 +293,9 @@
         </Setter>
     </Style>
 
+    <Style x:Key="Style_ChildWindow_Default" TargetType="sdk:ChildWindow">
+        <Setter Property="OverlayBrush" Value="Transparent"/>
+    </Style>
+
+    <Style TargetType="sdk:ChildWindow"  BasedOn="{StaticResource Style_ChildWindow_Default }"/>
 </ResourceDictionary>
