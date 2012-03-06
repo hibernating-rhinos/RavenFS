@@ -25,7 +25,11 @@ namespace RavenFS.Client
 				using (var stream = webException.Response.GetResponseStream())
 				using (var reader = new StreamReader(stream))
 				{
-					throw new InvalidOperationException(reader.ReadToEnd());
+					var readToEnd = reader.ReadToEnd();
+					throw new InvalidOperationException(
+						webException.ToString() + 
+						Environment.NewLine +
+						readToEnd);
 				}
 			})
 			.Unwrap();

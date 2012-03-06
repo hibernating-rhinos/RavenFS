@@ -127,7 +127,7 @@ namespace RavenFS.Web.Controllers
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
-		public Task Put([ModelBinder(typeof(TypeConverterModelBinder))]string filename)
+		public Task Put(string filename)
 		{
 			Storage.Batch(accessor =>
 			{
