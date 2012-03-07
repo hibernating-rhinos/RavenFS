@@ -104,6 +104,7 @@ namespace RavenFS.Web
 			// the default json parser can't handle NameValueCollection
 			var serializerSettings = new JsonSerializerSettings();
 			serializerSettings.Converters.Add(new IsoDateTimeConverter());
+			serializerSettings.Converters.Add(new NameValueCollectionJsonConverter());
 			var indexOfJson = config.Formatters.IndexOf(config.Formatters.JsonFormatter);
 			config.Formatters[indexOfJson] = new JsonNetFormatter(serializerSettings); 
  

@@ -109,6 +109,10 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\RavenFS.Client\RavenFS.Client.csproj">
+      <Project>{E37467ED-F680-423E-964A-60988A90F76E}</Project>
+      <Name>RavenFS.Client</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RavenFS\RavenFS.csproj">
       <Project>{6057787E-1771-4942-B3E5-FB435CED0408}</Project>
       <Name>RavenFS</Name>

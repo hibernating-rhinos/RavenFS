@@ -143,11 +143,7 @@
     <Compile Include="Extensions\MetadataExtensions.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Extensions\UrlExtension.cs" />
-    <Compile Include="Handlers\RdcGetFile.cs" />
-    <Compile Include="Handlers\RdcManifestHandler.cs" />
-    <Compile Include="Handlers\RdcStatsHandler.cs" />
     <Compile Include="Handlers\SynchonizationHandler.cs" />
-    <Compile Include="Handlers\WebUIHandler.cs" />
     <Compile Include="Infrastructure\ErrorLoggingConcurrentMergeScheduler.cs" />
     <Compile Include="Infrastructure\AbstractAsyncHandler.cs" />
     <Compile Include="Rdc\DataInfo.cs" />

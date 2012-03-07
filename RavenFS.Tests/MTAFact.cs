@@ -6,15 +6,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Sdk;
-using TimeoutException = Xunit.Sdk.TimeoutException;
 
 namespace RavenFS.Tests
 {
-	public class MTAFactAttribute : FactAttribute
+	public class MtaFactAttribute : FactAttribute
 	{
 		protected override IEnumerable<ITestCommand> EnumerateTestCommands(IMethodInfo method)
 		{
