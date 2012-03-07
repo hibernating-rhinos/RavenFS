@@ -118,7 +118,7 @@ namespace RavenFS.Web
 			config.Routes.MapHttpRoute(
 				name: "RDC",
 				routeTemplate: "rdc/{action}/{*filename}",
-				defaults: new { controller = "files", filename = RouteParameter.Optional }
+				defaults: new { controller = "rdc", filename = RouteParameter.Optional }
 				);
 
 			config.Routes.MapHttpRoute(

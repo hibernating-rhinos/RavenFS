@@ -97,6 +97,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\JsonNetFormatter.cs" />
+    <Compile Include="Infrastructure\LimitedStream.cs" />
     <Compile Include="Infrastructure\RavenReadOnlyStream.cs" />
     <Compile Include="Infrastructure\RedirectRouteHandler.cs" />
     <Compile Include="Infrastructure\RedirectHandler.cs" />
