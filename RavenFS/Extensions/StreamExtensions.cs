@@ -12,16 +12,12 @@ namespace RavenFS.Extensions
             return self.ReadAsync(buffer, start, buffer.Length - start)
                 .ContinueWith(task =>
                 {
-                    if (task.Result == 0)
-                        return task;
-                    if (task.Result < buffer.Length)
-                    {
-                        return self.ReadAsync(buffer, start + task.Result);
-                    }
-                    return task;
+                	if (task.Result == 0 || task.Result + start >= buffer.Length)
+                		return task;
+                	return self.ReadAsync(buffer, start + task.Result);
                 })
                 .Unwrap()
-                .ContinueWith(task => task.Result == 0 ? start : task.Result);
+				.ContinueWith(task => start + task.Result);
         }
 
         public static Task<int> ReadAsync(this Stream self, byte[] buffer)
