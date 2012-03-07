@@ -125,6 +125,7 @@
     <Compile Include="Commands\InfoCommand.cs" />
     <Compile Include="Commands\VirtualItemCommand.cs" />
     <Compile Include="Converters\AsyncOperationStatusConverter.cs" />
+    <Compile Include="Commands\CopyExceptionToClipboardCommand.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
     <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
@@ -298,6 +299,7 @@
     <Resource Include="Assets\Images\Success.png" />
     <Resource Include="Assets\Images\Close.png" />
     <Resource Include="Assets\Images\ClearList.png" />
+    <Resource Include="Assets\Images\CopyError.png" />
     <Content Include="Assets\Images\ImageCredits.txt" />
     <Resource Include="Assets\Images\Info.png" />
     <Resource Include="Assets\Images\Query.png" />

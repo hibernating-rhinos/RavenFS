@@ -18,15 +18,15 @@ namespace RavenFS.Studio.Converters
     {
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            if (values.Length < 2 || !(values[0] is AsyncOperationStatus) || !(values[1] is string))
+            if (values.Length < 2 || !(values[0] is AsyncOperationStatus))
             {
                 return DependencyProperty.UnsetValue;
             }
 
             var status = (AsyncOperationStatus)values[0];
-            var error = (string) values[1];
+            var error = values[1] as string;
 
-            return status == AsyncOperationStatus.Error ? "Error: " + error : status.ToString();
+            return status == AsyncOperationStatus.Error ? "Error: " + (error ?? "") : status.ToString();
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

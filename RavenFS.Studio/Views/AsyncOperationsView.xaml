@@ -45,7 +45,13 @@
                          VerticalAlignment="Center"
                             Margin="0,0,0,0" 
                             toolkit:DockPanel.Dock="Right">
-                  <CheckBox IsChecked="{Binding Model.ClearCompletedOperationsAutomatically.Value, Mode=TwoWay}" 
+                    <Button Command="{StaticResource CopyExceptionToClipboardCommand}"
+                            CommandParameter="{Binding Path=SelectedItem.Exception, ElementName=DataGrid}"
+                          ToolTipService.ToolTip="Copy Full Error Details to Clipboard"
+                          Style="{StaticResource Style_Button_MouseOverChrome}">
+                        <Image Source="{StaticResource Image_CopyError_Tiny}" Stretch="None"/>
+                    </Button>
+                    <CheckBox IsChecked="{Binding Model.ClearCompletedOperationsAutomatically.Value, Mode=TwoWay}" 
                               Content="Automatically clear finished operations"
                               VerticalAlignment="Center"
                               Margin="5,0" />
@@ -64,6 +70,7 @@
         </Border>
         
         <sdk:DataGrid 
+            x:Name="DataGrid"
             Grid.Row="1"
             ItemsSource="{Binding Model.Operations}" 
             AutoGenerateColumns="False" 
@@ -78,6 +85,7 @@
                                              Visibility="{Binding Progress, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}" 
                                              VerticalAlignment="Center" 
                                              Height="10" 
+                                             Maximum="1"
                                              Margin="4,0"/>
                                 <TextBlock x:Name="StatusText" Text="{m:MultiBinding Source1={Binding Status}, Source2={Binding Error}, Converter={StaticResource Converter_AsyncOperationStatus}}" 
                                            Margin="2" 

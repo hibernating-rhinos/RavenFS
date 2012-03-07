@@ -81,8 +81,7 @@ namespace RavenFS.Studio.Infrastructure
                     {
                         if (task.IsFaulted)
                         {
-                            operation.Faulted(
-                                task.Exception.ExtractSingleInnerException());
+                            operation.Faulted(task.Exception);
                         }
                         else
                         {

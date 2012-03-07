@@ -19,6 +19,7 @@ namespace RavenFS.Studio.Models
         double progress;
         string error;
         bool reportsProgress;
+        Exception exception;
         AsyncOperationStatus status;
 
         public AsyncOperationModel()
@@ -46,16 +47,6 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        public bool ReportsProgress
-        {
-            get { return reportsProgress; }
-            set
-            {
-                reportsProgress = value;
-                OnPropertyChanged("ReportsProgress");
-            }
-        }
-
         public AsyncOperationStatus Status
         {
             get { return status; }
@@ -73,6 +64,16 @@ namespace RavenFS.Studio.Models
             {
                 error = value;
                 OnPropertyChanged("Error");
+            }
+        }
+
+        public Exception Exception
+        {
+            get { return exception; }
+            set
+            {
+                exception = value;
+                OnPropertyChanged("Exception");
             }
         }
 
@@ -104,6 +105,7 @@ namespace RavenFS.Studio.Models
         public void Completed()
         {
             Status = AsyncOperationStatus.Completed;
+            Progress = 0;
         }
 
         public void Faulted(Exception exception)
@@ -111,7 +113,11 @@ namespace RavenFS.Studio.Models
             Status = AsyncOperationStatus.Error;
             if (exception != null)
             {
-                Error = exception.Message;
+                Exception = exception;
+
+                Error = exception is AggregateException
+                            ? ((exception as AggregateException).ExtractSingleInnerException() ?? exception).Message
+                            : exception.Message;
             }
 
             Progress = 0;

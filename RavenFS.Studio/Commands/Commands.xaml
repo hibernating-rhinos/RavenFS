@@ -5,4 +5,5 @@
     <Commands:ShowOperationsPaneCommand x:Name="ShowOperationsPaneCommand"/>
     <Commands:HideOperationsPaneCommand x:Name="HideOperationsPaneCommand"/>
     <Commands:ClearCompletedOperationsCommand x:Name="ClearCompletedOperationsCommand"/>
+    <Commands:CopyExceptionToClipboardCommand x:Name="CopyExceptionToClipboardCommand"/>
 </ResourceDictionary>
