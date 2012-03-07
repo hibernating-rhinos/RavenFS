@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -61,6 +62,8 @@ namespace RavenFS.Storage
 			}
 		}
 
+		[DebuggerHidden]
+		[DebuggerNonUserCode]
 		public void Dispose()
 		{
 			if (details != null)
@@ -79,6 +82,8 @@ namespace RavenFS.Storage
 				session.Dispose();
 		}
 
+		[DebuggerHidden]
+		[DebuggerNonUserCode]
 		public void Commit()
 		{
 			transaction.Commit(CommitTransactionGrbit.None);
