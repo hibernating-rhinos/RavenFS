@@ -124,10 +124,17 @@
     <Compile Include="Commands\DownloadCommand.cs" />
     <Compile Include="Commands\InfoCommand.cs" />
     <Compile Include="Commands\VirtualItemCommand.cs" />
+    <Compile Include="Converters\AsyncOperationStatusConverter.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
     <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
+    <Compile Include="Converters\ValueGreaterThanConverter.cs" />
+    <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
+    <Compile Include="External\MultiBinding\IMultiValueConverter.cs" />
+    <Compile Include="External\MultiBinding\MultiBinding.cs" />
+    <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
+    <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
     <Compile Include="Infrastructure\Schedulers.cs" />
     <Compile Include="Infrastructure\VirtualCollection.cs" />
@@ -269,6 +276,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="External\MultiBinding\Licence.htm" />
     <Resource Include="Assets\Images\Upload.png" />
     <Resource Include="Assets\Images\add.png" />
     <Resource Include="Assets\Images\BackgroundTexture.png" />

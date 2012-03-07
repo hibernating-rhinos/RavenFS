@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using RavenFS.Studio.Extensions;
 using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Models
@@ -15,7 +16,7 @@ namespace RavenFS.Studio.Models
     public class AsyncOperationModel : Model
     {
         string description;
-        int progress;
+        double progress;
         string error;
         bool reportsProgress;
         AsyncOperationStatus status;
@@ -35,7 +36,7 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        public int Progress
+        public double Progress
         {
             get { return progress; }
             private set
@@ -77,11 +78,16 @@ namespace RavenFS.Studio.Models
 
         public void ProgressChanged(double amountCompleted, double amountToDo)
         {
-            ProgressChanged((int)((amountCompleted / amountToDo) * 100));
+            ProgressChanged((amountCompleted / amountToDo).Clamp(0, 1));
         }
 
-        public void ProgressChanged(int progress)
+        public void ProgressChanged(double progress)
         {
+            if (progress < 0 || progress > 1)
+            {
+                throw new ArgumentOutOfRangeException("progress", "progress must be between 0 and 1");
+            }
+
             if (Status == AsyncOperationStatus.Queued)
             {
                 Started();
@@ -107,6 +113,8 @@ namespace RavenFS.Studio.Models
             {
                 Error = exception.Message;
             }
+
+            Progress = 0;
         }
     }
 }
