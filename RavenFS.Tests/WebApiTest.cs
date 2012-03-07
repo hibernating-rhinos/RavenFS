@@ -4,6 +4,7 @@ using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Web.Http.SelfHost;
 using RavenFS.Client;
+using RavenFS.Tests.Tools;
 using RavenFS.Web;
 
 namespace RavenFS.Tests
@@ -28,6 +29,9 @@ namespace RavenFS.Tests
 
 		public WebApiTest()
 		{
+			IOExtensions.DeleteDirectory("Data.ravenfs");
+			IOExtensions.DeleteDirectory("Index.ravenfs");
+			IOExtensions.DeleteDirectory("Signatures.ravenfs");
 			NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(9079);
 			Task.Factory.StartNew(() => // initialize in MTA thread
 			{
@@ -47,6 +51,12 @@ namespace RavenFS.Tests
 			{
 				BaseAddress = Url
 			};
+		}
+
+
+		protected HttpWebRequest CreateWebRequest(string url)
+		{
+			return (HttpWebRequest)WebRequest.Create(Url + url);
 		}
 
 		protected RavenFileSystemClient NewClient()
