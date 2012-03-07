@@ -76,6 +76,17 @@ namespace RavenFS.Web
 			}
 		}
 
+		public SimpleSignatureRepository SignatureRepository
+		{
+			get { return signatureRepository; }
+		}
+
+		public SigGenerator SigGenerator
+		{
+			get { return sigGenerator; }
+		}
+
+
 		[MethodImpl(MethodImplOptions.Synchronized)]
 		public static void Start(HttpConfiguration config)
 		{
@@ -100,6 +111,12 @@ namespace RavenFS.Web
 			config.Routes.MapHttpRoute(
 				name: "Files",
 				routeTemplate: "files/{*filename}",
+				defaults: new { controller = "files", filename = RouteParameter.Optional }
+				);
+
+			config.Routes.MapHttpRoute(
+				name: "RDC",
+				routeTemplate: "rdc/{action}/{*filename}",
 				defaults: new { controller = "files", filename = RouteParameter.Optional }
 				);
 

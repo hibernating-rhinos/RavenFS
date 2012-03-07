@@ -90,6 +90,7 @@
   <ItemGroup>
     <Compile Include="Controllers\FilesController.cs" />
     <Compile Include="Controllers\RavenController.cs" />
+    <Compile Include="Controllers\RdcController.cs" />
     <Compile Include="Controllers\SearchController.cs" />
     <Compile Include="Controllers\StatsController.cs" />
     <Compile Include="Global.asax.cs">

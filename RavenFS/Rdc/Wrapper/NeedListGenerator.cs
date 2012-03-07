@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 
 namespace RavenFS.Rdc.Wrapper
@@ -42,13 +38,14 @@ namespace RavenFS.Rdc.Wrapper
                     throw new RdcException("Cannot create comparator");
                 }
 
-                var inputBuffer = new RdcBufferPointer();
-                inputBuffer.Size = 0;
-                inputBuffer.Used = 0;
-                inputBuffer.Data = Marshal.AllocCoTaskMem(InputBufferSize + 16); // Completely don't know why 16
+                var inputBuffer = new RdcBufferPointer
+                {
+                	Size = 0,
+                	Used = 0,
+                	Data = Marshal.AllocCoTaskMem(InputBufferSize + 16)
+                };
 
-                var outputBuffer = Marshal.AllocCoTaskMem(
-                    Marshal.SizeOf(typeof(RdcNeed)) * 256);
+            	var outputBuffer = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(RdcNeed)) * 256);
 
                 try
                 {
@@ -115,7 +112,7 @@ namespace RavenFS.Rdc.Wrapper
             }
         }
 
-        private RdcNeed[] GetRdcNeedList(RdcNeedPointer pointer)
+        private static RdcNeed[] GetRdcNeedList(RdcNeedPointer pointer)
         {
             var result = new RdcNeed[pointer.Used];
 

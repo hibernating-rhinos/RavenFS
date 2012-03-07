@@ -1,6 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Web;
 using System.Web.Http;
+using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
 using RavenFS.Util;
@@ -23,6 +24,17 @@ namespace RavenFS.Web.Controllers
 		{
 			get { return RavenFileSystem.Instance.BufferPool; }
 		}
+
+		public ISignatureRepository SignatureRepository
+		{
+			get { return RavenFileSystem.Instance.SignatureRepository; }
+		}
+
+		public SigGenerator SigGenerator
+		{
+			get { return RavenFileSystem.Instance.SigGenerator; }
+		}
+
 		public NameValueCollection QueryString
 		{
 			get { return queryString ?? (queryString = HttpUtility.ParseQueryString(Request.RequestUri.Query)); }
