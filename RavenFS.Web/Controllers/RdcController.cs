@@ -30,6 +30,14 @@ namespace RavenFS.Web.Controllers
 			return GetStream(filename, resultContent);
 		}
 
+		public RdcStats GetStats()
+		{
+			return new RdcStats
+			{
+				Version = (int) Msrdc.Version
+			};
+		}
+
 		public HttpResponseMessage<SignatureManifest> GetManifest(string filename)
 		{
 			try
