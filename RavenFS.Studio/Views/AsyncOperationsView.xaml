@@ -102,8 +102,7 @@
                                            VerticalAlignment="Center" 
                                            Behaviors:FadeTrimming.IsEnabled="True"
                                            Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
-                                           Visibility="{Binding Progress, Converter={StaticResource Converter_CollapsedWhenValueGreaterThan}, ConverterParameter=0}"
-                                           ToolTipService.ToolTip="{m:MultiBinding Source1={Binding Status}, Source2={Binding Error}, Converter={StaticResource Converter_AsyncOperationStatus}}"/>
+                                           Visibility="{Binding Progress, Converter={StaticResource Converter_CollapsedWhenValueGreaterThan}, ConverterParameter=0}"/>
                             </Grid>
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
