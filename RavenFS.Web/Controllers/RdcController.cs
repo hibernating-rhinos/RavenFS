@@ -57,7 +57,13 @@ namespace RavenFS.Web.Controllers
 
 		private HttpResponseMessage GetStream(string filename, Stream resultContent)
 		{
-			var response = new HttpResponseMessage();
+			var response = new HttpResponseMessage
+			{
+				Headers =
+					{
+						TransferEncodingChunked = false
+					}
+			};
 			long length = 0;
 			ContentRangeHeaderValue contentRange = null;
 			if (Request.Headers.Range != null)
@@ -89,7 +95,7 @@ namespace RavenFS.Web.Controllers
 							FileName = filename
 						},
 						ContentLength =  length,
-						ContentRange = contentRange
+						ContentRange = contentRange,
 					}
 			};
        

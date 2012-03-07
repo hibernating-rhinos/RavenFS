@@ -204,7 +204,7 @@ namespace RavenFS.Tests
             var result = sr.ReadToEnd();
             Assert.Equal("000001", result);
             Assert.Equal("bytes 0-6/3000000", nameValues["Content-Range"]);
-			//Assert.Equal("6", nameValues["Content-Length"]); - no idea why we aren't getting this, probably because we get a range
+			//Assert.Equal("6", nameValues["Content-Length"]); // no idea why we aren't getting this, probably because we get a range
         }
 
         [Fact]
