@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using RavenFS.Storage;
 using RavenFS.Util;
@@ -11,6 +12,10 @@ namespace RavenFS.Web.Infrastructure
 		private readonly BufferPool bufferPool;
 		private readonly string filename;
 		private FileAndPages header;
+
+		private long position;
+		private byte[] internalBuffer;
+		private int posInBuffer;
 
 		public RavenReadOnlyStream(TransactionalStorage storage, BufferPool bufferPool, string filename)
 		{
@@ -34,24 +39,24 @@ namespace RavenFS.Web.Infrastructure
 			switch (origin)
 			{
 				case SeekOrigin.Begin:
-					Position = offset;
+					position = offset;
 					if(offset > Length)
 						throw new ArgumentException("New offset would be bigger than the file size");
 					break;
 				case SeekOrigin.Current:
-					if (Position + offset > Length)
+					if (position + offset > Length)
 						throw new ArgumentException("New offset would be bigger than the file size");
-					Position += offset;
+					position += offset;
 					break;
 				case SeekOrigin.End:
 					if (Length - offset < 0)
 						throw new ArgumentException("New offset would be before start of file");
-					Position = Length - offset;
+					position = Length - offset;
 					break;
 				default:
 					throw new ArgumentOutOfRangeException("origin");
 			}
-			return Position;
+			return position;
 		}
 
 		public override void SetLength(long value)
@@ -61,30 +66,51 @@ namespace RavenFS.Web.Infrastructure
 
 		public override int Read(byte[] buffer, int offset, int count)
 		{
-			var tuple = GetPageFor(Position);
+			if(internalBuffer != null && posInBuffer < internalBuffer.Length)
+			{
+				// serve directly from loaded buffer
+				int readFromBuffer = Math.Min(count, internalBuffer.Length - posInBuffer);
+				Buffer.BlockCopy(internalBuffer, posInBuffer, buffer, offset, readFromBuffer);
+				posInBuffer += readFromBuffer;
+				position += readFromBuffer;
+				return readFromBuffer;
+			}
+			// need to check for a new buffer
+			var tuple = GetPageFor(position);
 			if(tuple.Item1 == null)
 				return 0;
 
-			int read = 0;
-			storage.Batch(accessor =>
-			{
-				var pageBuffer = bufferPool.TakeBuffer(tuple.Item1.Size);
-				try
-				{
-					accessor.ReadPage(tuple.Item1.Key, pageBuffer);
-					read = Math.Min(count, pageBuffer.Length - tuple.Item2);
-					Buffer.BlockCopy(pageBuffer, tuple.Item2, buffer, offset, read);
-				}
-				finally
-				{
-					bufferPool.ReturnBuffer(pageBuffer);
-				}
-			});
-			Position += read;
+			ReturnBuffer();
+			TakeBuffer(tuple.Item1.Size);
+				
+			storage.Batch(accessor => accessor.ReadPage(tuple.Item1.Key, internalBuffer));
+
+			Debug.Assert(internalBuffer != null);
+
+			int read = Math.Min(count, internalBuffer.Length - tuple.Item2);
+			Buffer.BlockCopy(internalBuffer, tuple.Item2, buffer, offset, read);
+			
+			position += read;
+			posInBuffer = read;
 			return read;
 		}
 
-		private Tuple<PageInformation,int> GetPageFor(long position)
+		private void TakeBuffer(int size)
+		{
+			internalBuffer = bufferPool.TakeBuffer(size);
+		}
+
+		private void ReturnBuffer()
+		{
+			posInBuffer = 0;
+			if(internalBuffer != null)
+			{
+				bufferPool.ReturnBuffer(internalBuffer);
+				internalBuffer = null;
+			}
+		}
+
+		private Tuple<PageInformation,int> GetPageFor(long totalPos)
 		{
 			long current = 0;
 			var start = 0;
@@ -103,10 +129,10 @@ namespace RavenFS.Web.Infrastructure
 
 					foreach (var pageInformation in fileAndPages.Pages)
 					{
-						if (current >= position && current <= position + pageInformation.Size)
+						if (current <= totalPos && totalPos < current + pageInformation.Size)
 						{
 							page = pageInformation;
-							posInPage = (int)(position - current);
+							posInPage = (int)(totalPos - current);
 							return;
 						}
 						current += pageInformation.Size;
@@ -145,6 +171,17 @@ namespace RavenFS.Web.Infrastructure
 			}
 		}
 
-		public override long Position { get; set; }
+		public override long Position
+		{
+			get { return position; }
+			set { Seek(value, SeekOrigin.Begin); }
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			if (internalBuffer != null)
+				bufferPool.ReturnBuffer(internalBuffer);
+			base.Dispose(disposing);
+		}
 	}
 }
