@@ -10,19 +10,20 @@ using RavenFS.Rdc;
 using RavenFS.Rdc.Wrapper;
 using RavenFS.Util;
 using System.Linq;
+using RavenFS.Web.Infrastructure;
 
 namespace RavenFS.Web.Controllers
 {
 	public class RdcController : RavenController
 	{
-		public HttpResponseMessage GetFiles(string filename)
+		public HttpResponseMessage Files(string filename)
 		{
 			var resultContent = StorageStream.Reading(Storage, filename);
 
 			return GetStream(filename, resultContent);
 		}
 
-		public HttpResponseMessage GetSignatures(string filename)
+		public HttpResponseMessage Signatures(string filename)
 		{
 			var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
 			var resultContent = localRdcManager.GetSignatureContentForReading(filename);
@@ -30,7 +31,7 @@ namespace RavenFS.Web.Controllers
 			return GetStream(filename, resultContent);
 		}
 
-		public RdcStats GetStats()
+		public RdcStats Stats()
 		{
 			return new RdcStats
 			{
@@ -38,7 +39,7 @@ namespace RavenFS.Web.Controllers
 			};
 		}
 
-		public HttpResponseMessage<SignatureManifest> GetManifest(string filename)
+		public HttpResponseMessage<SignatureManifest> Manifest(string filename)
 		{
 			try
 			{
@@ -56,38 +57,42 @@ namespace RavenFS.Web.Controllers
 
 		private HttpResponseMessage GetStream(string filename, Stream resultContent)
 		{
-			var response = new HttpResponseMessage
-			{
-				Content = new StreamContent(resultContent)
-				{
-					Headers =
-						{
-							ContentDisposition = new ContentDispositionHeaderValue("attachment")
-							{
-								FileName = filename
-							}
-						}
-				}
-			};
+			var response = new HttpResponseMessage();
+			long length = 0;
+			ContentRangeHeaderValue contentRange = null;
 			if (Request.Headers.Range != null)
 			{
-				if(Request.Headers.Range.Ranges.Count != 1)
+				if (Request.Headers.Range.Ranges.Count != 1)
 				{
 					throw new InvalidOperationException("Can't handle multiple range values");
 				}
 				var range = Request.Headers.Range.Ranges.First();
 				var from = range.From ?? 0;
-				var to = range.To ?? resultContent.Length - 1;
+				var to = range.To ?? resultContent.Length ;
 
+				length = (to - from );
 
-				response.Content.Headers.ContentLength = (to - from + 1);
-				
-				response.Content.Headers.ContentRange = new ContentRangeHeaderValue(from, to, resultContent.Length);
+				contentRange = new ContentRangeHeaderValue(from, to, resultContent.Length);
+				resultContent = new LimitedStream(resultContent, from, to);
 			}
 			else
 			{
-				response.Content.Headers.ContentLength = resultContent.Length;
-			}            
+				length = resultContent.Length;
+			}
+
+			response.Content = new StreamContent(resultContent)
+			{
+				Headers =
+					{
+						ContentDisposition = new ContentDispositionHeaderValue("attachment")
+						{
+							FileName = filename
+						},
+						ContentLength =  length,
+						ContentRange = contentRange
+					}
+			};
+       
 			return response;
 		}
 	}
