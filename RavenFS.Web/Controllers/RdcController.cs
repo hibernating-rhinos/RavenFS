@@ -1,8 +1,11 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using System.Web.Http;
+using RavenFS.Client;
 using RavenFS.Rdc;
 using RavenFS.Rdc.Wrapper;
 using RavenFS.Util;
@@ -25,6 +28,22 @@ namespace RavenFS.Web.Controllers
 			var resultContent = localRdcManager.GetSignatureContentForReading(filename);
        
 			return GetStream(filename, resultContent);
+		}
+
+		public HttpResponseMessage<SignatureManifest> GetManifest(string filename)
+		{
+			try
+			{
+				Storage.Batch(accessor => accessor.GetFile(filename, 0, 0));
+			}
+			catch (FileNotFoundException)
+			{
+				return new HttpResponseMessage<SignatureManifest>(HttpStatusCode.NotFound);
+			}
+
+			var rdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
+			var signatureManifest = rdcManager.GetSignatureManifest(new DataInfo {Name = filename});
+			return new HttpResponseMessage<SignatureManifest>(signatureManifest);
 		}
 
 		private HttpResponseMessage GetStream(string filename, Stream resultContent)
