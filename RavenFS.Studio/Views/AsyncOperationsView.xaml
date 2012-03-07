@@ -76,7 +76,17 @@
             AutoGenerateColumns="False" 
             Style="{StaticResource Style_DataGrid_NoHeader}">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Binding="{Binding Description}" Width="*"/>
+                <sdk:DataGridTemplateColumn Width="*">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Description}"
+                                       Behaviors:FadeTrimming.IsEnabled="True"
+                                       Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
                 <sdk:DataGridTemplateColumn Width="300">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -90,6 +100,8 @@
                                 <TextBlock x:Name="StatusText" Text="{m:MultiBinding Source1={Binding Status}, Source2={Binding Error}, Converter={StaticResource Converter_AsyncOperationStatus}}" 
                                            Margin="2" 
                                            VerticalAlignment="Center" 
+                                           Behaviors:FadeTrimming.IsEnabled="True"
+                                           Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
                                            Visibility="{Binding Progress, Converter={StaticResource Converter_CollapsedWhenValueGreaterThan}, ConverterParameter=0}"
                                            ToolTipService.ToolTip="{m:MultiBinding Source1={Binding Status}, Source2={Binding Error}, Converter={StaticResource Converter_AsyncOperationStatus}}"/>
                             </Grid>

@@ -5,7 +5,7 @@
                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                      xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
                      xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-                     xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors"
+                     xmlns:b="clr-namespace:RavenFS.Studio.Behaviors"
                      xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
                      xmlns:Models="clr-namespace:RavenFS.Studio.Models"
                      xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
@@ -76,17 +76,47 @@
                       Margin="0,10"
                       SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}">
             <i:Interaction.Behaviors>
-                <Behaviors:ExecuteCommandOnFileDrop Command="{Binding Upload}"/>
+                <b:ExecuteCommandOnFileDrop Command="{Binding Upload}"/>
             </i:Interaction.Behaviors>
             <i:Interaction.Triggers>
-                <Behaviors:StudioKeyTrigger Key="Delete">
+                <b:StudioKeyTrigger Key="Delete">
                     <i:InvokeCommandAction Command="{Binding Delete}"/>
-                </Behaviors:StudioKeyTrigger>
+                </b:StudioKeyTrigger>
             </i:Interaction.Triggers>
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Header="Name" Width="*" Binding="{Binding Item.Name}"/>
-                <sdk:DataGridTextColumn Header="Size" Width="100" Binding="{Binding Item.HumaneTotalSize}"/>
-                <sdk:DataGridTextColumn Header="Last Modified" Width="150" Binding="{Binding Item.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDate}}"/>
+                <sdk:DataGridTemplateColumn Header="Name" Width="*">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Item.Name}" 
+                                       b:FadeTrimming.IsEnabled="True" 
+                                       b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Header="Size" Width="100">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Item.HumaneTotalSize}" 
+                                       b:FadeTrimming.IsEnabled="True" 
+                                       b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Header="Last Modified" Width="150">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Item.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDate}}" 
+                                       b:FadeTrimming.IsEnabled="True" 
+                                       b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
                 <sdk:DataGridTemplateColumn Width="25" CanUserResize="False">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
