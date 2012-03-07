@@ -35,7 +35,7 @@ namespace RavenFS.Web.Controllers
 			get { return RavenFileSystem.Instance.SigGenerator; }
 		}
 
-		public NameValueCollection QueryString
+		private NameValueCollection QueryString
 		{
 			get { return queryString ?? (queryString = HttpUtility.ParseQueryString(Request.RequestUri.Query)); }
 		}
