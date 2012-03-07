@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace RavenFS.Tests
 {
-	public class BigFileHandling : IisExpressTestClient
+	public class BigFileHandling : WebApiTest
 	{
 		[Theory]
         [InlineData(1024 * 1024)]		// 1 mb        
@@ -24,7 +24,8 @@ namespace RavenFS.Tests
 
 			WebClient.UploadData("/files/mb.bin", "PUT", buffer);
 
-			var files = JsonConvert.DeserializeObject<List<FileHeader>>(WebClient.DownloadString("/files/"), new NameValueCollectionJsonConverter());
+			var downloadString = WebClient.DownloadString("/files/");
+			var files = JsonConvert.DeserializeObject<List<FileHeader>>(downloadString, new NameValueCollectionJsonConverter());
 			Assert.Equal(1, files.Count);
 			Assert.Equal(buffer.Length, files[0].TotalSize);
 			Assert.Equal(buffer.Length, files[0].UploadedSize);
