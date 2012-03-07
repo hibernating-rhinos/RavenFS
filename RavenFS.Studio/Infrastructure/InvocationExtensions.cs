@@ -97,6 +97,13 @@ namespace RavenFS.Studio.Infrastructure
                 Schedulers.UIThread);
         }
 
+        public static Task ContinueOnUIThread<TResult>(this Task<TResult> parent, Action<Task<TResult>> action)
+        {
+            return parent.ContinueWith(
+                action,
+                Schedulers.UIThread);
+        }
+
 	    public static Task ContinueOnSuccessInTheUIThread(this Task parent, Action action)
 		{
 			return parent.ContinueOnSuccess(() =>

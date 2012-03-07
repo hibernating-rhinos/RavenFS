@@ -123,7 +123,7 @@
     <Compile Include="Commands\UploadCommand.cs" />
     <Compile Include="Commands\DeleteCommand.cs" />
     <Compile Include="Commands\DownloadCommand.cs" />
-    <Compile Include="Commands\InfoCommand.cs" />
+    <Compile Include="Commands\EditFilePropertiesCommand.cs" />
     <Compile Include="Commands\VirtualItemCommand.cs" />
     <Compile Include="Converters\AsyncOperationStatusConverter.cs" />
     <Compile Include="Commands\CopyExceptionToClipboardCommand.cs" />
@@ -138,6 +138,8 @@
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
     <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
+    <Compile Include="Infrastructure\DialogModel.cs" />
+    <Compile Include="Infrastructure\DialogView.cs" />
     <Compile Include="Infrastructure\Schedulers.cs" />
     <Compile Include="Infrastructure\VirtualCollection.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\StaticExtension.cs" />
@@ -152,7 +154,6 @@
     <Compile Include="Infrastructure\UrlUtil.cs" />
     <Compile Include="Infrastructure\UrlParser.cs" />
     <Compile Include="Infrastructure\Observable.cs" />
-    <Compile Include="Infrastructure\FileInfoWrapper.cs" />
     <Compile Include="Infrastructure\Input\AskUser.cs" />
     <Compile Include="Infrastructure\Input\ConfirmModel.cs" />
     <Compile Include="Infrastructure\Input\ConfirmWindow.xaml.cs">
@@ -168,7 +169,9 @@
     <Compile Include="Models\AsyncOperationsModel.cs" />
     <Compile Include="Models\AsyncOperationStatus.cs" />
     <Compile Include="Models\AsyncOperationsViewModel.cs" />
-    <Compile Include="Models\FileInfoModel.cs" />
+    <Compile Include="Models\EditableKeyValue.cs" />
+    <Compile Include="Models\EditableKeyValueCollection.cs" />
+    <Compile Include="Models\FilePropertiesDialogModel.cs" />
     <Compile Include="Infrastructure\Model.cs" />
     <Compile Include="Infrastructure\ModelResolver.cs" />
     <Compile Include="Infrastructure\NotifyPropertyChangedBase.cs" />
@@ -184,6 +187,9 @@
     </Compile>
     <Compile Include="Views\FileInfo.xaml.cs">
       <DependentUpon>FileInfo.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\FilePropertiesDialog.xaml.cs">
+      <DependentUpon>FilePropertiesDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Files.xaml.cs">
       <DependentUpon>Files.xaml</DependentUpon>
@@ -253,6 +259,10 @@
     <Page Include="Views\FileInfo.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\FilePropertiesDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Files.xaml">
       <SubType>Designer</SubType>

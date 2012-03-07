@@ -16,10 +16,12 @@ namespace RavenFS.Studio.Models
 
 	    private ICommand downloadCommand;
 	    private ICommand deleteCommand;
+	    private ICommand editCommand;
 
 	    public ICommand Upload { get { return new UploadCommand(); } }
         public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedFile)); } }
         public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedFile)); } }
+        public ICommand EditProperties { get { return editCommand ?? (editCommand = new EditFilePropertiesCommand(SelectedFile)); } }
 
         public Observable<VirtualItem<FileInfo>> SelectedFile { get; private set; }
 
