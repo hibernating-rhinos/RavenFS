@@ -5,7 +5,7 @@ namespace Tryouts
 	class Program
 	{
 		[STAThread]
-		static void Main(string[] args)
+		static void Main()
 		{
 		}
 		

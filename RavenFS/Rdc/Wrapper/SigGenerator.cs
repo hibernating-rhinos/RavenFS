@@ -24,7 +24,14 @@ namespace RavenFS.Rdc.Wrapper
 
         public SigGenerator(ISignatureRepository signatureRepository)
         {
-            _rdcLibrary = (IRdcLibrary)new RdcLibrary();
+        	try
+        	{
+        		_rdcLibrary = (IRdcLibrary)new RdcLibrary();
+        	}
+        	catch (InvalidCastException e)
+        	{
+        		throw new InvalidOperationException("This code must run in an MTA thread", e);
+        	}
             _signatureRepository = signatureRepository;
         }
 
