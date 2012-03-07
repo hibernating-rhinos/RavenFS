@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Web.Http.SelfHost;
 using RavenFS.Client;
@@ -30,15 +31,17 @@ namespace RavenFS.Tests
 			NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(9079);
 			Task.Factory.StartNew(() => // initialize in MTA thread
 			{
-				config = new HttpSelfHostConfiguration(Url);
-
+				config = new HttpSelfHostConfiguration(Url)
+				{
+					MaxReceivedMessageSize = Int64.MaxValue,
+					TransferMode = TransferMode.Streamed
+				};
 				RavenFileSystem.Start(config);
-
-				server = new HttpSelfHostServer(config);
-				return server.OpenAsync();
 			})
-				.Unwrap()
-				.Wait();
+			.Wait();
+
+			server = new HttpSelfHostServer(config);
+			server.OpenAsync().Wait();
 			
 			WebClient = new WebClient
 			{
@@ -53,6 +56,7 @@ namespace RavenFS.Tests
 
 		public void Dispose()
 		{
+			server.CloseAsync().Wait();
 			server.Dispose();
 			config.Dispose();
 			RavenFileSystem.Stop();
