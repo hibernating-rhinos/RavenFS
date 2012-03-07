@@ -16,7 +16,7 @@ namespace RavenFS.Rdc.Wrapper
         private readonly ReaderWriterLockSlim _disposerLock = new ReaderWriterLockSlim();
         private bool _disposed;
 
-        private ISignatureRepository _signatureRepository;
+        private readonly ISignatureRepository _signatureRepository;
         private readonly IRdcLibrary _rdcLibrary;
         private int _recursionDepth;
         private const uint OutputBufferSize = 1024;
@@ -43,7 +43,7 @@ namespace RavenFS.Rdc.Wrapper
                 return new List<SignatureInfo>();
             }
 
-            var result = InitializeSignatureInfos();
+        	var result = Enumerable.Range(0, _recursionDepth).Select(i => new SignatureInfo()).ToList();
 
             var rdcGenerator = InitializeRdcGenerator();
 
@@ -60,7 +60,8 @@ namespace RavenFS.Rdc.Wrapper
                 Marshal.FreeCoTaskMem(inputBuffer.Data);
             }
 
-            return result.Reverse().ToList();
+			result.Reverse();
+        	return result;
         }
 
 
@@ -252,16 +253,6 @@ namespace RavenFS.Rdc.Wrapper
             if (hr != 0)
             {
                 throw new RdcException("Failed to compute the recursion depth.", hr);
-            }
-            return result;
-        }
-
-        private IList<SignatureInfo> InitializeSignatureInfos()
-        {
-            IList<SignatureInfo> result = new List<SignatureInfo>();
-            for (var i = 0; i < _recursionDepth; i++)
-            {
-                result.Add(new SignatureInfo());
             }
             return result;
         }
