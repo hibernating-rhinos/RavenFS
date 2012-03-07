@@ -5,9 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using RavenFS.Rdc.Wrapper;
 
 namespace RavenFS.Rdc.Wrapper
 {
@@ -69,14 +67,16 @@ namespace RavenFS.Rdc.Wrapper
         private RdcBufferPointer Process(Stream source, RdcBufferPointer[] rdcBufferPointers, IRdcGenerator rdcGenerator, IntPtr[] outputPointers,
             IList<SignatureInfo> result)
         {
-            var inputBuffer = new RdcBufferPointer();
-            inputBuffer.Size = 0;
-            inputBuffer.Used = 0;
-            inputBuffer.Data = Marshal.AllocCoTaskMem((int)InputBufferSize + 16); // Completely don't know why 16
-            var eof = false;
+            var inputBuffer = new RdcBufferPointer
+            {
+            	Size = 0,
+            	Used = 0,
+            	Data = Marshal.AllocCoTaskMem((int) InputBufferSize + 16)
+            };
+        	var eof = false;
             var eofOutput = false;
             // prepare streams
-            var sigStreams = (from item in result select _signatureRepository.CreateContent(item.Name)).ToList();
+            var sigStreams = (result.Select(item => _signatureRepository.CreateContent(item.Name))).ToList();
 
             try
             {
