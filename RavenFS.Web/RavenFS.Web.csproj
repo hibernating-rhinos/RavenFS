@@ -108,10 +108,6 @@
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RavenFS.Rdc.Wrapper\RavenFS.Rdc.Wrapper.csproj">
-      <Project>{E5A918C7-8FB7-4172-A11F-0E7219B1FD08}</Project>
-      <Name>RavenFS.Rdc.Wrapper</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RavenFS\RavenFS.csproj">
       <Project>{6057787E-1771-4942-B3E5-FB435CED0408}</Project>
       <Name>RavenFS</Name>

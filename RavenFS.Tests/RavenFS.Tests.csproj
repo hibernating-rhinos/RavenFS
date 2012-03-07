@@ -97,6 +97,12 @@
     <Compile Include="CompleteUsage.cs" />
     <Compile Include="FileHandling.cs" />
     <Compile Include="MTAFact.cs" />
+    <Compile Include="RDC\IO\RandomlyModifiedStream.cs" />
+    <Compile Include="RDC\IO\RandomStream.cs" />
+    <Compile Include="RDC\IO\TestDataGenerators.cs" />
+    <Compile Include="RDC\IO\TestUtils.cs" />
+    <Compile Include="RDC\NeedListGeneratorTest.cs" />
+    <Compile Include="RDC\SigGeneratorTest.cs" />
     <Compile Include="Tools\HttpWebRequestExtensions.cs" />
     <Compile Include="Tools\IisDeploymentUtil.cs" />
     <Compile Include="Infrastructure\IisExpressDriver.cs" />
