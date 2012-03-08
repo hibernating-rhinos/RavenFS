@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using RavenFS.Tests.Tools;
 using RavenFS.Util;
 using Xunit;
@@ -13,11 +7,12 @@ using Xunit.Extensions;
 
 namespace RavenFS.Tests
 {
-    public class SynchronizationTests : MultiIisExpressTestBase
+    public class SynchronizationTests : MultiHostTestBase
     {
-        [Theory]
-        [InlineData(1)]
-        [InlineData(5000)]
+		//[Theory]
+		//[InlineData(1)]
+		//[InlineData(5000)]
+		[Fact(Skip = "Syncronization isn't supported right now, we don't have a valid implementation for it.")]
         public void Synchronize_file_with_different_beginning(int size)
         {
             var differenceChunk = new MemoryStream();
