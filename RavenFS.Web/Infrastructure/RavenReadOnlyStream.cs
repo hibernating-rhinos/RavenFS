@@ -91,7 +91,7 @@ namespace RavenFS.Web.Infrastructure
 			Buffer.BlockCopy(internalBuffer, tuple.Item2, buffer, offset, read);
 			
 			position += read;
-			posInBuffer = read;
+			posInBuffer = tuple.Item2 + read;
 			return read;
 		}
 
