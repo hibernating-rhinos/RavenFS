@@ -30,9 +30,7 @@ namespace RavenFS.Tests
 
 		public WebApiTest()
 		{
-			IOExtensions.DeleteDirectory("Data.ravenfs");
-			IOExtensions.DeleteDirectory("Index.ravenfs");
-			IOExtensions.DeleteDirectory("Signatures.ravenfs");
+			IOExtensions.DeleteDirectory("Test");
 			NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(19079);
 			Task.Factory.StartNew(() => // initialize in MTA thread
 			{
@@ -41,7 +39,7 @@ namespace RavenFS.Tests
 					MaxReceivedMessageSize = Int64.MaxValue,
 					TransferMode = TransferMode.Streamed
 				};
-				ravenFileSystem = new RavenFileSystem();
+				ravenFileSystem = new RavenFileSystem("~/Test");
 				ravenFileSystem.Start(config);
 			})
 			.Wait();
