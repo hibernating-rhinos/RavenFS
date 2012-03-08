@@ -4,6 +4,7 @@ using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Ink;
 using System.Windows.Input;
@@ -16,7 +17,19 @@ namespace RavenFS.Studio.Behaviors
     public static class FadeTrimming
     {
         private const double FadeWidth = 10.0;
- 
+
+        public static readonly DependencyProperty IsEnabledProperty =
+            DependencyProperty.RegisterAttached("IsEnabled", typeof(bool), typeof(FadeTrimming), new PropertyMetadata(false, HandleIsEnabledChanged));
+
+        public static readonly DependencyProperty ForegroundColorProperty =
+            DependencyProperty.RegisterAttached("ForegroundColor", typeof(Color), typeof(FadeTrimming), new PropertyMetadata(Colors.Transparent));
+
+        public static readonly DependencyProperty ShowTextInToolTipWhenTrimmedProperty =
+            DependencyProperty.RegisterAttached("ShowTextInToolTipWhenTrimmed", typeof(bool), typeof(FadeTrimming), new PropertyMetadata(false));
+
+        private static readonly DependencyProperty FaderProperty =
+            DependencyProperty.RegisterAttached("Fader", typeof(Fader), typeof(FadeTrimming), new PropertyMetadata(null));
+
         public static bool GetIsEnabled(DependencyObject obj)
         {
             return (bool)obj.GetValue(IsEnabledProperty);
@@ -26,11 +39,6 @@ namespace RavenFS.Studio.Behaviors
         {
             obj.SetValue(IsEnabledProperty, value);
         }
-
-        public static readonly DependencyProperty IsEnabledProperty =
-            DependencyProperty.RegisterAttached("IsEnabled", typeof(bool), typeof(FadeTrimming), new PropertyMetadata(false, HandleIsEnabledChanged));
-
-
 
         public static bool GetShowTextInToolTipWhenTrimmed(DependencyObject obj)
         {
@@ -42,8 +50,15 @@ namespace RavenFS.Studio.Behaviors
             obj.SetValue(ShowTextInToolTipWhenTrimmedProperty, value);
         }
 
-        public static readonly DependencyProperty ShowTextInToolTipWhenTrimmedProperty =
-            DependencyProperty.RegisterAttached("ShowTextInToolTipWhenTrimmed", typeof(bool), typeof(FadeTrimming), new PropertyMetadata(false));
+        public static Color GetForegroundColor(DependencyObject obj)
+        {
+            return (Color)obj.GetValue(ForegroundColorProperty);
+        }
+
+        public static void SetForegroundColor(DependencyObject obj, Color value)
+        {
+            obj.SetValue(ForegroundColorProperty, value);
+        }
 
         private static Fader GetFader(DependencyObject obj)
         {
@@ -55,10 +70,6 @@ namespace RavenFS.Studio.Behaviors
             obj.SetValue(FaderProperty, value);
         }
 
-        private static readonly DependencyProperty FaderProperty =
-            DependencyProperty.RegisterAttached("Fader", typeof(Fader), typeof(FadeTrimming), new PropertyMetadata(null));
-
-        
         private static void HandleIsEnabledChanged(DependencyObject source, DependencyPropertyChangedEventArgs e)
         {
             var textBlock = source as TextBlock;
@@ -104,6 +115,9 @@ namespace RavenFS.Studio.Behaviors
         {
             private readonly TextBlock _textBlock;
             private bool _isAttached;
+            private LinearGradientBrush _brush;
+            private Color _foregroundColor;
+            private bool _isClipped;
 
             public Fader(TextBlock textBlock)
             {
@@ -112,74 +126,124 @@ namespace RavenFS.Studio.Behaviors
 
             public void Attach()
             {
-                var parent = VisualTreeHelper.GetParent(_textBlock) as FrameworkElement;  
+                var parent = VisualTreeHelper.GetParent(_textBlock) as FrameworkElement;
                 if (parent == null || _isAttached)
                 {
                     return;
                 }
 
-                parent.SizeChanged += UpdateMask;
-                _textBlock.SizeChanged += UpdateMask;
+                parent.SizeChanged += UpdateForegroundBrush;
+                _textBlock.SizeChanged += UpdateForegroundBrush;
+
+                _foregroundColor = DetermineForegroundColor(_textBlock);
+                UpdateForegroundBrush(_textBlock, EventArgs.Empty);
+
                 _isAttached = true;
             }
 
             public void Detach()
             {
-                _textBlock.SizeChanged -= UpdateMask;
+                _textBlock.SizeChanged -= UpdateForegroundBrush;
+
                 var parent = VisualTreeHelper.GetParent(_textBlock) as FrameworkElement;
                 if (parent != null)
                 {
-                    parent.SizeChanged -= UpdateMask;
+                    parent.SizeChanged -= UpdateForegroundBrush;
                 }
 
+                _textBlock.ClearValue(TextBlock.ForegroundProperty);
                 _isAttached = false;
             }
 
-            private void UpdateMask(object sender, EventArgs e)
+            private Color DetermineForegroundColor(TextBlock textBlock)
             {
-                var layoutClip = LayoutInformation.GetLayoutClip(_textBlock);
-
-                if (layoutClip != null && layoutClip.Bounds.Width > 0)
+                // if an explicit foreground color has been set, use that
+                if (GetForegroundColor(textBlock) != Colors.Transparent)
                 {
-                    var visibleWidth = layoutClip.Bounds.Width;
-
-                    var opacityBrush = new LinearGradientBrush
-                                           {
-                                               MappingMode = BrushMappingMode.Absolute,
-                                               StartPoint = new Point(0, 0),
-                                               EndPoint = new Point(visibleWidth, 0),
-                                               GradientStops =
-                                                   {
-                                                       new GradientStop()
-                                                           {Color = Color.FromArgb(255, 0, 0, 0), Offset = 0},
-                                                       new GradientStop()
-                                                           {
-                                                               Color = Color.FromArgb(255, 0, 0, 0),
-                                                               Offset = (visibleWidth - FadeWidth)/visibleWidth
-                                                           },
-                                                       new GradientStop()
-                                                           {
-                                                               Color = Color.FromArgb(0, 0, 0, 0),
-                                                               Offset = 1
-                                                           }
-                                                   }
-                                           };
-
-                    if (GetShowTextInToolTipWhenTrimmed(_textBlock))
-                    {
-                        ToolTipService.SetToolTip(_textBlock, _textBlock.Text);
-                    }
-                    _textBlock.OpacityMask = opacityBrush;
+                    return GetForegroundColor(textBlock);
+                }
+                else if (textBlock.Foreground is SolidColorBrush)
+                {
+                    return (textBlock.Foreground as SolidColorBrush).Color;
                 }
                 else
                 {
-                    if (GetShowTextInToolTipWhenTrimmed(_textBlock))
-                    {
-                        ToolTipService.SetToolTip(_textBlock, null);
-                    }
-                    _textBlock.OpacityMask = null;
+                    return Colors.Black;
                 }
             }
+
+            private void UpdateForegroundBrush(object sender, EventArgs e)
+            {
+                var layoutClip = LayoutInformation.GetLayoutClip(_textBlock);
+                bool needsClipping = layoutClip != null
+                    && layoutClip.Bounds.Width > 0
+                    && layoutClip.Bounds.Width < _textBlock.ActualWidth;
+
+                if (_isClipped && !needsClipping)
+                {
+                    if (GetShowTextInToolTipWhenTrimmed(_textBlock))
+                    {
+                        _textBlock.ClearValue(ToolTipService.ToolTipProperty);
+                    }
+
+                    _textBlock.Foreground = new SolidColorBrush() { Color = _foregroundColor };
+                    _brush = null;
+                    _isClipped = false;
+                }
+
+                if (!_isClipped && needsClipping)
+                {
+                    if (GetShowTextInToolTipWhenTrimmed(_textBlock))
+                    {
+                        BindingOperations.SetBinding(_textBlock, ToolTipService.ToolTipProperty,
+                                                     new Binding("Text") { Source = _textBlock });
+                    }
+                }
+
+                if (needsClipping)
+                {
+                    var visibleWidth = layoutClip.Bounds.Width;
+
+                    if (_brush == null)
+                    {
+                        _brush = new LinearGradientBrush
+                        {
+                            MappingMode = BrushMappingMode.Absolute,
+                            StartPoint = new Point(0, 0),
+                            EndPoint = new Point(visibleWidth, 0),
+                            GradientStops =
+                                             {
+                                                 new GradientStop()
+                                                     {Color = _foregroundColor, Offset = 0},
+                                                 new GradientStop()
+                                                     {
+                                                         Color = _foregroundColor,
+                                                         Offset = (visibleWidth - FadeWidth)/visibleWidth
+                                                     },
+                                                 new GradientStop()
+                                                     {
+                                                         Color = Color.FromArgb(0, _foregroundColor.R, _foregroundColor.G, _foregroundColor.B),
+                                                         Offset = 1
+                                                     }
+                                             }
+                        };
+                        _textBlock.Foreground = _brush;
+                    }
+                    else if (BrushNeedsUpdating(_brush, visibleWidth))
+                    {
+                        _brush.EndPoint = new Point(visibleWidth, 0);
+                        _brush.GradientStops[1].Offset = (visibleWidth - FadeWidth) / visibleWidth;
+                    }
+
+                    _isClipped = true;
+                }
+            }
+        }
+
+        private static bool BrushNeedsUpdating(LinearGradientBrush brush, double visibleWidth)
+        {
+            const double epsilon = 0.00001;
+            return brush.EndPoint.X < visibleWidth - epsilon || brush.EndPoint.X > visibleWidth + epsilon;
         }
     }
 }
