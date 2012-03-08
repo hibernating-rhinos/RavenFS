@@ -125,6 +125,8 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ClientAccessPolicy.xml" />
+    <Content Include="Global.asax" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -140,14 +142,30 @@
     <Content Include="WebUI\Studio.html" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\FilesController.cs" />
+    <Compile Include="Controllers\RavenController.cs" />
+    <Compile Include="Controllers\RdcController.cs" />
+    <Compile Include="Controllers\SearchController.cs" />
+    <Compile Include="Controllers\StatsController.cs" />
     <Compile Include="Extensions\ConcurrentDictionaryExtensions.cs" />
     <Compile Include="Extensions\IOExtensions.cs" />
     <Compile Include="Extensions\MetadataExtensions.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Extensions\UrlExtension.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
     <Compile Include="Handlers\SynchonizationHandler.cs" />
     <Compile Include="Infrastructure\ErrorLoggingConcurrentMergeScheduler.cs" />
     <Compile Include="Infrastructure\AbstractAsyncHandler.cs" />
+    <Compile Include="Infrastructure\JsonNetFormatter.cs" />
+    <Compile Include="Infrastructure\LimitedStream.cs" />
+    <Compile Include="Infrastructure\RavenReadOnlyStream.cs" />
+    <Compile Include="Infrastructure\RedirectHandler.cs" />
+    <Compile Include="Infrastructure\RedirectRouteHandler.cs" />
+    <Compile Include="Infrastructure\Workarounds\ReadAsSingleObjectPolicy.cs" />
+    <Compile Include="NonAdminHttp.cs" />
+    <Compile Include="RavenFileSystem.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
     <Compile Include="Rdc\IPartialDataAccess.cs" />
     <Compile Include="Rdc\RemotePartialAccess.cs" />
