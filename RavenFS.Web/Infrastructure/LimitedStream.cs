@@ -66,5 +66,11 @@ namespace RavenFS.Web.Infrastructure
 			get { throw new NotSupportedException(); }
 			set { throw new NotSupportedException(); }
 		}
+
+		protected override void Dispose(bool disposing)
+		{
+			inner.Dispose();
+			base.Dispose(disposing);
+		}
 	}
 }
