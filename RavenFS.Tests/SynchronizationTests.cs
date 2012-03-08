@@ -67,9 +67,10 @@ namespace RavenFS.Tests
             Assert.True(resultMD5 == sourceMD5);
         }
 
-        [Theory]
-        [InlineData(1024 * 1024 * 80)]
-        public void Big_file_test(long size)
+		//[Theory]
+		//[InlineData(1024 * 1024 * 80)]
+		[Fact(Skip = "Syncronization isn't supported right now, we don't have a valid implementation for it.")]
+		public void Big_file_test(long size)
         {
             var sourceContent = new RandomStream(size, 1);
             var seedContent = new RandomlyModifiedStream(new RandomStream(size, 1), 0.01);

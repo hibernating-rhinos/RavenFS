@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenFS.Client.Silverlight"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenFS.Studio", "RavenFS.Studio\RavenFS.Studio.csproj", "{4E9DB486-66C3-48FE-B750-78C5E1C2FAB1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RavenFS.Web", "RavenFS.Web\RavenFS.Web.csproj", "{6F527033-D855-4799-9710-6EC5CFC180C2}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,16 +83,6 @@ Global
 		{4E9DB486-66C3-48FE-B750-78C5E1C2FAB1}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{4E9DB486-66C3-48FE-B750-78C5E1C2FAB1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{4E9DB486-66C3-48FE-B750-78C5E1C2FAB1}.Release|x86.ActiveCfg = Release|Any CPU
-		{6F527033-D855-4799-9710-6EC5CFC180C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6F527033-D855-4799-9710-6EC5CFC180C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6F527033-D855-4799-9710-6EC5CFC180C2}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{6F527033-D855-4799-9710-6EC5CFC180C2}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{6F527033-D855-4799-9710-6EC5CFC180C2}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{6F527033-D855-4799-9710-6EC5CFC180C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6F527033-D855-4799-9710-6EC5CFC180C2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6F527033-D855-4799-9710-6EC5CFC180C2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{6F527033-D855-4799-9710-6EC5CFC180C2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{6F527033-D855-4799-9710-6EC5CFC180C2}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
