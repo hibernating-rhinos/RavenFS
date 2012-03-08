@@ -1,57 +1,70 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
+using System.ServiceModel;
+using System.Threading.Tasks;
+using System.Web.Http.SelfHost;
 using RavenFS.Client;
-using RavenFS.Tests.Infrastructure;
 using RavenFS.Tests.Tools;
+using RavenFS.Web;
 
 namespace RavenFS.Tests
 {
-    public abstract class MultiIisExpressTestBase : IDisposable
-    {
-        public static readonly int[] Ports = { 8085, 8086 };
+	public abstract class MultiHostTestBase : IDisposable
+	{
+		public static readonly int[] Ports = { 19079, 19081 };
 
-        protected IList<IisExpressDriver> IisExpresses = new List<IisExpressDriver>();
+		private readonly IList<IDisposable> disposables = new List<IDisposable>();
 
-        protected IList<WebClient> WebClients = new List<WebClient>();
+		private const string UrlBase = "http://localhost:";
 
+		protected MultiHostTestBase()
+		{
+			foreach (var port in Ports)
+			{
+				NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(port);
+				HttpSelfHostConfiguration config = null;
+				Task.Factory.StartNew(() => // initialize in MTA thread
+				{
+					config = new HttpSelfHostConfiguration(UrlBase + port + "/")
+					{
+						MaxReceivedMessageSize = Int64.MaxValue,
+						TransferMode = TransferMode.Streamed
+					};
+					disposables.Add(config);
+					var path = "~/" + port;
+					IOExtensions.DeleteDirectory(path);
+					var ravenFileSystem = new RavenFileSystem(path);
+					ravenFileSystem.Start(config);
+					disposables.Add(ravenFileSystem);
+				})
+					.Wait();
 
-        protected MultiIisExpressTestBase()
-        {
-            foreach (var item in Ports)
-            {
-                var iisExpress = new IisExpressDriver();
-                iisExpress.Start(IisDeploymentUtil.DeployWebProjectToTestDirectory(item), item);
-                var webClient = new WebClient
-                {
-                    BaseAddress = iisExpress.Url
-                };
-                IisExpresses.Add(iisExpress);
-                WebClients.Add(webClient);
-            }
-        }
+				var server = new HttpSelfHostServer(config);
+				server.OpenAsync().Wait();
 
-        protected RavenFileSystemClient NewClient(int index)
-        {
-            return new RavenFileSystemClient(IisExpresses[index].Url);
-        }
+				disposables.Add(server);
+			}
+		}
 
-        #region IDisposable Members
+		protected RavenFileSystemClient NewClient(int index)
+		{
+			return new RavenFileSystemClient(UrlBase + Ports[index] + "/");
+		}
 
-        public void Dispose()
-        {
-            if (IisExpresses != null)
-            {
-                foreach (var item in IisExpresses)
-                {
-                    item.Dispose();
-                }
-            }
-            IisExpresses = null;
-        }
+		#region IDisposable Members
 
-        #endregion
-    }
+		public void Dispose()
+		{
+			foreach (var disposable in disposables)
+			{
+				var httpSelfHostServer = disposable as HttpSelfHostServer;
+				if (httpSelfHostServer != null)
+					httpSelfHostServer.CloseAsync().Wait();
+				disposable.Dispose();
+			}
+		}
+
+		#endregion
+	}
 }
