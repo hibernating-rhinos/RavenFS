@@ -118,7 +118,7 @@ namespace RavenFS.Client
             return DownloadAsync("/files/", filename, destination, from, to);
         }
 
-		public Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, long? from = null, long? to = null,
+		private Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, long? from = null, long? to = null,
             Action<string, int> progress = null)
 		{
 #if SILVERLIGHT
