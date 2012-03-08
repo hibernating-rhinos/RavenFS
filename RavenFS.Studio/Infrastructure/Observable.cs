@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Markup;
 
@@ -62,10 +61,5 @@ namespace RavenFS.Studio.Infrastructure
 		{
 			actions += act;
 		}
-	}
-
-	public interface IObservable : INotifyPropertyChanged
-	{
-		object Value { get; }
 	}
 }
