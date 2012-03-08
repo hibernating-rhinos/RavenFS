@@ -83,7 +83,8 @@ task Compile -depends Init {
 	
  $v4_net_version = (ls "$env:windir\Microsoft.NET\Framework\v4.0*").Name
  exec { &"C:\Windows\Microsoft.NET\Framework\$v4_net_version\MSBuild.exe" "$sln_file" /p:OutDir="$buildartifacts_dir\" }
-
+ cp (Get-DependencyPackageFiles 'NLog.2') $build_dir -force
+ cp (Get-DependencyPackageFiles 'Newtonsoft.Json') $build_dir -force
 }
 
 task Test -depends Compile{
