@@ -128,8 +128,9 @@ namespace RavenFS.Web
 				);
 
 			config.Routes.MapHttpRoute(
-				name: "Api Default",
-				routeTemplate: "api/{controller}"
+				name: "Search",
+				routeTemplate: "search/",
+				defaults: new { controller = "search", filename = RouteParameter.Optional }
 				);
 
 			config.Routes.MapHttpRoute(

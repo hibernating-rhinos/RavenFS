@@ -155,7 +155,6 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Handlers\SynchonizationHandler.cs" />
     <Compile Include="Infrastructure\ErrorLoggingConcurrentMergeScheduler.cs" />
     <Compile Include="Infrastructure\AbstractAsyncHandler.cs" />
     <Compile Include="Infrastructure\JsonNetFormatter.cs" />

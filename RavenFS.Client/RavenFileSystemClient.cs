@@ -84,7 +84,7 @@ namespace RavenFS.Client
 
 		public Task<FileInfo[]> SearchAsync(string query)
 		{
-			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/api/search?query=" + Uri.EscapeUriString(query));
+			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/search?query=" + Uri.EscapeUriString(query));
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
