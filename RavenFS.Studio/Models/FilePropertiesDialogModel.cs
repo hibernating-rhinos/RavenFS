@@ -5,6 +5,7 @@ using RavenFS.Client;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Infrastructure;
 using System.Linq;
+using Raven.Abstractions.Extensions;
 
 namespace RavenFS.Studio.Models
 {
@@ -44,7 +45,7 @@ namespace RavenFS.Studio.Models
 
         private void UpdateMetadata(Task<NameValueCollection> metadata)
         {
-            Metadata = EditableKeyValueCollection.FromNameValueCollection(metadata.Result);
+            Metadata = EditableKeyValueCollection.FromNameValueCollection(metadata.Result.FilterHeadersForViewing());
         }
 
         public ICommand CancelCommand { get { return cancelCommand ?? (cancelCommand = new ActionCommand(() => Close(false))); } }
@@ -53,12 +54,13 @@ namespace RavenFS.Studio.Models
 
 	    private void HandleSave()
 	    {
-	        var newMetaData = Metadata.ToNameValueCollection(GetNonEditableKeys());
+	        var newMetaData = Metadata.ToNameValueCollection(GetNonEditableKeys()).FilterHeaders();
 
             ApplicationModel.Current.AsyncOperations.Do(() =>
                 ApplicationModel.Current.Client.UpdateMetadataAsync(Name, newMetaData), "Updating properties for file " + Name);
 
 	        Close(true);
+
 	    }
 
         private IList<string> GetNonEditableKeys()

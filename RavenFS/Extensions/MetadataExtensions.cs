@@ -8,18 +8,27 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Web;
-using Newtonsoft.Json;
 using System;
+
+#if !SILVERLIGHT
+using System.Web;
+#endif
+
+#if CLIENT
+using RavenFS.Client;
+#else
 using RavenFS.Storage;
+#endif
 
 namespace Raven.Abstractions.Extensions
 {
+    
     /// <summary>
     /// Extensions for handling metadata
     /// </summary>
     public static class MetadataExtensions
     {
+#if !CLIENT
 		public static void AddHeaders(HttpContext context, FileAndPages fileAndPages)
 		{
 			foreach (var key in fileAndPages.Metadata.AllKeys)
@@ -35,6 +44,7 @@ namespace Raven.Abstractions.Extensions
 				}
 			}
 		}        
+#endif
 
         private static readonly HashSet<string> HeadersToIgnoreClient = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
@@ -110,11 +120,28 @@ namespace Raven.Abstractions.Extensions
 			"Warning",
 		};
 
+        public static readonly IList<string> ReadOnlyHeaders = new List<string>() { "Last-Modified"}.AsReadOnly();
+ 
+        public static NameValueCollection FilterHeadersForViewing(this NameValueCollection metadata)
+        {
+            var filteredHeaders = metadata.FilterHeaders();
+
+            foreach (var header in ReadOnlyHeaders)
+            {
+                var value = metadata[header];
+                if (value != null)
+                {
+                    filteredHeaders.Add(header, value);
+                }
+            }
+
+            return filteredHeaders;
+        }
+
         /// <summary>
         /// Filters the headers from unwanted headers
         /// </summary>
         /// <param name="self">The self.</param>
-        /// <returns></returns>public static RavenJObject FilterHeaders(this System.Collections.Specialized.NameValueCollection self, bool isServerDocument)
         public static NameValueCollection FilterHeaders(this NameValueCollection self)
         {
             var metadata = new NameValueCollection();

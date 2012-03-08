@@ -25,7 +25,7 @@ namespace RavenFS.Studio.Models
         {
             var editableCollection =
                 new EditableKeyValueCollection(
-                    collection.Select(kv => new EditableKeyValue() { Key = kv.Key, Value = kv.Value }));
+                    collection.Select(key => new EditableKeyValue() { Key = key, Value = collection[key]}));
 
             return editableCollection;
         }
