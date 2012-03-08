@@ -32,7 +32,7 @@ namespace RavenFS.Web.Infrastructure
 
 		public override int Read(byte[] buffer, int offset, int count)
 		{
-			var actualCount = Math.Min(inner.Position + count, end - inner.Position);
+			var actualCount = inner.Position + count > end ? end - inner.Position : count;
 			return inner.Read(buffer, offset, (int)actualCount);
 		}
 
