@@ -140,6 +140,8 @@
     <Content Include="WebUI\Studio.html" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\ConcurrentDictionaryExtensions.cs" />
+    <Compile Include="Extensions\IOExtensions.cs" />
     <Compile Include="Extensions\MetadataExtensions.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Extensions\UrlExtension.cs" />
