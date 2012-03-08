@@ -113,12 +113,7 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<NameValueCollection> DownloadAsync(string filename, Stream destination)
-		{
-			return DownloadAsync("/files/", filename, destination);
-		}
-
-        public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long from, long to)
+        public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long? from = null, long? to = null)
         {
             return DownloadAsync("/files/", filename, destination, from, to);
         }
