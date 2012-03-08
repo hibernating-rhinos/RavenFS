@@ -10,6 +10,7 @@ using Lucene.Net.Search;
 using Lucene.Net.Store;
 using RavenFS.Infrastructure;
 using Version = Lucene.Net.Util.Version;
+using RavenFS.Tests.Tools;
 
 namespace RavenFS.Search
 {
@@ -24,9 +25,7 @@ namespace RavenFS.Search
 
 		public IndexStorage(string path, NameValueCollection _)
 		{
-			if (Path.IsPathRooted(path) == false)
-				path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
-			this.path = Path.Combine(path, "Index.ravenfs");
+			this.path = Path.Combine(path.ToFullPath(), "Index.ravenfs");
 		}
 
 		public void Initialize()
