@@ -3,11 +3,11 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using RavenFS.Client;
+using RavenFS.Extensions;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Extensions;
 using RavenFS.Studio.Infrastructure;
 using System.Linq;
-using Raven.Abstractions.Extensions;
 using RavenFS.Studio.Infrastructure.Input;
 
 namespace RavenFS.Studio.Models

@@ -18,3 +18,4 @@ Packages.dgml
 
 RavenFS.Web/Data.ravenfs/*
 RavenFS.Web/Index.ravenfs/*
+RavenFS/~/
