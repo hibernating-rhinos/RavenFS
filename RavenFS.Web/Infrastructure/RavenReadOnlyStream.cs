@@ -15,6 +15,7 @@ namespace RavenFS.Web.Infrastructure
 
 		private long position;
 		private byte[] internalBuffer;
+		private int internalBufferSize; // note that it may be smaller than internalBuffer.Length
 		private int posInBuffer;
 
 		public RavenReadOnlyStream(TransactionalStorage storage, BufferPool bufferPool, string filename)
@@ -66,10 +67,10 @@ namespace RavenFS.Web.Infrastructure
 
 		public override int Read(byte[] buffer, int offset, int count)
 		{
-			if(internalBuffer != null && posInBuffer < internalBuffer.Length)
+			if(internalBuffer != null && posInBuffer < internalBufferSize )
 			{
 				// serve directly from loaded buffer
-				int readFromBuffer = Math.Min(count, internalBuffer.Length - posInBuffer);
+				int readFromBuffer = Math.Min(count, internalBufferSize - posInBuffer);
 				Buffer.BlockCopy(internalBuffer, posInBuffer, buffer, offset, readFromBuffer);
 				posInBuffer += readFromBuffer;
 				position += readFromBuffer;
@@ -87,7 +88,7 @@ namespace RavenFS.Web.Infrastructure
 
 			Debug.Assert(internalBuffer != null);
 
-			int read = Math.Min(count, internalBuffer.Length - tuple.Item2);
+			int read = Math.Min(count, internalBufferSize - tuple.Item2);
 			Buffer.BlockCopy(internalBuffer, tuple.Item2, buffer, offset, read);
 			
 			position += read;
@@ -97,6 +98,7 @@ namespace RavenFS.Web.Infrastructure
 
 		private void TakeBuffer(int size)
 		{
+			internalBufferSize = size;
 			internalBuffer = bufferPool.TakeBuffer(size);
 		}
 
