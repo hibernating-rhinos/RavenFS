@@ -181,7 +181,7 @@ namespace Raven.Abstractions.Extensions
 
         public static NameValueCollection UpdateLastModified(this NameValueCollection self)
         {
-            self["Last-Modified"] = DateTime.UtcNow.ToString("d MMM yyyy H:m:s 'GMT'");
+            self["Last-Modified"] = DateTime.UtcNow.ToString("d MMM yyyy H:m:s 'GMT'",CultureInfo.InvariantCulture);
             return self;
         }
 
