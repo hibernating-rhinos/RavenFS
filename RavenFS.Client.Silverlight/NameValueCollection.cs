@@ -1,11 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+
 
 namespace RavenFS.Client
 {
-	public class NameValueCollection : Dictionary<string,string>
+	public class NameValueCollection : IEnumerable<string>
 	{
-		public IEnumerable<string> AllKeys { get { return Keys; } }
+        private readonly Dictionary<string,string> keyValues = new Dictionary<string, string>();
+
+        public IEnumerable<string> AllKeys { get { return keyValues.Keys; } }
 
 		public NameValueCollection()
 		{
@@ -16,14 +21,14 @@ namespace RavenFS.Client
 		{
 			foreach (string header in headers)
 			{
-				this[header] = headers[header];
+				keyValues[header] = headers[header];
 			}
 		}
 
 		public string[] GetValues(string key)
 		{
 			string value;
-			if (TryGetValue(key, out value))
+			if (keyValues.TryGetValue(key, out value))
 				return new[] {value};
 			return new string[0];
 		}
@@ -31,8 +36,29 @@ namespace RavenFS.Client
 		public string Get(string key)
 		{
 			string value;
-			TryGetValue(key, out value);
+            keyValues.TryGetValue(key, out value);
 			return value;
 		}
+
+	    public IEnumerator<string> GetEnumerator()
+	    {
+	        return AllKeys.GetEnumerator();
+	    }
+
+	    IEnumerator IEnumerable.GetEnumerator()
+	    {
+	        return GetEnumerator();
+	    }
+
+	    public void Add(string key, string value)
+	    {
+	        keyValues.Add(key, value);
+	    }
+
+	    public string this[string key]
+	    {
+            get { return Get(key); }
+            set { keyValues[key] = value; }
+	    }
 	}
 }

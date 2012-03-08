@@ -2,6 +2,18 @@
 {
 	public class InputModel : NotifyPropertyChangedBase
 	{
+	    bool allowCancel = true;
+
+	    public bool AllowCancel
+	    {
+	        get { return allowCancel; }
+	        set
+	        {
+	            allowCancel = value;
+	            OnPropertyChanged();
+	        }
+	    }
+
 		private string title;
 
 		public string Title
@@ -14,14 +26,14 @@
 			}
 		}
 
-		private string question;
+		private string message;
 
-		public string Question
+		public string Message
 		{
-			get { return question; }
+			get { return message; }
 			set
 			{
-				question = value;
+				message = value;
 				OnPropertyChanged();
 			}
 		}

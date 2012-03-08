@@ -3,7 +3,11 @@
                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                       xmlns:controls="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls"
                       Style="{StaticResource Style_ChildWindow_Default}"
-                      Title="{Binding Path=Title}">
+                      Title="{Binding Path=Title}"
+                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                      xmlns:Input="clr-namespace:RavenFS.Studio.Infrastructure.Input" mc:Ignorable="d"
+                      d:DataContext="{d:DesignInstance Input:InputModel}">
 
     <Grid Margin="2"
           KeyDown="LayoutRoot_OnKeyDown">
@@ -16,7 +20,7 @@
                 <Setter Property="HorizontalAlignment"
                         Value="Left" />
                 <Setter Property="Margin"
-                        Value="6,0,0,0" />
+                        Value="6,0" />
             </Style>
         </Grid.Resources>
 
@@ -26,7 +30,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="{Binding Path=Question}" />
+        <TextBlock Text="{Binding Path=Message}" />
 
         <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
@@ -37,7 +41,8 @@
 
             <Button x:Name="CancelButton"
                     Content="Cancel"
-                    Click="CancelButton_Click" />
+                    Click="CancelButton_Click"
+                    Visibility="{Binding AllowCancel, Converter={StaticResource Converter_VisibleWhenTrue}}"/>
         </StackPanel>
     </Grid>
 </controls:ChildWindow>

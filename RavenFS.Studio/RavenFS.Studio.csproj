@@ -71,6 +71,8 @@
     <Reference Include="NLog">
       <HintPath>..\packages\NLog.2.0.0.2000\lib\sl4\NLog.dll</HintPath>
     </Reference>
+    <Reference Include="System.ComponentModel.DataAnnotations, Version=5.0.5.0, Culture=neutral, PublicKeyToken=ddd0da4d3e678217, processorArchitecture=MSIL" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows" />
     <Reference Include="system" />
     <Reference Include="System.Core" />
@@ -103,6 +105,7 @@
     <Compile Include="Behaviors\ExecuteCommandOnFileDrop.cs" />
     <Compile Include="Behaviors\FadeTrimming.cs" />
     <Compile Include="Behaviors\LinkHighlighter.cs" />
+    <Compile Include="Behaviors\PreventEditingReadOnlyRows.cs" />
     <Compile Include="Behaviors\StudioKeyTrigger.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
     <Compile Include="Commands\HideOperationsPaneCommand.cs" />
@@ -119,9 +122,11 @@
     <Compile Include="Commands\CopyExceptionToClipboardCommand.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
-    <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
+    <Compile Include="Converters\BooleanConverter.cs" />
+    <Compile Include="Converters\StringIsNullOrEmptyConverter.cs" />
     <Compile Include="Converters\ValueGreaterThanConverter.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
+    <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="External\MultiBinding\IMultiValueConverter.cs" />
     <Compile Include="External\MultiBinding\MultiBinding.cs" />
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
@@ -131,6 +136,7 @@
     <Compile Include="Infrastructure\DialogModel.cs" />
     <Compile Include="Infrastructure\DialogView.cs" />
     <Compile Include="Infrastructure\Schedulers.cs" />
+    <Compile Include="Infrastructure\Validation.cs" />
     <Compile Include="Infrastructure\VirtualCollection.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\StaticExtension.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\TypeExtension.cs" />
@@ -174,9 +180,6 @@
     </Compile>
     <Compile Include="Views\About.xaml.cs">
       <DependentUpon>About.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\FileInfo.xaml.cs">
-      <DependentUpon>FileInfo.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\FilePropertiesDialog.xaml.cs">
       <DependentUpon>FilePropertiesDialog.xaml</DependentUpon>
@@ -245,10 +248,6 @@
     <Page Include="Views\About.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\FileInfo.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\FilePropertiesDialog.xaml">
       <SubType>Designer</SubType>

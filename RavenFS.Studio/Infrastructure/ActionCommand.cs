@@ -13,16 +13,20 @@ namespace RavenFS.Studio.Infrastructure
 {
     public class ActionCommand : Command
     {
-        private readonly Action _action;
+        private readonly Action<object> action;
 
-        public ActionCommand(Action action)
+        public ActionCommand(Action<object> action)
         {
-            _action = action;
+            this.action = action;
+        }
+
+        public ActionCommand(Action action) : this(_ => action())
+        {
         }
 
         public override void Execute(object parameter)
         {
-            _action();
+            action(parameter);
         }
     }
 }

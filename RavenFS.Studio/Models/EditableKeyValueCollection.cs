@@ -20,31 +20,5 @@ namespace RavenFS.Studio.Models
         public EditableKeyValueCollection(IEnumerable<EditableKeyValue> values) : base(values)
         {
         }
-
-        public static EditableKeyValueCollection FromNameValueCollection(NameValueCollection collection)
-        {
-            var editableCollection =
-                new EditableKeyValueCollection(
-                    collection.Select(kv => new EditableKeyValue() { Key = kv.Key, Value = kv.Value }));
-
-            return editableCollection;
-        }
-
-        public NameValueCollection ToNameValueCollection(IList<string> ignoredKeys)
-        {
-            var collection = new NameValueCollection();
-
-            foreach (var item in Items)
-            {
-                if (ignoredKeys.Contains(item.Key))
-                {
-                    continue;
-                }
-
-                collection[item.Key] = item.Value;
-            }
-
-            return collection;
-        }
     }
 }

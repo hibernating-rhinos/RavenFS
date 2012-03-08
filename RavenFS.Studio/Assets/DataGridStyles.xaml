@@ -18,6 +18,7 @@
         <Setter Property="RowDetailsVisibilityMode" Value="VisibleWhenSelected" />
         <Setter Property="BorderBrush" Value="#FFEAE7E4"/>
         <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="TextOptions.TextHintingMode" Value="Animated"/>
         <Setter Property="DragIndicatorStyle">
             <Setter.Value>
                 <!-- TODO: Change the TargetType to Control when the fix Jolt bugs 18719 is verified -->
@@ -219,7 +220,7 @@
                                 </VisualState>
                                 <VisualState x:Name="MouseOver">
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="BackgroundRectangle" Storyboard.TargetProperty="Opacity" Duration="0" To=".5"/>
+                                        <DoubleAnimation Storyboard.TargetName="BackgroundRectangle" Storyboard.TargetProperty="Opacity" Duration="0" To=".3"/>
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="NormalSelected">
@@ -229,7 +230,7 @@
                                 </VisualState>
                                 <VisualState x:Name="MouseOverSelected">
                                     <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="BackgroundRectangle" Storyboard.TargetProperty="Opacity" Duration="0" To="1"/>
+                                        <DoubleAnimation Storyboard.TargetName="BackgroundRectangle" Storyboard.TargetProperty="Opacity" Duration="0" To="0.9"/>
                                     </Storyboard>
                                 </VisualState>
                                 <VisualState x:Name="UnfocusedSelected">
@@ -597,7 +598,6 @@
                                 <VisualState x:Name="Invalid">
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="InvalidVisualElement" Storyboard.TargetProperty="Opacity" Duration="0" To="1"/>
-                                        <ColorAnimation Storyboard.TargetName="FocusVisual" Storyboard.TargetProperty="(Fill).Color" Duration="0" To="#FFFFFFFF"/>
                                     </Storyboard>
                                 </VisualState>
                             </VisualStateGroup>

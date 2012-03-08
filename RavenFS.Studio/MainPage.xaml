@@ -4,7 +4,9 @@
 			 xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
 			 xmlns:uriMapper="clr-namespace:System.Windows.Navigation;assembly=System.Windows.Controls.Navigation"
 			 xmlns:TiledBG="clr-namespace:TiledBG;assembly=TiledBG"
-             xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit">
+             xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
+             FontFamily="Segoe UI"
+             FontSize="12">
 
     <Grid x:Name="LayoutRoot"
 		  Style="{StaticResource Style_LayoutRootGrid}">

@@ -7,20 +7,31 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
+
+using System.Text;
+using System;
+
+#if !SILVERLIGHT
+using System.Web;
+#endif
+
+#if CLIENT
+using RavenFS.Client;
+#else
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Web;
-using System;
 using RavenFS.Storage;
+#endif
 
 namespace RavenFS.Extensions
 {
+    
     /// <summary>
     /// Extensions for handling metadata
     /// </summary>
     public static class MetadataExtensions
     {
+#if !CLIENT
 		public static void AddHeaders(HttpContext context, FileAndPages fileAndPages)
 		{
 			foreach (var key in fileAndPages.Metadata.AllKeys)
@@ -35,7 +46,7 @@ namespace RavenFS.Extensions
 
 				}
 			}
-		}
+		}        
 
 
 		public static void AddHeaders(HttpResponseMessage context, FileAndPages fileAndPages)
@@ -51,7 +62,31 @@ namespace RavenFS.Extensions
 					context.Content.Headers.Add(key, value);
 				}
 			}
-		}     
+		}    
+ 
+        public static NameValueCollection FilterHeaders(this HttpRequestHeaders self)
+		{
+			var metadata = new NameValueCollection();
+			foreach (KeyValuePair<string, IEnumerable<string>> header in self)
+			{
+				if (header.Key.StartsWith("Temp"))
+					continue;
+				if (HeadersToIgnoreClient.Contains(header.Key))
+					continue;
+				var values = header.Value;
+				var headerName = CaptureHeaderName(header.Key);
+
+				if (values == null)
+					continue;
+
+				foreach (var value in values)
+				{
+					metadata.Add(headerName, value);
+				}
+			}
+			return metadata;
+		}
+#endif
 
         private static readonly HashSet<string> HeadersToIgnoreClient = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 		{
@@ -127,11 +162,28 @@ namespace RavenFS.Extensions
 			"Warning",
 		};
 
+        public static readonly IList<string> ReadOnlyHeaders = new List<string>() { "Last-Modified"}.AsReadOnly();
+ 
+        public static NameValueCollection FilterHeadersForViewing(this NameValueCollection metadata)
+        {
+            var filteredHeaders = metadata.FilterHeaders();
+
+            foreach (var header in ReadOnlyHeaders)
+            {
+                var value = metadata[header];
+                if (value != null)
+                {
+                    filteredHeaders.Add(header, value);
+                }
+            }
+
+            return filteredHeaders;
+        }
+
         /// <summary>
         /// Filters the headers from unwanted headers
         /// </summary>
         /// <param name="self">The self.</param>
-        /// <returns></returns>public static RavenJObject FilterHeaders(this System.Collections.Specialized.NameValueCollection self, bool isServerDocument)
         public static NameValueCollection FilterHeaders(this NameValueCollection self)
         {
             var metadata = new NameValueCollection();
@@ -155,28 +207,7 @@ namespace RavenFS.Extensions
         	return metadata;
         }
 
-		public static NameValueCollection FilterHeaders(this HttpRequestHeaders self)
-		{
-			var metadata = new NameValueCollection();
-			foreach (KeyValuePair<string, IEnumerable<string>> header in self)
-			{
-				if (header.Key.StartsWith("Temp"))
-					continue;
-				if (HeadersToIgnoreClient.Contains(header.Key))
-					continue;
-				var values = header.Value;
-				var headerName = CaptureHeaderName(header.Key);
 
-				if (values == null)
-					continue;
-
-				foreach (var value in values)
-				{
-					metadata.Add(headerName, value);
-				}
-			}
-			return metadata;
-		}
 
         public static NameValueCollection UpdateLastModified(this NameValueCollection self)
         {
