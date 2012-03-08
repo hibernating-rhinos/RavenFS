@@ -41,46 +41,10 @@ namespace RavenFS.Web.Controllers
 				throw new HttpResponseException(HttpStatusCode.NotFound);
 			}
 
-			var response = new HttpResponseMessage(HttpStatusCode.OK);
-
-
-			var totalSize = fileAndPages.TotalSize ?? 0;
-
-			long start = GetRangeStart();
-
-
-
 			var ravenReadOnlyStream = new RavenReadOnlyStream(Storage, BufferPool, filename);
-			ravenReadOnlyStream.Seek(start, SeekOrigin.Begin);
-			response.Content = new StreamContent(ravenReadOnlyStream);
-			response.Content.Headers.ContentLength = Math.Abs(totalSize - start);
-			response.Content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
-			{
-				FileName = filename
-			};
-			MetadataExtensions.AddHeaders(response, fileAndPages);
-			return response;
-		}
-
-		private long GetRangeStart()
-		{
-			long start = 0;
-
-			if(Request.Headers.Range != null)
-			{
-				switch (Request.Headers.Range.Ranges.Count)
-				{
-					case 0:
-						start = 0;
-						break;
-					case 1:
-						start = Request.Headers.Range.Ranges.First().From ?? 0;
-						break;
-					default:
-						throw new ArgumentException("Can't handle multiple range values");
-				}
-			}
-			return start;
+			var result = StreamResult(filename, ravenReadOnlyStream);
+			MetadataExtensions.AddHeaders(result, fileAndPages);
+			return result;
 		}
 
 		public HttpResponseMessage Delete(string filename)

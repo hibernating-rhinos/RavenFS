@@ -1,10 +1,16 @@
-﻿using System.Collections.Specialized;
+﻿using System;
+using System.Collections.Specialized;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Web;
 using System.Web.Http;
 using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
 using RavenFS.Util;
+using RavenFS.Web.Infrastructure;
 
 namespace RavenFS.Web.Controllers
 {
@@ -73,6 +79,53 @@ namespace RavenFS.Web.Controllers
 				};
 				return paging;
 			}
+		}
+
+		protected HttpResponseMessage StreamResult(string filename, Stream resultContent)
+		{
+			var response = new HttpResponseMessage
+			{
+				Headers =
+				{
+					TransferEncodingChunked = false
+				}
+			};
+			long length = 0;
+			ContentRangeHeaderValue contentRange = null;
+			if (Request.Headers.Range != null)
+			{
+				if (Request.Headers.Range.Ranges.Count != 1)
+				{
+					throw new InvalidOperationException("Can't handle multiple range values");
+				}
+				var range = Request.Headers.Range.Ranges.First();
+				var from = range.From ?? 0;
+				var to = range.To ?? resultContent.Length;
+
+				length = (to - from);
+
+				contentRange = new ContentRangeHeaderValue(from, to, resultContent.Length);
+				resultContent = new LimitedStream(resultContent, from, to);
+			}
+			else
+			{
+				length = resultContent.Length;
+			}
+
+			response.Content = new StreamContent(resultContent)
+			{
+				Headers =
+				{
+					ContentDisposition = new ContentDispositionHeaderValue("attachment")
+					{
+						FileName = filename
+					},
+					ContentLength = length,
+					ContentRange = contentRange,
+				}
+			};
+
+			return response;
 		}
 
 	}
