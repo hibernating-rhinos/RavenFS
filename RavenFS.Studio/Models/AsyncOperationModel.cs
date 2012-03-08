@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using RavenFS.Client;
 using RavenFS.Studio.Extensions;
 using RavenFS.Studio.Infrastructure;
 
@@ -18,7 +19,6 @@ namespace RavenFS.Studio.Models
         string description;
         double progress;
         string error;
-        bool reportsProgress;
         Exception exception;
         AsyncOperationStatus status;
 
@@ -102,7 +102,7 @@ namespace RavenFS.Studio.Models
             Status = AsyncOperationStatus.Processing;
         }
 
-        public void Completed()
+        public new void Completed()
         {
             Status = AsyncOperationStatus.Completed;
             Progress = 0;

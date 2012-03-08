@@ -46,7 +46,8 @@ namespace RavenFS.Client
 					{
 						return new JsonSerializer().Deserialize<ServerStats>(new JsonTextReader(new StreamReader(stream)));
 					}
-				});
+				})
+				.TryThrowBetteError();
 		}
 
 		public Task DeleteAsync(string filename)
@@ -55,7 +56,8 @@ namespace RavenFS.Client
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 			request.Method = "DELETE";
 			return request.GetResponseAsync()
-				.ContinueWith(task => task.Result.Close());
+				.ContinueWith(task => task.Result.Close())
+				.TryThrowBetteError();
 		}
 
 		public Task<FileInfo[]> BrowseAsync(int start = 0, int pageSize = 25)
@@ -76,7 +78,8 @@ namespace RavenFS.Client
 									}
 						}.Deserialize<FileInfo[]>(jsonTextReader);
 					}
-				});
+				})
+				.TryThrowBetteError();
 		}
 
 		public Task<FileInfo[]> SearchAsync(string query)
@@ -97,7 +100,8 @@ namespace RavenFS.Client
 									}
 						}.Deserialize<FileInfo[]>(jsonTextReader);
 					}
-				});
+				})
+				.TryThrowBetteError();
 		}
 
 		public Task<NameValueCollection> GetMetadataForAsync(string filename)
@@ -105,20 +109,16 @@ namespace RavenFS.Client
 			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename);
 			request.Method = "HEAD";
 			return request.GetResponseAsync()
-				.ContinueWith(task => new NameValueCollection(task.Result.Headers));
+				.ContinueWith(task => new NameValueCollection(task.Result.Headers))
+				.TryThrowBetteError();
 		}
 
-		public Task<NameValueCollection> DownloadAsync(string filename, Stream destination)
-		{
-			return DownloadAsync("/files/", filename, destination);
-		}
-
-        public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long from, long to)
+        public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long? from = null, long? to = null)
         {
             return DownloadAsync("/files/", filename, destination, from, to);
         }
 
-		public Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, long? from = null, long? to = null,
+		private Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, long? from = null, long? to = null,
             Action<string, int> progress = null)
 		{
 #if SILVERLIGHT
@@ -168,7 +168,8 @@ namespace RavenFS.Client
 							return collection;
 						});
 				})
-				.Unwrap();
+				.Unwrap()
+				.TryThrowBetteError();
 		}
 
 	    public Task UpdateMetadataAsync(string filename, NameValueCollection metadata)
@@ -178,7 +179,8 @@ namespace RavenFS.Client
 			request.Method = "POST";
 			AddHeaders(metadata, request);
 	        return request
-	            .GetResponseAsync();
+	            .GetResponseAsync()
+	            .TryThrowBetteError();
 		}
 
 		public Task UploadAsync(string filename, Stream source)
@@ -221,13 +223,13 @@ namespace RavenFS.Client
                     return request.GetResponseAsync();
                 })
                 .Unwrap()
-                .ContinueWith(task =>
-                {
-                    task.Result.Close();
-                });
+                .ContinueWith(task => task.Result.Close())
+				.TryThrowBetteError();
 		}
 
-        public Task<RdcStats> GetRdcStatsAsync()
+		
+
+		public Task<RdcStats> GetRdcStatsAsync()
         {
             var requestUriString = ServerUrl + "/rdc/stats";
             var request = (HttpWebRequest)WebRequest.Create(requestUriString);
@@ -238,7 +240,8 @@ namespace RavenFS.Client
                     {
                         return new JsonSerializer().Deserialize<RdcStats>(new JsonTextReader(new StreamReader(stream)));
                     }
-                });
+                })
+				.TryThrowBetteError();
         }
 
         public Task<SignatureManifest> GetRdcManifestAsync(string path)
@@ -252,7 +255,8 @@ namespace RavenFS.Client
                     {
                         return new JsonSerializer().Deserialize<SignatureManifest>(new JsonTextReader(new StreamReader(stream)));
                     }
-                });
+                })
+				.TryThrowBetteError();
         }
 
         public Task DownloadSignatureAsync(string sigName, Stream destination, long? from = null, long? to = null)
@@ -285,7 +289,8 @@ namespace RavenFS.Client
                     {
                         return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
                     }
-                });
+                })
+				.TryThrowBetteError();
 	    }
 	}    
 }

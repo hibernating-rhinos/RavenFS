@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Threading.Tasks;
-using RavenFS.Studio.Extensions;
+using RavenFS.Client;
 using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio.Infrastructure

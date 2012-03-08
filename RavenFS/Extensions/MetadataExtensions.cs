@@ -3,10 +3,12 @@
 //     Copyright (c) Hibernating Rhinos LTD. All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
+
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
-using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System;
 
@@ -20,7 +22,7 @@ using RavenFS.Client;
 using RavenFS.Storage;
 #endif
 
-namespace Raven.Abstractions.Extensions
+namespace RavenFS.Extensions
 {
     
     /// <summary>
@@ -44,6 +46,22 @@ namespace Raven.Abstractions.Extensions
 				}
 			}
 		}        
+
+
+		public static void AddHeaders(HttpResponseMessage context, FileAndPages fileAndPages)
+		{
+			foreach (var key in fileAndPages.Metadata.AllKeys)
+			{
+				var values = fileAndPages.Metadata.GetValues(key);
+				if (values == null)
+					continue;
+
+				foreach (var value in values)
+				{
+					context.Content.Headers.Add(key, value);
+				}
+			}
+		}     
 #endif
 
         private static readonly HashSet<string> HeadersToIgnoreClient = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -165,9 +183,32 @@ namespace Raven.Abstractions.Extensions
         	return metadata;
         }
 
+		public static NameValueCollection FilterHeaders(this HttpRequestHeaders self)
+		{
+			var metadata = new NameValueCollection();
+			foreach (KeyValuePair<string, IEnumerable<string>> header in self)
+			{
+				if (header.Key.StartsWith("Temp"))
+					continue;
+				if (HeadersToIgnoreClient.Contains(header.Key))
+					continue;
+				var values = header.Value;
+				var headerName = CaptureHeaderName(header.Key);
+
+				if (values == null)
+					continue;
+
+				foreach (var value in values)
+				{
+					metadata.Add(headerName, value);
+				}
+			}
+			return metadata;
+		}
+
         public static NameValueCollection UpdateLastModified(this NameValueCollection self)
         {
-            self["Last-Modified"] = DateTime.UtcNow.ToString("O");
+            self["Last-Modified"] = DateTime.UtcNow.ToString("d MMM yyyy H:m:s 'GMT'",CultureInfo.InvariantCulture);
             return self;
         }
 

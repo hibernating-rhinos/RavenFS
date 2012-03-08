@@ -90,3 +90,12 @@ using System.Runtime.InteropServices;
 	Write-Host "Generating assembly info file: $file"
 	Write-Output $asmInfo > $file
 }
+
+
+function Get-DependencyPackageFiles
+{
+	param([string]$packageName, [string]$frameworkVersion = "net40")
+	
+	$fullPackageName = Get-ChildItem "$base_dir\packages\$packageName.*" | Sort-Object Name | Select-Object -First 1
+	Return "$fullPackageName\lib\$frameworkVersion\*"
+}

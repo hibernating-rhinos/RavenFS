@@ -77,32 +77,39 @@
     <Reference Include="Lucene.Net">
       <HintPath>..\packages\Lucene\Lucene.Net.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.4.0.2\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=4.0.8.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog">
       <HintPath>..\packages\NLog.2.0.0.2000\lib\net40\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Net.Http">
+      <HintPath>..\packages\System.Net.Http.2.0.20126.16343\lib\net40\System.Net.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.Formatting">
+      <HintPath>..\packages\System.Net.Http.Formatting.4.0.20126.16343\lib\net40\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
     <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Web.DynamicData" />
-    <Reference Include="System.Web.Entity" />
-    <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Http">
+      <HintPath>..\packages\AspNetWebApi.Core.4.0.20126.16343\lib\net40\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.Common">
+      <HintPath>..\packages\System.Web.Http.Common.4.0.20126.16343\lib\net40\System.Web.Http.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.WebHost">
+      <HintPath>..\packages\AspNetWebApi.4.0.20126.16343\lib\net40\System.Web.Http.WebHost.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Web.Services" />
-    <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ClientAccessPolicy.xml" />
+    <Content Include="Global.asax" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -118,26 +125,29 @@
     <Content Include="WebUI\Studio.html" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\FilesController.cs" />
+    <Compile Include="Controllers\RavenController.cs" />
+    <Compile Include="Controllers\RdcController.cs" />
+    <Compile Include="Controllers\SearchController.cs" />
+    <Compile Include="Controllers\StatsController.cs" />
+    <Compile Include="Extensions\ConcurrentDictionaryExtensions.cs" />
+    <Compile Include="Extensions\IOExtensions.cs" />
     <Compile Include="Extensions\MetadataExtensions.cs" />
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Extensions\UrlExtension.cs" />
-    <Compile Include="Handlers\ClientAccessPolicy.cs" />
-    <Compile Include="Handlers\FavIconHandler.cs" />
-    <Compile Include="Handlers\FilesHandler.cs" />
-    <Compile Include="Handlers\RdcGetFile.cs" />
-    <Compile Include="Handlers\RdcManifestHandler.cs" />
-    <Compile Include="Handlers\SearchHandler.cs" />
-    <Compile Include="Handlers\RootHanlder.cs" />
-    <Compile Include="Handlers\SimpleDeleteHandler.cs" />
-    <Compile Include="Handlers\SimpleGetHandler.cs" />
-    <Compile Include="Handlers\SimpleHeadHandler.cs" />
-    <Compile Include="Handlers\SimplePostHandler.cs" />
-    <Compile Include="Handlers\SimplePutHandler.cs" />
-    <Compile Include="Handlers\StatsHandler.cs" />
-    <Compile Include="Handlers\RdcStatsHandler.cs" />
-    <Compile Include="Handlers\SynchonizationHandler.cs" />
-    <Compile Include="Handlers\WebUIHandler.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Infrastructure\ErrorLoggingConcurrentMergeScheduler.cs" />
     <Compile Include="Infrastructure\AbstractAsyncHandler.cs" />
+    <Compile Include="Infrastructure\JsonNetFormatter.cs" />
+    <Compile Include="Infrastructure\LimitedStream.cs" />
+    <Compile Include="Infrastructure\RavenReadOnlyStream.cs" />
+    <Compile Include="Infrastructure\RedirectHandler.cs" />
+    <Compile Include="Infrastructure\RedirectRouteHandler.cs" />
+    <Compile Include="Infrastructure\Workarounds\ReadAsSingleObjectPolicy.cs" />
+    <Compile Include="NonAdminHttp.cs" />
+    <Compile Include="RavenFileSystem.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
     <Compile Include="Rdc\IPartialDataAccess.cs" />
     <Compile Include="Rdc\RemotePartialAccess.cs" />
@@ -147,6 +157,63 @@
     <Compile Include="Rdc\StoragePartialAccess.cs" />
     <Compile Include="Rdc\LocalRdcManager.cs" />
     <Compile Include="Rdc\NeedListParser.cs" />
+    <Compile Include="Rdc\Wrapper\FindSimilarFileIndexResults.cs" />
+    <Compile Include="Rdc\Wrapper\FindSimilarResults.cs" />
+    <Compile Include="Rdc\Wrapper\GeneratorParametersType.cs" />
+    <Compile Include="Rdc\Wrapper\IFindSimilarResults.cs" />
+    <Compile Include="Rdc\Wrapper\IRdcComparator.cs" />
+    <Compile Include="Rdc\Wrapper\IRdcFileReader.cs" />
+    <Compile Include="Rdc\Wrapper\IRdcFileWriter.cs" />
+    <Compile Include="Rdc\Wrapper\IRdcGenerator.cs" />
+    <Compile Include="Rdc\Wrapper\IRdcGeneratorFilterMaxParameters.cs" />
+    <Compile Include="Rdc\Wrapper\IRdcGeneratorParameters.cs" />
+    <Compile Include="Rdc\Wrapper\IRdcLibrary.cs" />
+    <Compile Include="Rdc\Wrapper\IRdcSignatureReader.cs" />
+    <Compile Include="Rdc\Wrapper\IRdcSimilarityGenerator.cs" />
+    <Compile Include="Rdc\Wrapper\ISignatureRepository.cs" />
+    <Compile Include="Rdc\Wrapper\ISimilarity.cs" />
+    <Compile Include="Rdc\Wrapper\ISimilarityFileIdTable.cs" />
+    <Compile Include="Rdc\Wrapper\ISimilarityReportProgress.cs" />
+    <Compile Include="Rdc\Wrapper\ISimilarityTableDumpState.cs" />
+    <Compile Include="Rdc\Wrapper\ISimilarityTraitsMappedView.cs" />
+    <Compile Include="Rdc\Wrapper\ISimilarityTraitsMapping.cs" />
+    <Compile Include="Rdc\Wrapper\ISimilarityTraitsTable.cs" />
+    <Compile Include="Rdc\Wrapper\NeedListGenerator.cs" />
+    <Compile Include="Rdc\Wrapper\RdcBufferPointer.cs" />
+    <Compile Include="Rdc\Wrapper\RdcBufferTools.cs" />
+    <Compile Include="Rdc\Wrapper\Msrdc.cs" />
+    <Compile Include="Rdc\Wrapper\RdcComparator.cs" />
+    <Compile Include="Rdc\Wrapper\RdcCreatedTables.cs" />
+    <Compile Include="Rdc\Wrapper\RdcError.cs" />
+    <Compile Include="Rdc\Wrapper\RdcException.cs" />
+    <Compile Include="Rdc\Wrapper\RdcFileReader.cs" />
+    <Compile Include="Rdc\Wrapper\RdcFileWriter.cs" />
+    <Compile Include="Rdc\Wrapper\RdcGenerator.cs" />
+    <Compile Include="Rdc\Wrapper\RdcGeneratorFilterMaxParameters.cs" />
+    <Compile Include="Rdc\Wrapper\RdcGeneratorParameters.cs" />
+    <Compile Include="Rdc\Wrapper\RdcLibrary.cs" />
+    <Compile Include="Rdc\Wrapper\RdcMappingAccessMode.cs" />
+    <Compile Include="Rdc\Wrapper\RdcNeed.cs" />
+    <Compile Include="Rdc\Wrapper\RdcNeedPointer.cs" />
+    <Compile Include="Rdc\Wrapper\RdcNeedType.cs" />
+    <Compile Include="Rdc\Wrapper\RdcSignature.cs" />
+    <Compile Include="Rdc\Wrapper\RdcSignaturePointer.cs" />
+    <Compile Include="Rdc\Wrapper\RdcSignatureReader.cs" />
+    <Compile Include="Rdc\Wrapper\RdcSimilarityGenerator.cs" />
+    <Compile Include="Rdc\Wrapper\SigGenerator.cs" />
+    <Compile Include="Rdc\Wrapper\SignatureInfo.cs" />
+    <Compile Include="Rdc\Wrapper\Similarity.cs" />
+    <Compile Include="Rdc\Wrapper\SimilarityData.cs" />
+    <Compile Include="Rdc\Wrapper\SimilarityDumpData.cs" />
+    <Compile Include="Rdc\Wrapper\SimilarityFileId.cs" />
+    <Compile Include="Rdc\Wrapper\SimilarityFileIdTable.cs" />
+    <Compile Include="Rdc\Wrapper\SimilarityMappedViewInfo.cs" />
+    <Compile Include="Rdc\Wrapper\SimilarityReportProgress.cs" />
+    <Compile Include="Rdc\Wrapper\SimilarityTableDumpState.cs" />
+    <Compile Include="Rdc\Wrapper\SimilarityTraitsMappedView.cs" />
+    <Compile Include="Rdc\Wrapper\SimilarityTraitsMapping.cs" />
+    <Compile Include="Rdc\Wrapper\SimilarityTraitsTable.cs" />
+    <Compile Include="Rdc\Wrapper\SimpleSignatureRepository.cs" />
     <Compile Include="Search\IndexStorage.cs" />
     <Compile Include="Search\LowerCaseKeywordAnalyzer.cs" />
     <Compile Include="Storage\EsentExtension.cs" />
@@ -161,7 +228,7 @@
     <Compile Include="Util\CombinedStream.cs" />
     <Compile Include="Util\DispsableAction.cs" />
     <Compile Include="Infrastructure\HandlerMetadataAttribute.cs" />
-    <Compile Include="Infrastructure\IHandlerMetadata.cs" />
+    <Compile Include="Infrastructure\HandlerMetadata.cs" />
     <Compile Include="Infrastructure\RouterHandlerFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\BufferPool.cs" />
@@ -173,6 +240,7 @@
     <Compile Include="Util\NarrowedStream.cs" />
     <Compile Include="Util\RabinKarpHasher.cs" />
     <Compile Include="Util\StorageStream.cs" />
+    <Compile Include="Util\StorageStreamAccess.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
@@ -181,10 +249,6 @@
     <ProjectReference Include="..\RavenFS.Client\RavenFS.Client.csproj">
       <Project>{E37467ED-F680-423E-964A-60988A90F76E}</Project>
       <Name>RavenFS.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RavenFS.Rdc.Wrapper\RavenFS.Rdc.Wrapper.csproj">
-      <Project>{E5A918C7-8FB7-4172-A11F-0E7219B1FD08}</Project>
-      <Name>RavenFS.Rdc.Wrapper</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

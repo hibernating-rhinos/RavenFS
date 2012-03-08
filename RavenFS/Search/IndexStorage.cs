@@ -8,6 +8,8 @@ using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using RavenFS.Extensions;
+using RavenFS.Infrastructure;
 using Version = Lucene.Net.Util.Version;
 
 namespace RavenFS.Search
@@ -23,9 +25,7 @@ namespace RavenFS.Search
 
 		public IndexStorage(string path, NameValueCollection _)
 		{
-			if (Path.IsPathRooted(path) == false)
-				path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, path);
-			this.path = Path.Combine(path, "Index.ravenfs");
+			this.path = Path.Combine(path.ToFullPath(), "Index.ravenfs");
 		}
 
 		public void Initialize()
@@ -36,6 +36,7 @@ namespace RavenFS.Search
 
 			analyzer = new LowerCaseKeywordAnalyzer();
 			writer = new IndexWriter(directory, analyzer, IndexWriter.MaxFieldLength.UNLIMITED);
+			writer.SetMergeScheduler(new ErrorLoggingConcurrentMergeScheduler());
 			searcher = new IndexSearcher(writer.GetReader());
 		}
 

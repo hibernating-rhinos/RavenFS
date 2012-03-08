@@ -37,7 +37,7 @@ namespace RavenFS.Storage
 				return string.Format("{0:#,#.##} GBytes", size / GB);
 			if (absSize > MB)
 				return string.Format("{0:#,#.##} MBytes", size / MB);
-			if (absSize > MB)
+			if (absSize > KB)
 				return string.Format("{0:#,#.##} KBytes", size / KB);
 			return string.Format("{0:#,#} Bytes", size);
 
