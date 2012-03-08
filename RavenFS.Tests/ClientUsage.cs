@@ -35,6 +35,34 @@ namespace RavenFS.Tests
             Assert.Equal(expected, WebClient.DownloadString("/files/abc.txt"));
         }
 
+		[Fact]
+		public void Can_get_partial_results()
+		{
+			var ms = new MemoryStream();
+			var streamWriter = new StreamWriter(ms);
+			for (int i = 0; i < 1024*8; i++)
+			{
+				streamWriter.Write(i);
+				streamWriter.Write(",");
+			}
+			streamWriter.Flush();
+			ms.Position = 0;
+			var client = NewClient();
+			client.UploadAsync("numbers.txt", ms).Wait();
+
+			var actual = new MemoryStream();
+			client.DownloadAsync("numbers.txt", actual, 1024*4 + 1).Wait();
+			actual.Position = 0;
+			ms.Position = 1024*4 + 1;
+			var expectedString = new StreamReader(ms).ReadToEnd();
+			var actualString = new StreamReader(actual).ReadToEnd();
+
+			Assert.Equal(expectedString, actualString);
+
+		}
+
+       
+
         [Theory]
         [InlineData(1024 * 1024)]		// 1 mb
 		[InlineData(1024 * 1024 * 8)]	// 8 mb
