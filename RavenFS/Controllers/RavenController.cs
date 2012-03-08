@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using RavenFS.Infrastructure;
@@ -35,6 +36,13 @@ namespace RavenFS.Controllers
 					ravenFileSystem = (RavenFileSystem) ControllerContext.Configuration.ServiceResolver.GetService(typeof (RavenFileSystem));
 				return ravenFileSystem;
 			}
+		}
+
+		protected Task<T> Result<T>(T result)
+		{
+			var tcs = new TaskCompletionSource<T>();
+			tcs.SetResult(result);
+			return tcs.Task;
 		}
 
 		public BufferPool BufferPool
