@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace RavenFS.Web.Infrastructure
+namespace RavenFS.Infrastructure
 {
 	public class LimitedStream : Stream
 	{

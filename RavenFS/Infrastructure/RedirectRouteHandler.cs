@@ -1,7 +1,7 @@
 using System.Web;
 using System.Web.Routing;
 
-namespace RavenFS.Web.Infrastructure
+namespace RavenFS.Infrastructure
 {
 	public class RedirectRouteHandler : IRouteHandler
 	{

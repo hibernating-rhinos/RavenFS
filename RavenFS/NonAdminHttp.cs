@@ -3,12 +3,13 @@
 //     Copyright (c) Hibernating Rhinos LTD. All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
+
 using System;
 using System.Diagnostics;
 using System.Net;
 using System.Security.Principal;
 
-namespace RavenFS.Web
+namespace RavenFS
 {
 	public static class NonAdminHttp
 	{

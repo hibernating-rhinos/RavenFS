@@ -1,4 +1,4 @@
-namespace RavenFS.Web.Controllers
+namespace RavenFS.Controllers
 {
 	public class StatsController : RavenController
 	{

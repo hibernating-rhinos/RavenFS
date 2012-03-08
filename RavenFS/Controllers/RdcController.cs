@@ -5,9 +5,8 @@ using System.Net.Http;
 using RavenFS.Client;
 using RavenFS.Rdc;
 using RavenFS.Rdc.Wrapper;
-using RavenFS.Util;
 
-namespace RavenFS.Web.Controllers
+namespace RavenFS.Controllers
 {
 	public class RdcController : RavenController
 	{

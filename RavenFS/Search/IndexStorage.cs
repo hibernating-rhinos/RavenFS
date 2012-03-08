@@ -8,9 +8,9 @@ using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
+using RavenFS.Extensions;
 using RavenFS.Infrastructure;
 using Version = Lucene.Net.Util.Version;
-using RavenFS.Tests.Tools;
 
 namespace RavenFS.Search
 {

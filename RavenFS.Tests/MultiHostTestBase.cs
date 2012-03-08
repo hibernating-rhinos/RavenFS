@@ -5,8 +5,8 @@ using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Web.Http.SelfHost;
 using RavenFS.Client;
+using RavenFS.Extensions;
 using RavenFS.Tests.Tools;
-using RavenFS.Web;
 
 namespace RavenFS.Tests
 {

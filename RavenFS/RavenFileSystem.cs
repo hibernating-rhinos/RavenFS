@@ -1,24 +1,20 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Web.Http;
 using System.Web.Http.ModelBinding;
-using System.Web.Http.Routing;
-using System.Web.Routing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using RavenFS.Extensions;
+using RavenFS.Infrastructure;
+using RavenFS.Infrastructure.Workarounds;
 using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
 using RavenFS.Util;
-using RavenFS.Web.Infrastructure;
-using RavenFS.Web.Infrastructure.Workarounds;
-using RavenFS.Tests.Tools;
 
-namespace RavenFS.Web
+namespace RavenFS
 {
 	public class RavenFileSystem : IDisposable
 	{

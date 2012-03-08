@@ -10,7 +10,7 @@ using System.IO;
 using System.Runtime.ConstrainedExecution;
 using System.Threading;
 using Microsoft.Isam.Esent.Interop;
-using RavenFS.Tests.Tools;
+using RavenFS.Extensions;
 
 namespace RavenFS.Storage
 {

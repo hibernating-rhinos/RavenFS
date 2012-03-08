@@ -114,6 +114,7 @@
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
     <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
+    <Compile Include="Infrastructure\IObservable.cs" />
     <Compile Include="Infrastructure\LazyLoadingCollection.cs" />
     <Compile Include="Infrastructure\LruList.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\StaticExtension.cs" />

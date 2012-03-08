@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Web.Routing;
 using System.Web.Http;
-using RavenFS.Web.Infrastructure;
 
-namespace RavenFS.Web
+namespace RavenFS
 {
 	public class Global : System.Web.HttpApplication
 	{

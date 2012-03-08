@@ -4,7 +4,7 @@ using System.IO;
 using RavenFS.Storage;
 using RavenFS.Util;
 
-namespace RavenFS.Web.Infrastructure
+namespace RavenFS.Infrastructure
 {
 	public class RavenReadOnlyStream : Stream
 	{

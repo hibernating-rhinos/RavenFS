@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
-using RavenFS.Tests.Tools;
+using RavenFS.Extensions;
 
 namespace RavenFS.Rdc.Wrapper
 {

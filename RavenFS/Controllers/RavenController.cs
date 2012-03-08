@@ -6,13 +6,13 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Web;
 using System.Web.Http;
+using RavenFS.Infrastructure;
 using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
 using RavenFS.Util;
-using RavenFS.Web.Infrastructure;
 
-namespace RavenFS.Web.Controllers
+namespace RavenFS.Controllers
 {
 	public abstract class RavenController : ApiController
 	{

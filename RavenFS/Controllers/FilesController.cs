@@ -5,14 +5,13 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
-using Raven.Abstractions.Extensions;
+using RavenFS.Extensions;
+using RavenFS.Infrastructure;
 using RavenFS.Storage;
 using System.Linq;
 using RavenFS.Util;
-using RavenFS.Extensions;
-using RavenFS.Web.Infrastructure;
 
-namespace RavenFS.Web.Controllers
+namespace RavenFS.Controllers
 {
 	public class FilesController : RavenController
 	{

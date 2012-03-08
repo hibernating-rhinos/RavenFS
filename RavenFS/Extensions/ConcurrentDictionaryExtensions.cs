@@ -3,7 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Raven.Abstractions.Extensions
+namespace RavenFS.Extensions
 {
 	public static class ConcurrentDictionaryExtensions
 	{

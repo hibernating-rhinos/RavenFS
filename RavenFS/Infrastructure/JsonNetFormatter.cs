@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace RavenFS.Web.Infrastructure
+namespace RavenFS.Infrastructure
 {
 	public class JsonNetFormatter : MediaTypeFormatter
 	{

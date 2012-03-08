@@ -1,5 +1,6 @@
 ﻿using System.Collections.Specialized;
 using System.IO;
+using RavenFS.Extensions;
 using RavenFS.Tests.Tools;
 using RavenFS.Util;
 using Xunit;

@@ -1,6 +1,6 @@
 ﻿using System.Web;
 
-namespace RavenFS.Web.Infrastructure
+namespace RavenFS.Infrastructure
 {
 	public class RedirectHandler : IHttpHandler
 	{

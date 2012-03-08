@@ -1,7 +1,7 @@
 using System.Web.Http.Controllers;
 using System.Web.Http.ModelBinding;
 
-namespace RavenFS.Web.Infrastructure.Workarounds
+namespace RavenFS.Infrastructure.Workarounds
 {
 	public class ReadAsSingleObjectPolicy : IRequestContentReadPolicy
 	{

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using RavenFS.Storage;
 
-namespace RavenFS.Web.Controllers
+namespace RavenFS.Controllers
 {
 	public class SearchController : RavenController
 	{
