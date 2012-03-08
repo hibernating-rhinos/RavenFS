@@ -8,11 +8,27 @@ namespace RavenFS.Studio.Infrastructure
 		private Task currentTask;
 		private DateTime lastRefresh;
 		protected TimeSpan RefreshRate { get; set; }
+	    protected static Task _completedTask;
 
 		protected Model()
 		{
 			RefreshRate = TimeSpan.FromSeconds(5);
 		}
+
+	    protected static Task Completed
+	    {
+	        get
+	        {
+	            if (_completedTask == null)
+	            {
+	                var tcs = new TaskCompletionSource<bool>();
+	                tcs.SetResult(true);
+	                _completedTask = tcs.Task;
+	            }
+
+	            return _completedTask;
+	        }
+	    }
 
 		internal void ForceTimerTicked()
 		{

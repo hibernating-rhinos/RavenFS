@@ -48,7 +48,7 @@ namespace RavenFS.Studio.Commands
 	        var filename = file.Name;
 	        var operation = new AsyncOperationModel()
 	                            {
-	                                Name = "Uploading " + filename,
+	                                Description = "Uploading " + filename,
 	                            };
 
 	        ApplicationModel.Current.Client.UploadAsync(
@@ -56,19 +56,8 @@ namespace RavenFS.Studio.Commands
 	            new NameValueCollection(),
 	            stream,
 	            (fileName, bytesUploaded) => operation.ProgressChanged(bytesUploaded, fileSize))
-	            .ContinueWith(task =>
-	                              {
-	                                  stream.Dispose();
-
-	                                  if (task.IsFaulted)
-	                                  {
-	                                      operation.Faulted(task.Exception.ExtractSingleInnerException());
-	                                  }
-	                                  else
-	                                  {
-	                                      operation.Completed();
-	                                  }
-	                              });
+                .UpdateOperationWithOutcome(operation)
+	            .ContinueOnUIThread(task => stream.Dispose());
 
 	        ApplicationModel.Current.AsyncOperations.RegisterOperation(operation);
 	    }

@@ -85,7 +85,9 @@
       <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Libraries\Client\System.Windows.Controls.Navigation.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Controls.Toolkit, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
-    <Reference Include="System.Windows.Interactivity, Version=4.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Windows.Interactivity">
+      <HintPath>..\SharedLibs\Silverlight\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Windows.Browser" />
     <Reference Include="TiledBG">
@@ -99,7 +101,9 @@
     <Compile Include="Behaviors\ChangeDependencyPropertyAction.cs" />
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
     <Compile Include="Behaviors\ExecuteCommandOnFileDrop.cs" />
+    <Compile Include="Behaviors\FadeTrimming.cs" />
     <Compile Include="Behaviors\LinkHighlighter.cs" />
+    <Compile Include="Behaviors\StudioKeyTrigger.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
     <Compile Include="Commands\HideOperationsPaneCommand.cs" />
     <Compile Include="Commands\NavigateToCommand.cs" />
@@ -109,16 +113,31 @@
     <Compile Include="Commands\UploadCommand.cs" />
     <Compile Include="Commands\DeleteCommand.cs" />
     <Compile Include="Commands\DownloadCommand.cs" />
-    <Compile Include="Commands\InfoCommand.cs" />
+    <Compile Include="Commands\EditFilePropertiesCommand.cs" />
+    <Compile Include="Commands\VirtualItemCommand.cs" />
+    <Compile Include="Converters\AsyncOperationStatusConverter.cs" />
+    <Compile Include="Commands\CopyExceptionToClipboardCommand.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
     <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
+    <Compile Include="Converters\ValueGreaterThanConverter.cs" />
+    <Compile Include="Extensions\DoubleExtensions.cs" />
+    <Compile Include="Extensions\ExceptionExtensions.cs" />
+    <Compile Include="External\MultiBinding\IMultiValueConverter.cs" />
+    <Compile Include="External\MultiBinding\MultiBinding.cs" />
+    <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
+    <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
     <Compile Include="Infrastructure\IObservable.cs" />
     <Compile Include="Infrastructure\LazyLoadingCollection.cs" />
     <Compile Include="Infrastructure\LruList.cs" />
+    <Compile Include="Infrastructure\DialogModel.cs" />
+    <Compile Include="Infrastructure\DialogView.cs" />
+    <Compile Include="Infrastructure\Schedulers.cs" />
+    <Compile Include="Infrastructure\VirtualCollection.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\StaticExtension.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\TypeExtension.cs" />
+    <Compile Include="Infrastructure\SparseList.cs" />
     <Compile Include="Infrastructure\VirtualItem.cs" />
     <Compile Include="Models\ApplicationModel.cs" />
     <Compile Include="Infrastructure\BindableCollection.cs" />
@@ -128,7 +147,6 @@
     <Compile Include="Infrastructure\UrlUtil.cs" />
     <Compile Include="Infrastructure\UrlParser.cs" />
     <Compile Include="Infrastructure\Observable.cs" />
-    <Compile Include="Infrastructure\FileInfoWrapper.cs" />
     <Compile Include="Infrastructure\Input\AskUser.cs" />
     <Compile Include="Infrastructure\Input\ConfirmModel.cs" />
     <Compile Include="Infrastructure\Input\ConfirmWindow.xaml.cs">
@@ -144,7 +162,9 @@
     <Compile Include="Models\AsyncOperationsModel.cs" />
     <Compile Include="Models\AsyncOperationStatus.cs" />
     <Compile Include="Models\AsyncOperationsViewModel.cs" />
-    <Compile Include="Models\FileInfoModel.cs" />
+    <Compile Include="Models\EditableKeyValue.cs" />
+    <Compile Include="Models\EditableKeyValueCollection.cs" />
+    <Compile Include="Models\FilePropertiesDialogModel.cs" />
     <Compile Include="Infrastructure\Model.cs" />
     <Compile Include="Infrastructure\ModelResolver.cs" />
     <Compile Include="Infrastructure\NotifyPropertyChangedBase.cs" />
@@ -160,6 +180,9 @@
     </Compile>
     <Compile Include="Views\FileInfo.xaml.cs">
       <DependentUpon>FileInfo.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\FilePropertiesDialog.xaml.cs">
+      <DependentUpon>FilePropertiesDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Files.xaml.cs">
       <DependentUpon>Files.xaml</DependentUpon>
@@ -230,6 +253,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Views\FilePropertiesDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\Files.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -254,6 +281,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="External\MultiBinding\Licence.htm" />
     <Resource Include="Assets\Images\Upload.png" />
     <Resource Include="Assets\Images\add.png" />
     <Resource Include="Assets\Images\BackgroundTexture.png" />
@@ -275,6 +303,7 @@
     <Resource Include="Assets\Images\Success.png" />
     <Resource Include="Assets\Images\Close.png" />
     <Resource Include="Assets\Images\ClearList.png" />
+    <Resource Include="Assets\Images\CopyError.png" />
     <Content Include="Assets\Images\ImageCredits.txt" />
     <Resource Include="Assets\Images\Info.png" />
     <Resource Include="Assets\Images\Query.png" />
