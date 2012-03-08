@@ -177,21 +177,8 @@ namespace RavenFS.Client
 			
 			request.Method = "POST";
 			AddHeaders(metadata, request);
-			return request
-				.GetRequestStreamAsync()
-				.ContinueWith(requestTask =>
-				{
-					if (requestTask.Exception != null)
-						return requestTask;
-					return request.GetResponseAsync()
-						.ContinueWith(task =>
-						{
-							if (task.Result != null)
-								task.Result.Close();
-							return task;
-						})
-						.Unwrap();
-				}).Unwrap();
+	        return request
+	            .GetResponseAsync();
 		}
 
 		public Task UploadAsync(string filename, Stream source)
