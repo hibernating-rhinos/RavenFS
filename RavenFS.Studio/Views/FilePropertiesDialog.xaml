@@ -22,7 +22,7 @@
         <sdk:DataGrid 
                       x:Name="DataGrid"
                       ItemsSource="{Binding Metadata}" 
-                      Margin="0,0,0,10" 
+                      Margin="0" 
                       IsReadOnly="False" 
                       AutoGenerateColumns="False"
                       CanUserReorderColumns="False"
@@ -88,7 +88,13 @@
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 
-      <Button x:Name="CancelButton" Content="Cancel" Command="{Binding CancelCommand}" Width="75" Height="23" HorizontalAlignment="Right" Margin="0,12,0,0" Grid.Row="1" />
-        <Button x:Name="OKButton" Content="Save" Command="{Binding SaveCommand}" Width="75" Height="23" HorizontalAlignment="Right" Margin="0,12,79,0" Grid.Row="1" />
+        <TextBlock Visibility="{Binding IsSaveVisible, Converter={StaticResource Converter_CollapsedWhenTrue}}"
+                   Text="{Binding StatusMessage}"
+                   TextWrapping="Wrap"
+                   Margin="10,30"/>
+
+      <Button Content="Cancel" Command="{Binding CancelCommand}" Width="75" Height="23" HorizontalAlignment="Right" Margin="0,12,0,0" Grid.Row="1" />
+        <Button Content="Save" Command="{Binding SaveCommand}" Width="75" Height="23" HorizontalAlignment="Right" Margin="0,12,79,0" Grid.Row="1" 
+                Visibility="{Binding IsSaveVisible, Converter={StaticResource Converter_VisibleWhenTrue}}"/>
     </Grid>
 </Infrastructure:DialogView>

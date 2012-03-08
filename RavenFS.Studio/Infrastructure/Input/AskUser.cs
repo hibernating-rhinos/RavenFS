@@ -2,14 +2,42 @@
 
 namespace RavenFS.Studio.Infrastructure.Input
 {
-	public class AskUser
+	public static class AskUser
 	{
+        public static Task AlertUser(string title, string message)
+        {
+            var dataContext = new InputModel
+			{
+				Title = title,
+				Message = message,
+                AllowCancel = false,
+			};
+			var inputWindow = new ConfirmWindow()
+			{
+				DataContext = dataContext
+			};
+
+			var tcs = new TaskCompletionSource<bool>();
+
+			inputWindow.Closed += (sender, args) =>
+			{
+				if (inputWindow.DialogResult == true)
+					tcs.SetResult(true);
+				else
+					tcs.SetCanceled();
+			};
+
+			inputWindow.Show();
+
+			return tcs.Task;
+        }
+
 		public static Task<string> QuestionAsync(string title, string question)
 		{
 			var dataContext = new InputModel
 			{
 				Title = title,
-				Question = question
+				Message = question
 			};
 			var inputWindow = new InputWindow
 			{

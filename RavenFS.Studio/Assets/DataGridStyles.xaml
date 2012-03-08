@@ -598,7 +598,6 @@
                                 <VisualState x:Name="Invalid">
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="InvalidVisualElement" Storyboard.TargetProperty="Opacity" Duration="0" To="1"/>
-                                        <ColorAnimation Storyboard.TargetName="FocusVisual" Storyboard.TargetProperty="(Fill).Color" Duration="0" To="#FFFFFFFF"/>
                                     </Storyboard>
                                 </VisualState>
                             </VisualStateGroup>

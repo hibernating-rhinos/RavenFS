@@ -8,6 +8,7 @@ using RavenFS.Studio.Extensions;
 using RavenFS.Studio.Infrastructure;
 using System.Linq;
 using Raven.Abstractions.Extensions;
+using RavenFS.Studio.Infrastructure.Input;
 
 namespace RavenFS.Studio.Models
 {
@@ -19,6 +20,8 @@ namespace RavenFS.Studio.Models
 	    private EditableKeyValue emptyItem;
 	    private ICommand deleteCommand;
 
+        string statusMessage;
+
 	    public string Name { get; set; }
 
 		public FilePropertiesDialogModel()
@@ -29,16 +32,18 @@ namespace RavenFS.Studio.Models
         {
             if (!string.IsNullOrEmpty(Name))
             {
+                StatusMessage = string.Format("Loading details for file '{0}'", Name);
+
                 ApplicationModel.Current.Client.GetMetadataForAsync(Name)
                 .ContinueOnUIThread(UpdateMetadata);
             }
 
-            OnEverythingChanged();
+            OnPropertyChanged("Title");
         }
 
 	    public string Title
 	    {
-	        get { return Name + " properties"; }
+	        get { return string.Format("Edit properties for '{0}'", Name); }
 	    }
 
 		public EditableKeyValueCollection Metadata
@@ -51,21 +56,46 @@ namespace RavenFS.Studio.Models
             }
 		}
 
-        private void UpdateMetadata(Task<NameValueCollection> metadata)
+	    public bool IsSaveVisible
+	    {
+	        get { return Metadata != null; }
+	    }
+
+	    public string StatusMessage
+	    {
+	        get { return statusMessage; }
+	        private set
+	        {
+	            statusMessage = value;
+	            OnPropertyChanged("StatusMessage");
+	        }
+	    }
+
+        private void UpdateMetadata(Task<NameValueCollection> metadataTask)
         {
-            NameValueCollection collection = metadata.Result.FilterHeadersForViewing();
+            if (!metadataTask.IsFaulted)
+            {
+                NameValueCollection collection = metadataTask.Result.FilterHeadersForViewing();
 
-            var editableCollection =
-                new EditableKeyValueCollection(
-                    collection.Select(key => new EditableKeyValue()
-                                                 {
-                                                     Key = key, 
-                                                     Value = collection[key], 
-                                                     IsReadOnly = MetadataExtensions.ReadOnlyHeaders.Contains(key)
-                                                 }));
+                var editableCollection =
+                    new EditableKeyValueCollection(
+                        collection.Select(key => new EditableKeyValue()
+                                                     {
+                                                         Key = key,
+                                                         Value = collection[key],
+                                                         IsReadOnly = MetadataExtensions.ReadOnlyHeaders.Contains(key)
+                                                     }));
 
-            Metadata = editableCollection;
-            AddEmptyItem();
+                Metadata = editableCollection;
+                AddEmptyItem();
+            }
+            else
+            {
+                StatusMessage = "File details could not be loaded. \n\n" +
+                                metadataTask.Exception.ExtractSingleInnerException().Message;
+            }
+
+            OnPropertyChanged("IsSaveVisible");
         }
 
 	    private void AddEmptyItem()
@@ -109,6 +139,12 @@ namespace RavenFS.Studio.Models
 
 	    private void HandleSave()
 	    {
+            if (Metadata.Any(e => e.HasErrors))
+            {
+                AskUser.AlertUser("Edit Properties", "Please correct the errors indicated in red before saving.");
+                return;
+            }
+
 	        var newMetaData = Metadata
                 .Where(i => i != emptyItem)
                 .ToNameValueCollection()
