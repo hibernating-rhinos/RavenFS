@@ -16,11 +16,13 @@ using RavenFS.Storage;
 using RavenFS.Util;
 using RavenFS.Web.Infrastructure;
 using RavenFS.Web.Infrastructure.Workarounds;
+using RavenFS.Tests.Tools;
 
 namespace RavenFS.Web
 {
 	public class RavenFileSystem : IDisposable
 	{
+		private readonly string path;
 		private readonly TransactionalStorage storage;
 		private readonly IndexStorage search;
 		private readonly SimpleSignatureRepository signatureRepository;
@@ -38,11 +40,12 @@ namespace RavenFS.Web
 
 		public BufferPool BufferPool { get; private set; }
 
-		public RavenFileSystem()
+		public RavenFileSystem(string path = "~")
 		{
-			storage = new TransactionalStorage("Data.ravenfs", new NameValueCollection());
-			search = new IndexStorage("Index.ravenfs", new NameValueCollection());
-			signatureRepository = new SimpleSignatureRepository(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "localrepo"));
+			this.path = path.ToFullPath();
+			storage = new TransactionalStorage(this.path, new NameValueCollection());
+			search = new IndexStorage(this.path, new NameValueCollection());
+			signatureRepository = new SimpleSignatureRepository(this.path);
 			sigGenerator = new SigGenerator(signatureRepository);
 			storage.Initialize();
 			search.Initialize();
@@ -50,6 +53,11 @@ namespace RavenFS.Web
 
 			AppDomain.CurrentDomain.ProcessExit += ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload += ShouldDispose;
+		}
+
+		public string Path
+		{
+			get { return path; }
 		}
 
 		private void ShouldDispose(object sender, EventArgs eventArgs)
