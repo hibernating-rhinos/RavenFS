@@ -226,7 +226,7 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, 0, 6).Result;
+            var nameValues = client.DownloadAsync("abc.txt", downloadedStream, 0, 6).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
@@ -247,7 +247,7 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, 3006, 3017).Result;
+            var nameValues = client.DownloadAsync("abc.txt", downloadedStream, 3006, 3017).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
@@ -268,7 +268,7 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, ms.Length - 6, ms.Length - 1).Result;
+            var nameValues = client.DownloadAsync("abc.txt", downloadedStream, ms.Length - 6, ms.Length - 1).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
@@ -289,7 +289,7 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();            
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.bin", downloadedStream, ms.Length - 7).Result;
+            var nameValues = client.DownloadAsync("abc.bin", downloadedStream, ms.Length - 7).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();

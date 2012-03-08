@@ -20,7 +20,7 @@ namespace RavenFS.Rdc
 
         public void CopyTo(Stream target, long from, long length)
         {
-            _ravenFileSystemClient.DownloadAsync("/rdc/signatures/", _fileName, target, from, from + length - 1).Wait();
+			_ravenFileSystemClient.DownloadSignatureAsync(_fileName, target, from, from + length - 1).Wait();
         }
     }
 }
