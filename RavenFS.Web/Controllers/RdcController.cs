@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -12,6 +13,7 @@ namespace RavenFS.Web.Controllers
 	{
 		public HttpResponseMessage Files(string filename)
 		{
+			filename = Uri.UnescapeDataString(filename);
 			var resultContent = StorageStream.Reading(Storage, filename);
 
 			return StreamResult(filename, resultContent);
@@ -19,6 +21,7 @@ namespace RavenFS.Web.Controllers
 
 		public HttpResponseMessage Signatures(string filename)
 		{
+			filename = Uri.UnescapeDataString(filename);
 			var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
 			var resultContent = localRdcManager.GetSignatureContentForReading(filename);
        
@@ -35,6 +38,7 @@ namespace RavenFS.Web.Controllers
 
 		public HttpResponseMessage<SignatureManifest> Manifest(string filename)
 		{
+			filename = Uri.UnescapeDataString(filename);
 			try
 			{
 				Storage.Batch(accessor => accessor.GetFile(filename, 0, 0));

@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.ModelBinding;
-using System.Web.Http.ModelBinding.Binders;
 using Raven.Abstractions.Extensions;
 using RavenFS.Storage;
 using System.Linq;
@@ -31,6 +28,7 @@ namespace RavenFS.Web.Controllers
 
 		public HttpResponseMessage Get(string filename)
 		{
+			filename = Uri.UnescapeDataString(filename);
 			FileAndPages fileAndPages = null;
 			try
 			{
@@ -49,6 +47,7 @@ namespace RavenFS.Web.Controllers
 
 		public HttpResponseMessage Delete(string filename)
 		{
+			filename = Uri.UnescapeDataString(filename); 
 			Search.Delete(filename);
 			Storage.Batch(accessor => accessor.Delete(filename));
 
@@ -58,6 +57,7 @@ namespace RavenFS.Web.Controllers
 		[AcceptVerbs("HEAD")]
 		public HttpResponseMessage Head(string filename)
 		{
+			filename = Uri.UnescapeDataString(filename); 
 			FileAndPages fileAndPages = null;
 			try
 			{
@@ -76,6 +76,7 @@ namespace RavenFS.Web.Controllers
 
 		public HttpResponseMessage Post(string filename)
 		{
+			filename = Uri.UnescapeDataString(filename); 
 			var headers = Request.Headers.FilterHeaders();
 			headers.UpdateLastModified();
 			try
@@ -93,6 +94,7 @@ namespace RavenFS.Web.Controllers
 
 		public Task Put(string filename)
 		{
+			filename = Uri.UnescapeDataString(filename);
 			Storage.Batch(accessor =>
 			{
 				accessor.Delete(filename);
