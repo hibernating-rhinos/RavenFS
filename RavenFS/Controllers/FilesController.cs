@@ -91,7 +91,7 @@ namespace RavenFS.Controllers
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
-		public Task Put(string filename)
+		public Task<HttpResponseMessage> Put(string filename)
 		{
 			filename = Uri.UnescapeDataString(filename);
 			Storage.Batch(accessor =>
@@ -123,7 +123,14 @@ namespace RavenFS.Controllers
 						})
 						.Unwrap();
 				})
-				.Unwrap();
+				.Unwrap()
+				.ContinueWith(task =>
+				{
+					if (task.Status == TaskStatus.Faulted)
+						task.Wait();//throw
+
+					return new HttpResponseMessage(HttpStatusCode.Created);
+				});
 		}
 
 		private class ReadFileToDatabase : IDisposable

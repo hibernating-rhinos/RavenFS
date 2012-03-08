@@ -62,6 +62,7 @@
     <Compile Include="BigFileHandling.cs" />
     <Compile Include="Bugs\Queries.cs" />
     <Compile Include="Bugs\UpdatingMetadata.cs" />
+    <Compile Include="Bugs\UploadDownload.cs" />
     <Compile Include="ClientUsage.cs" />
     <Compile Include="CompleteUsage.cs" />
     <Compile Include="FileHandling.cs" />
