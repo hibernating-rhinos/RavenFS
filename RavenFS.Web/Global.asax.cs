@@ -7,14 +7,21 @@ namespace RavenFS.Web
 {
 	public class Global : System.Web.HttpApplication
 	{
+		private static RavenFileSystem ravenFileSystem;
+
 		protected void Application_Start(object sender, EventArgs e)
 		{
-			RavenFileSystem.Start(GlobalConfiguration.Configuration);
+			ravenFileSystem = new RavenFileSystem();
+
+			ravenFileSystem.Start(GlobalConfiguration.Configuration);
 		}
 
 		protected void Application_End(object sender, EventArgs e)
 		{
-			RavenFileSystem.Stop();
+			using(ravenFileSystem)
+			{
+				
+			}
 		}
 	}
 }

@@ -15,6 +15,7 @@ namespace RavenFS.Tests
 		private HttpSelfHostServer server;
 		private const string Url = "http://localhost:19079";
 		protected WebClient WebClient;
+		private RavenFileSystem ravenFileSystem;
 
 		static WebApiTest()
 		{
@@ -40,7 +41,8 @@ namespace RavenFS.Tests
 					MaxReceivedMessageSize = Int64.MaxValue,
 					TransferMode = TransferMode.Streamed
 				};
-				RavenFileSystem.Start(config);
+				ravenFileSystem = new RavenFileSystem();
+				ravenFileSystem.Start(config);
 			})
 			.Wait();
 
@@ -69,7 +71,7 @@ namespace RavenFS.Tests
 			server.CloseAsync().Wait();
 			server.Dispose();
 			config.Dispose();
-			RavenFileSystem.Stop();
+			ravenFileSystem.Dispose();
 		}
 	}
 }

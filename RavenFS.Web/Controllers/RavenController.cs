@@ -25,20 +25,31 @@ namespace RavenFS.Web.Controllers
 		NameValueCollection queryString;
 		private PagingInfo paging;
 
+		private RavenFileSystem ravenFileSystem;
+
+		public RavenFileSystem  RavenFileSystem
+		{
+			get
+			{
+				if (ravenFileSystem == null)
+					ravenFileSystem = (RavenFileSystem) ControllerContext.Configuration.ServiceResolver.GetService(typeof (RavenFileSystem));
+				return ravenFileSystem;
+			}
+		}
 
 		public BufferPool BufferPool
 		{
-			get { return RavenFileSystem.Instance.BufferPool; }
+			get { return RavenFileSystem.BufferPool; }
 		}
 
 		public ISignatureRepository SignatureRepository
 		{
-			get { return RavenFileSystem.Instance.SignatureRepository; }
+			get { return RavenFileSystem.SignatureRepository; }
 		}
 
 		public SigGenerator SigGenerator
 		{
-			get { return RavenFileSystem.Instance.SigGenerator; }
+			get { return RavenFileSystem.SigGenerator; }
 		}
 
 		private NameValueCollection QueryString
@@ -48,12 +59,12 @@ namespace RavenFS.Web.Controllers
 
 		protected TransactionalStorage Storage
 		{
-			get { return RavenFileSystem.Instance.Storage; }
+			get { return RavenFileSystem.Storage; }
 		}
 
 		protected IndexStorage Search
 		{
-			get { return RavenFileSystem.Instance.Search; }
+			get { return RavenFileSystem.Search; }
 		}
 
 		protected PagingInfo Paging

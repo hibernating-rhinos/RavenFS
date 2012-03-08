@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Web.Http;
 using System.Web.Http.ModelBinding;
@@ -19,8 +21,6 @@ namespace RavenFS.Web
 {
 	public class RavenFileSystem : IDisposable
 	{
-		public static RavenFileSystem Instance { get; private set; }
-
 		private readonly TransactionalStorage storage;
 		private readonly IndexStorage search;
 		private readonly SimpleSignatureRepository signatureRepository;
@@ -67,15 +67,6 @@ namespace RavenFS.Web
 			sigGenerator.Dispose();
 		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
-		public static void Stop()
-		{
-			using(Instance)
-			{
-				Instance = null;
-			}
-		}
-
 		public SimpleSignatureRepository SignatureRepository
 		{
 			get { return signatureRepository; }
@@ -88,12 +79,19 @@ namespace RavenFS.Web
 
 
 		[MethodImpl(MethodImplOptions.Synchronized)]
-		public static void Start(HttpConfiguration config)
+		public void Start(HttpConfiguration config)
 		{
-			if(Instance != null)
+			config.ServiceResolver.SetResolver(type =>
 			{
-				throw new InvalidOperationException("Already setup");
-			}
+				if(type == typeof(RavenFileSystem))
+					return this;
+				return null;
+			}, type =>
+			{
+				if (type == typeof(RavenFileSystem))
+					return new[] {this};
+				return Enumerable.Empty<object>();
+			});
 
 			// we don't like XML, let us remove support for it.
 			config.Formatters.XmlFormatter.SupportedMediaTypes.Clear();
@@ -130,8 +128,6 @@ namespace RavenFS.Web
 				name: "Root",
 				routeTemplate: "",
 				defaults: new {controller = "files"});
-
-			Instance = new RavenFileSystem();
 		}
 	}
 }
