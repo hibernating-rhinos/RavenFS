@@ -5,7 +5,7 @@ using Xunit;
 
 namespace RavenFS.Tests
 {
-	public class CompleteUsage : IisExpressTestClient
+	public class CompleteUsage : WebApiTest
 	{
 		[Fact]
 		public void HowToUseTheClient()

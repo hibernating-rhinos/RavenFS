@@ -13,7 +13,7 @@ namespace RavenFS.Tests
 	{
 		private HttpSelfHostConfiguration config;
 		private HttpSelfHostServer server;
-		private const string Url = "http://localhost:9079";
+		private const string Url = "http://localhost:19079";
 		protected WebClient WebClient;
 
 		static WebApiTest()
@@ -32,7 +32,7 @@ namespace RavenFS.Tests
 			IOExtensions.DeleteDirectory("Data.ravenfs");
 			IOExtensions.DeleteDirectory("Index.ravenfs");
 			IOExtensions.DeleteDirectory("Signatures.ravenfs");
-			NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(9079);
+			NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(19079);
 			Task.Factory.StartNew(() => // initialize in MTA thread
 			{
 				config = new HttpSelfHostConfiguration(Url)
