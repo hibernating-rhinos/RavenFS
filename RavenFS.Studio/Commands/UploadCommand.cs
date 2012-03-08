@@ -36,24 +36,23 @@ namespace RavenFS.Studio.Commands
             {
                 foreach (var file in files)
                 {
-                    UploadFile(file);
+                    QueueForUpload(file);
                 }
             }
 		}
 
-	    private static void UploadFile(FileInfo file)
+	    private static void QueueForUpload(FileInfo file)
 	    {
-	        var stream = file.OpenRead();
-	        var fileSize = stream.Length;
-
-	        var filename = file.Name;
 	        var operation = new AsyncOperationModel()
 	                            {
-	                                Description = "Uploading " + filename,
+	                                Description = "Uploading " + file.Name,
 	                            };
 
+            var stream = file.OpenRead();
+            var fileSize = stream.Length;
+
 	        ApplicationModel.Current.Client.UploadAsync(
-	            filename,
+	            file.Name,
 	            new NameValueCollection(),
 	            stream,
 	            (fileName, bytesUploaded) => operation.ProgressChanged(bytesUploaded, fileSize))

@@ -113,6 +113,7 @@
     <Compile Include="Behaviors\ExecuteCommandOnFileDrop.cs" />
     <Compile Include="Behaviors\FadeTrimming.cs" />
     <Compile Include="Behaviors\LinkHighlighter.cs" />
+    <Compile Include="Behaviors\PreventEditingReadOnlyRows.cs" />
     <Compile Include="Behaviors\StudioKeyTrigger.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
     <Compile Include="Commands\HideOperationsPaneCommand.cs" />
@@ -129,9 +130,12 @@
     <Compile Include="Commands\CopyExceptionToClipboardCommand.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
+    <Compile Include="Converters\BooleanConverter.cs" />
+    <Compile Include="Converters\StringIsNullOrEmptyConverter.cs" />
     <Compile Include="Converters\ValueGreaterThanConverter.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
+    <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="External\MultiBinding\IMultiValueConverter.cs" />
     <Compile Include="External\MultiBinding\MultiBinding.cs" />
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />

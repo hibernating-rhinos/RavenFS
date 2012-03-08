@@ -20,6 +20,7 @@ namespace RavenFS.Studio.Models
 
         string key;
         string value;
+        private bool isReadOnly;
 
         public string Key
         {
@@ -49,6 +50,19 @@ namespace RavenFS.Studio.Models
         public bool HasErrors
         {
             get { return false; }
+        }
+
+        public bool IsReadOnly
+        {
+            get 
+            {
+                return isReadOnly;
+            }
+            set 
+            {
+                isReadOnly = value;
+                OnPropertyChanged("IsReadOnly");
+            }
         }
 
         protected void OnErrorsChanged(DataErrorsChangedEventArgs e)

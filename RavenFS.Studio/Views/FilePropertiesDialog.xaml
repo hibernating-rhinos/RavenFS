@@ -10,7 +10,8 @@
                            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                            xmlns:Models="clr-namespace:RavenFS.Studio.Models"
                            xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
-                           xmlns:b="clr-namespace:RavenFS.Studio.Behaviors" mc:Ignorable="d"
+                           xmlns:b="clr-namespace:RavenFS.Studio.Behaviors"
+                           xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity" mc:Ignorable="d"
                            d:DataContext="{d:DesignInstance Models:FilePropertiesDialogModel}">
     <Grid x:Name="LayoutRoot" Margin="2">
         <Grid.RowDefinitions>
@@ -18,7 +19,9 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <sdk:DataGrid ItemsSource="{Binding Metadata}" 
+        <sdk:DataGrid 
+                      x:Name="DataGrid"
+                      ItemsSource="{Binding Metadata}" 
                       Margin="0,0,0,10" 
                       IsReadOnly="False" 
                       AutoGenerateColumns="False"
@@ -27,20 +30,40 @@
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto"
                       FrozenColumnCount="1">
+            <i:Interaction.Triggers>
+                <b:StudioKeyTrigger Key="Delete" SourceObject="{Binding ElementName=DataGrid}">
+                    <i:InvokeCommandAction Command="{Binding DeleteMetadataItemCommand}" CommandParameter="{Binding ElementName=DataGrid, Path=SelectedItem}"/>
+                </b:StudioKeyTrigger>
+            </i:Interaction.Triggers>
+            <i:Interaction.Behaviors>
+                <b:PreventEditingReadOnlyRows IsReadOnlyBinding="{Binding IsReadOnly}"/>
+            </i:Interaction.Behaviors>
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTemplateColumn Header="Key" Width="Auto" IsReadOnly="False">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Key}" 
-                                       b:FadeTrimming.IsEnabled="True" 
-                                       b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
-                                       VerticalAlignment="Center"
-                                       Margin="4"/>
+                            <Grid>
+                                <TextBlock Text="{Binding Key}" 
+                                           Visibility="{Binding Key, Converter={StaticResource Converter_CollapsedWhenStringIsNullOrEmpty}}"
+                                           b:FadeTrimming.IsEnabled="True" 
+                                           b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                           VerticalAlignment="Center"
+                                           Margin="4"/>
+                                <TextBlock Text="[New Key]" 
+                                           Visibility="{Binding Key, Converter={StaticResource Converter_VisibleWhenStringIsNullOrEmpty}}"
+                                           b:FadeTrimming.IsEnabled="True" 
+                                           ToolTipService.ToolTip="Double-click to edit"
+                                           VerticalAlignment="Center"
+                                           Foreground="Gray"
+                                           Margin="4"/>
+                            </Grid>
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                     <sdk:DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding Key, Mode=TwoWay}"/>
+                            <Grid>
+                                <TextBox Text="{Binding Key, Mode=TwoWay}"/>
+                            </Grid>
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellEditingTemplate>
                 </sdk:DataGridTemplateColumn>
@@ -56,7 +79,9 @@
                     </sdk:DataGridTemplateColumn.CellTemplate>
                     <sdk:DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
-                            <TextBox Text="{Binding Value, Mode=TwoWay}"/>
+                            <Grid>
+                                <TextBox Text="{Binding Value, Mode=TwoWay}"/>
+                            </Grid>
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellEditingTemplate>
                 </sdk:DataGridTemplateColumn>
