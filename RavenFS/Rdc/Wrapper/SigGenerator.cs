@@ -71,7 +71,7 @@ namespace RavenFS.Rdc.Wrapper
             {
             	Size = 0,
             	Used = 0,
-            	Data = Marshal.AllocCoTaskMem((int) InputBufferSize + 16)
+            	Data = Marshal.AllocCoTaskMem(InputBufferSize + 16)
             };
         	var eof = false;
             var eofOutput = false;

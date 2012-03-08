@@ -27,14 +27,14 @@ namespace RavenFS.Rdc.Wrapper
         {
         }
 
-        public Stream GetContentForReading(string name)
+        public Stream GetContentForReading(string sigName)
         {
-            return File.OpenRead(NameToPath(name));
+            return File.OpenRead(NameToPath(sigName));
         }
 
-        public Stream CreateContent(string name)
+        public Stream CreateContent(string sigName)
         {
-            return File.Create(NameToPath(name));
+            return File.Create(NameToPath(sigName));
         }
 
         public SignatureInfo GetByName(string name)
