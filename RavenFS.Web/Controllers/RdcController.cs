@@ -11,14 +11,6 @@ namespace RavenFS.Web.Controllers
 {
 	public class RdcController : RavenController
 	{
-		public HttpResponseMessage Files(string filename)
-		{
-			filename = Uri.UnescapeDataString(filename);
-			var resultContent = StorageStream.Reading(Storage, filename);
-
-			return StreamResult(filename, resultContent);
-		}
-
 		public HttpResponseMessage Signatures(string filename)
 		{
 			filename = Uri.UnescapeDataString(filename);
