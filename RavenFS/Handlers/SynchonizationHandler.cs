@@ -21,7 +21,6 @@ namespace RavenFS.Handlers
     public class SynchonizationHandler : AbstractAsyncHandler
     {
         private readonly IDictionary<string, ISignatureRepository> _remoteSignatureCaches = new Dictionary<string, ISignatureRepository>();
-        private NeedListParser _needListParser = new NeedListParser();
 
         private static NameValueCollection KnownServers
         {
@@ -87,7 +86,7 @@ namespace RavenFS.Handlers
                                                                          sourceMetadata))
             {
                 var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
-                _needListParser.Parse(
+				NeedListParser.Parse(
                     new RemotePartialAccess(sourceServerUrl, fileName),
                     new StoragePartialAccess(Storage, fileName),
                     outputFile, needList);
