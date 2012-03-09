@@ -405,5 +405,20 @@ namespace RavenFS.Storage
 
 			return Api.RetrieveColumnAsInt32(session, Details, tableColumnsCache.DetailsColumns["file_count"]).Value;
 		}
+
+		public void RenameFile(string filename, string rename)
+		{
+			Api.JetSetCurrentIndex(session, Files, "by_name");
+			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
+				throw new FileNotFoundException("Could not find file: " + filename);
+
+			using (var update = new Update(session, Files, JET_prep.Replace))
+			{
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["name"], rename, Encoding.Unicode);
+
+				update.Save();
+			}
+		}
 	}
 }

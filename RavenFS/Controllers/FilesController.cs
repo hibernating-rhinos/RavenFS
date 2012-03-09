@@ -92,6 +92,28 @@ namespace RavenFS.Controllers
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
+		[AcceptVerbs("PATCH")]
+		public HttpResponseMessage Patch(string name, string rename)
+		{
+			try
+			{
+				FileAndPages fileAndPages = null;
+				Storage.Batch(accessor =>
+				{
+					fileAndPages = accessor.GetFile(name, 0, 0);
+					accessor.RenameFile(name, rename);
+				});
+				Search.Delete(name);
+				Search.Index(rename, fileAndPages.Metadata);
+			}
+			catch (FileNotFoundException)
+			{
+				return new HttpResponseMessage(HttpStatusCode.NotFound);
+			}
+
+			return new HttpResponseMessage(HttpStatusCode.NoContent);
+		}
+
 		public Task<HttpResponseMessage> Put(string name)
 		{
 			var headers = Request.Headers.FilterHeaders();
