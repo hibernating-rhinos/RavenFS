@@ -6,9 +6,9 @@ namespace RavenFS.Controllers
 {
 	public class SearchController : RavenController
 	{
-		public List<FileHeader> Get(string query)
+		public List<FileHeader> Get(string query, string[] sort)
 		{
-			var keys = Search.Query(query, Paging.Start, Paging.PageSize);
+			var keys = Search.Query(query, sort, Paging.Start, Paging.PageSize);
 
 			var list = new List<FileHeader>();
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Lucene.Net.Documents;
@@ -11,6 +12,7 @@ using Lucene.Net.Store;
 using RavenFS.Extensions;
 using RavenFS.Infrastructure;
 using Version = Lucene.Net.Util.Version;
+using System.Linq;
 
 namespace RavenFS.Search
 {
@@ -40,12 +42,12 @@ namespace RavenFS.Search
 			searcher = new IndexSearcher(writer.GetReader());
 		}
 
-		public string[] Query(string query, int start, int pageSize)
+		public string[] Query(string query, string[] sortFields, int start, int pageSize)
 		{
 			var queryParser = new QueryParser(Version.LUCENE_29, "", analyzer);
 			var q = queryParser.Parse(query);
 
-			var topDocs = searcher.Search(q, pageSize + start);
+			var topDocs = ExecuteQuery(sortFields, q, pageSize + start);
 
 			var results = new List<string>();
 
@@ -57,26 +59,38 @@ namespace RavenFS.Search
 			return results.ToArray();
 		}
 
+		private TopDocs ExecuteQuery(string[] sortFields, Query q, int size)
+		{
+			TopDocs topDocs;
+			if (sortFields != null && sortFields.Length > 0)
+			{
+				var sort = new Sort(sortFields.Select(field =>
+				{
+					var desc = field.StartsWith("-");
+					if (desc)
+						field = field.Substring(1);
+					return new SortField(field, SortField.STRING, desc);
+				}).ToArray());
+				topDocs = searcher.Search(q, null, size, sort);
+			}
+			else
+			{
+				topDocs = searcher.Search(q, null, size);
+			}
+			return topDocs;
+		}
+
 		public void Index(string key, NameValueCollection metadata)
 		{
 			lock (writerLock)
 			{
-				var doc = new Document();
-
-				string lowerKey = key.ToLowerInvariant();
-				doc.Add(new Field("__key", lowerKey, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
-				var directoryName = Path.GetDirectoryName(key);
-				if (string.IsNullOrEmpty(directoryName))
-					directoryName = "/";
-				else
-					directoryName = directoryName.Replace("\\", "/");
-
-				doc.Add(new Field("__directory", directoryName.ToLowerInvariant(),Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+				var lowerKey = key.ToLowerInvariant();
+				var doc = CreateDocument(lowerKey, metadata);
 
 				foreach (var metadataKey in metadata.AllKeys)
 				{
 					var values = metadata.GetValues(metadataKey);
-					if(values == null)
+					if (values == null)
 						continue;
 
 					foreach (var value in values)
@@ -92,6 +106,26 @@ namespace RavenFS.Search
 				ReplaceSearcher();
 			}
 		}
+
+		private static Document CreateDocument(string lowerKey, NameValueCollection metadata)
+		{
+			var doc = new Document();
+			doc.Add(new Field("__key", lowerKey, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+			var directoryName = Path.GetDirectoryName(lowerKey);
+			directoryName = string.IsNullOrEmpty(directoryName) ? "/" : directoryName.Replace("\\", "/");
+			doc.Add(new Field("__directory", directoryName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+			doc.Add(new Field("__modified", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture), Field.Store.NO,
+							  Field.Index.NOT_ANALYZED_NO_NORMS));
+
+			long len;
+			if (long.TryParse(metadata["Content-Length"], out len))
+			{
+				doc.Add(new Field("__size", len.ToString("D20"), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+			}
+
+			return doc;
+		}
+
 		public void Dispose()
 		{
 			analyzer.Close();

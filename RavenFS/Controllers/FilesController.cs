@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -93,13 +94,14 @@ namespace RavenFS.Controllers
 
 		public Task<HttpResponseMessage> Put(string name)
 		{
+			var headers = Request.Headers.FilterHeaders();
+			headers.UpdateLastModified();
+			
 			name = Uri.UnescapeDataString(name);
 			Storage.Batch(accessor =>
 			{
 				accessor.Delete(name);
 
-				var headers = Request.Headers.FilterHeaders();
-				headers.UpdateLastModified();
 				
 				long? contentLength = Request.Content.Headers.ContentLength;
 				if (Request.Headers.TransferEncodingChunked ?? false)
@@ -118,6 +120,9 @@ namespace RavenFS.Controllers
 					return readFileToDatabase.Execute()
 						.ContinueWith(readingTask =>
 						{
+							headers.UpdateLastModified();// update with the final file size
+							headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
+							Search.Index(name, headers);
 							readFileToDatabase.Dispose();
 							return readingTask;
 						})
@@ -141,7 +146,7 @@ namespace RavenFS.Controllers
 			private int pos;
 			readonly byte[] buffer;
 			private readonly Stream inputStream;
-
+			public int TotalSizeRead;
 			public ReadFileToDatabase(BufferPool bufferPool, TransactionalStorage storage, Stream inputStream, string filename)
 			{
 				this.bufferPool = bufferPool;
@@ -156,6 +161,8 @@ namespace RavenFS.Controllers
 				return inputStream.ReadAsync(buffer)
 					.ContinueWith(task =>
 					{
+						TotalSizeRead += task.Result;
+
 						if (task.Result == 0) // nothing left to read
 						{
 							storage.Batch(accessor => accessor.CompleteFileUpload(filename));
