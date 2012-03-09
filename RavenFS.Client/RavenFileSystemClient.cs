@@ -61,6 +61,16 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
+		public Task RenameAsync(string filename, string rename)
+		{
+			var requestUriString = ServerUrl + "/files/" + Uri.EscapeDataString(filename) + "?rename=" + Uri.EscapeDataString(rename);
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+			request.Method = "PATCH";
+			return request.GetResponseAsync()
+				.ContinueWith(task => task.Result.Close())
+				.TryThrowBetteError();
+		}
+
 		public Task<FileInfo[]> BrowseAsync(int start = 0, int pageSize = 25)
 		{
 			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files?start=" + start + "&pageSize=" + pageSize);
@@ -287,7 +297,7 @@ namespace RavenFS.Client
 
 		public Task<string[]> GetFoldersAsync(string from = null, int pageSize = 25)
 		{
-			string requestUriString = ServerUrl + "/folders/subdirectores/" + Uri.EscapeDataString(@from ?? "") + "?pageSize=" + pageSize;
+			string requestUriString = ServerUrl + "/folders/subdirectories/" + Uri.EscapeDataString(@from ?? "") + "?pageSize=" + pageSize;
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
