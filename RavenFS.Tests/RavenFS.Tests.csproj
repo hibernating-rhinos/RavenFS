@@ -66,6 +66,7 @@
     <Compile Include="ClientUsage.cs" />
     <Compile Include="CompleteUsage.cs" />
     <Compile Include="FileHandling.cs" />
+    <Compile Include="Folders.cs" />
     <Compile Include="MtaFactAttribute.cs" />
     <Compile Include="RDC\IO\RandomlyModifiedStream.cs" />
     <Compile Include="RDC\IO\RandomStream.cs" />

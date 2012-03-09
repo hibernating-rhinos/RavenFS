@@ -112,27 +112,24 @@ namespace RavenFS
  
 
 			config.Routes.MapHttpRoute(
-				name: "Files",
-				routeTemplate: "files/{*filename}",
-				defaults: new { controller = "files", filename = RouteParameter.Optional }
-				);
-
-			config.Routes.MapHttpRoute(
-				name: "RDC",
+				name: "rdc",
 				routeTemplate: "rdc/{action}/{*filename}",
 				defaults: new { controller = "rdc", filename = RouteParameter.Optional }
 				);
 
+
 			config.Routes.MapHttpRoute(
-				name: "Search",
-				routeTemplate: "search/",
-				defaults: new { controller = "search", filename = RouteParameter.Optional }
+				name: "folders",
+				routeTemplate: "folders/{ation}/{*folder}",
+				defaults: new { controller = "folders", folder = RouteParameter.Optional }
 				);
 
 			config.Routes.MapHttpRoute(
-				name: "Root",
-				routeTemplate: "",
-				defaults: new {controller = "files"});
+				name: "Default",
+				routeTemplate: "{controller}/{*name}",
+				defaults: new { controller = "files", name = RouteParameter.Optional }
+				);
+
 		}
 	}
 }
