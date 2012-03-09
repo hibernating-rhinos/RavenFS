@@ -106,6 +106,7 @@ namespace RavenFS.Search
 			lock (writerLock)
 			{
 				writer.DeleteDocuments(new Term("__key", key));
+				writer.Optimize();
 				writer.Commit();
 				ReplaceSearcher();
 			}
@@ -118,6 +119,40 @@ namespace RavenFS.Search
 			currentSearcher.Close();
 
 			searcher = new IndexSearcher(writer.GetReader());
+		}
+
+		public IEnumerable<string> GetTermsFor(string field, string fromValue, int pageSize)
+		{
+			var result = new HashSet<string>();
+			var termEnum = searcher.GetIndexReader().Terms(new Term(field, fromValue ?? string.Empty));
+			try
+			{
+				if (string.IsNullOrEmpty(fromValue) == false) // need to skip this value
+				{
+					while (termEnum.Term() == null || fromValue.Equals(termEnum.Term().Text()))
+					{
+						if (termEnum.Next() == false)
+							return result;
+					}
+				}
+				while (termEnum.Term() == null ||
+					field.Equals(termEnum.Term().Field()))
+				{
+					if (termEnum.Term() != null)
+						result.Add(termEnum.Term().Text());
+
+					if (result.Count >= pageSize)
+						break;
+
+					if (termEnum.Next() == false)
+						break;
+				}
+			}
+			finally
+			{
+				termEnum.Close();
+			}
+			return result;
 		}
 	}
 }
