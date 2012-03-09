@@ -203,6 +203,7 @@ namespace RavenFS.Client
 			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename);
 
 			request.Method = "POST";
+			request.ContentLength = 0;
 			AddHeaders(metadata, request);
 			return request
 				.GetResponseAsync()
