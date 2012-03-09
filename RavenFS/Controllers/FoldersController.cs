@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Web.Http;
 using RavenFS.Client;
 
 namespace RavenFS.Controllers

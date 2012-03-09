@@ -120,8 +120,8 @@ namespace RavenFS
 
 			config.Routes.MapHttpRoute(
 				name: "folders",
-				routeTemplate: "folders/{ation}/{*folder}",
-				defaults: new { controller = "folders", folder = RouteParameter.Optional }
+				routeTemplate: "folders/{action}/{*directory}",
+				defaults: new { controller = "folders", directory = RouteParameter.Optional }
 				);
 
 			config.Routes.MapHttpRoute(
