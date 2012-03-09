@@ -88,12 +88,9 @@ namespace RavenFS.Controllers
 				int pageSize;
 				int.TryParse(QueryString["pageSize"], out pageSize);
 
-				if (pageSize <= 0 || pageSize >= 256)
-					pageSize = 256;
-
 				paging = new PagingInfo
 				{
-					PageSize = pageSize,
+					PageSize = Math.Max(1024, Math.Min(25, pageSize)),
 					Start = start
 				};
 				return paging;
