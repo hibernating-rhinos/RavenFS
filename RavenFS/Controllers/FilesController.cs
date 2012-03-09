@@ -25,42 +25,42 @@ namespace RavenFS.Controllers
 			return fileHeaders;
 		}
 
-		public HttpResponseMessage Get(string filename)
+		public HttpResponseMessage Get(string name)
 		{
-			filename = Uri.UnescapeDataString(filename);
+			name = Uri.UnescapeDataString(name);
 			FileAndPages fileAndPages = null;
 			try
 			{
-				Storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, 0, 0));
+				Storage.Batch(accessor => fileAndPages = accessor.GetFile(name, 0, 0));
 			}
 			catch (FileNotFoundException)
 			{
 				throw new HttpResponseException(HttpStatusCode.NotFound);
 			}
 
-			var ravenReadOnlyStream = new RavenReadOnlyStream(Storage, BufferPool, filename);
-			var result = StreamResult(filename, ravenReadOnlyStream);
+			var ravenReadOnlyStream = new RavenReadOnlyStream(Storage, BufferPool, name);
+			var result = StreamResult(name, ravenReadOnlyStream);
 			MetadataExtensions.AddHeaders(result, fileAndPages);
 			return result;
 		}
 
-		public HttpResponseMessage Delete(string filename)
+		public HttpResponseMessage Delete(string name)
 		{
-			filename = Uri.UnescapeDataString(filename); 
-			Search.Delete(filename);
-			Storage.Batch(accessor => accessor.Delete(filename));
+			name = Uri.UnescapeDataString(name); 
+			Search.Delete(name);
+			Storage.Batch(accessor => accessor.Delete(name));
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
 		[AcceptVerbs("HEAD")]
-		public HttpResponseMessage Head(string filename)
+		public HttpResponseMessage Head(string name)
 		{
-			filename = Uri.UnescapeDataString(filename); 
+			name = Uri.UnescapeDataString(name); 
 			FileAndPages fileAndPages = null;
 			try
 			{
-				Storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, 0, 0));
+				Storage.Batch(accessor => fileAndPages = accessor.GetFile(name, 0, 0));
 			}
 			catch (FileNotFoundException)
 			{
@@ -73,15 +73,15 @@ namespace RavenFS.Controllers
 			return httpResponseMessage;
 		}
 
-		public HttpResponseMessage Post(string filename)
+		public HttpResponseMessage Post(string name)
 		{
-			filename = Uri.UnescapeDataString(filename); 
+			name = Uri.UnescapeDataString(name); 
 			var headers = Request.Headers.FilterHeaders();
 			headers.UpdateLastModified();
 			try
 			{
-				Storage.Batch(accessor => accessor.UpdateFileMetadata(filename, headers));
-				Search.Index(filename, headers);
+				Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
+				Search.Index(name, headers);
 			}
 			catch (FileNotFoundException)
 			{
@@ -91,12 +91,12 @@ namespace RavenFS.Controllers
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
-		public Task<HttpResponseMessage> Put(string filename)
+		public Task<HttpResponseMessage> Put(string name)
 		{
-			filename = Uri.UnescapeDataString(filename);
+			name = Uri.UnescapeDataString(name);
 			Storage.Batch(accessor =>
 			{
-				accessor.Delete(filename);
+				accessor.Delete(name);
 
 				var headers = Request.Headers.FilterHeaders();
 				headers.UpdateLastModified();
@@ -106,15 +106,15 @@ namespace RavenFS.Controllers
 				{
 					contentLength = null;
 				}
-				accessor.PutFile(filename, contentLength, headers);
+				accessor.PutFile(name, contentLength, headers);
 
-				Search.Index(filename, headers);
+				Search.Index(name, headers);
 			});
 
 			return Request.Content.ReadAsStreamAsync()
 				.ContinueWith(task =>
 				{
-					var readFileToDatabase = new ReadFileToDatabase(BufferPool, Storage, task.Result, filename);
+					var readFileToDatabase = new ReadFileToDatabase(BufferPool, Storage, task.Result, name);
 					return readFileToDatabase.Execute()
 						.ContinueWith(readingTask =>
 						{
