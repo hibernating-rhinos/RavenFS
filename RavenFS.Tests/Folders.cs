@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using RavenFS.Client;
 using Xunit;
 using System.Linq;
 
@@ -30,6 +31,29 @@ namespace RavenFS.Tests
 
 			var strings = client.GetFilesAsync("test").Result.Select(x=>x.Name).ToArray();
 			Assert.Equal(new[] { "test/abc.txt", "test/ced.txt" }, strings);
+		}
+
+
+		[Fact]
+		public void CanGetListOfFilesInFolder_Sorted_Size()
+		{
+			var client = NewClient();
+			client.UploadAsync("test/abc.txt", new MemoryStream(new byte[4])).Wait();
+			client.UploadAsync("test/ced.txt", new MemoryStream(new byte[8])).Wait();
+
+			var strings = client.GetFilesAsync("test", FilesSortOptions.Size | FilesSortOptions.Desc).Result.Select(x => x.Name).ToArray();
+			Assert.Equal(new[] { "test/ced.txt", "test/abc.txt" }, strings);
+		}
+
+		[Fact]
+		public void CanGetListOfFilesInFolder_Sorted_Name()
+		{
+			var client = NewClient();
+			client.UploadAsync("test/abc.txt", new MemoryStream(new byte[4])).Wait();
+			client.UploadAsync("test/ced.txt", new MemoryStream(new byte[8])).Wait();
+
+			var strings = client.GetFilesAsync("test", FilesSortOptions.Name | FilesSortOptions.Desc).Result.Select(x => x.Name).ToArray();
+			Assert.Equal(new[] { "test/ced.txt", "test/abc.txt" }, strings);
 		}
 
 
