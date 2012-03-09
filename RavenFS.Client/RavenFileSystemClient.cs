@@ -5,6 +5,7 @@ using System.Net;
 #if SILVERLIGHT
 using System.Net.Browser;
 #endif
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RavenFS.Client;
@@ -30,12 +31,12 @@ namespace RavenFS.Client
 				this.baseUrl = this.ServerUrl.Substring(0, this.ServerUrl.Length - 1);
 		}
 
-	    public string ServerUrl
-	    {
-	        get { return baseUrl; }
-	    }
+		public string ServerUrl
+		{
+			get { return baseUrl; }
+		}
 
-	    public Task<ServerStats> StatsAsync()
+		public Task<ServerStats> StatsAsync()
 		{
 			var requestUriString = ServerUrl + "/stats";
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
@@ -82,9 +83,24 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<FileInfo[]> SearchAsync(string query, int start = 0,int pageSize = 25)
+		public Task<FileInfo[]> SearchAsync(string query, string[] sortFields = null, int start = 0, int pageSize = 25)
 		{
-			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/search?query=" + Uri.EscapeUriString(query) + "&start=" + start + "&pageSize=" + pageSize);
+			var requestUriBuilder = new StringBuilder(ServerUrl)
+				.Append("/search?query=")
+				.Append(Uri.EscapeUriString(query))
+				.Append("&start=")
+				.Append(start)
+				.Append("&pageSize=")
+				.Append(pageSize);
+
+			if (sortFields != null)
+			{
+				foreach (var sortField in sortFields)
+				{
+					requestUriBuilder.Append("&sort=").Append(sortField);
+				}
+			}
+			var request = (HttpWebRequest)WebRequest.Create(requestUriBuilder.ToString());
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -113,13 +129,13 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-        public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long? from = null, long? to = null)
-        {
-            return DownloadAsync("/files/", filename, destination, from, to);
-        }
+		public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long? from = null, long? to = null)
+		{
+			return DownloadAsync("/files/", filename, destination, from, to);
+		}
 
 		private Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, long? from = null, long? to = null,
-            Action<string, int> progress = null)
+			Action<string, int> progress = null)
 		{
 #if SILVERLIGHT
             if (from != null || to != null)
@@ -128,31 +144,31 @@ namespace RavenFS.Client
             }
 #endif
 
-            var collection = new NameValueCollection();
+			var collection = new NameValueCollection();
 			if (destination.CanWrite == false)
 				throw new ArgumentException("Stream does not support writing");
 
 			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + path + filename);
 
 #if !SILVERLIGHT
-            if (from != null)
-            {
-                if (to != null)
-                {
-                    request.AddRange(from.Value, to.Value);
-                }
-                else
-                {
-                    request.AddRange(from.Value);
-                }
-            }
-            else if (destination.CanSeek)
-            {
-                destination.Position = destination.Length;
-                request.AddRange(destination.Position);
-            }
+			if (from != null)
+			{
+				if (to != null)
+				{
+					request.AddRange(from.Value, to.Value);
+				}
+				else
+				{
+					request.AddRange(from.Value);
+				}
+			}
+			else if (destination.CanSeek)
+			{
+				destination.Position = destination.Length;
+				request.AddRange(destination.Position);
+			}
 #endif
-            progress = progress ?? delegate { };
+			progress = progress ?? delegate { };
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -172,15 +188,15 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-	    public Task UpdateMetadataAsync(string filename, NameValueCollection metadata)
+		public Task UpdateMetadataAsync(string filename, NameValueCollection metadata)
 		{
 			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename);
-			
+
 			request.Method = "POST";
 			AddHeaders(metadata, request);
-	        return request
-	            .GetResponseAsync()
-	            .TryThrowBetteError();
+			return request
+				.GetResponseAsync()
+				.TryThrowBetteError();
 		}
 
 		public Task UploadAsync(string filename, Stream source)
@@ -205,66 +221,42 @@ namespace RavenFS.Client
 			request.AllowWriteStreamBuffering = false;
 #endif
 			AddHeaders(metadata, request);
-            return request.GetRequestStreamAsync()
-                .ContinueWith(
-                    task => source.CopyToAsync(
-                        task.Result,
-                        written =>
-                            {
-                                if (progress != null)
-                                    progress(filename, written);
-                            })
-                .ContinueWith(_ => task.Result.Close())
-                )
-                .Unwrap()
-                .ContinueWith(task =>
-                {
-                    task.Wait();
-                    return request.GetResponseAsync();
-                })
-                .Unwrap()
-                .ContinueWith(task => task.Result.Close())
+			return request.GetRequestStreamAsync()
+				.ContinueWith(
+					task => source.CopyToAsync(
+						task.Result,
+						written =>
+						{
+							if (progress != null)
+								progress(filename, written);
+						})
+				.ContinueWith(_ => task.Result.Close())
+				)
+				.Unwrap()
+				.ContinueWith(task =>
+				{
+					task.Wait();
+					return request.GetResponseAsync();
+				})
+				.Unwrap()
+				.ContinueWith(task => task.Result.Close())
 				.TryThrowBetteError();
 		}
 
-		
 
-		public Task<RdcStats> GetRdcStatsAsync()
-        {
-            var requestUriString = ServerUrl + "/rdc/stats";
-            var request = (HttpWebRequest)WebRequest.Create(requestUriString);
-            return request.GetResponseAsync()
-                .ContinueWith(task =>
-                {
-                    using (var stream = task.Result.GetResponseStream())
-                    {
-                        return new JsonSerializer().Deserialize<RdcStats>(new JsonTextReader(new StreamReader(stream)));
-                    }
-                })
-				.TryThrowBetteError();
-        }
 
-        public Task<SignatureManifest> GetRdcManifestAsync(string path)
-        {
-            var requestUriString = ServerUrl + "/rdc/manifest/" + StringUtils.UrlEncode(path);
-            var request = (HttpWebRequest)WebRequest.Create(requestUriString);
-            return request.GetResponseAsync()
-                .ContinueWith(task =>
-                {
-                    using (var stream = task.Result.GetResponseStream())
-                    {
-                        return new JsonSerializer().Deserialize<SignatureManifest>(new JsonTextReader(new StreamReader(stream)));
-                    }
-                })
-				.TryThrowBetteError();
-        }
+		public SynchronizationClient Synchronization {get
+		{
+			return new SynchronizationClient(this);
+		}}
 
-        public Task DownloadSignatureAsync(string sigName, Stream destination, long? from = null, long? to = null)
-        {
-            return DownloadAsync("/rdc/signatures/", sigName, destination, from, to);
-        }
 
-	    private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
+		public Task DownloadSignatureAsync(string sigName, Stream destination, long? from = null, long? to = null)
+		{
+			return DownloadAsync("/rdc/signatures/", sigName, destination, from, to);
+		}
+
+		private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
 		{
 			foreach (var key in metadata.AllKeys)
 			{
@@ -278,20 +270,20 @@ namespace RavenFS.Client
 			}
 		}
 
-	    public Task<SynchronizationReport> StartSynchronizationAsync(string serverIdentifier, string fileName)
-	    {
-            var requestUriString = ServerUrl + "/synchronize/" + Uri.EscapeDataString(serverIdentifier) + "/" + Uri.EscapeDataString(fileName); ;
-            var request = (HttpWebRequest)WebRequest.Create(requestUriString);
-            return request.GetResponseAsync()
-                .ContinueWith(task =>
-                {
-                    using (var stream = task.Result.GetResponseStream())
-                    {
-                        return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
-                    }
-                })
+		public Task<SynchronizationReport> StartSynchronizationAsync(string serverIdentifier, string fileName)
+		{
+			var requestUriString = ServerUrl + "/synchronize/" + Uri.EscapeDataString(serverIdentifier) + "/" + Uri.EscapeDataString(fileName); ;
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+			return request.GetResponseAsync()
+				.ContinueWith(task =>
+				{
+					using (var stream = task.Result.GetResponseStream())
+					{
+						return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
+					}
+				})
 				.TryThrowBetteError();
-	    }
+		}
 
 		public Task<string[]> GetFoldersAsync(string from = null, int pageSize = 25)
 		{
@@ -308,9 +300,76 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<FileInfo[]> GetFilesAsync(string from, int start = 0, int pageSize = 25)
+		public Task<FileInfo[]> GetFilesAsync(string from, FilesSortOptions options = FilesSortOptions.Default, int start = 0, int pageSize = 25)
 		{
-			return SearchAsync("__directory:" + from,start, pageSize);
+			return SearchAsync("__directory:" + from, GetSortFields(options), start, pageSize);
 		}
-	}    
+
+		private static string[] GetSortFields(FilesSortOptions options)
+		{
+			string sort = null;
+			switch (options & ~FilesSortOptions.Desc)
+			{
+				case FilesSortOptions.Name:
+					sort = "__key";
+					break;
+				case FilesSortOptions.Size:
+					sort = "__size";
+					break;
+				case FilesSortOptions.LastModified:
+					sort = "__modified";
+					break;
+			}
+
+			if (options.HasFlag(FilesSortOptions.Desc))
+			{
+				if (string.IsNullOrEmpty(sort))
+					throw new ArgumentException("options");
+				sort = "-" + sort;
+			}
+
+			var sortFields = string.IsNullOrEmpty(sort) ? null : new[] {sort};
+			return sortFields;
+		}
+
+		public class SynchronizationClient
+		{
+			private readonly RavenFileSystemClient ravenFileSystemClient;
+
+			public SynchronizationClient(RavenFileSystemClient ravenFileSystemClient)
+			{
+				this.ravenFileSystemClient = ravenFileSystemClient;
+			}
+
+			public Task<SignatureManifest> GetRdcManifestAsync(string path)
+			{
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/rdc/manifest/" + StringUtils.UrlEncode(path);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				return request.GetResponseAsync()
+					.ContinueWith(task =>
+					{
+						using (var stream = task.Result.GetResponseStream())
+						{
+							return new JsonSerializer().Deserialize<SignatureManifest>(new JsonTextReader(new StreamReader(stream)));
+						}
+					})
+					.TryThrowBetteError();
+			}
+		}
+
+		public Task<RdcStats> GetRdcStatsAsync()
+		{
+			var requestUriString = ServerUrl + "/rdc/stats";
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+			return request.GetResponseAsync()
+				.ContinueWith(task =>
+				{
+					using (var stream = task.Result.GetResponseStream())
+					{
+						return new JsonSerializer().Deserialize<RdcStats>(new JsonTextReader(new StreamReader(stream)));
+					}
+				})
+				.TryThrowBetteError();
+		}
+	}
 }

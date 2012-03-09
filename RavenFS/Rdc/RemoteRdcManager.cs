@@ -28,7 +28,7 @@ namespace RavenFS.Rdc
         /// <returns></returns>
         public SignatureManifest SynchronizeSignatures(DataInfo dataInfo)
         {
-            var remoteSignatureManifest = _ravenFileSystemClient.GetRdcManifestAsync(dataInfo.Name).Result;
+            var remoteSignatureManifest = _ravenFileSystemClient.Synchronization.GetRdcManifestAsync(dataInfo.Name).Result;
             if (remoteSignatureManifest.Signatures.Count > 0)
             {
                 InternalSynchronizeSignatures(dataInfo, remoteSignatureManifest);

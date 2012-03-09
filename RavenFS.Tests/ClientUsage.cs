@@ -172,7 +172,7 @@ namespace RavenFS.Tests
             WebClient.UploadData("/files/mb.bin", "PUT", buffer);
 
 
-            var result = client.GetRdcManifestAsync("mb.bin").Result;
+			var result = client.Synchronization.GetRdcManifestAsync("mb.bin").Result;
             Assert.NotNull(result);
         }
 
@@ -187,7 +187,7 @@ namespace RavenFS.Tests
             WebClient.UploadData("/files/mb.bin", "PUT", buffer);
 
 
-            var result = client.GetRdcManifestAsync("mb.bin").Result;
+			var result = client.Synchronization.GetRdcManifestAsync("mb.bin").Result;
 
             Assert.True(result.Signatures.Count > 0);
 
@@ -207,7 +207,7 @@ namespace RavenFS.Tests
             new Random().NextBytes(buffer);
 
             WebClient.UploadData("/files/mb.bin", "PUT", buffer);
-            var signatureManifest = client.GetRdcManifestAsync("mb.bin").Result;
+			var signatureManifest = client.Synchronization.GetRdcManifestAsync("mb.bin").Result;
 
             var ms = new MemoryStream();
             client.DownloadSignatureAsync(signatureManifest.Signatures[0].Name, ms, 5, 10).Wait();
