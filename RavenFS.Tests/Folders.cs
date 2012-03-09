@@ -21,6 +21,39 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
+		public void CanRename()
+		{
+			var client = NewClient();
+			var ms = new MemoryStream();
+			client.UploadAsync("test/abc.txt", ms).Wait();
+
+			client.RenameAsync("test/abc.txt", "test2/abc.txt").Wait();
+
+			client.DownloadAsync("test2/abc.txt", new MemoryStream()).Wait();// would thorw if missing
+		}
+
+
+
+		[Fact]
+		public void AfterRename_OldFolderIsGoneAndWeHaveNewOne()
+		{
+			var client = NewClient();
+			var ms = new MemoryStream();
+			client.UploadAsync("test/abc.txt", ms).Wait();
+
+			Assert.Contains("test", client.GetFoldersAsync().Result);
+
+			client.RenameAsync("test/abc.txt", "test2/abc.txt").Wait();
+
+			client.DownloadAsync("test2/abc.txt", new MemoryStream()).Wait();// would thorw if missing
+
+			Assert.DoesNotContain("test", client.GetFoldersAsync().Result);
+
+			Assert.Contains("test2", client.GetFoldersAsync().Result);
+
+		}
+
+		[Fact]
 		public void CanGetListOfFilesInFolder()
 		{
 			var client = NewClient();
