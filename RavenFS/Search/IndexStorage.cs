@@ -64,7 +64,14 @@ namespace RavenFS.Search
 				var doc = new Document();
 
 				string lowerKey = key.ToLowerInvariant();
-				doc.Add(new Field("__key", lowerKey, Field.Store.YES, Field.Index.ANALYZED_NO_NORMS));
+				doc.Add(new Field("__key", lowerKey, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+				var directoryName = Path.GetDirectoryName(key);
+				if (string.IsNullOrEmpty(directoryName))
+					directoryName = "/";
+				else
+					directoryName = directoryName.Replace("\\", "/");
+
+				doc.Add(new Field("__directory", directoryName.ToLowerInvariant(),Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
 
 				foreach (var metadataKey in metadata.AllKeys)
 				{
