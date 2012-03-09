@@ -82,9 +82,9 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<FileInfo[]> SearchAsync(string query)
+		public Task<FileInfo[]> SearchAsync(string query, int start = 0,int pageSize = 25)
 		{
-			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/search?query=" + Uri.EscapeUriString(query));
+			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/search?query=" + Uri.EscapeUriString(query) + "&start=" + start + "&pageSize=" + pageSize);
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -292,5 +292,25 @@ namespace RavenFS.Client
                 })
 				.TryThrowBetteError();
 	    }
+
+		public Task<string[]> GetFoldersAsync(string from = null, int pageSize = 25)
+		{
+			string requestUriString = ServerUrl + "/folders/subdirectores/" + Uri.EscapeDataString(@from ?? "") + "?pageSize=" + pageSize;
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+			return request.GetResponseAsync()
+				.ContinueWith(task =>
+				{
+					using (var stream = task.Result.GetResponseStream())
+					{
+						return new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(stream)));
+					}
+				})
+				.TryThrowBetteError();
+		}
+
+		public Task<FileInfo[]> GetFilesAsync(string from = null, int start = 0, int pageSize = 25)
+		{
+			return SearchAsync("__directory:" + from,start, pageSize);
+		}
 	}    
 }
