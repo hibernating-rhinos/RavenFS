@@ -32,6 +32,20 @@ namespace RavenFS.Tests
 			Assert.Equal(new[] { "test/abc.txt", "test/ced.txt" }, strings);
 		}
 
+
+		[Fact]
+		public void CanGetListOfFilesInFolderInRoot()
+		{
+			var client = NewClient();
+			var ms = new MemoryStream();
+			client.UploadAsync("test/abc.txt", ms).Wait();
+			client.UploadAsync("test/ced.txt", ms).Wait();
+			client.UploadAsync("why/abc.txt", ms).Wait();
+
+			var strings = client.GetFilesAsync("/").Result.Select(x => x.Name).ToArray();
+			Assert.Equal(new string[] { }, strings);
+		}
+
 		[Fact]
 		public void CanPage()
 		{

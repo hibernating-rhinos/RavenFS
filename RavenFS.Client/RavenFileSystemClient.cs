@@ -308,7 +308,7 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<FileInfo[]> GetFilesAsync(string from = null, int start = 0, int pageSize = 25)
+		public Task<FileInfo[]> GetFilesAsync(string from, int start = 0, int pageSize = 25)
 		{
 			return SearchAsync("__directory:" + from,start, pageSize);
 		}
