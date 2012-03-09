@@ -311,9 +311,9 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<FileInfo[]> GetFilesAsync(string from, FilesSortOptions options = FilesSortOptions.Default, int start = 0, int pageSize = 25)
+		public Task<FileInfo[]> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, int start = 0, int pageSize = 25)
 		{
-			return SearchAsync("__directory:" + from, GetSortFields(options), start, pageSize);
+			return SearchAsync("__directory:" + folder, GetSortFields(options), start, pageSize);
 		}
 
 		private static string[] GetSortFields(FilesSortOptions options)
