@@ -6,15 +6,22 @@ namespace RavenFS.Controllers
 {
 	public class SearchController : RavenController
 	{
-		public List<FileHeader> Get(string query, string[] sort)
+		public SearchResults Get(string query, string[] sort)
 		{
-			var keys = Search.Query(query, sort, Paging.Start, Paging.PageSize);
+			int results;
+			var keys = Search.Query(query, sort, Paging.Start, Paging.PageSize, out results);
 
 			var list = new List<FileHeader>();
 
 			Storage.Batch(accessor => list.AddRange(keys.Select(accessor.ReadFile)));
 
-			return list;
+			return new SearchResults
+			{
+				Start = Paging.Start,
+				PageSize = Paging.PageSize,
+				Files = list,
+				FileCount = results
+			};
 		}
 	}
 }

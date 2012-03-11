@@ -124,9 +124,9 @@ namespace RavenFS.Tests
 
             var collection = client.SearchAsync("Test:value").Result;
 
-            Assert.Equal(1, collection.Length);
-            Assert.Equal("abc.txt", collection[0].Name);
-            Assert.Equal("value", collection[0].Metadata["Test"]);
+			Assert.Equal(1, collection.Files.Length);
+			Assert.Equal("abc.txt", collection.Files[0].Name);
+			Assert.Equal("value", collection.Files[0].Metadata["Test"]);
         }
 
 

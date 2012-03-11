@@ -93,7 +93,7 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<FileInfo[]> SearchAsync(string query, string[] sortFields = null, int start = 0, int pageSize = 25)
+		public Task<SearchResults> SearchAsync(string query, string[] sortFields = null, int start = 0, int pageSize = 25)
 		{
 			var requestUriBuilder = new StringBuilder(ServerUrl)
 				.Append("/search?query=")
@@ -124,7 +124,7 @@ namespace RavenFS.Client
 									{
 										new NameValueCollectionJsonConverter()
 									}
-						}.Deserialize<FileInfo[]>(jsonTextReader);
+						}.Deserialize<SearchResults>(jsonTextReader);
 					}
 				})
 				.TryThrowBetteError();
@@ -311,7 +311,7 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<FileInfo[]> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, int start = 0, int pageSize = 25)
+		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, int start = 0, int pageSize = 25)
 		{
 			return SearchAsync("__directory:" + folder, GetSortFields(options), start, pageSize);
 		}

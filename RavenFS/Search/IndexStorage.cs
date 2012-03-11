@@ -42,7 +42,7 @@ namespace RavenFS.Search
 			searcher = new IndexSearcher(writer.GetReader());
 		}
 
-		public string[] Query(string query, string[] sortFields, int start, int pageSize)
+		public string[] Query(string query, string[] sortFields, int start, int pageSize, out int totalResults)
 		{
 			var queryParser = new QueryParser(Version.LUCENE_29, "", analyzer);
 			var q = queryParser.Parse(query);
@@ -56,6 +56,7 @@ namespace RavenFS.Search
 				var document = searcher.Doc(topDocs.scoreDocs[i].doc);
 				results.Add(document.Get("__key"));
 			}
+			totalResults = topDocs.totalHits;
 			return results.ToArray();
 		}
 

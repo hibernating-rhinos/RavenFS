@@ -23,7 +23,7 @@ namespace RavenFS.Tests
 
 			searchTask.Wait();
 
-			Assert.Equal("dragon.design", searchTask.Result[0].Name);
+			Assert.Equal("dragon.design", searchTask.Result.Files[0].Name);
 		}
 	}
 }
