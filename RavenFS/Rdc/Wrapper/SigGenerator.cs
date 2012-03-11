@@ -22,14 +22,14 @@ namespace RavenFS.Rdc.Wrapper
 
         public SigGenerator(ISignatureRepository signatureRepository)
         {
-        	try
-        	{
-        		_rdcLibrary = (IRdcLibrary)new RdcLibrary();
-        	}
-        	catch (InvalidCastException e)
-        	{
-        		throw new InvalidOperationException("This code must run in an MTA thread", e);
-        	}
+            try
+            {
+                _rdcLibrary = (IRdcLibrary)new RdcLibrary();
+            }
+            catch (InvalidCastException e)
+            {
+                throw new InvalidOperationException("This code must run in an MTA thread", e);
+            }
             _signatureRepository = signatureRepository;
         }
 
@@ -41,15 +41,13 @@ namespace RavenFS.Rdc.Wrapper
                 return new List<SignatureInfo>();
             }
 
-        	var result = Enumerable.Range(0, _recursionDepth).Select(i => new SignatureInfo()).ToList();
+            var result = Enumerable.Range(0, _recursionDepth).Select(i => new SignatureInfo()).ToList();
 
             var rdcGenerator = InitializeRdcGenerator();
 
-            var rdcBufferPointers = PrepareRdcBufferPointers();
 
-            var outputPointers = PrepareOutputPointers(rdcBufferPointers);
 
-            var inputBuffer = Process(source, rdcBufferPointers, rdcGenerator, outputPointers, result);
+            var inputBuffer = Process(source, rdcGenerator, result);
 
             Marshal.ReleaseComObject(rdcGenerator);
 
@@ -58,26 +56,26 @@ namespace RavenFS.Rdc.Wrapper
                 Marshal.FreeCoTaskMem(inputBuffer.Data);
             }
 
-			result.Reverse();
-        	return result;
+            result.Reverse();
+            return result;
         }
 
-
-
-        private RdcBufferPointer Process(Stream source, RdcBufferPointer[] rdcBufferPointers, IRdcGenerator rdcGenerator, IntPtr[] outputPointers,
-            IList<SignatureInfo> result)
+        private RdcBufferPointer Process(Stream source, IRdcGenerator rdcGenerator, IList<SignatureInfo> result)
         {
-            var inputBuffer = new RdcBufferPointer
-            {
-            	Size = 0,
-            	Used = 0,
-            	Data = Marshal.AllocCoTaskMem((int) InputBufferSize + 16)
-            };
-        	var eof = false;
+            var eof = false;
             var eofOutput = false;
             // prepare streams
             var sigStreams = (result.Select(item => _signatureRepository.CreateContent(item.Name))).ToList();
 
+            var inputBuffer = new RdcBufferPointer
+            {
+                Size = 0,
+                Used = 0,
+                Data = Marshal.AllocCoTaskMem((int)InputBufferSize + 16)
+            };
+
+            var rdcBufferPointers = PrepareRdcBufferPointers();
+            var outputPointers = PrepareOutputPointers(rdcBufferPointers);
             try
             {
                 while (!eofOutput)
@@ -127,6 +125,14 @@ namespace RavenFS.Rdc.Wrapper
             }
             finally
             {
+                if (inputBuffer.Data != IntPtr.Zero)
+                {
+                    Marshal.FreeCoTaskMem(inputBuffer.Data);
+                }
+                foreach (var item in outputPointers)
+                {
+                    Marshal.FreeCoTaskMem(item);
+                }
                 foreach (var item in sigStreams)
                 {
                     item.Close();
