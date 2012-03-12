@@ -135,7 +135,7 @@ namespace RavenFS.Util
                 if (pageOffset <= currentOffset && currentOffset < pageOffset + page.Size)
                 {
                     var pageLength = 0;
-                    TransactionalStorage.Batch(accessor => pageLength = accessor.ReadPage(page.Key, innerBuffer));
+                    TransactionalStorage.Batch(accessor => pageLength = accessor.ReadPage(page.Id, innerBuffer));
                     var sourceIndex = currentOffset - pageOffset;
                     length = Math.Min(innerBuffer.Length - sourceIndex, Math.Min(pageLength, Math.Min(buffer.Length - offset, count)));
 
