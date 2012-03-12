@@ -24,10 +24,16 @@ namespace RavenFS.Storage
 
 		private Table files, usage, pages, details;
 		private readonly Transaction transaction;
+		private Table config;
 
 		private Table Files
 		{
 			get { return files ?? (files = new Table(session, database, "files", OpenTableGrbit.None)); }
+		}
+
+		private Table Config
+		{
+			get { return config ?? (config = new Table(session, database, "config", OpenTableGrbit.None)); }
 		}
 
 		private Table Usage
@@ -66,6 +72,8 @@ namespace RavenFS.Storage
 		[DebuggerNonUserCode]
 		public void Dispose()
 		{
+			if (config != null)
+				config.Dispose();
 			if (details != null)
 				details.Dispose();
 			if (pages != null)
@@ -101,7 +109,7 @@ namespace RavenFS.Storage
 			if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
 			{
 				Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], 1);
-				return Api.RetrieveColumnAsInt32(session,Pages, tableColumnsCache.PagesColumns["id"]).Value;
+				return Api.RetrieveColumnAsInt32(session, Pages, tableColumnsCache.PagesColumns["id"]).Value;
 			}
 
 			byte[] bookMarkBuffer = new byte[SystemParameters.BookmarkMost];
@@ -126,7 +134,7 @@ namespace RavenFS.Storage
 			using (var update = new Update(session, Files, JET_prep.Insert))
 			{
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["name"], filename, Encoding.Unicode);
-				if(totalSize!=null)
+				if (totalSize != null)
 				{
 					Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize.Value));
 				}
@@ -297,7 +305,7 @@ namespace RavenFS.Storage
 			}
 			catch (EsentErrorException e)
 			{
-				if(e.Error==JET_err.NoCurrentRecord)
+				if (e.Error == JET_err.NoCurrentRecord)
 					yield break;
 				throw;
 			}
@@ -346,7 +354,7 @@ namespace RavenFS.Storage
 				var pageId = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value;
 
 				Api.MakeKey(session, Pages, pageId, MakeKeyGrbit.NewKey);
-				
+
 				if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
 				{
 					var escrowUpdate = Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], -1);
@@ -412,6 +420,42 @@ namespace RavenFS.Storage
 
 				update.Save();
 			}
+		}
+
+		public NameValueCollection GetConfig(string name)
+		{
+			Api.JetSetCurrentIndex(session, Config, "by_name");
+			Api.MakeKey(session, Config, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Config, SeekGrbit.SeekEQ) == false)
+				throw new FileNotFoundException("Could not find config: " + name);
+			var metadata = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["metadata"], Encoding.Unicode);
+			return HttpUtility.ParseQueryString(metadata);
+		}
+
+		public void SetConfig(string name, NameValueCollection metadata)
+		{
+			Api.JetSetCurrentIndex(session, Config, "by_name");
+			Api.MakeKey(session, Config, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			var prep = Api.TrySeek(session, Config, SeekGrbit.SeekEQ) ? JET_prep.Replace : JET_prep.Insert;
+
+			using(var update = new Update(session,Config,prep))
+			{
+				Api.SetColumn(session, Config, tableColumnsCache.ConfigColumns["name"], name, Encoding.Unicode);
+				Api.SetColumn(session, Config, tableColumnsCache.ConfigColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
+
+				update.Save();
+			}
+		}
+
+		public void DeleteConfig(string name)
+		{
+			Api.JetSetCurrentIndex(session, Config, "by_name");
+			Api.MakeKey(session, Config, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Config, SeekGrbit.SeekEQ) == false)
+				return;
+
+			Api.JetDelete(session, Config);
+		
 		}
 	}
 }

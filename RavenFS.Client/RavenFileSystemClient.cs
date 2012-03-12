@@ -256,10 +256,18 @@ namespace RavenFS.Client
 
 
 
-		public SynchronizationClient Synchronization {get
+		public SynchronizationClient Synchronization
 		{
-			return new SynchronizationClient(this);
-		}}
+			get
+			{
+				return new SynchronizationClient(this);
+			}
+		}
+
+		public ConfigurationClient Config
+		{
+			get { return new ConfigurationClient(this);}
+		}
 
 
 		public Task DownloadSignatureAsync(string sigName, Stream destination, long? from = null, long? to = null)
@@ -341,6 +349,79 @@ namespace RavenFS.Client
 
 			var sortFields = string.IsNullOrEmpty(sort) ? null : new[] {sort};
 			return sortFields;
+		}
+
+		public class ConfigurationClient
+		{
+			private readonly RavenFileSystemClient ravenFileSystemClient;
+			private readonly JsonSerializer jsonSerializer;
+
+			public ConfigurationClient(RavenFileSystemClient ravenFileSystemClient)
+			{
+				jsonSerializer = new JsonSerializer
+				{
+					Converters =
+						{
+							new NameValueCollectionJsonConverter()
+						}
+				};
+				this.ravenFileSystemClient = ravenFileSystemClient;
+			}
+
+			public Task SetConfig(string name, NameValueCollection data)
+			{
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/config/" + StringUtils.UrlEncode(name);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				request.Method = "PUT";
+				return request.GetRequestStreamAsync()
+					.ContinueWith(task =>
+					{
+						using(var streamWriter = new StreamWriter(task.Result))
+						{
+							jsonSerializer.Serialize(streamWriter, data);
+							streamWriter.Flush();
+						}
+					})
+					.ContinueWith(task => request.GetResponseAsync())
+					.Unwrap();
+			}
+
+			public Task DeleteConfig(string name)
+			{
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/config/" + StringUtils.UrlEncode(name);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				request.Method = "DELETE";
+				return request.GetResponseAsync();
+			}
+
+			public Task<NameValueCollection> GetConfig(string name)
+			{
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/config/" + StringUtils.UrlEncode(name);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				
+				return request.GetResponseAsync()
+					.ContinueWith(task =>
+					{
+						WebResponse webResponse;
+						try
+						{
+							webResponse = task.Result;
+						}
+						catch (AggregateException e)
+						{
+							var webException = e.ExtractSingleInnerException() as WebException;
+							if (webException == null)
+								throw;
+							var httpWebResponse = webException.Response as HttpWebResponse;
+							if (httpWebResponse == null)
+								throw;
+							if (httpWebResponse.StatusCode == HttpStatusCode.NotFound)
+								return null;
+							throw;
+						}
+						return jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(webResponse.GetResponseStream())));
+					});
+			}
 		}
 
 		public class SynchronizationClient

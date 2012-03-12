@@ -65,6 +65,7 @@
     <Compile Include="Bugs\UploadDownload.cs" />
     <Compile Include="ClientUsage.cs" />
     <Compile Include="CompleteUsage.cs" />
+    <Compile Include="Config.cs" />
     <Compile Include="FileHandling.cs" />
     <Compile Include="Folders.cs" />
     <Compile Include="MtaFactAttribute.cs" />
