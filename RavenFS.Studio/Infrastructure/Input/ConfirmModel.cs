@@ -13,15 +13,27 @@
 			}
 		}
 
-		private string question;
-		public string Question
+		private string message;
+		public string Message
 		{
-			get { return question; }
+			get { return message; }
 			set
 			{
-				question = value;
+				message = value;
 				OnPropertyChanged();
 			}
 		}
+
+        bool allowCancel = true;
+
+        public bool AllowCancel
+        {
+            get { return allowCancel; }
+            set
+            {
+                allowCancel = value;
+                OnPropertyChanged();
+            }
+        }
 	}
 }

@@ -6,7 +6,7 @@ namespace RavenFS.Studio.Infrastructure.Input
 	{
         public static Task AlertUser(string title, string message)
         {
-            var dataContext = new InputModel
+            var dataContext = new ConfirmModel
 			{
 				Title = title,
 				Message = message,
@@ -64,7 +64,7 @@ namespace RavenFS.Studio.Infrastructure.Input
 			var dataContext = new ConfirmModel
 			{
 				Title = title,
-				Question = question
+				Message = question
 			};
 			var inputWindow = new ConfirmWindow
 			{

@@ -2,18 +2,6 @@
 {
 	public class InputModel : NotifyPropertyChangedBase
 	{
-	    bool allowCancel = true;
-
-	    public bool AllowCancel
-	    {
-	        get { return allowCancel; }
-	        set
-	        {
-	            allowCancel = value;
-	            OnPropertyChanged();
-	        }
-	    }
-
 		private string title;
 
 		public string Title

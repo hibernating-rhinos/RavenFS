@@ -7,7 +7,7 @@
                       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                       xmlns:Input="clr-namespace:RavenFS.Studio.Infrastructure.Input" mc:Ignorable="d"
-                      d:DataContext="{d:DesignInstance Input:InputModel}">
+                      d:DataContext="{d:DesignInstance Input:ConfirmModel}">
 
     <Grid Margin="2"
           KeyDown="LayoutRoot_OnKeyDown">
