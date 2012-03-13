@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RavenFS.Client;
+using System.Linq;
 
 namespace RavenFS.Client
 {
@@ -304,9 +305,10 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<string[]> GetFoldersAsync(string from = null, int pageSize = 25)
+		public Task<string[]> GetFoldersAsync(string from = null, int start = 0,int pageSize = 25)
 		{
-			string requestUriString = ServerUrl + "/folders/subdirectories/" + Uri.EscapeDataString(@from ?? "") + "?pageSize=" + pageSize;
+			string requestUriString = ServerUrl + "/folders/subdirectories/" + Uri.EscapeDataString(@from ?? "") + "?pageSize=" +
+			                          pageSize + "&start=" + start;
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
@@ -321,7 +323,15 @@ namespace RavenFS.Client
 
 		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, int start = 0, int pageSize = 25)
 		{
-			return SearchAsync("__directory:" + folder, GetSortFields(options), start, pageSize);
+			if (folder == null) throw new ArgumentNullException("folder");
+			if(folder.StartsWith("/") == false)
+				throw new ArgumentException("folder must starts with a /","folder");
+			int level;
+			if (folder == "/")
+				level = 1;
+			else
+				level = folder.Count(ch => ch == '/') + 1;
+			return SearchAsync("__directory:" + folder + " AND __level:" + level, GetSortFields(options), start, pageSize);
 		}
 
 		private static string[] GetSortFields(FilesSortOptions options)
