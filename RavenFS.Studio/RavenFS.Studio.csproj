@@ -167,14 +167,17 @@
     <Compile Include="Models\AsyncOperationsModel.cs" />
     <Compile Include="Models\AsyncOperationStatus.cs" />
     <Compile Include="Models\AsyncOperationsViewModel.cs" />
+    <Compile Include="Models\DirectoryModel.cs" />
     <Compile Include="Models\EditableKeyValue.cs" />
     <Compile Include="Models\EditableKeyValueCollection.cs" />
+    <Compile Include="Models\FileModel.cs" />
     <Compile Include="Models\FilePropertiesDialogModel.cs" />
     <Compile Include="Infrastructure\Model.cs" />
     <Compile Include="Infrastructure\ModelResolver.cs" />
     <Compile Include="Infrastructure\NotifyPropertyChangedBase.cs" />
     <Compile Include="Models\FilesCollectionSource.cs" />
     <Compile Include="Models\FilesPageModel.cs" />
+    <Compile Include="Models\FileSystemModel.cs" />
     <Compile Include="Views\AsyncOperationsView.xaml.cs">
       <DependentUpon>AsyncOperationsView.xaml</DependentUpon>
     </Compile>

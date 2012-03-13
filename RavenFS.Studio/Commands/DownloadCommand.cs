@@ -9,13 +9,19 @@ using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio.Commands
 {
-	public class DownloadCommand : VirtualItemCommand<FileInfo>
+    public class DownloadCommand : VirtualItemCommand<FileSystemModel>
 	{
-		public DownloadCommand(Observable<VirtualItem<FileInfo>> observableFileInfo) : base(observableFileInfo) 
+        public DownloadCommand(Observable<VirtualItem<FileSystemModel>> observableFileInfo)
+            : base(observableFileInfo) 
 		{	
 		}
 
-        protected override void ExecuteOverride(FileInfo item)
+        protected override bool CanExecuteOverride(FileSystemModel item)
+        {
+            return item is FileModel;
+        }
+
+        protected override void ExecuteOverride(FileSystemModel item)
         {
             var url = ApplicationModel.Current.GetFileUrl(item.Name);
             HtmlPage.Window.Navigate(url);

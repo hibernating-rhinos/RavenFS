@@ -24,15 +24,15 @@ namespace RavenFS.Studio.Models
         public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedFile)); } }
         public ICommand EditProperties { get { return editCommand ?? (editCommand = new EditFilePropertiesCommand(SelectedFile)); } }
 
-        public Observable<VirtualItem<FileInfo>> SelectedFile { get; private set; }
+        public Observable<VirtualItem<FileSystemModel>> SelectedFile { get; private set; }
 
-        public VirtualCollection<FileInfo> Files { get; private set; }
+        public VirtualCollection<FileSystemModel> Files { get; private set; }
 
 		public FilesPageModel()
 		{
 		    filesSource = new FilesCollectionSource();
-            Files = new VirtualCollection<FileInfo>(filesSource, DefaultPageSize);
-            SelectedFile = new Observable<VirtualItem<FileInfo>>();
+            Files = new VirtualCollection<FileSystemModel>(filesSource, DefaultPageSize);
+            SelectedFile = new Observable<VirtualItem<FileSystemModel>>();
 		}
 
 		protected override Task TimerTickedAsync()
