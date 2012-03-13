@@ -18,13 +18,11 @@ namespace RavenFS.Studio.Infrastructure
     /// items from its DataSource in one shot is to implement both IList and ICollectionView.</remarks>
     public class VirtualCollection<T> : IList<VirtualItem<T>>, IList, ICollectionView, INotifyPropertyChanged where T : class
     {
+        private readonly IVirtualCollectionSource<T> _source;
         private readonly int _pageSize;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
         public event PropertyChangedEventHandler PropertyChanged;
-
-        private Func<Task<int>> _rowCountFetcher;
-        private Func<int, int, Task<IList<T>>> _pageFetcher;
 
         private readonly SparseList<VirtualItem<T>> _virtualItems;
         private readonly HashSet<int> _fetchedPages = new HashSet<int>();
@@ -34,17 +32,24 @@ namespace RavenFS.Studio.Infrastructure
         private bool _isRefreshInProgress;
         private int _currentItem;
 
-        public VirtualCollection(int pageSize)
+        public VirtualCollection(IVirtualCollectionSource<T> source, int pageSize)
         {
             if (pageSize < 1)
             {
                 throw new ArgumentException("pageSize must be bigger than 0");
             }
 
+            _source = source;
+            _source.CollectionChanged += HandleSourceCollectionChanged;
             _pageSize = pageSize;
             _virtualItems = new SparseList<VirtualItem<T>>(DetermineSparseListPageSize(pageSize));
             _currentItem = -1;
             _synchronizationContextScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+        }
+
+        private void HandleSourceCollectionChanged(object sender, EventArgs e)
+        {
+            Refresh();
         }
 
         private int DetermineSparseListPageSize(int fetchPageSize)
@@ -62,26 +67,6 @@ namespace RavenFS.Studio.Infrastructure
             {
                 // return the smallest multiple of fetchPageSize that is bigger than TargetSparseListPageSize
                 return (int)Math.Ceiling((double)TargetSparseListPageSize / fetchPageSize) * fetchPageSize;
-            }
-        }
-
-        public Func<Task<int>> RowCountFetcher
-        {
-            get { return _rowCountFetcher; }
-            set
-            {
-                _rowCountFetcher = value;
-                Refresh();
-            }
-        }
-
-        public Func<int, int, Task<IList<T>>> PageFetcher
-        {
-            get { return _pageFetcher; }
-            set
-            {
-                _pageFetcher = value;
-                Refresh();
             }
         }
 
@@ -121,7 +106,7 @@ namespace RavenFS.Studio.Infrastructure
 
         private void BeginUpdateItemCount()
         {
-            _rowCountFetcher()
+            _source.GetItemCountAsync()
                 .ContinueWith(
                     t => UpdateItemCount(t.Result),
                     _synchronizationContextScheduler);
@@ -136,7 +121,7 @@ namespace RavenFS.Studio.Infrastructure
 
             _requestedPages.Add(page);
 
-            _pageFetcher(page*_pageSize, _pageSize).ContinueWith(
+            _source.GetPageAsync(page*_pageSize, _pageSize).ContinueWith(
                 t => UpdatePage(page, t.Result),
                 _synchronizationContextScheduler);
         }

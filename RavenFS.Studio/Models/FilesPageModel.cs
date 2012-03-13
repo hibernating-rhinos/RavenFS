@@ -17,6 +17,7 @@ namespace RavenFS.Studio.Models
 	    private ICommand downloadCommand;
 	    private ICommand deleteCommand;
 	    private ICommand editCommand;
+	    private FilesCollectionSource filesSource;
 
 	    public ICommand Upload { get { return new UploadCommand(); } }
         public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedFile)); } }
@@ -25,22 +26,18 @@ namespace RavenFS.Studio.Models
 
         public Observable<VirtualItem<FileInfo>> SelectedFile { get; private set; }
 
-		public VirtualCollection<FileInfo> Files { get; private set; }
+        public VirtualCollection<FileInfo> Files { get; private set; }
 
 		public FilesPageModel()
 		{
-			Files = new VirtualCollection<FileInfo>(DefaultPageSize)
-			            {
-                            RowCountFetcher = () => ApplicationModel.Current.Client.StatsAsync().ContinueOnSuccess(t => (int)t.FileCount),
-                            PageFetcher = (start, pageSize) => ApplicationModel.Current.Client.BrowseAsync(start, pageSize).ContinueOnSuccess(t => (IList<FileInfo>)t)
-			            };
-
-		    SelectedFile = new Observable<VirtualItem<FileInfo>>();
+		    filesSource = new FilesCollectionSource();
+            Files = new VirtualCollection<FileInfo>(filesSource, DefaultPageSize);
+            SelectedFile = new Observable<VirtualItem<FileInfo>>();
 		}
 
 		protected override Task TimerTickedAsync()
 		{
-            Files.Refresh();
+            filesSource.Refresh();
 		    return Completed;
 		}
 	}
