@@ -16,7 +16,9 @@ namespace RavenFS.Studio.Behaviors
 {
     public static class FadeTrimming
     {
+        const double Epsilon = 0.00001;
         private const double FadeWidth = 10.0;
+        private const double FadeHeight = 20.0;
 
         public static readonly DependencyProperty IsEnabledProperty =
             DependencyProperty.RegisterAttached("IsEnabled", typeof(bool), typeof(FadeTrimming), new PropertyMetadata(false, HandleIsEnabledChanged));
@@ -29,6 +31,19 @@ namespace RavenFS.Studio.Behaviors
 
         private static readonly DependencyProperty FaderProperty =
             DependencyProperty.RegisterAttached("Fader", typeof(Fader), typeof(FadeTrimming), new PropertyMetadata(null));
+
+        public static readonly DependencyProperty ToolTipStyleProperty =
+            DependencyProperty.RegisterAttached("ToolTipStyle", typeof(Style), typeof(FadeTrimming), new PropertyMetadata(null));
+
+        public static Style GetToolTipStyle(DependencyObject obj)
+        {
+            return (Style)obj.GetValue(ToolTipStyleProperty);
+        }
+
+        public static void SetToolTipStyle(DependencyObject obj, Style value)
+        {
+            obj.SetValue(ToolTipStyleProperty, value);
+        }
 
         public static bool GetIsEnabled(DependencyObject obj)
         {
@@ -78,22 +93,25 @@ namespace RavenFS.Studio.Behaviors
                 return;
             }
 
-            var fader = GetFader(textBlock);
-            if (fader != null)
+            if ((bool)e.OldValue)
             {
-                fader.Detach();
-                SetFader(textBlock, null);
-            }
+                var fader = GetFader(textBlock);
+                if (fader != null)
+                {
+                    fader.Detach();
+                    SetFader(textBlock, null);
+                }
 
-            textBlock.Loaded -= HandleTextBlockLoaded;
-            textBlock.Unloaded -= HandleTextBlockUnloaded;
+                textBlock.Loaded -= HandleTextBlockLoaded;
+                textBlock.Unloaded -= HandleTextBlockUnloaded;
+            }
 
             if ((bool)e.NewValue)
             {
                 textBlock.Loaded += HandleTextBlockLoaded;
                 textBlock.Unloaded += HandleTextBlockUnloaded;
 
-                fader = new Fader(textBlock);
+                var fader = new Fader(textBlock);
                 SetFader(textBlock, fader);
                 fader.Attach();
             }
@@ -126,7 +144,7 @@ namespace RavenFS.Studio.Behaviors
 
             public void Attach()
             {
-                var parent = VisualTreeHelper.GetParent(_textBlock) as FrameworkElement;
+                var parent = VisualTreeHelper.GetParent(_textBlock) as FrameworkElement;  
                 if (parent == null || _isAttached)
                 {
                     return;
@@ -137,6 +155,8 @@ namespace RavenFS.Studio.Behaviors
 
                 _foregroundColor = DetermineForegroundColor(_textBlock);
                 UpdateForegroundBrush(_textBlock, EventArgs.Empty);
+
+                _textBlock.TextTrimming = TextTrimming.None;
 
                 _isAttached = true;
             }
@@ -151,34 +171,41 @@ namespace RavenFS.Studio.Behaviors
                     parent.SizeChanged -= UpdateForegroundBrush;
                 }
 
+                // remove our explicitly set Foreground color
                 _textBlock.ClearValue(TextBlock.ForegroundProperty);
                 _isAttached = false;
             }
 
             private Color DetermineForegroundColor(TextBlock textBlock)
             {
-                // if an explicit foreground color has been set, use that
+                // if our own Attached Property has been used to set an explicit foreground color, use that
                 if (GetForegroundColor(textBlock) != Colors.Transparent)
                 {
                     return GetForegroundColor(textBlock);
                 }
-                else if (textBlock.Foreground is SolidColorBrush)
+                
+                // otherwise, if the textBlock has inherited a foreground color, use that
+                if (textBlock.Foreground is SolidColorBrush)
                 {
                     return (textBlock.Foreground as SolidColorBrush).Color;
                 }
-                else
-                {
-                    return Colors.Black;
-                }
+                
+                return Colors.Black;
             }
 
             private void UpdateForegroundBrush(object sender, EventArgs e)
             {
+                // determine if the TextBlock has been clipped
                 var layoutClip = LayoutInformation.GetLayoutClip(_textBlock);
-                bool needsClipping = layoutClip != null
-                    && layoutClip.Bounds.Width > 0
-                    && layoutClip.Bounds.Width < _textBlock.ActualWidth;
 
+                bool needsClipping = layoutClip != null
+                    && ((_textBlock.TextWrapping == TextWrapping.NoWrap && layoutClip.Bounds.Width > 0 
+                    && layoutClip.Bounds.Width < _textBlock.ActualWidth) 
+                    || (_textBlock.TextWrapping == TextWrapping.Wrap && layoutClip.Bounds.Height > 0
+                    && layoutClip.Bounds.Height < _textBlock.ActualHeight));
+
+                // if the TextBlock was clipped, but is no longer clipped, then
+                // strip all the fancy features
                 if (_isClipped && !needsClipping)
                 {
                     if (GetShowTextInToolTipWhenTrimmed(_textBlock))
@@ -191,45 +218,51 @@ namespace RavenFS.Studio.Behaviors
                     _isClipped = false;
                 }
 
+                // if the TextBlock has just become clipped, make its
+                // content show in its tooltip
                 if (!_isClipped && needsClipping)
                 {
                     if (GetShowTextInToolTipWhenTrimmed(_textBlock))
                     {
-                        BindingOperations.SetBinding(_textBlock, ToolTipService.ToolTipProperty,
-                                                     new Binding("Text") { Source = _textBlock });
+                        var toolTip = new ToolTip();
+                        toolTip.SetBinding(FrameworkElement.StyleProperty,
+                                           new Binding()
+                                               {
+                                                   Path = new PropertyPath(ToolTipStyleProperty), 
+                                                   Source = _textBlock
+                                               });
+                        toolTip.SetBinding(ContentControl.ContentProperty,
+                                           new Binding()
+                                           {
+                                               Path = new PropertyPath(TextBlock.TextProperty),
+                                               Source = _textBlock
+                                           });
+
+                        ToolTipService.SetToolTip(_textBlock, toolTip);
                     }
                 }
 
+                // here's the real magic: if the TextBlock is clipped
+                // update its Foreground brush to make it fade out just
+                // inside the clip boundary
                 if (needsClipping)
                 {
                     var visibleWidth = layoutClip.Bounds.Width;
+                    var visibleHeight = layoutClip.Bounds.Height;
+
+                    var verticalClip = _textBlock.TextWrapping == TextWrapping.Wrap;
 
                     if (_brush == null)
                     {
-                        _brush = new LinearGradientBrush
-                        {
-                            MappingMode = BrushMappingMode.Absolute,
-                            StartPoint = new Point(0, 0),
-                            EndPoint = new Point(visibleWidth, 0),
-                            GradientStops =
-                                             {
-                                                 new GradientStop()
-                                                     {Color = _foregroundColor, Offset = 0},
-                                                 new GradientStop()
-                                                     {
-                                                         Color = _foregroundColor,
-                                                         Offset = (visibleWidth - FadeWidth)/visibleWidth
-                                                     },
-                                                 new GradientStop()
-                                                     {
-                                                         Color = Color.FromArgb(0, _foregroundColor.R, _foregroundColor.G, _foregroundColor.B),
-                                                         Offset = 1
-                                                     }
-                                             }
-                        };
+                        _brush = verticalClip ? GetVerticalClipBrush(visibleHeight) : GetHorizontalClipBrush(visibleWidth);
                         _textBlock.Foreground = _brush;
                     }
-                    else if (BrushNeedsUpdating(_brush, visibleWidth))
+                    else if (verticalClip && VerticalBrushNeedsUpdating(_brush, visibleHeight))
+                    {
+                        _brush.EndPoint = new Point(0, visibleHeight);
+                        _brush.GradientStops[1].Offset = (visibleHeight - FadeHeight) / visibleHeight;
+                    }
+                    else if (!verticalClip && HorizontalBrushNeedsUpdating(_brush, visibleWidth))
                     {
                         _brush.EndPoint = new Point(visibleWidth, 0);
                         _brush.GradientStops[1].Offset = (visibleWidth - FadeWidth) / visibleWidth;
@@ -238,12 +271,78 @@ namespace RavenFS.Studio.Behaviors
                     _isClipped = true;
                 }
             }
+
+            private LinearGradientBrush GetHorizontalClipBrush(double visibleWidth)
+            {
+                return new LinearGradientBrush
+                           {
+                               // set MappingMode to absolute so that
+                               // we can specify the EndPoint of the brush in
+                               // terms of the TextBlock's actual dimensions
+                               MappingMode = BrushMappingMode.Absolute,
+                               StartPoint = new Point(0, 0),
+                               EndPoint = new Point(visibleWidth, 0),
+                               GradientStops =
+                                   {
+                                       new GradientStop()
+                                           {Color = _foregroundColor, Offset = 0},
+                                       new GradientStop()
+                                           {
+                                               Color = _foregroundColor,
+                                               // Even though the mapping mode is absolute,
+                                               // the offset for gradient stops is always relative with
+                                               // 0 being the start of the brush, and 1 the end of the brush
+                                               Offset = (visibleWidth - FadeWidth)/visibleWidth
+                                           },
+                                       new GradientStop()
+                                           {
+                                               Color = Color.FromArgb(0, _foregroundColor.R, _foregroundColor.G, _foregroundColor.B),
+                                               Offset = 1
+                                           }
+                                   }
+                           };
+            }
+
+            private LinearGradientBrush GetVerticalClipBrush(double visibleHeight)
+            {
+                return new LinearGradientBrush
+                {
+                    // set MappingMode to absolute so that
+                    // we can specify the EndPoint of the brush in
+                    // terms of the TextBlock's actual dimensions
+                    MappingMode = BrushMappingMode.Absolute,
+                    StartPoint = new Point(0, 0),
+                    EndPoint = new Point(0, visibleHeight),
+                    GradientStops =
+                                   {
+                                       new GradientStop()
+                                           {Color = _foregroundColor, Offset = 0},
+                                       new GradientStop()
+                                           {
+                                               Color = _foregroundColor,
+                                               // Even though the mapping mode is absolute,
+                                               // the offset for gradient stops is always relative with
+                                               // 0 being the start of the brush, and 1 the end of the brush
+                                               Offset = (visibleHeight - FadeHeight)/visibleHeight
+                                           },
+                                       new GradientStop()
+                                           {
+                                               Color = Color.FromArgb(0, _foregroundColor.R, _foregroundColor.G, _foregroundColor.B),
+                                               Offset = 1
+                                           }
+                                   }
+                };
+            }
         }
 
-        private static bool BrushNeedsUpdating(LinearGradientBrush brush, double visibleWidth)
+        private static bool HorizontalBrushNeedsUpdating(LinearGradientBrush brush, double visibleWidth)
         {
-            const double epsilon = 0.00001;
-            return brush.EndPoint.X < visibleWidth - epsilon || brush.EndPoint.X > visibleWidth + epsilon;
+            return brush.EndPoint.X < visibleWidth - Epsilon || brush.EndPoint.X > visibleWidth + Epsilon;
+        }
+
+        private static bool VerticalBrushNeedsUpdating(LinearGradientBrush brush, double visibleHeight)
+        {
+            return brush.EndPoint.Y < visibleHeight - Epsilon || brush.EndPoint.Y > visibleHeight + Epsilon;
         }
     }
 }

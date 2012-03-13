@@ -102,6 +102,9 @@
                                            VerticalAlignment="Center" 
                                            Behaviors:FadeTrimming.IsEnabled="True"
                                            Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                           Behaviors:FadeTrimming.ToolTipStyle="{StaticResource Style_ToolTip_ConstrainedText}"
+                                           TextWrapping="NoWrap"
+                                           MaxHeight="16"
                                            Visibility="{Binding Progress, Converter={StaticResource Converter_CollapsedWhenValueGreaterThan}, ConverterParameter=0}"/>
                             </Grid>
                         </DataTemplate>
