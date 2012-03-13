@@ -40,28 +40,22 @@ namespace RavenFS.Rdc.Wrapper
             {
                 return new List<SignatureInfo>();
             }
-
-            var result = Enumerable.Range(0, _recursionDepth).Select(i => new SignatureInfo()).ToList();
-
             var rdcGenerator = InitializeRdcGenerator();
-
-
-
-            var inputBuffer = Process(source, rdcGenerator, result);
-
-            Marshal.ReleaseComObject(rdcGenerator);
-
-            if (inputBuffer.Data != IntPtr.Zero)
+            try
             {
-                Marshal.FreeCoTaskMem(inputBuffer.Data);
+                var result = Process(source, rdcGenerator);
+                return result.Reverse().ToList();
             }
-
-            result.Reverse();
-            return result;
+            finally
+            {
+                Marshal.ReleaseComObject(rdcGenerator);
+            }
         }
 
-        private RdcBufferPointer Process(Stream source, IRdcGenerator rdcGenerator, IList<SignatureInfo> result)
+        private IList<SignatureInfo> Process(Stream source, IRdcGenerator rdcGenerator)
         {
+            var result = Enumerable.Range(0, _recursionDepth).Select(i => new SignatureInfo()).ToList();
+
             var eof = false;
             var eofOutput = false;
             // prepare streams
@@ -139,7 +133,7 @@ namespace RavenFS.Rdc.Wrapper
                     item.Dispose();
                 }
             }
-            return inputBuffer;
+            return result;
         }
 
         private static RdcBufferPointer GetInputBuffer(Stream source, int inputBufferSize, RdcBufferPointer inputBuffer, ref bool eof)

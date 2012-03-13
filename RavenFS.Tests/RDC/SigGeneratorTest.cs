@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using RavenFS.Rdc.Utils.IO;
+using RavenFS.Tests;
 using Xunit;
 
 namespace RavenFS.Rdc.Wrapper.Test
@@ -16,7 +17,7 @@ namespace RavenFS.Rdc.Wrapper.Test
             }
         }
 
-        [Fact]
+        [MtaFact]
         public void Ctor_and_dispose()
         {
             using (var tested = new SigGenerator(_signatureRepository))
@@ -25,7 +26,7 @@ namespace RavenFS.Rdc.Wrapper.Test
             }
         }
 
-        [Fact]
+        [MtaFact]
         public void Generate_check()
         {
             using (Stream file = File.OpenRead("test.txt"))

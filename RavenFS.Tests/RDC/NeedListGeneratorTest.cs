@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using RavenFS.Rdc.Utils.IO;
+using RavenFS.Tests;
 using Xunit;
 
 
@@ -25,7 +26,7 @@ namespace RavenFS.Rdc.Wrapper.Test
             }
         }
 
-        [Fact]
+        [MtaFact]
         public void ctor_and_dispose()
         {
             using (var tested = new NeedListGenerator(_signatureRepository, _signatureRepository))
@@ -34,7 +35,7 @@ namespace RavenFS.Rdc.Wrapper.Test
             }
         }
 
-        [Fact]
+        [MtaFact]
         public void Generate_check()
         {
             IList<SignatureInfo> sourceSignatureInfos;
