@@ -40,14 +40,14 @@ namespace RavenFS.Studio.Infrastructure
             }
 
             _source = source;
-            _source.CollectionChanged += HandleSourceCollectionChanged;
+            _source.SourceChanged += HandleSourceSourceChanged;
             _pageSize = pageSize;
             _virtualItems = new SparseList<VirtualItem<T>>(DetermineSparseListPageSize(pageSize));
             _currentItem = -1;
             _synchronizationContextScheduler = TaskScheduler.FromCurrentSynchronizationContext();
         }
 
-        private void HandleSourceCollectionChanged(object sender, EventArgs e)
+        private void HandleSourceSourceChanged(object sender, EventArgs e)
         {
             Refresh();
         }
@@ -102,14 +102,6 @@ namespace RavenFS.Studio.Infrastructure
                     }
                 }
             }
-        }
-
-        private void BeginUpdateItemCount()
-        {
-            _source.GetItemCountAsync()
-                .ContinueWith(
-                    t => UpdateItemCount(t.Result),
-                    _synchronizationContextScheduler);
         }
 
         private void BeginGetPage(int page)
@@ -178,7 +170,10 @@ namespace RavenFS.Studio.Infrastructure
             _fetchedPages.Clear();
             _requestedPages.Clear();
 
-            BeginUpdateItemCount();
+            if (_source.Count.HasValue)
+            {
+                UpdateItemCount(_source.Count.Value);
+            }
         }
 
         public int IndexOf(VirtualItem<T> item)

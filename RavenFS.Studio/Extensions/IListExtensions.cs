@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -11,12 +10,16 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
-namespace RavenFS.Studio.Infrastructure
+namespace RavenFS.Studio.Extensions
 {
-    public interface IVirtualCollectionSource<T>
+    public static class IListExtensions
     {
-        event EventHandler<EventArgs> SourceChanged;
-        int? Count { get; }
-        Task<IList<T>> GetPageAsync(int start, int pageSize);
+        public static IEnumerable<T> Skip<T>(this IList<T> list, int count)
+        {
+            for (int i = count; i < list.Count; i++)
+            {
+                yield return list[i];
+            }
+        }
     }
 }
