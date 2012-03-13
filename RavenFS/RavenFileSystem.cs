@@ -108,8 +108,13 @@ namespace RavenFS
 			serializerSettings.Converters.Add(new IsoDateTimeConverter());
 			serializerSettings.Converters.Add(new NameValueCollectionJsonConverter());
 			var indexOfJson = config.Formatters.IndexOf(config.Formatters.JsonFormatter);
-			config.Formatters[indexOfJson] = new JsonNetFormatter(serializerSettings); 
- 
+			config.Formatters[indexOfJson] = new JsonNetFormatter(serializerSettings);
+
+
+			config.Routes.MapHttpRoute(
+				name: "ClientAccessPolicy.xml",
+				routeTemplate: "ClientAccessPolicy.xml",
+				defaults: new {controller = "static", action = "ClientAccessPolicy"});
 
 			config.Routes.MapHttpRoute(
 				name: "rdc",
