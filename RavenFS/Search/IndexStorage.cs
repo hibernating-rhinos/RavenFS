@@ -112,12 +112,20 @@ namespace RavenFS.Search
 		{
 			var doc = new Document();
 			doc.Add(new Field("__key", lowerKey, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+			int level = 0;
 			var directoryName = Path.GetDirectoryName(lowerKey);
-			directoryName = string.IsNullOrEmpty(directoryName) ? "/" : directoryName.Replace("\\", "/");
-			doc.Add(new Field("__directory", directoryName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+			do
+			{
+				level += 1;
+				directoryName = (string.IsNullOrEmpty(directoryName) ? "" : directoryName.Replace("\\", "/"));
+				if (directoryName.StartsWith("/") == false)
+					directoryName = "/" + directoryName;
+				doc.Add(new Field("__directory", directoryName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+				directoryName = Path.GetDirectoryName(directoryName);
+			} while (directoryName != null);
 			doc.Add(new Field("__modified", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture), Field.Store.NO,
 							  Field.Index.NOT_ANALYZED_NO_NORMS));
-
+			doc.Add(new Field("__level", level.ToString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
 			long len;
 			if (long.TryParse(metadata["Content-Length"], out len))
 			{
@@ -156,9 +164,8 @@ namespace RavenFS.Search
 			searcher = new IndexSearcher(writer.GetReader());
 		}
 
-		public IEnumerable<string> GetTermsFor(string field, string fromValue, int pageSize)
+		public IEnumerable<string> GetTermsFor(string field, string fromValue)
 		{
-			var result = new HashSet<string>();
 			var termEnum = searcher.GetIndexReader().Terms(new Term(field, fromValue ?? string.Empty));
 			try
 			{
@@ -167,17 +174,17 @@ namespace RavenFS.Search
 					while (termEnum.Term() == null || fromValue.Equals(termEnum.Term().Text()))
 					{
 						if (termEnum.Next() == false)
-							return result;
+							yield break;
 					}
 				}
 				while (termEnum.Term() == null ||
 					field.Equals(termEnum.Term().Field()))
 				{
 					if (termEnum.Term() != null)
-						result.Add(termEnum.Term().Text());
-
-					if (result.Count >= pageSize)
-						break;
+					{
+						var item = termEnum.Term().Text();
+							yield return item;
+					}
 
 					if (termEnum.Next() == false)
 						break;
@@ -187,7 +194,6 @@ namespace RavenFS.Search
 			{
 				termEnum.Close();
 			}
-			return result;
 		}
 	}
 }
