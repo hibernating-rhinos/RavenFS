@@ -10,8 +10,8 @@
              xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
              xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
              xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors" 
-             xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions" 
-             mc:Ignorable="d"
+             xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
+             xmlns:m="clr-namespace:RavenFS.Studio.External.MultiBinding" mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="400"
     Infrastructure:ModelResolver.AttachModel="AsyncOperationsViewModel" d:DataContext="{d:DesignInstance Models:AsyncOperationsViewModel}">
     <UserControl.Resources>
@@ -45,7 +45,13 @@
                          VerticalAlignment="Center"
                             Margin="0,0,0,0" 
                             toolkit:DockPanel.Dock="Right">
-                  <CheckBox IsChecked="{Binding Model.ClearCompletedOperationsAutomatically.Value, Mode=TwoWay}" 
+                    <Button Command="{StaticResource CopyExceptionToClipboardCommand}"
+                            CommandParameter="{Binding Path=SelectedItem.Exception, ElementName=DataGrid}"
+                          ToolTipService.ToolTip="Copy Full Error Details to Clipboard"
+                          Style="{StaticResource Style_Button_MouseOverChrome}">
+                        <Image Source="{StaticResource Image_CopyError_Tiny}" Stretch="None"/>
+                    </Button>
+                    <CheckBox IsChecked="{Binding Model.ClearCompletedOperationsAutomatically.Value, Mode=TwoWay}" 
                               Content="Automatically clear finished operations"
                               VerticalAlignment="Center"
                               Margin="5,0" />
@@ -64,26 +70,39 @@
         </Border>
         
         <sdk:DataGrid 
+            x:Name="DataGrid"
             Grid.Row="1"
             ItemsSource="{Binding Model.Operations}" 
             AutoGenerateColumns="False" 
             Style="{StaticResource Style_DataGrid_NoHeader}">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Binding="{Binding Name}" Width="*"/>
-                <sdk:DataGridTemplateColumn Width="150">
+                <sdk:DataGridTemplateColumn Width="*">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Description}"
+                                       Behaviors:FadeTrimming.IsEnabled="True"
+                                       Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Width="300">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Grid>
-                                <ProgressBar Value="{Binding Progress}" Visibility="{Binding Status, Converter={StaticResource Converter_VisibileOnlyWhenAsyncOperationStatusIsProcessing}}" VerticalAlignment="Center" Height="10" Margin="4,0"/>
-                                <TextBlock x:Name="StatusText" Text="{Binding Status}" Margin="2" VerticalAlignment="Center" Visibility="{Binding Status, Converter={StaticResource Converter_VisibileExceptWhenAsyncOperationStatusIsProcessing}}"/>
-                                <i:Interaction.Triggers>
-                                    <ei:DataTrigger Binding="{Binding Status}" Value="Error" Comparison="Equal">
-                                        <Behaviors:ChangeDependencyPropertyAction TargetName="StatusText" Property="{z:Static Member=ToolTipService.ToolTipProperty}" Value="{Binding Error, StringFormat='Error: {0}'}"/>
-                                    </ei:DataTrigger>
-                                    <ei:DataTrigger Binding="{Binding Status}" Value="Error" Comparison="NotEqual">
-                                        <Behaviors:ChangeDependencyPropertyAction TargetName="StatusText" Property="{z:Static Member=ToolTipService.ToolTipProperty}" Value="{x:Null}"/>
-                                    </ei:DataTrigger>
-                                </i:Interaction.Triggers>
+                                <ProgressBar Value="{Binding Progress}" 
+                                             Visibility="{Binding Progress, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}" 
+                                             VerticalAlignment="Center" 
+                                             Height="10" 
+                                             Maximum="1"
+                                             Margin="4,0"/>
+                                <TextBlock x:Name="StatusText" Text="{m:MultiBinding Source1={Binding Status}, Source2={Binding Error}, Converter={StaticResource Converter_AsyncOperationStatus}}" 
+                                           Margin="2" 
+                                           VerticalAlignment="Center" 
+                                           Behaviors:FadeTrimming.IsEnabled="True"
+                                           Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                           Visibility="{Binding Progress, Converter={StaticResource Converter_CollapsedWhenValueGreaterThan}, ConverterParameter=0}"/>
                             </Grid>
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
@@ -91,7 +110,11 @@
                 <sdk:DataGridTemplateColumn Width="25">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Image x:Name="StatusImage" Stretch="None" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2">
+                            <Image x:Name="StatusImage" Stretch="None" 
+                                   VerticalAlignment="Center" 
+                                   HorizontalAlignment="Center" 
+                                   Margin="2"
+                                   ToolTipService.ToolTip="{m:MultiBinding Source1={Binding Status}, Source2={Binding Error}, Converter={StaticResource Converter_AsyncOperationStatus}}">
                                 <i:Interaction.Triggers>
                                     <ei:DataTrigger Binding="{Binding Status}" Value="Processing" Comparison="Equal">
                                         <ei:ChangePropertyAction TargetName="StatusImage" PropertyName="Source" Value="{x:Null}"/>
@@ -104,10 +127,6 @@
                                     </ei:DataTrigger>
                                     <ei:DataTrigger Binding="{Binding Status}" Value="Error" Comparison="Equal">
                                         <ei:ChangePropertyAction TargetName="StatusImage" PropertyName="Source" Value="{StaticResource Image_Error_Tiny}"/>
-                                        <Behaviors:ChangeDependencyPropertyAction TargetName="StatusImage" Property="{z:Static Member=ToolTipService.ToolTipProperty}" Value="{Binding Error, StringFormat='Error: {0}'}"/>
-                                    </ei:DataTrigger>
-                                    <ei:DataTrigger Binding="{Binding Status}" Value="Error" Comparison="NotEqual">
-                                        <Behaviors:ChangeDependencyPropertyAction TargetName="StatusText" Property="{z:Static Member=ToolTipService.ToolTipProperty}" Value="{x:Null}"/>
                                     </ei:DataTrigger>
                                 </i:Interaction.Triggers>
                             </Image>

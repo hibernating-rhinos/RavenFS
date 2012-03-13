@@ -62,4 +62,6 @@
                  UriSource="Close.png"/>
     <BitmapImage x:Key="Image_Clear_Tiny"
                  UriSource="ClearList.png"/>
+    <BitmapImage x:Key="Image_CopyError_Tiny"
+                 UriSource="CopyError.png"/>
 </ResourceDictionary>

@@ -8,4 +8,7 @@
     <Converters:DateStringToFormattedDateConverter x:Key="Converter_DateStringToFormattedDate"/>
     <Converters:EnumToVisibilityConverter x:Key="Converter_VisibileOnlyWhenAsyncOperationStatusIsProcessing" Type="{z:Type Name=Models:AsyncOperationStatus}" ValuesWhenVisibile="Processing"/>
     <Converters:EnumToVisibilityConverter x:Key="Converter_VisibileExceptWhenAsyncOperationStatusIsProcessing" Type="{z:Type Name=Models:AsyncOperationStatus}" ValuesWhenCollapsed="Processing"/>
+    <Converters:AsyncOperationStatusConverter x:Key="Converter_AsyncOperationStatus" />
+    <Converters:ValueGreaterThanConverter x:Key="Converter_VisibleWhenValueGreaterThan" ValueWhenTrue="{z:Static Member=Visibility.Visible}" ValueWhenFalse="{z:Static Member=Visibility.Collapsed}"/>
+    <Converters:ValueGreaterThanConverter x:Key="Converter_CollapsedWhenValueGreaterThan" ValueWhenTrue="{z:Static Member=Visibility.Collapsed}" ValueWhenFalse="{z:Static Member=Visibility.Visible}"/>
 </ResourceDictionary>

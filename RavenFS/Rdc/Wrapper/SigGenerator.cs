@@ -63,9 +63,9 @@ namespace RavenFS.Rdc.Wrapper
 
             var inputBuffer = new RdcBufferPointer
             {
-                Size = 0,
-                Used = 0,
-                Data = Marshal.AllocCoTaskMem((int)InputBufferSize + 16)
+            	Size = 0,
+            	Used = 0,
+            	Data = Marshal.AllocCoTaskMem(InputBufferSize + 16)
             };
 
             var rdcBufferPointers = PrepareRdcBufferPointers();

@@ -1,11 +1,10 @@
 ﻿using System.Collections.Specialized;
 using System.IO;
-using RavenFS.Client;
 using Xunit;
 
 namespace RavenFS.Tests.Bugs
 {
-	public class Queries : IisExpressTestClient
+	public class Queries : WebApiTest
 	{
 		[Fact]
 		public void CanQueryMultipleFiles()
@@ -86,7 +85,7 @@ namespace RavenFS.Tests.Bugs
 			streamWriter.Flush();
 			ms.Position = 0;
 
-			const string filename = "10 jQuery Transition Effects- Moving Elements with Style - DevSnippets.txt";
+			const string filename = "10 jQuery Transition Effects/Moving Elements with Style - DevSnippets.txt";
 			client.UploadAsync(filename, new NameValueCollection
 			{
 				{"Item", "10"}

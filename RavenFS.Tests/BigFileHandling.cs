@@ -51,6 +51,7 @@ namespace RavenFS.Tests
 			Assert.Equal(1, files.Count);
 			Assert.Equal(buffer.Length, files[0].TotalSize);
 			Assert.Equal(buffer.Length, files[0].UploadedSize);
+			
 			var readData = CreateWebRequest("/files/mb.bin")
 				.WithRange(skip)
 				.MakeRequest()
@@ -58,7 +59,8 @@ namespace RavenFS.Tests
 
 			var expected = buffer.Skip(skip).ToArray();
 			Assert.Equal(expected.Length, readData.Length);
-			Assert.Equal(expected, readData);
+
+			Assert.True(expected.SequenceEqual(readData));
 		}
 
 		public class SizeAndPartition : DataAttribute

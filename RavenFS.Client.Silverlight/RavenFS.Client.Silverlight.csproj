@@ -50,7 +50,6 @@
     <Reference Include="AsyncCtpLibrary_Silverlight5">
       <HintPath>..\packages\AsyncCTP.0.3\lib\sl50\AsyncCtpLibrary_Silverlight5.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="mscorlib" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\sl4\Newtonsoft.Json.dll</HintPath>
@@ -58,9 +57,7 @@
     <Reference Include="System.Windows" />
     <Reference Include="system" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml" />
     <Reference Include="System.Net" />
-    <Reference Include="System.Windows.Browser" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\RavenFS.Client\AsyncExtensions.cs">

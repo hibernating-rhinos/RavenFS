@@ -94,7 +94,7 @@
                 </Style>
             </Setter.Value>
         </Setter>
-        <Setter Property="GridLinesVisibility" Value="Vertical" />
+        <Setter Property="GridLinesVisibility" Value="None" />
         <Setter Property="HorizontalGridLinesBrush" Value="#FFEAE7E4" />
         <Setter Property="IsTabStop" Value="True" />
         <Setter Property="VerticalGridLinesBrush" Value="#FFEAE7E4" />

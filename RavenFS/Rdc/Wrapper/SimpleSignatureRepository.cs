@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using RavenFS.Extensions;
 
 namespace RavenFS.Rdc.Wrapper
 {
@@ -13,9 +14,9 @@ namespace RavenFS.Rdc.Wrapper
         private IDictionary<string, IEnumerable<string>> _sigNamesCache = new Dictionary<string, IEnumerable<string>>();
         private IDictionary<string, DateTime> _sigCreationTimes = new Dictionary<string, DateTime>();
 
-        public SimpleSignatureRepository(string baseDirectory)
+        public SimpleSignatureRepository(string path)
         {
-            _baseDirectory = baseDirectory;
+        	_baseDirectory = path.ToFullPath();
             if (!Directory.Exists(_baseDirectory))
             {
                 Directory.CreateDirectory(_baseDirectory);
@@ -27,14 +28,14 @@ namespace RavenFS.Rdc.Wrapper
         {
         }
 
-        public Stream GetContentForReading(string name)
+        public Stream GetContentForReading(string sigName)
         {
-            return File.OpenRead(NameToPath(name));
+            return File.OpenRead(NameToPath(sigName));
         }
 
-        public Stream CreateContent(string name)
+        public Stream CreateContent(string sigName)
         {
-            return File.Create(NameToPath(name));
+            return File.Create(NameToPath(sigName));
         }
 
         public SignatureInfo GetByName(string name)

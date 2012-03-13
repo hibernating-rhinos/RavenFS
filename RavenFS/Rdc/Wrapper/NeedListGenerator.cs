@@ -20,7 +20,14 @@ namespace RavenFS.Rdc.Wrapper
 
         public NeedListGenerator(ISignatureRepository seedSignatureRepository, ISignatureRepository sourceSignatureRepository)
         {
-            _rdcLibrary = (IRdcLibrary)new RdcLibrary();
+        	try
+        	{
+        		_rdcLibrary = (IRdcLibrary)new RdcLibrary();
+        	}
+        	catch (InvalidCastException e)
+        	{
+        		throw new InvalidOperationException("This have to run in an MTA thread", e);
+        	}
             _seedSignatureRepository = seedSignatureRepository;
             _sourceSignatureRepository = sourceSignatureRepository;
         }

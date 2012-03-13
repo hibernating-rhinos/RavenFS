@@ -35,6 +35,34 @@ namespace RavenFS.Tests
             Assert.Equal(expected, WebClient.DownloadString("/files/abc.txt"));
         }
 
+		[Fact]
+		public void Can_get_partial_results()
+		{
+			var ms = new MemoryStream();
+			var streamWriter = new StreamWriter(ms);
+			for (int i = 0; i < 1024*8; i++)
+			{
+				streamWriter.Write(i);
+				streamWriter.Write(",");
+			}
+			streamWriter.Flush();
+			ms.Position = 0;
+			var client = NewClient();
+			client.UploadAsync("numbers.txt", ms).Wait();
+
+			var actual = new MemoryStream();
+			client.DownloadAsync("numbers.txt", actual, 1024*4 + 1).Wait();
+			actual.Position = 0;
+			ms.Position = 1024*4 + 1;
+			var expectedString = new StreamReader(ms).ReadToEnd();
+			var actualString = new StreamReader(actual).ReadToEnd();
+
+			Assert.Equal(expectedString, actualString);
+
+		}
+
+       
+
         [Theory]
         [InlineData(1024 * 1024)]		// 1 mb
 		[InlineData(1024 * 1024 * 8)]	// 8 mb
@@ -198,7 +226,7 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, 0, 6).Result;
+            var nameValues = client.DownloadAsync("abc.txt", downloadedStream, 0, 6).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
@@ -219,7 +247,7 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, 3006, 3017).Result;
+            var nameValues = client.DownloadAsync("abc.txt", downloadedStream, 3006, 3017).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
@@ -240,7 +268,7 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.txt", downloadedStream, ms.Length - 6, ms.Length - 1).Result;
+            var nameValues = client.DownloadAsync("abc.txt", downloadedStream, ms.Length - 6, ms.Length - 1).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
@@ -261,7 +289,7 @@ namespace RavenFS.Tests
                                    }, ms)
                 .Wait();
             var downloadedStream = new MemoryStream();            
-            var nameValues = client.DownloadAsync("/rdc/files/", "abc.bin", downloadedStream, ms.Length - 7).Result;
+            var nameValues = client.DownloadAsync("abc.bin", downloadedStream, ms.Length - 7).Result;
             var sr = new StreamReader(downloadedStream);
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();

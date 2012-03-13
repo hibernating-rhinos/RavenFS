@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -94,5 +95,15 @@ namespace RavenFS.Studio.Models
         public Observable<bool> ClearCompletedOperationsAutomatically { get; private set; }
  
         public ReadOnlyObservableCollection<AsyncOperationModel> Operations { get { return operationsWrapper; } }
+
+        public void Do(Func<Task> taskGenerator, string description)
+        {
+            var operation = new AsyncOperationModel() {Description = description};
+
+            var task = taskGenerator();
+            task.UpdateOperationWithOutcome(operation);
+
+            RegisterOperation(operation);
+        }
     }
 }

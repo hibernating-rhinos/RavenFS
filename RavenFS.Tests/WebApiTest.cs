@@ -4,8 +4,8 @@ using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Web.Http.SelfHost;
 using RavenFS.Client;
+using RavenFS.Extensions;
 using RavenFS.Tests.Tools;
-using RavenFS.Web;
 
 namespace RavenFS.Tests
 {
@@ -13,8 +13,9 @@ namespace RavenFS.Tests
 	{
 		private HttpSelfHostConfiguration config;
 		private HttpSelfHostServer server;
-		private const string Url = "http://localhost:9079";
+		private const string Url = "http://localhost:19079";
 		protected WebClient WebClient;
+		private RavenFileSystem ravenFileSystem;
 
 		static WebApiTest()
 		{
@@ -29,10 +30,8 @@ namespace RavenFS.Tests
 
 		public WebApiTest()
 		{
-			IOExtensions.DeleteDirectory("Data.ravenfs");
-			IOExtensions.DeleteDirectory("Index.ravenfs");
-			IOExtensions.DeleteDirectory("Signatures.ravenfs");
-			NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(9079);
+			IOExtensions.DeleteDirectory("Test");
+			NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(19079);
 			Task.Factory.StartNew(() => // initialize in MTA thread
 			{
 				config = new HttpSelfHostConfiguration(Url)
@@ -40,7 +39,8 @@ namespace RavenFS.Tests
 					MaxReceivedMessageSize = Int64.MaxValue,
 					TransferMode = TransferMode.Streamed
 				};
-				RavenFileSystem.Start(config);
+				ravenFileSystem = new RavenFileSystem("~/Test");
+				ravenFileSystem.Start(config);
 			})
 			.Wait();
 
@@ -69,7 +69,7 @@ namespace RavenFS.Tests
 			server.CloseAsync().Wait();
 			server.Dispose();
 			config.Dispose();
-			RavenFileSystem.Stop();
+			ravenFileSystem.Dispose();
 		}
 	}
 }

@@ -2,16 +2,16 @@
 
 namespace RavenFS.Studio.Infrastructure
 {
-    public class VirtualItem<T> : INotifyPropertyChanged where T:class
+    public class VirtualItem<T> : INotifyPropertyChanged where T : class
     {
-        private readonly LazyLoadingCollection<T> _parent;
+        private readonly VirtualCollection<T> _parent;
         private readonly int _index;
         private T _item;
         private bool _isStale;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public VirtualItem(LazyLoadingCollection<T> parent, int index)
+        public VirtualItem(VirtualCollection<T> parent, int index)
         {
             _parent = parent;
             _index = index;
@@ -31,6 +31,7 @@ namespace RavenFS.Studio.Infrastructure
             {
                 _item = value;
                 OnPropertyChanged(new PropertyChangedEventArgs("Item"));
+                OnPropertyChanged(new PropertyChangedEventArgs("IsRealized"));
                 IsStale = false;
             }
         }
@@ -50,6 +51,11 @@ namespace RavenFS.Studio.Infrastructure
         public int Index
         {
             get { return _index; }
+        }
+
+        public VirtualCollection<T> Parent
+        {
+            get { return _parent; }
         }
 
         protected void OnPropertyChanged(PropertyChangedEventArgs e)

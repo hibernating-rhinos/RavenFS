@@ -34,52 +34,21 @@
     <Reference Include="AsyncCtpLibrary, Version=1.0.4107.18181, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\AsyncCTP.0.3\lib\net40\AsyncCtpLibrary.dll</HintPath>
     </Reference>
-    <Reference Include="Moq">
-      <HintPath>..\packages\Moq.4.0.10827\lib\NET40\Moq.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.0.8.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NLog.2.0.0.2000\lib\net40\NLog.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Json">
-      <HintPath>..\packages\System.Json.4.0.20126.16343\lib\net40\System.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System.Net.Http, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Net.Http.2.0.20126.16343\lib\net40\System.Net.Http.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Http.Formatting">
-      <HintPath>..\packages\System.Net.Http.Formatting.4.0.20126.16343\lib\net40\System.Net.Http.Formatting.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Http.WebRequest">
-      <HintPath>..\packages\System.Net.Http.2.0.20126.16343\lib\net40\System.Net.Http.WebRequest.dll</HintPath>
     </Reference>
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web.Http">
       <HintPath>..\packages\AspNetWebApi.Core.4.0.20126.16343\lib\net40\System.Web.Http.dll</HintPath>
     </Reference>
-    <Reference Include="System.Web.Http.Common">
-      <HintPath>..\packages\System.Web.Http.Common.4.0.20126.16343\lib\net40\System.Web.Http.Common.dll</HintPath>
-    </Reference>
     <Reference Include="System.Web.Http.SelfHost">
       <HintPath>..\packages\AspNetWebApi.SelfHost.4.0.20126.16343\lib\net40\System.Web.Http.SelfHost.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web.Http.WebHost">
-      <HintPath>..\packages\AspNetWebApi.4.0.20126.16343\lib\net40\System.Web.Http.WebHost.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="WebDev.WebHost40, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Windows\Microsoft.NET\assembly\GAC_32\WebDev.WebHost40\v4.0_10.0.0.0__b03f5f7f11d50a3a\WebDev.WebHost40.dll</HintPath>
     </Reference>
     <Reference Include="xunit, Version=1.8.0.1545, Culture=neutral, PublicKeyToken=8d05b1bb7a6fdb6c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -96,7 +65,7 @@
     <Compile Include="ClientUsage.cs" />
     <Compile Include="CompleteUsage.cs" />
     <Compile Include="FileHandling.cs" />
-    <Compile Include="MTAFact.cs" />
+    <Compile Include="MtaFactAttribute.cs" />
     <Compile Include="RDC\IO\RandomlyModifiedStream.cs" />
     <Compile Include="RDC\IO\RandomStream.cs" />
     <Compile Include="RDC\IO\TestDataGenerators.cs" />
@@ -105,15 +74,11 @@
     <Compile Include="RDC\SigGeneratorTest.cs" />
     <Compile Include="Tools\HttpWebRequestExtensions.cs" />
     <Compile Include="Tools\IisDeploymentUtil.cs" />
-    <Compile Include="Infrastructure\IisExpressDriver.cs" />
-    <Compile Include="IisExpressTestClient.cs" />
-    <Compile Include="MultiIisExpressTestBase.cs" />
+    <Compile Include="MultiHostTestBase.cs" />
     <Compile Include="NarrowedStreamTests.cs" />
-    <Compile Include="Infrastructure\ProcessDriver.cs" />
     <Compile Include="Tools\RandomlyModifiedStream.cs" />
     <Compile Include="Tools\RandomStream.cs" />
     <Compile Include="RemoteFilesHandlerTests.cs" />
-    <Compile Include="Tools\IOExtensions.cs" />
     <Compile Include="PagesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SynchronizationTests.cs" />
@@ -132,10 +97,6 @@
     <ProjectReference Include="..\RavenFS.Client\RavenFS.Client.csproj">
       <Project>{E37467ED-F680-423E-964A-60988A90F76E}</Project>
       <Name>RavenFS.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RavenFS.Web\RavenFS.Web.csproj">
-      <Project>{6F527033-D855-4799-9710-6EC5CFC180C2}</Project>
-      <Name>RavenFS.Web</Name>
     </ProjectReference>
     <ProjectReference Include="..\RavenFS\RavenFS.csproj">
       <Project>{6057787E-1771-4942-B3E5-FB435CED0408}</Project>
