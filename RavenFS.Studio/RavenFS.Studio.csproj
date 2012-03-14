@@ -101,6 +101,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Behaviors\ChangeDependencyPropertyAction.cs" />
+    <Compile Include="Behaviors\DataGridRowDoubleClickCommandBehavior.cs" />
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
     <Compile Include="Behaviors\ExecuteCommandOnFileDrop.cs" />
     <Compile Include="Behaviors\FadeTrimming.cs" />
@@ -110,6 +111,7 @@
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
     <Compile Include="Commands\HideOperationsPaneCommand.cs" />
     <Compile Include="Commands\NavigateToCommand.cs" />
+    <Compile Include="Commands\NavigateToFileSystemModelCommand.cs" />
     <Compile Include="Commands\NavigateToNextPageCommand.cs" />
     <Compile Include="Commands\NavigateToPrevPageCommand.cs" />
     <Compile Include="Commands\ShowOperationsPaneCommand.cs" />
@@ -139,6 +141,7 @@
     <Compile Include="Infrastructure\DialogModel.cs" />
     <Compile Include="Infrastructure\DialogView.cs" />
     <Compile Include="Infrastructure\IVirtualCollectionSource.cs" />
+    <Compile Include="Infrastructure\Navigation.cs" />
     <Compile Include="Infrastructure\PageModel.cs" />
     <Compile Include="Infrastructure\Schedulers.cs" />
     <Compile Include="Infrastructure\Validation.cs" />

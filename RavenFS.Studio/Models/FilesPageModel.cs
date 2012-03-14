@@ -19,8 +19,10 @@ namespace RavenFS.Studio.Models
 	    private ICommand deleteCommand;
 	    private ICommand editCommand;
 	    private ICommand uploadCommand;
+	    private ICommand navigateCommand;
 	    private FilesCollectionSource filesSource;
 
+        public ICommand Navigate { get { return navigateCommand ?? (navigateCommand = new NavigateToFileSystemModelCommand()); } }
         public ICommand Upload { get { return uploadCommand ?? (uploadCommand = new UploadCommand(CurrentFolder)); } }
         public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedFile)); } }
         public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedFile)); } }

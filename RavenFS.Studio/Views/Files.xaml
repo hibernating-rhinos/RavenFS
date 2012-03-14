@@ -80,6 +80,7 @@
                       SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}">
             <i:Interaction.Behaviors>
                 <b:ExecuteCommandOnFileDrop Command="{Binding Upload}"/>
+                <b:DataGridRowDoubleClickCommandBehavior Command="{Binding Navigate}"/>
             </i:Interaction.Behaviors>
             <i:Interaction.Triggers>
                 <b:StudioKeyTrigger Key="Delete">
