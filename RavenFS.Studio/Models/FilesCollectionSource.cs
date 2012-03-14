@@ -21,7 +21,8 @@ namespace RavenFS.Studio.Models
     public class FilesCollectionSource : VirtualCollectionSource<FileSystemModel>
     {
         private int? _fileCount;
-        
+
+        private string currentFolder;
         private const int MaximumNumberOfFolders = 1024;
         private List<DirectoryModel> _subFolders = new List<DirectoryModel>();
         private TaskScheduler _scheduler;
@@ -29,6 +30,7 @@ namespace RavenFS.Studio.Models
         public FilesCollectionSource()
         {
             _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            currentFolder = "/";
         }
 
         public override int? Count
@@ -36,6 +38,15 @@ namespace RavenFS.Studio.Models
             get { return _fileCount + _subFolders.Count; }
         }
 
+        public string CurrentFolder
+        {
+            get { return currentFolder; }
+            set
+            {
+                currentFolder = value;
+                Refresh();
+            }
+        }
 
         public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize)
         {
@@ -51,7 +62,7 @@ namespace RavenFS.Studio.Models
                 var subFoldersToInclude = Math.Min(Math.Max(pageSize - start, 0), _subFolders.Count);
                 var filesPageSize = pageSize - subFoldersToInclude;
 
-                return ApplicationModel.Current.Client.GetFilesAsync("/", FilesSortOptions.Name, filesStart, filesPageSize)
+                return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, FilesSortOptions.Name, filesStart, filesPageSize)
                         .ContinueOnSuccess(t => (IList<FileSystemModel>)GetLastSubFolders(subFoldersToInclude).Concat(ToFileSystemModels(t.Files)).ToList());
 
             }
@@ -64,12 +75,14 @@ namespace RavenFS.Studio.Models
 
         private static IEnumerable<FileSystemModel> ToFileSystemModels(IEnumerable<FileInfo> t)
         {
-            return t.Select(fi => new FileModel
-                                      {
-                                          FormattedTotalSize = fi.HumaneTotalSize, 
-                                          FullPath = fi.Name,
-                                          Metadata = fi.Metadata
-                                      });
+            return t
+                .Where(fi => fi != null)
+                .Select(fi => new FileModel
+                                  {
+                                      FormattedTotalSize = fi.HumaneTotalSize,
+                                      FullPath = fi.Name,
+                                      Metadata = fi.Metadata
+                                  });
         }
 
         public void Refresh()
@@ -79,8 +92,8 @@ namespace RavenFS.Studio.Models
 
         private void BeginUpdateItemCount()
         {
-            var getFoldersTask = ApplicationModel.Current.Client.GetFoldersAsync(pageSize: MaximumNumberOfFolders);
-            var getFilesCountTask = ApplicationModel.Current.Client.GetFilesAsync("/", pageSize: 1);
+            var getFoldersTask = ApplicationModel.Current.Client.GetFoldersAsync(currentFolder, start:0, pageSize: MaximumNumberOfFolders);
+            var getFilesCountTask = ApplicationModel.Current.Client.GetFilesAsync(currentFolder, pageSize: 1);
 
             TaskEx.WhenAll(getFoldersTask, getFilesCountTask)
                 .ContinueWith(_ =>

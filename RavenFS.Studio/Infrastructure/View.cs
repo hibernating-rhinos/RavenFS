@@ -15,6 +15,8 @@ namespace RavenFS.Studio.Infrastructure
 
 		private static readonly DispatcherTimer dispatcherTimer;
 
+	    private bool isLoaded;
+
 		static View()
 		{
 			CurrentViews = new List<View>();
@@ -80,10 +82,52 @@ namespace RavenFS.Studio.Infrastructure
 		{
             if (!DesignerProperties.IsInDesignTool)
             {
-                Loaded += (sender, args) => CurrentViews.Add(this);
-                DataContextChanged += (sender, args) => InvokeTimerTicked(args.NewValue);
-                Unloaded += (sender, args) => CurrentViews.Remove(this);
+                Loaded += OnLoaded;
+                DataContextChanged += OnDataContextChanged;
+                Unloaded += OnUnloaded;
             }
 		}
+
+	    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs args)
+	    {
+	        InvokeTimerTicked(args.NewValue);
+            if (isLoaded)
+            {
+                NotifyModelLoaded();
+            }
+	    }
+
+	    private void OnUnloaded(object sender, RoutedEventArgs args)
+	    {
+	        CurrentViews.Remove(this);
+            if (Model != null)
+            {
+                Model.NotifyViewUnloaded();
+            }
+
+            isLoaded = false;
+	    }
+
+	    private void OnLoaded(object sender, RoutedEventArgs args)
+	    {
+	        isLoaded = true;
+	        CurrentViews.Add(this);
+	        NotifyModelLoaded();
+	    }
+
+	    private void NotifyModelLoaded()
+	    {
+	        if (Model != null)
+	        {
+	            if (Model is PageModel)
+	            {
+	                (Model as PageModel).QueryParameters = NavigationContext.QueryString;
+	            }
+
+	            Model.NotifyViewLoaded();
+	        }
+	    }
+
+	    protected Model Model {get { return DataContext as Model; }}
 	}
 }

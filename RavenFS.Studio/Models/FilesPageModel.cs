@@ -7,25 +7,27 @@ using RavenFS.Client;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Infrastructure;
 using System.Linq;
+using RavenFS.Studio.Extensions;
 
 namespace RavenFS.Studio.Models
 {
-	public class FilesPageModel : Model
+	public class FilesPageModel : PageModel
 	{
 	    private const int DefaultPageSize = 50;
 
 	    private ICommand downloadCommand;
 	    private ICommand deleteCommand;
 	    private ICommand editCommand;
+	    private ICommand uploadCommand;
 	    private FilesCollectionSource filesSource;
 
-	    public ICommand Upload { get { return new UploadCommand(); } }
+        public ICommand Upload { get { return uploadCommand ?? (uploadCommand = new UploadCommand(CurrentFolder)); } }
         public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedFile)); } }
         public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedFile)); } }
         public ICommand EditProperties { get { return editCommand ?? (editCommand = new EditFilePropertiesCommand(SelectedFile)); } }
 
         public Observable<VirtualItem<FileSystemModel>> SelectedFile { get; private set; }
-
+        public Observable<string> CurrentFolder { get; private set; } 
         public VirtualCollection<FileSystemModel> Files { get; private set; }
 
 		public FilesPageModel()
@@ -33,11 +35,30 @@ namespace RavenFS.Studio.Models
 		    filesSource = new FilesCollectionSource();
             Files = new VirtualCollection<FileSystemModel>(filesSource, DefaultPageSize);
             SelectedFile = new Observable<VirtualItem<FileSystemModel>>();
+            CurrentFolder = new Observable<string>() { Value = "/"};
+            CurrentFolder.PropertyChanged += delegate { filesSource.CurrentFolder = CurrentFolder.Value; };
 		}
 
-		protected override Task TimerTickedAsync()
+        protected override void OnViewLoaded()
+        {
+            CurrentFolder.Value = GetFolder();
+        }
+
+	    private string GetFolder()
+	    {
+	        var folder = QueryParameters.GetValueOrDefault("folder", "");
+
+	        folder = folder.TrimEnd('/');
+
+            if (!folder.StartsWith("/"))
+            {
+                folder = "/" + folder;
+            }
+	        return folder;
+	    }
+
+	    protected override Task TimerTickedAsync()
 		{
-            filesSource.Refresh();
 		    return Completed;
 		}
 	}

@@ -127,6 +127,7 @@
     <Compile Include="Converters\StringIsNullOrEmptyConverter.cs" />
     <Compile Include="Converters\ValueGreaterThanConverter.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
+    <Compile Include="Extensions\IDictionaryExtensions.cs" />
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Extensions\IListExtensions.cs" />
     <Compile Include="External\MultiBinding\IMultiValueConverter.cs" />
@@ -138,6 +139,7 @@
     <Compile Include="Infrastructure\DialogModel.cs" />
     <Compile Include="Infrastructure\DialogView.cs" />
     <Compile Include="Infrastructure\IVirtualCollectionSource.cs" />
+    <Compile Include="Infrastructure\PageModel.cs" />
     <Compile Include="Infrastructure\Schedulers.cs" />
     <Compile Include="Infrastructure\Validation.cs" />
     <Compile Include="Infrastructure\VirtualCollection.cs" />

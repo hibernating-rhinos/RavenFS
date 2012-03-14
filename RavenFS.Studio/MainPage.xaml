@@ -153,6 +153,8 @@
                     <uriMapper:UriMapper>
                         <uriMapper:UriMapping Uri=""
 											  MappedUri="/Views/Files.xaml" />
+                        <uriMapper:UriMapping Uri="/files/{path}"
+											  MappedUri="/Views/Files.xaml?folder={path}" />
                         <uriMapper:UriMapping Uri="/{pageName}"
 											  MappedUri="/Views/{pageName}.xaml" />
                     </uriMapper:UriMapper>

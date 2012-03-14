@@ -10,11 +10,14 @@ namespace RavenFS.Studio.Commands
 {
 	public class UploadCommand : Command
 	{
-		public UploadCommand()
+	    private readonly Observable<string> currentFolder;
+
+	    public UploadCommand(Observable<string> currentFolder)
 		{
+		    this.currentFolder = currentFolder;
 		}
 
-		public override void Execute(object parameter)
+	    public override void Execute(object parameter)
 		{
 		    var files = parameter as IList<FileInfo>;
             
@@ -35,23 +38,23 @@ namespace RavenFS.Studio.Commands
             {
                 foreach (var file in files)
                 {
-                    QueueForUpload(file);
+                    QueueForUpload(file, currentFolder.Value);
                 }
             }
 		}
 
-	    private static void QueueForUpload(FileInfo file)
+	    private static void QueueForUpload(FileInfo file, string folder)
 	    {
 	        var operation = new AsyncOperationModel()
 	                            {
-	                                Description = "Uploading " + file.Name,
+	                                Description = "Uploading " + file.Name + " to " + folder,
 	                            };
 
             var stream = file.OpenRead();
             var fileSize = stream.Length;
 
 	        ApplicationModel.Current.Client.UploadAsync(
-	            file.Name,
+	            folder + "/" + file.Name,
 	            new NameValueCollection(),
 	            stream,
 	            (fileName, bytesUploaded) => operation.ProgressChanged(bytesUploaded, fileSize))
