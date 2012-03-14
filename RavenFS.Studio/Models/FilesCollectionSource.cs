@@ -67,7 +67,7 @@ namespace RavenFS.Studio.Models
             return t.Select(fi => new FileModel
                                       {
                                           FormattedTotalSize = fi.HumaneTotalSize, 
-                                          Name = fi.Name,
+                                          FullPath = fi.Name,
                                           Metadata = fi.Metadata
                                       });
         }
@@ -86,7 +86,7 @@ namespace RavenFS.Studio.Models
                 .ContinueWith(_ =>
                                   {
                                       _subFolders.Clear();
-                                      _subFolders.AddRange(getFoldersTask.Result.Select(n => new DirectoryModel() { Name = n}));
+                                      _subFolders.AddRange(getFoldersTask.Result.Select(n => new DirectoryModel() { FullPath = n}));
                                       _fileCount = getFilesCountTask.Result.FileCount;
 
                                       OnSourceChanged(EventArgs.Empty);

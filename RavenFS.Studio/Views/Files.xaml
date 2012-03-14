@@ -90,11 +90,13 @@
                 <sdk:DataGridTemplateColumn Header="Name" Width="*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Item.Name, FallbackValue=Loading...}" 
-                                       b:FadeTrimming.IsEnabled="True" 
-                                       b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
-                                       VerticalAlignment="Center"
-                                       Margin="4"/>
+                            <StackPanel Orientation="Horizontal" Margin="4" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+                                <Image Width="16" Source="{Binding Item, Converter={StaticResource Converter_FileSystemModelToIconConverter}}" Stretch="None"/>
+                                <TextBlock Text="{Binding Item.Name, FallbackValue=Loading...}" 
+                                           b:FadeTrimming.IsEnabled="True" 
+                                           b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                           Margin="4, 0,0,0"/>
+                            </StackPanel>
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>

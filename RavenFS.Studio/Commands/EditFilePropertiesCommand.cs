@@ -20,7 +20,7 @@ namespace RavenFS.Studio.Commands
 
         protected override void ExecuteOverride(FileSystemModel item)
         {
-            var model = new FilePropertiesDialogModel { Name = item.Name };
+            var model = new FilePropertiesDialogModel { File = item as FileModel };
             var view = new FilePropertiesDialog { Model = model };
             view.Show();
         }

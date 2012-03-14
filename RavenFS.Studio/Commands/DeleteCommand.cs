@@ -25,7 +25,7 @@ namespace RavenFS.Studio.Commands
 			AskUser.ConfirmationAsync("Delete", string.Format("Are you sure you want to delete file '{0}'?", parameter.Name))
                 .ContinueWhenTrueInTheUIThread(
 				() => ApplicationModel.Current.AsyncOperations.Do(
-				    () => ApplicationModel.Current.Client.DeleteAsync(parameter.Name),
+				    () => ApplicationModel.Current.Client.DeleteAsync(parameter.FullPath),
 				    "Deleting " + parameter.Name));	
 		}
 	}

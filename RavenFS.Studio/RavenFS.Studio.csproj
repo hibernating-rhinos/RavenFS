@@ -123,6 +123,7 @@
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
     <Compile Include="Converters\BooleanConverter.cs" />
+    <Compile Include="Converters\FileSystemModelToIconConverter.cs" />
     <Compile Include="Converters\StringIsNullOrEmptyConverter.cs" />
     <Compile Include="Converters\ValueGreaterThanConverter.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
@@ -307,6 +308,7 @@
     <Resource Include="Assets\Images\Close.png" />
     <Resource Include="Assets\Images\ClearList.png" />
     <Resource Include="Assets\Images\CopyError.png" />
+    <Resource Include="Assets\Images\Folder.png" />
     <Content Include="Assets\Images\ImageCredits.txt" />
     <Resource Include="Assets\Images\Info.png" />
     <Resource Include="Assets\Images\Query.png" />

@@ -13,6 +13,23 @@ namespace RavenFS.Studio.Models
 {
     public class FileSystemModel
     {
-        public string Name { get; set; }
+        private string fullPath;
+        private string name;
+
+        public string Name
+        {
+            get { return name; }
+            private set { name = value; }
+        }
+
+        public string FullPath
+        {
+            get { return fullPath; }
+            set
+            {
+                fullPath = value;
+                name = fullPath.Substring(fullPath.LastIndexOf("/", StringComparison.InvariantCulture) + 1);
+            }
+        }
     }
 }
