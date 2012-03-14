@@ -101,7 +101,7 @@
                 <sdk:DataGridTemplateColumn Header="Size" Width="100">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Item.HumaneTotalSize, FallbackValue=-}" 
+                            <TextBlock Text="{Binding Item.FormattedTotalSize}" 
                                        b:FadeTrimming.IsEnabled="True" 
                                        b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
                                        VerticalAlignment="Center"
@@ -112,7 +112,7 @@
                 <sdk:DataGridTemplateColumn Header="Last Modified" Width="150">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Item.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDate}, FallbackValue=-}" 
+                            <TextBlock Text="{Binding Item.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDate}}" 
                                        b:FadeTrimming.IsEnabled="True" 
                                        b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
                                        VerticalAlignment="Center"

@@ -47,12 +47,12 @@ namespace RavenFS.Studio.Models
             }
             else
             {
-                var filesStart = start - _subFolders.Count;
-                var subFoldersToInclude = Math.Max(pageSize - start, 0);
+                var filesStart = Math.Max(start - _subFolders.Count, 0);
+                var subFoldersToInclude = Math.Min(Math.Max(pageSize - start, 0), _subFolders.Count);
                 var filesPageSize = pageSize - subFoldersToInclude;
 
-                return ApplicationModel.Current.Client.BrowseAsync(filesStart, filesPageSize)
-                        .ContinueOnSuccess(t => (IList<FileSystemModel>)GetLastSubFolders(subFoldersToInclude).Concat(ToFileSystemModels(t)).ToList());
+                return ApplicationModel.Current.Client.GetFilesAsync("/", FilesSortOptions.Name, filesStart, filesPageSize)
+                        .ContinueOnSuccess(t => (IList<FileSystemModel>)GetLastSubFolders(subFoldersToInclude).Concat(ToFileSystemModels(t.Files)).ToList());
 
             }
         }
