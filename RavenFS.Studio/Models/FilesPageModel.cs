@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Browser;
@@ -31,6 +33,7 @@ namespace RavenFS.Studio.Models
         public Observable<VirtualItem<FileSystemModel>> SelectedFile { get; private set; }
         public Observable<string> CurrentFolder { get; private set; } 
         public VirtualCollection<FileSystemModel> Files { get; private set; }
+        public ObservableCollection<DirectoryModel> BreadcrumbTrail { get; private set; }
 
 		public FilesPageModel()
 		{
@@ -38,10 +41,30 @@ namespace RavenFS.Studio.Models
             Files = new VirtualCollection<FileSystemModel>(filesSource, DefaultPageSize);
             SelectedFile = new Observable<VirtualItem<FileSystemModel>>();
             CurrentFolder = new Observable<string>() { Value = "/"};
-            CurrentFolder.PropertyChanged += delegate { filesSource.CurrentFolder = CurrentFolder.Value; };
+            CurrentFolder.PropertyChanged += delegate
+                                                 {
+                                                     filesSource.CurrentFolder = CurrentFolder.Value;
+                                                     UpdateBreadCrumbs();
+                                                 };
+            BreadcrumbTrail = new ObservableCollection<DirectoryModel>();
 		}
 
-        protected override void OnViewLoaded()
+	    private void UpdateBreadCrumbs()
+	    {
+            BreadcrumbTrail.Clear();
+
+	        var folders = CurrentFolder.Value.Split(new[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
+
+	        var currentPath = "";
+
+            foreach (var folder in folders)
+            {
+                currentPath += "/" + folder;
+                BreadcrumbTrail.Add(new DirectoryModel() { FullPath = currentPath });
+	        }
+	    }
+
+	    protected override void OnViewLoaded()
         {
             CurrentFolder.Value = GetFolder();
         }

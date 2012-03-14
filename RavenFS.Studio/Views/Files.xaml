@@ -21,6 +21,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
           <RowDefinition Height="*"/>
           <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
@@ -72,11 +73,38 @@
             </toolkit:DockPanel>
         </Border>
 
-        <sdk:DataGrid x:Name="DataGrid" Grid.Row="2" 
+        <Border Grid.Row="2" Style="{StaticResource Style_Border_Toolbar}">
+            <toolkit:DockPanel>
+                <HyperlinkButton Command="{StaticResource NavigateToCommand}"
+                                 CommandParameter="/files">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Image Source="{StaticResource Image_RavenLogo}" Width="16" Stretch="Uniform" Margin="4" VerticalAlignment="Center"/>
+                        <TextBlock Text="RavenFS" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </HyperlinkButton>
+                <ItemsControl ItemsSource="{Binding BreadcrumbTrail}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <HyperlinkButton Style="{StaticResource Style_Link_Breadcrumb_Initial}" 
+                                    Command="{StaticResource NavigateToCommand}"
+                                    CommandParameter="{Binding FullPath, StringFormat='/files{0}'}"
+                                    Content="{Binding Name, StringFormat='>  {0}'}" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </toolkit:DockPanel>
+        </Border>
+        
+        <sdk:DataGrid x:Name="DataGrid" Grid.Row="3" 
                       AutoGenerateColumns="False" 
                       IsReadOnly="True" 
                       ItemsSource="{Binding Files}"
-                      Margin="0,10"
+                      Margin="0,0,0,10"
                       SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}">
             <i:Interaction.Behaviors>
                 <b:ExecuteCommandOnFileDrop Command="{Binding Upload}"/>
@@ -126,6 +154,6 @@
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
         
-        <Views:AsyncOperationsView Grid.Row="3"/>
+        <Views:AsyncOperationsView Grid.Row="4"/>
     </Grid>
 </Infrastructure:View>
