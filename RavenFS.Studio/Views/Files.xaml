@@ -78,13 +78,14 @@
 
         <Border Grid.Row="2" Style="{StaticResource Style_Border_Toolbar}">
             <toolkit:DockPanel>
-                <HyperlinkButton Command="{StaticResource NavigateToCommand}"
-                                 CommandParameter="/files">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Image Source="{StaticResource Image_RavenLogo}" Width="16" Stretch="Uniform" Margin="4" VerticalAlignment="Center"/>
-                        <TextBlock Text="RavenFS" VerticalAlignment="Center"/>
-                    </StackPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="{StaticResource Image_RavenLogo}" Width="16" Stretch="Uniform" Margin="4,0" VerticalAlignment="Center"/>
+                    <HyperlinkButton Style="{StaticResource Style_Link_Breadcrumb}" 
+                                Command="{StaticResource NavigateToCommand}"
+                                 CommandParameter="/files"
+                                 Content="RavenFS">
                 </HyperlinkButton>
+                </StackPanel>
                 <ItemsControl ItemsSource="{Binding BreadcrumbTrail}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -93,10 +94,17 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <HyperlinkButton Style="{StaticResource Style_Link_Breadcrumb_Initial}" 
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text=">" Margin="2,0" VerticalAlignment="Center"/>
+                                <Image Source="{StaticResource Image_Folder_Tiny}" Width="14" Stretch="Uniform" Margin="3,0" VerticalAlignment="Center"/>
+                                <HyperlinkButton Style="{StaticResource Style_Link_Breadcrumb}" 
                                     Command="{StaticResource NavigateToCommand}"
                                     CommandParameter="{Binding FullPath, StringFormat='/files{0}'}"
-                                    Content="{Binding Name, StringFormat='>  {0}'}" VerticalAlignment="Center" />
+                                    VerticalAlignment="Center"
+                                    Content="{Binding Name}">
+                                </HyperlinkButton>
+                            </StackPanel>
+                            
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

@@ -379,11 +379,11 @@
         </Setter>
     </Style>
 
-    <Style x:Key="Style_Link_Breadcrumb_Initial" TargetType="HyperlinkButton">
+    <Style x:Key="Style_Link_Breadcrumb" TargetType="HyperlinkButton">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="BorderBrush" Value="{x:Null}"/>
-        <Setter Property="Foreground" Value="#FFA1A1A1"/>
+        <Setter Property="Foreground" Value="Black"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="MinHeight" Value="0"/>
