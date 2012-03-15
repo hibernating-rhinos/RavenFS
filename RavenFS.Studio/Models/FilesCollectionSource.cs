@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,22 +21,24 @@ namespace RavenFS.Studio.Models
 {
     public class FilesCollectionSource : VirtualCollectionSource<FileSystemModel>
     {
-        private int? _fileCount;
-
+        private object lockObject = new object();
         private string currentFolder;
-        private const int MaximumNumberOfFolders = 1024;
-        private List<DirectoryModel> _subFolders = new List<DirectoryModel>();
-        private TaskScheduler _scheduler;
+        private int fileCount;
 
         public FilesCollectionSource()
         {
-            _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
             currentFolder = "/";
         }
 
-        public override int? Count
+        public override int Count
         {
-            get { return _fileCount + _subFolders.Count; }
+            get
+            {
+                lock (lockObject)
+                {
+                    return fileCount;
+                }
+            }
         }
 
         public string CurrentFolder
@@ -50,32 +53,18 @@ namespace RavenFS.Studio.Models
 
         public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize)
         {
-            if (start < _subFolders.Count - pageSize)
-            {
-                var tcs = new TaskCompletionSource<IList<FileSystemModel>>();
-                tcs.SetResult(_subFolders.GetRange(start, pageSize).Cast<FileSystemModel>().ToList());
-                return tcs.Task;
-            }
-            else
-            {
-                var filesStart = Math.Max(start - _subFolders.Count, 0);
-                var subFoldersToInclude = Math.Min(Math.Max(pageSize - start, 0), _subFolders.Count);
-                var filesPageSize = pageSize - subFoldersToInclude;
-
-                return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, FilesSortOptions.Name, filesStart, filesPageSize)
-                        .ContinueOnSuccess(t => (IList<FileSystemModel>)GetLastSubFolders(subFoldersToInclude).Concat(ToFileSystemModels(t.Files)).ToList());
-
-            }
+            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, FilesSortOptions.Name, start, pageSize)
+                        .ContinueWith(t =>
+                                          {
+                                              var result = (IList<FileSystemModel>) ToFileSystemModels(t.Result.Files).Take(pageSize).ToArray();
+                                              UpdateCount(t.Result.FileCount);
+                                              return result;
+                                          });
         }
 
-        private IEnumerable<DirectoryModel> GetLastSubFolders(int subFoldersToInclude)
+        private static IEnumerable<FileSystemModel> ToFileSystemModels(IEnumerable<FileInfo> files)
         {
-            return _subFolders.Skip(_subFolders.Count - subFoldersToInclude).Take(subFoldersToInclude);
-        }
-
-        private static IEnumerable<FileSystemModel> ToFileSystemModels(IEnumerable<FileInfo> t)
-        {
-            return t
+            return files
                 .Where(fi => fi != null)
                 .Select(fi => new FileModel
                                   {
@@ -87,23 +76,31 @@ namespace RavenFS.Studio.Models
 
         public void Refresh()
         {
-            BeginUpdateItemCount();
+            BeginGetCount();
         }
 
-        private void BeginUpdateItemCount()
+        private void BeginGetCount()
         {
-            var getFoldersTask = ApplicationModel.Current.Client.GetFoldersAsync(currentFolder, start:0, pageSize: MaximumNumberOfFolders);
-            var getFilesCountTask = ApplicationModel.Current.Client.GetFilesAsync(currentFolder, pageSize: 1);
+            ApplicationModel.Current.Client.GetFilesAsync(currentFolder, pageSize: 1)
+                .ContinueWith(t => 
+                    UpdateCount(t.Result.FileCount, forceCollectionRefresh: true), 
+                TaskContinuationOptions.ExecuteSynchronously);
+        }
 
-            TaskEx.WhenAll(getFoldersTask, getFilesCountTask)
-                .ContinueWith(_ =>
-                                  {
-                                      _subFolders.Clear();
-                                      _subFolders.AddRange(getFoldersTask.Result.Select(n => new DirectoryModel() { FullPath = n}));
-                                      _fileCount = getFilesCountTask.Result.FileCount;
+        private void UpdateCount(int newCount, bool forceCollectionRefresh = false)
+        {
+            bool fileCountChanged; 
 
-                                      OnSourceChanged(EventArgs.Empty);
-                                  }, _scheduler);
+            lock(lockObject)
+            {
+                fileCountChanged = newCount != fileCount;
+                fileCount = newCount;
+            }
+
+            if (fileCountChanged || forceCollectionRefresh)
+            {
+                OnCollectionChanged(EventArgs.Empty);
+            }
         }
     }
 }

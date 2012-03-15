@@ -137,6 +137,7 @@
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
     <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
+    <Compile Include="Infrastructure\CompositeVirtualCollectionSource.cs" />
     <Compile Include="Infrastructure\IObservable.cs" />
     <Compile Include="Infrastructure\DialogModel.cs" />
     <Compile Include="Infrastructure\DialogView.cs" />
@@ -184,7 +185,9 @@
     <Compile Include="Infrastructure\NotifyPropertyChangedBase.cs" />
     <Compile Include="Models\FilesCollectionSource.cs" />
     <Compile Include="Models\FilesPageModel.cs" />
+    <Compile Include="Models\FileSystemCollectionSource.cs" />
     <Compile Include="Models\FileSystemModel.cs" />
+    <Compile Include="Models\FoldersCollectionSource.cs" />
     <Compile Include="Views\AsyncOperationsView.xaml.cs">
       <DependentUpon>AsyncOperationsView.xaml</DependentUpon>
     </Compile>

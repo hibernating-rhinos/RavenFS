@@ -15,8 +15,8 @@ namespace RavenFS.Studio.Infrastructure
 {
     public interface IVirtualCollectionSource<T>
     {
-        event EventHandler<EventArgs> SourceChanged;
-        int? Count { get; }
+        event EventHandler<EventArgs> CollectionChanged;
+        int Count { get; }
         Task<IList<T>> GetPageAsync(int start, int pageSize);
     }
 }

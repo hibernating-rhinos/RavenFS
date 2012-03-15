@@ -22,7 +22,7 @@ namespace RavenFS.Studio.Models
 	    private ICommand editCommand;
 	    private ICommand uploadCommand;
 	    private ICommand navigateCommand;
-	    private FilesCollectionSource filesSource;
+        private FileSystemCollectionSource filesSource;
 
         public ICommand Navigate { get { return navigateCommand ?? (navigateCommand = new NavigateToFileSystemModelCommand()); } }
         public ICommand Upload { get { return uploadCommand ?? (uploadCommand = new UploadCommand(CurrentFolder)); } }
@@ -37,7 +37,7 @@ namespace RavenFS.Studio.Models
 
 		public FilesPageModel()
 		{
-		    filesSource = new FilesCollectionSource();
+            filesSource = new FileSystemCollectionSource();
             Files = new VirtualCollection<FileSystemModel>(filesSource, DefaultPageSize);
             SelectedFile = new Observable<VirtualItem<FileSystemModel>>();
             CurrentFolder = new Observable<string>() { Value = "/"};
@@ -84,6 +84,7 @@ namespace RavenFS.Studio.Models
 
 	    protected override Task TimerTickedAsync()
 		{
+            filesSource.Refresh();
 		    return Completed;
 		}
 	}
