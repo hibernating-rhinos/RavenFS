@@ -22,8 +22,10 @@ namespace RavenFS.Studio.Models
 	    private ICommand editCommand;
 	    private ICommand uploadCommand;
 	    private ICommand navigateCommand;
+	    private ICommand addFolderCommand;
         private FileSystemCollectionSource filesSource;
 
+        public ICommand AddFolder { get { return addFolderCommand ?? (addFolderCommand = new AddFolderCommand(CurrentFolder)); } }
         public ICommand Navigate { get { return navigateCommand ?? (navigateCommand = new NavigateToFileSystemModelCommand()); } }
         public ICommand Upload { get { return uploadCommand ?? (uploadCommand = new UploadCommand(CurrentFolder)); } }
         public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedFile)); } }

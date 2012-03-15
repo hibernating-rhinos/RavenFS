@@ -14,36 +14,23 @@ using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio.Converters
 {
-    public class FileSystemModelToIconConverter : IValueConverter
+    public class VirtualFolderToolTipConverter : IValueConverter
     {
+        #region Implementation of IValueConverter
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value == null)
+            var directoryModel = value as DirectoryModel;
+
+            if (directoryModel == null || !directoryModel.IsVirtual)
             {
                 return null;
             }
-
-            if (value is DirectoryModel)
+            else
             {
-                var directoryModel = value as DirectoryModel;
-                return directoryModel.IsVirtual ? FindResource("Image_VirtualFolder_Tiny") : FindResource("Image_Folder_Tiny");
+                return
+                    "This is a virtual folder, which will disappear at the end of this session, unless you upload something into it.";
             }
-            else if (value is FileModel)
-            {
-                return FindResource("Image_Document_Tiny");
-            }
-
-            return null;
-        }
-
-        private object FindResource(string resourceName)
-        {
-            if (Application.Current != null)
-            {
-                return Application.Current.Resources[resourceName];
-            }
-
-            return null;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -51,5 +38,6 @@ namespace RavenFS.Studio.Converters
             throw new NotImplementedException();
         }
 
+        #endregion
     }
 }

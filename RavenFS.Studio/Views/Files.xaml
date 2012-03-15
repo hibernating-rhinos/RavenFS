@@ -52,7 +52,10 @@
                             </StackPanel>
                         </Button.Content>
                     </Button>
-                  <Button Content="Download"
+                    <Button Content="Add Folder"
+                            VerticalAlignment="Center"
+                            Command="{Binding AddFolder}" Margin="5,0,0,0"/>
+                    <Button Content="Download"
                             VerticalAlignment="Center"
                             Command="{Binding Download}" Margin="5,0,0,0"/>
                     <Button Content="Delete"
@@ -119,13 +122,17 @@
                 <sdk:DataGridTemplateColumn Header="Name" Width="*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Margin="4" VerticalAlignment="Center" HorizontalAlignment="Stretch">
-                                <Image Width="16" Source="{Binding Item, Converter={StaticResource Converter_FileSystemModelToIconConverter}}" Stretch="None"/>
-                                <TextBlock Text="{Binding Item.Name, FallbackValue=Loading...}" 
+                            <toolkit:DockPanel  Margin="4" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+                                <Image Width="16" 
+                                       toolkit:DockPanel.Dock="Left"
+                                       Source="{Binding Item, Converter={StaticResource Converter_FileSystemModelToIcon}}" Stretch="None"
+                                       ToolTipService.ToolTip="{Binding Item, Converter={StaticResource Converter_VirtualFolderToolTip}}"/>
+                                <TextBlock Text="{Binding Item.Name, FallbackValue=...}"
+                                           HorizontalAlignment="Left"
                                            b:FadeTrimming.IsEnabled="True" 
                                            b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
                                            Margin="4, 0,0,0"/>
-                            </StackPanel>
+                            </toolkit:DockPanel>
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
