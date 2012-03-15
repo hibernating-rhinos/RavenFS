@@ -90,8 +90,8 @@ namespace RavenFS.Controllers
 
 				paging = new PagingInfo
 				{
-					PageSize = Math.Max(1024, Math.Min(25, pageSize)),
-					Start = start
+					PageSize = Math.Min(1024, Math.Max(1, pageSize)),
+					Start = Math.Max(start, 0)
 				};
 				return paging;
 			}
