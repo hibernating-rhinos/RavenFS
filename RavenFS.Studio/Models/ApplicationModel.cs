@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Browser;
@@ -14,10 +15,13 @@ namespace RavenFS.Studio.Models
 		{
 			Client = new RavenFileSystemClient(DetermineUri());
 		    AsyncOperations = new AsyncOperationsModel();
+            VirtualFolders = new VirtualFoldersManager();
 		}
 
 	    public AsyncOperationsModel AsyncOperations { get; private set; }
 
+        public VirtualFoldersManager VirtualFolders { get; private set; }
+ 
 	    public RavenFileSystemClient Client { get; private set; }
 
 		private static string DetermineUri()

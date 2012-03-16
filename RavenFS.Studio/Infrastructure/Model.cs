@@ -75,5 +75,25 @@ namespace RavenFS.Studio.Infrastructure
 		{
 			return null;
 		}
+
+	    public void NotifyViewLoaded()
+	    {
+	        OnViewLoaded();
+	    }
+
+	    public void NotifyViewUnloaded()
+	    {
+	        OnViewUnloaded();
+	    }
+
+	    protected virtual void OnViewLoaded()
+	    {
+            
+	    }
+
+	    protected virtual void OnViewUnloaded()
+	    {
+
+	    }
 	}
 }

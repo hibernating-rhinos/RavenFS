@@ -84,7 +84,7 @@ namespace RavenFS.Infrastructure
 			ReturnBuffer();
 			TakeBuffer(tuple.Item1.Size);
 				
-			storage.Batch(accessor => accessor.ReadPage(tuple.Item1.Key, internalBuffer));
+			storage.Batch(accessor => accessor.ReadPage(tuple.Item1.Id, internalBuffer));
 
 			Debug.Assert(internalBuffer != null);
 

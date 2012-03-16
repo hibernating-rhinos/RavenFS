@@ -81,7 +81,7 @@ namespace RavenFS.Util
             var buffer = Handler.BufferPool.TakeBuffer(information.Size);
             try
             {
-                Handler.Storage.Batch(accessor => accessor.ReadPage(information.Key, buffer));
+                Handler.Storage.Batch(accessor => accessor.ReadPage(information.Id, buffer));
                 return output.WriteAsync(buffer, offset, information.Size - offset)
                     .ContinueWith(task =>
                     {

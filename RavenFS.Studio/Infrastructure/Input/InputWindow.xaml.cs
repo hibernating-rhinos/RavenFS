@@ -21,6 +21,11 @@ namespace RavenFS.Studio.Infrastructure.Input
 
 		private void OKButton_Click(object sender, RoutedEventArgs e)
 		{
+            if (DataContext is InputModel && !(DataContext as InputModel).EnsureValid())
+            {
+                return;
+            }
+
 			this.DialogResult = true;
 		}
 

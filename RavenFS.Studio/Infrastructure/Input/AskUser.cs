@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace RavenFS.Studio.Infrastructure.Input
 {
@@ -6,7 +7,7 @@ namespace RavenFS.Studio.Infrastructure.Input
 	{
         public static Task AlertUser(string title, string message)
         {
-            var dataContext = new InputModel
+            var dataContext = new ConfirmModel
 			{
 				Title = title,
 				Message = message,
@@ -32,12 +33,13 @@ namespace RavenFS.Studio.Infrastructure.Input
 			return tcs.Task;
         }
 
-		public static Task<string> QuestionAsync(string title, string question)
+		public static Task<string> QuestionAsync(string title, string question, Func<string,string> validator = null)
 		{
 			var dataContext = new InputModel
 			{
 				Title = title,
-				Message = question
+				Message = question,
+                ValidationCallback = validator,
 			};
 			var inputWindow = new InputWindow
 			{
@@ -64,7 +66,7 @@ namespace RavenFS.Studio.Infrastructure.Input
 			var dataContext = new ConfirmModel
 			{
 				Title = title,
-				Question = question
+				Message = question
 			};
 			var inputWindow = new ConfirmWindow
 			{

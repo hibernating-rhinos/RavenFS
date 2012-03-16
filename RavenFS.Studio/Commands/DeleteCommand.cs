@@ -8,18 +8,24 @@ using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio.Commands
 {
-	public class DeleteCommand: VirtualItemCommand<FileInfo>
+    public class DeleteCommand : VirtualItemCommand<FileSystemModel>
 	{
-		public DeleteCommand(Observable<VirtualItem<FileInfo>> observableFileInfo) : base(observableFileInfo)
+        public DeleteCommand(Observable<VirtualItem<FileSystemModel>> observableFileInfo)
+            : base(observableFileInfo)
 		{
 		}
 
-        protected override void ExecuteOverride(FileInfo parameter)
+        protected override bool CanExecuteOverride(FileSystemModel item)
+        {
+            return item is FileModel;
+        }
+
+        protected override void ExecuteOverride(FileSystemModel parameter)
 		{
 			AskUser.ConfirmationAsync("Delete", string.Format("Are you sure you want to delete file '{0}'?", parameter.Name))
                 .ContinueWhenTrueInTheUIThread(
 				() => ApplicationModel.Current.AsyncOperations.Do(
-				    () => ApplicationModel.Current.Client.DeleteAsync(parameter.Name),
+				    () => ApplicationModel.Current.Client.DeleteAsync(parameter.FullPath),
 				    "Deleting " + parameter.Name));	
 		}
 	}

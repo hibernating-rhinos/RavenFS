@@ -29,6 +29,7 @@ namespace RavenFS.Storage
 				{
 					CreateDetailsTable(dbid);
 					CreateFilesTable(dbid);
+					CreateConfigTable(dbid);
 					CreateUsageTable(dbid);
 					CreatePagesTable(dbid);
 
@@ -154,14 +155,7 @@ namespace RavenFS.Storage
 				grbit = ColumndefGrbit.ColumnFixed | ColumndefGrbit.ColumnNotNULL
 			}, null, 0, out columnid);
 
-			Api.JetAddColumn(session, tableid, "page_strong_hash", new JET_COLUMNDEF
-			{
-				coltyp = JET_coltyp.Binary,
-				cbMax = 32,
-				grbit = ColumndefGrbit.ColumnFixed | ColumndefGrbit.ColumnNotNULL
-			}, null, 0, out columnid);
-
-			Api.JetAddColumn(session, tableid, "page_weak_hash", new JET_COLUMNDEF
+			Api.JetAddColumn(session, tableid, "page_id", new JET_COLUMNDEF
 			{
 				coltyp = JET_coltyp.Long,
 				grbit = ColumndefGrbit.ColumnFixed | ColumndefGrbit.ColumnNotNULL
@@ -203,7 +197,7 @@ namespace RavenFS.Storage
 
 			Api.JetAddColumn(session, tableid, "metadata", new JET_COLUMNDEF
 			{
-				cbMax = 1024*64,
+				cbMax = 1024*512,
 				coltyp = JET_coltyp.LongText,
 				cp = JET_CP.Unicode,
 				grbit = ColumndefGrbit.ColumnNotNULL
@@ -228,6 +222,43 @@ namespace RavenFS.Storage
 			Api.JetCreateIndex(session, tableid, "by_id", CreateIndexGrbit.IndexPrimary, indexDef, indexDef.Length,
 							   80);
 			
+			indexDef = "+name\0\0";
+			Api.JetCreateIndex(session, tableid, "by_name", CreateIndexGrbit.IndexUnique, indexDef, indexDef.Length,
+							   80);
+		}
+
+		private void CreateConfigTable(JET_DBID dbid)
+		{
+			JET_TABLEID tableid;
+			Api.JetCreateTable(session, dbid, "config", 1, 80, out tableid);
+			JET_COLUMNID columnid;
+
+			Api.JetAddColumn(session, tableid, "id", new JET_COLUMNDEF
+			{
+				coltyp = JET_coltyp.Long,
+				grbit = ColumndefGrbit.ColumnAutoincrement | ColumndefGrbit.ColumnFixed | ColumndefGrbit.ColumnNotNULL
+			}, null, 0, out columnid);
+
+			Api.JetAddColumn(session, tableid, "name", new JET_COLUMNDEF
+			{
+				cbMax = 1024,
+				coltyp = JET_coltyp.LongText,
+				cp = JET_CP.Unicode,
+				grbit = ColumndefGrbit.ColumnNotNULL
+			}, null, 0, out columnid);
+
+			Api.JetAddColumn(session, tableid, "metadata", new JET_COLUMNDEF
+			{
+				cbMax = 1024 * 512,
+				coltyp = JET_coltyp.LongText,
+				cp = JET_CP.Unicode,
+				grbit = ColumndefGrbit.ColumnNotNULL
+			}, null, 0, out columnid);
+
+			string indexDef = "+id\0\0";
+			Api.JetCreateIndex(session, tableid, "by_id", CreateIndexGrbit.IndexPrimary, indexDef, indexDef.Length,
+							   80);
+
 			indexDef = "+name\0\0";
 			Api.JetCreateIndex(session, tableid, "by_name", CreateIndexGrbit.IndexUnique, indexDef, indexDef.Length,
 							   80);

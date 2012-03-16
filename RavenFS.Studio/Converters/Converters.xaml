@@ -16,4 +16,7 @@
 
     <Converters:BooleanConverter x:Key="Converter_VisibleWhenTrue" ValueWhenTrue="{z:Static Member=Visibility.Visible}" ValueWhenFalse="{z:Static Member=Visibility.Collapsed}"/>
     <Converters:BooleanConverter x:Key="Converter_CollapsedWhenTrue" ValueWhenTrue="{z:Static Member=Visibility.Collapsed}" ValueWhenFalse="{z:Static Member=Visibility.Visible}"/>
+
+    <Converters:FileSystemModelToIconConverter x:Key="Converter_FileSystemModelToIcon"/>
+    <Converters:VirtualFolderToolTipConverter x:Key="Converter_VirtualFolderToolTip"/>
 </ResourceDictionary>

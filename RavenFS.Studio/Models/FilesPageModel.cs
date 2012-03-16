@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Browser;
@@ -7,40 +9,84 @@ using RavenFS.Client;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Infrastructure;
 using System.Linq;
+using RavenFS.Studio.Extensions;
 
 namespace RavenFS.Studio.Models
 {
-	public class FilesPageModel : Model
+	public class FilesPageModel : PageModel
 	{
 	    private const int DefaultPageSize = 50;
 
 	    private ICommand downloadCommand;
 	    private ICommand deleteCommand;
 	    private ICommand editCommand;
+	    private ICommand uploadCommand;
+	    private ICommand navigateCommand;
+	    private ICommand addFolderCommand;
+        private FileSystemCollectionSource filesSource;
 
-	    public ICommand Upload { get { return new UploadCommand(); } }
+        public ICommand AddFolder { get { return addFolderCommand ?? (addFolderCommand = new AddFolderCommand(CurrentFolder)); } }
+        public ICommand Navigate { get { return navigateCommand ?? (navigateCommand = new NavigateToFileSystemModelCommand()); } }
+        public ICommand Upload { get { return uploadCommand ?? (uploadCommand = new UploadCommand(CurrentFolder)); } }
         public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedFile)); } }
         public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedFile)); } }
         public ICommand EditProperties { get { return editCommand ?? (editCommand = new EditFilePropertiesCommand(SelectedFile)); } }
 
-        public Observable<VirtualItem<FileInfo>> SelectedFile { get; private set; }
-
-		public VirtualCollection<FileInfo> Files { get; private set; }
+        public Observable<VirtualItem<FileSystemModel>> SelectedFile { get; private set; }
+        public Observable<string> CurrentFolder { get; private set; } 
+        public VirtualCollection<FileSystemModel> Files { get; private set; }
+        public ObservableCollection<DirectoryModel> BreadcrumbTrail { get; private set; }
 
 		public FilesPageModel()
 		{
-			Files = new VirtualCollection<FileInfo>(DefaultPageSize)
-			            {
-                            RowCountFetcher = () => ApplicationModel.Current.Client.StatsAsync().ContinueOnSuccess(t => (int)t.FileCount),
-                            PageFetcher = (start, pageSize) => ApplicationModel.Current.Client.BrowseAsync(start, pageSize).ContinueOnSuccess(t => (IList<FileInfo>)t)
-			            };
-
-		    SelectedFile = new Observable<VirtualItem<FileInfo>>();
+            filesSource = new FileSystemCollectionSource();
+            Files = new VirtualCollection<FileSystemModel>(filesSource, DefaultPageSize);
+            SelectedFile = new Observable<VirtualItem<FileSystemModel>>();
+            CurrentFolder = new Observable<string>() { Value = "/"};
+            CurrentFolder.PropertyChanged += delegate
+                                                 {
+                                                     filesSource.CurrentFolder = CurrentFolder.Value;
+                                                     UpdateBreadCrumbs();
+                                                 };
+            BreadcrumbTrail = new ObservableCollection<DirectoryModel>();
 		}
 
-		protected override Task TimerTickedAsync()
+	    private void UpdateBreadCrumbs()
+	    {
+            BreadcrumbTrail.Clear();
+
+	        var folders = CurrentFolder.Value.Split(new[] {'/'}, StringSplitOptions.RemoveEmptyEntries);
+
+	        var currentPath = "";
+
+            foreach (var folder in folders)
+            {
+                currentPath += "/" + folder;
+                BreadcrumbTrail.Add(new DirectoryModel() { FullPath = currentPath });
+	        }
+	    }
+
+	    protected override void OnViewLoaded()
+        {
+            CurrentFolder.Value = GetFolder();
+        }
+
+	    private string GetFolder()
+	    {
+	        var folder = QueryParameters.GetValueOrDefault("folder", "");
+
+	        folder = folder.TrimEnd('/');
+
+            if (!folder.StartsWith("/"))
+            {
+                folder = "/" + folder;
+            }
+	        return folder;
+	    }
+
+	    protected override Task TimerTickedAsync()
 		{
-            Files.Refresh();
+            filesSource.Refresh();
 		    return Completed;
 		}
 	}

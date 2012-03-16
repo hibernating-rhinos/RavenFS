@@ -6,15 +6,21 @@ using FileInfo = RavenFS.Client.FileInfo;
 
 namespace RavenFS.Studio.Commands
 {
-	public class EditFilePropertiesCommand : VirtualItemCommand<FileInfo>
+    public class EditFilePropertiesCommand : VirtualItemCommand<FileSystemModel>
 	{
-        public EditFilePropertiesCommand(Observable<VirtualItem<FileInfo>> observableItem) :base(observableItem)
+        public EditFilePropertiesCommand(Observable<VirtualItem<FileSystemModel>> observableItem)
+            : base(observableItem)
 		{
 		}
 
-        protected override void ExecuteOverride(FileInfo item)
+        protected override bool CanExecuteOverride(FileSystemModel item)
         {
-            var model = new FilePropertiesDialogModel { Name = item.Name };
+            return item is FileModel;
+        }
+
+        protected override void ExecuteOverride(FileSystemModel item)
+        {
+            var model = new FilePropertiesDialogModel { File = item as FileModel };
             var view = new FilePropertiesDialog { Model = model };
             view.Show();
         }

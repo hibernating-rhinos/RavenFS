@@ -22,7 +22,7 @@ namespace RavenFS.Studio.Models
 
         string statusMessage;
 
-	    public string Name { get; set; }
+	    public FileModel File { get; set; }
 
 		public FilePropertiesDialogModel()
 		{
@@ -30,11 +30,11 @@ namespace RavenFS.Studio.Models
 
         protected override void OnViewLoaded()
         {
-            if (!string.IsNullOrEmpty(Name))
+            if (File == null)
             {
-                StatusMessage = string.Format("Loading details for file '{0}'", Name);
+                StatusMessage = string.Format("Loading details for file '{0}'", File.Name);
 
-                ApplicationModel.Current.Client.GetMetadataForAsync(Name)
+                ApplicationModel.Current.Client.GetMetadataForAsync(File.FullPath)
                 .ContinueOnUIThread(UpdateMetadata);
             }
 
@@ -43,7 +43,7 @@ namespace RavenFS.Studio.Models
 
 	    public string Title
 	    {
-	        get { return string.Format("Edit properties for '{0}'", Name); }
+	        get { return string.Format("Edit properties for '{0}'", File.Name); }
 	    }
 
 		public EditableKeyValueCollection Metadata
@@ -151,7 +151,7 @@ namespace RavenFS.Studio.Models
                 .FilterHeaders();
 
             ApplicationModel.Current.AsyncOperations.Do(() =>
-                ApplicationModel.Current.Client.UpdateMetadataAsync(Name, newMetaData), "Updating properties for file " + Name);
+                ApplicationModel.Current.Client.UpdateMetadataAsync(File.FullPath, newMetaData), "Updating properties for file " + File.Name);
 
 	        Close(true);
 	    }

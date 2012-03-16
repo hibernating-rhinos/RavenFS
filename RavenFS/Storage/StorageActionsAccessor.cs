@@ -24,10 +24,16 @@ namespace RavenFS.Storage
 
 		private Table files, usage, pages, details;
 		private readonly Transaction transaction;
+		private Table config;
 
 		private Table Files
 		{
 			get { return files ?? (files = new Table(session, database, "files", OpenTableGrbit.None)); }
+		}
+
+		private Table Config
+		{
+			get { return config ?? (config = new Table(session, database, "config", OpenTableGrbit.None)); }
 		}
 
 		private Table Usage
@@ -66,6 +72,8 @@ namespace RavenFS.Storage
 		[DebuggerNonUserCode]
 		public void Dispose()
 		{
+			if (config != null)
+				config.Dispose();
 			if (details != null)
 				details.Dispose();
 			if (pages != null)
@@ -89,7 +97,7 @@ namespace RavenFS.Storage
 			transaction.Commit(CommitTransactionGrbit.None);
 		}
 
-		public HashKey InsertPage(byte[] buffer, int size)
+		public int InsertPage(byte[] buffer, int size)
 		{
 			var key = new HashKey(buffer, size);
 
@@ -101,9 +109,11 @@ namespace RavenFS.Storage
 			if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
 			{
 				Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], 1);
-				return key;
+				return Api.RetrieveColumnAsInt32(session, Pages, tableColumnsCache.PagesColumns["id"]).Value;
 			}
 
+			byte[] bookMarkBuffer = new byte[SystemParameters.BookmarkMost];
+			int actualSize = 0;
 			using (var update = new Update(session, Pages, JET_prep.Insert))
 			{
 				Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_strong_hash"], key.Strong);
@@ -111,10 +121,12 @@ namespace RavenFS.Storage
 				Api.JetSetColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, size,
 								 SetColumnGrbit.None, null);
 
-				update.Save();
+				update.Save(bookMarkBuffer, bookMarkBuffer.Length, out actualSize);
 			}
 
-			return key;
+			Api.JetGotoBookmark(session, Pages, bookMarkBuffer, actualSize);
+
+			return Api.RetrieveColumnAsInt32(session, Pages, tableColumnsCache.PagesColumns["id"]).Value;
 		}
 
 		public void PutFile(string filename, long? totalSize, NameValueCollection metadata)
@@ -122,7 +134,7 @@ namespace RavenFS.Storage
 			using (var update = new Update(session, Files, JET_prep.Insert))
 			{
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["name"], filename, Encoding.Unicode);
-				if(totalSize!=null)
+				if (totalSize != null)
 				{
 					Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize.Value));
 				}
@@ -160,7 +172,7 @@ namespace RavenFS.Storage
 			return sb.ToString();
 		}
 
-		public void AssociatePage(string filename, HashKey pageKey, int pagePositionInFile, int pageSize)
+		public void AssociatePage(string filename, int pageId, int pagePositionInFile, int pageSize)
 		{
 			Api.JetSetCurrentIndex(session, Files, "by_name");
 			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
@@ -193,8 +205,7 @@ namespace RavenFS.Storage
 			{
 				Api.SetColumn(session, Usage, tableColumnsCache.UsageColumns["name"], filename, Encoding.Unicode);
 				Api.SetColumn(session, Usage, tableColumnsCache.UsageColumns["file_pos"], pagePositionInFile);
-				Api.SetColumn(session, Usage, tableColumnsCache.UsageColumns["page_strong_hash"], pageKey.Strong);
-				Api.SetColumn(session, Usage, tableColumnsCache.UsageColumns["page_weak_hash"], pageKey.Weak);
+				Api.SetColumn(session, Usage, tableColumnsCache.UsageColumns["page_id"], pageId);
 				Api.SetColumn(session, Usage, tableColumnsCache.UsageColumns["page_size"], pageSize);
 
 				update.Save();
@@ -209,11 +220,10 @@ namespace RavenFS.Storage
 			return BitConverter.ToInt64(totalSize, 0);
 		}
 
-		public int ReadPage(HashKey key, byte[] buffer)
+		public int ReadPage(int pageId, byte[] buffer)
 		{
-			Api.JetSetCurrentIndex(session, Pages, "by_keys");
-			Api.MakeKey(session, Pages, key.Weak, MakeKeyGrbit.NewKey);
-			Api.MakeKey(session, Pages, key.Strong, MakeKeyGrbit.None);
+			Api.JetSetCurrentIndex(session, Pages, "by_id");
+			Api.MakeKey(session, Pages, pageId, MakeKeyGrbit.NewKey);
 
 			if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ) == false)
 				return -1;
@@ -274,11 +284,7 @@ namespace RavenFS.Storage
 						fileInformation.Pages.Add(new PageInformation
 						{
 							Size = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_size"]).Value,
-							Key = new HashKey
-							{
-								Strong = Api.RetrieveColumn(session, Usage, tableColumnsCache.UsageColumns["page_strong_hash"]),
-								Weak = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_weak_hash"]).Value,
-							}
+							Id = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value
 						});
 					} while (Api.TryMoveNext(session, Usage) && fileInformation.Pages.Count < pagesToLoad);
 				}
@@ -299,7 +305,7 @@ namespace RavenFS.Storage
 			}
 			catch (EsentErrorException e)
 			{
-				if(e.Error==JET_err.NoCurrentRecord)
+				if (e.Error == JET_err.NoCurrentRecord)
 					yield break;
 				throw;
 			}
@@ -341,18 +347,13 @@ namespace RavenFS.Storage
 			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			Api.JetSetIndexRange(session, Usage, SetIndexRangeGrbit.RangeInclusive);
 
-			Api.JetSetCurrentIndex(session, Pages, "by_keys");
+			Api.JetSetCurrentIndex(session, Pages, "by_id");
 
 			do
 			{
-				var page = new HashKey
-				{
-					Strong = Api.RetrieveColumn(session, Usage, tableColumnsCache.UsageColumns["page_strong_hash"]),
-					Weak = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_weak_hash"]).Value,
-				};
+				var pageId = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value;
 
-				Api.MakeKey(session, Pages, page.Weak, MakeKeyGrbit.NewKey);
-				Api.MakeKey(session, Pages, page.Strong, MakeKeyGrbit.None);
+				Api.MakeKey(session, Pages, pageId, MakeKeyGrbit.NewKey);
 
 				if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
 				{
@@ -419,6 +420,42 @@ namespace RavenFS.Storage
 
 				update.Save();
 			}
+		}
+
+		public NameValueCollection GetConfig(string name)
+		{
+			Api.JetSetCurrentIndex(session, Config, "by_name");
+			Api.MakeKey(session, Config, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Config, SeekGrbit.SeekEQ) == false)
+				throw new FileNotFoundException("Could not find config: " + name);
+			var metadata = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["metadata"], Encoding.Unicode);
+			return HttpUtility.ParseQueryString(metadata);
+		}
+
+		public void SetConfig(string name, NameValueCollection metadata)
+		{
+			Api.JetSetCurrentIndex(session, Config, "by_name");
+			Api.MakeKey(session, Config, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			var prep = Api.TrySeek(session, Config, SeekGrbit.SeekEQ) ? JET_prep.Replace : JET_prep.Insert;
+
+			using(var update = new Update(session,Config,prep))
+			{
+				Api.SetColumn(session, Config, tableColumnsCache.ConfigColumns["name"], name, Encoding.Unicode);
+				Api.SetColumn(session, Config, tableColumnsCache.ConfigColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
+
+				update.Save();
+			}
+		}
+
+		public void DeleteConfig(string name)
+		{
+			Api.JetSetCurrentIndex(session, Config, "by_name");
+			Api.MakeKey(session, Config, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Config, SeekGrbit.SeekEQ) == false)
+				return;
+
+			Api.JetDelete(session, Config);
+		
 		}
 	}
 }

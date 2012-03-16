@@ -3,6 +3,7 @@
 //     Copyright (c) Hibernating Rhinos LTD. All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 using Microsoft.Isam.Esent.Interop;
 
@@ -17,7 +18,9 @@ namespace RavenFS.Storage
 		public IDictionary<string, JET_COLUMNID> FilesColumns { get; set; }
 		public IDictionary<string, JET_COLUMNID> DetailsColumns { get; set; }
 
-	    public void InitColumDictionaries(JET_INSTANCE instance, string database)
+		public IDictionary<string, JET_COLUMNID> ConfigColumns { get; set; }
+
+		public void InitColumDictionaries(JET_INSTANCE instance, string database)
 	    {
 	        using (var session = new Session(instance))
 	        {
@@ -33,6 +36,9 @@ namespace RavenFS.Storage
 						PagesColumns = Api.GetColumnDictionary(session, pages);
 	                using (var files = new Table(session, dbid, "files", OpenTableGrbit.None))
 	                    FilesColumns = Api.GetColumnDictionary(session, files);
+
+					using (var config = new Table(session, dbid, "config", OpenTableGrbit.None))
+						ConfigColumns = Api.GetColumnDictionary(session, config);
 	            }
 	            finally
 	            {

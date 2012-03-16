@@ -35,25 +35,5 @@ namespace RavenFS.Studio.Infrastructure
             EventHandler<CloseRequestedEventArgs> handler = CloseRequested;
             if (handler != null) handler(this, e);
         }
-
-        public void NotifyViewLoaded()
-        {
-            OnViewLoaded();
-        }
-
-        public void NotifyViewUnloaded()
-        {
-            OnViewUnloaded();
-        }
-
-        protected virtual void OnViewLoaded()
-        {
-            
-        }
-
-        protected virtual void OnViewUnloaded()
-        {
-
-        }
     }
 }
