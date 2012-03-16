@@ -13,7 +13,7 @@ namespace RavenFS.Controllers
 
 			var list = new List<FileHeader>();
 
-			Storage.Batch(accessor => list.AddRange(keys.Select(accessor.ReadFile)));
+			Storage.Batch(accessor => list.AddRange(keys.Select(accessor.ReadFile).Where(x => x != null)));
 
 			return new SearchResults
 			{
