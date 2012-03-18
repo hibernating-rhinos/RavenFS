@@ -25,10 +25,16 @@ namespace RavenFS.Storage
 		private Table files, usage, pages, details;
 		private readonly Transaction transaction;
 		private Table config;
+		private Table signatures;
 
 		private Table Files
 		{
 			get { return files ?? (files = new Table(session, database, "files", OpenTableGrbit.None)); }
+		}
+
+		private Table Signatures
+		{
+			get { return signatures ?? (signatures = new Table(session, database, "signatures", OpenTableGrbit.None)); }
 		}
 
 		private Table Config
@@ -72,6 +78,8 @@ namespace RavenFS.Storage
 		[DebuggerNonUserCode]
 		public void Dispose()
 		{
+			if (signatures != null)
+				signatures.Dispose();
 			if (config != null)
 				config.Dispose();
 			if (details != null)
@@ -438,7 +446,7 @@ namespace RavenFS.Storage
 			Api.MakeKey(session, Config, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			var prep = Api.TrySeek(session, Config, SeekGrbit.SeekEQ) ? JET_prep.Replace : JET_prep.Insert;
 
-			using(var update = new Update(session,Config,prep))
+			using (var update = new Update(session, Config, prep))
 			{
 				Api.SetColumn(session, Config, tableColumnsCache.ConfigColumns["name"], name, Encoding.Unicode);
 				Api.SetColumn(session, Config, tableColumnsCache.ConfigColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
@@ -455,7 +463,57 @@ namespace RavenFS.Storage
 				return;
 
 			Api.JetDelete(session, Config);
-		
+
+		}
+
+		public Stream GetSignature(string name)
+		{
+			Api.JetSetCurrentIndex(session, Signatures, "by_name");
+			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
+				throw new InvalidOperationException("Could not find signature named: " + name);
+
+			var stream = new ColumnStream(session, Signatures, tableColumnsCache.SignaturesColumns["data"]);
+			return new BufferedStream(stream);
+		}
+
+		public long GetSignatureSize(string name)
+		{
+			Api.JetSetCurrentIndex(session, Signatures, "by_name");
+			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
+				throw new InvalidOperationException("Could not find signature named: " + name);
+
+			return Api.RetrieveColumnSize(session, Signatures, tableColumnsCache.SignaturesColumns["data"]) ?? 0;
+		}
+
+		public DateTime? GetSignatureLastModified(string name)
+		{
+			Api.JetSetCurrentIndex(session, Signatures, "by_name");
+			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
+				throw new InvalidOperationException("Could not find signature named: " + name);
+			
+			return Api.RetrieveColumnAsDateTime(session, Signatures, tableColumnsCache.SignaturesColumns["modified"]);
+		}
+
+		public Stream CreateSignature(string name)
+		{
+			Api.JetSetCurrentIndex(session, Signatures, "by_name");
+			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
+			{
+				using(var update = new Update(session, Signatures, JET_prep.Insert))
+				{
+					Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["name"], name, Encoding.Unicode);
+					Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["data"], new byte[0]);
+					Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["modified"], DateTime.UtcNow);
+
+					update.Save();
+				}
+			}
+
+			return GetSignature(name);
 		}
 	}
 }

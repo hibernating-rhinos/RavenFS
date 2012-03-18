@@ -19,6 +19,7 @@ namespace RavenFS.Storage
 		public IDictionary<string, JET_COLUMNID> DetailsColumns { get; set; }
 
 		public IDictionary<string, JET_COLUMNID> ConfigColumns { get; set; }
+		public IDictionary<string, JET_COLUMNID> SignaturesColumns { get; set; }
 
 		public void InitColumDictionaries(JET_INSTANCE instance, string database)
 	    {
@@ -36,7 +37,8 @@ namespace RavenFS.Storage
 						PagesColumns = Api.GetColumnDictionary(session, pages);
 	                using (var files = new Table(session, dbid, "files", OpenTableGrbit.None))
 	                    FilesColumns = Api.GetColumnDictionary(session, files);
-
+					using (var signatures = new Table(session, dbid, "signatures", OpenTableGrbit.None))
+						SignaturesColumns = Api.GetColumnDictionary(session, signatures);
 					using (var config = new Table(session, dbid, "config", OpenTableGrbit.None))
 						ConfigColumns = Api.GetColumnDictionary(session, config);
 	            }
