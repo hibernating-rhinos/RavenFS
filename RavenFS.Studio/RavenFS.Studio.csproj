@@ -12,7 +12,7 @@
     <RootNamespace>RavenFS.Studio</RootNamespace>
     <AssemblyName>RavenFS.Studio</AssemblyName>
     <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
     <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
     <SilverlightApplication>true</SilverlightApplication>
     <SupportedCultures>
@@ -31,6 +31,7 @@
     <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
     <LinkedServerProject>
     </LinkedServerProject>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <!-- This property group is only here to support building this project using the 
        MSBuild 3.5 toolset. In order to work correctly with this older toolset, it needs 
@@ -60,46 +61,113 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AsyncCtpLibrary_Silverlight, Version=1.0.4107.18177, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\AsyncCTP.0.3\lib\sl40\AsyncCtpLibrary_Silverlight.dll</HintPath>
+    <Reference Include="AsyncCtpLibrary_Silverlight5">
+      <HintPath>..\packages\AsyncCTP.0.3\lib\sl50\AsyncCtpLibrary_Silverlight5.dll</HintPath>
     </Reference>
-    <Reference Include="MissingBitFromSilverlight">
-      <HintPath>..\packages\RavenDB.1.0.531\lib\sl40\MissingBitFromSilverlight.dll</HintPath>
+    <Reference Include="Microsoft.Expression.Interactions">
+      <HintPath>..\SharedLibs\Silverlight\Microsoft.Expression.Interactions.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
-    <Reference Include="Newtonsoft.Json.Silverlight, Version=4.0.2.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.4.0.2\lib\sl4\Newtonsoft.Json.Silverlight.dll</HintPath>
-    </Reference>
     <Reference Include="NLog">
       <HintPath>..\packages\NLog.2.0.0.2000\lib\sl4\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="Raven.Client.Silverlight">
-      <HintPath>..\packages\RavenDB.1.0.531\lib\sl40\Raven.Client.Silverlight.dll</HintPath>
+    <Reference Include="System.ComponentModel.DataAnnotations, Version=5.0.5.0, Culture=neutral, PublicKeyToken=ddd0da4d3e678217, processorArchitecture=MSIL" />
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\packages\Rx-Core.2.0.20304-beta\lib\SL5\System.Reactive.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces">
+      <HintPath>..\packages\Rx-Interfaces.2.0.20304-beta\lib\SL5\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq">
+      <HintPath>..\packages\Rx-Linq.2.0.20304-beta\lib\SL5\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices">
+      <HintPath>..\packages\Rx-PlatformServices.2.0.20304-beta\lib\SL5\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows" />
     <Reference Include="system" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Net" />
-    <Reference Include="System.Windows.Interactivity, Version=4.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Windows.Controls, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Libraries\Client\System.Windows.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Controls.Data, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Windows.Controls.Input.Toolkit, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Windows.Controls.Navigation, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Libraries\Client\System.Windows.Controls.Navigation.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Controls.Toolkit, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Windows.Interactivity">
+      <HintPath>..\SharedLibs\Silverlight\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Windows.Browser" />
-    <Reference Include="System.Windows.Controls" />
-    <Reference Include="System.Windows.Controls.Navigation" />
+    <Reference Include="TiledBG">
+      <HintPath>..\SharedLibs\Silverlight\TiledBG.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Behaviors\ChangeDependencyPropertyAction.cs" />
+    <Compile Include="Behaviors\DataGridRowDoubleClickCommandBehavior.cs" />
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
+    <Compile Include="Behaviors\ExecuteCommandOnFileDrop.cs" />
+    <Compile Include="Behaviors\FadeTrimming.cs" />
+    <Compile Include="Behaviors\LinkHighlighter.cs" />
+    <Compile Include="Behaviors\PreventEditingReadOnlyRows.cs" />
+    <Compile Include="Behaviors\StudioKeyTrigger.cs" />
+    <Compile Include="Commands\AddFolderCommand.cs" />
+    <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
+    <Compile Include="Commands\HideOperationsPaneCommand.cs" />
+    <Compile Include="Commands\NavigateToCommand.cs" />
+    <Compile Include="Commands\NavigateToFileSystemModelCommand.cs" />
     <Compile Include="Commands\NavigateToNextPageCommand.cs" />
     <Compile Include="Commands\NavigateToPrevPageCommand.cs" />
+    <Compile Include="Commands\ShowOperationsPaneCommand.cs" />
     <Compile Include="Commands\UploadCommand.cs" />
     <Compile Include="Commands\DeleteCommand.cs" />
     <Compile Include="Commands\DownloadCommand.cs" />
-    <Compile Include="Commands\InfoCommand.cs" />
-    <Compile Include="Converters\NameValueCollectionToMultiLineStringConverter.cs" />
-    <Compile Include="Infrastructure\ApplicationModel.cs" />
+    <Compile Include="Commands\EditFilePropertiesCommand.cs" />
+    <Compile Include="Commands\VirtualItemCommand.cs" />
+    <Compile Include="Converters\AsyncOperationStatusConverter.cs" />
+    <Compile Include="Commands\CopyExceptionToClipboardCommand.cs" />
+    <Compile Include="Converters\EnumToVisibilityConverter.cs" />
+    <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
+    <Compile Include="Converters\BooleanConverter.cs" />
+    <Compile Include="Converters\FileSystemModelToIconConverter.cs" />
+    <Compile Include="Converters\StringIsNullOrEmptyConverter.cs" />
+    <Compile Include="Converters\ValueGreaterThanConverter.cs" />
+    <Compile Include="Converters\VirtualFolderToolTipConverter.cs" />
+    <Compile Include="Extensions\DoubleExtensions.cs" />
+    <Compile Include="Extensions\IDictionaryExtensions.cs" />
+    <Compile Include="Extensions\IEnumerableExtensions.cs" />
+    <Compile Include="Extensions\IListExtensions.cs" />
+    <Compile Include="Extensions\IObservableExtensions.cs" />
+    <Compile Include="External\MultiBinding\IMultiValueConverter.cs" />
+    <Compile Include="External\MultiBinding\MultiBinding.cs" />
+    <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
+    <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
+    <Compile Include="Infrastructure\ActionCommand.cs" />
+    <Compile Include="Infrastructure\CompositeVirtualCollectionSource.cs" />
+    <Compile Include="Infrastructure\IObservable.cs" />
+    <Compile Include="Infrastructure\DialogModel.cs" />
+    <Compile Include="Infrastructure\DialogView.cs" />
+    <Compile Include="Infrastructure\IVirtualCollectionSource.cs" />
+    <Compile Include="Infrastructure\Navigation.cs" />
+    <Compile Include="Infrastructure\PageModel.cs" />
+    <Compile Include="Infrastructure\Schedulers.cs" />
+    <Compile Include="Infrastructure\Validation.cs" />
+    <Compile Include="Infrastructure\VirtualCollection.cs" />
+    <Compile Include="Infrastructure\MarkupExtensions\StaticExtension.cs" />
+    <Compile Include="Infrastructure\MarkupExtensions\TypeExtension.cs" />
+    <Compile Include="Infrastructure\SparseList.cs" />
+    <Compile Include="Infrastructure\VirtualCollectionSource.cs" />
+    <Compile Include="Infrastructure\VirtualItem.cs" />
+    <Compile Include="Models\ApplicationModel.cs" />
     <Compile Include="Infrastructure\BindableCollection.cs" />
     <Compile Include="Infrastructure\Command.cs" />
     <Compile Include="Infrastructure\ErrorPresenter.cs" />
@@ -107,7 +175,6 @@
     <Compile Include="Infrastructure\UrlUtil.cs" />
     <Compile Include="Infrastructure\UrlParser.cs" />
     <Compile Include="Infrastructure\Observable.cs" />
-    <Compile Include="Infrastructure\FileInfoWrapper.cs" />
     <Compile Include="Infrastructure\Input\AskUser.cs" />
     <Compile Include="Infrastructure\Input\ConfirmModel.cs" />
     <Compile Include="Infrastructure\Input\ConfirmWindow.xaml.cs">
@@ -119,22 +186,38 @@
     </Compile>
     <Compile Include="Infrastructure\InvocationExtensions.cs" />
     <Compile Include="Infrastructure\View.cs" />
-    <Compile Include="Models\FileInfoModel.cs" />
+    <Compile Include="Models\AsyncOperationModel.cs" />
+    <Compile Include="Models\AsyncOperationsModel.cs" />
+    <Compile Include="Models\AsyncOperationStatus.cs" />
+    <Compile Include="Models\AsyncOperationsViewModel.cs" />
+    <Compile Include="Models\DirectoryModel.cs" />
+    <Compile Include="Models\EditableKeyValue.cs" />
+    <Compile Include="Models\EditableKeyValueCollection.cs" />
+    <Compile Include="Models\FileModel.cs" />
+    <Compile Include="Models\FilePropertiesDialogModel.cs" />
     <Compile Include="Infrastructure\Model.cs" />
     <Compile Include="Infrastructure\ModelResolver.cs" />
     <Compile Include="Infrastructure\NotifyPropertyChangedBase.cs" />
-    <Compile Include="Models\HomePageModel.cs" />
+    <Compile Include="Models\FilesCollectionSource.cs" />
+    <Compile Include="Models\FilesPageModel.cs" />
+    <Compile Include="Models\FileSystemCollectionSource.cs" />
+    <Compile Include="Models\FileSystemModel.cs" />
+    <Compile Include="Models\FoldersCollectionSource.cs" />
+    <Compile Include="Models\VirtualFoldersManager.cs" />
+    <Compile Include="Views\AsyncOperationsView.xaml.cs">
+      <DependentUpon>AsyncOperationsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ErrorWindow.xaml.cs">
       <DependentUpon>ErrorWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\About.xaml.cs">
       <DependentUpon>About.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\FileInfo.xaml.cs">
-      <DependentUpon>FileInfo.xaml</DependentUpon>
+    <Compile Include="Views\FilePropertiesDialog.xaml.cs">
+      <DependentUpon>FilePropertiesDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\Home.xaml.cs">
-      <DependentUpon>Home.xaml</DependentUpon>
+    <Compile Include="Views\Files.xaml.cs">
+      <DependentUpon>Files.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -150,7 +233,27 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Resource>
-    <Page Include="Assets\Images\Images.xaml">
+    <Resource Include="Assets\Images\Images.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Resource>
+    <Resource Include="Commands\Commands.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Resource>
+    <Page Include="Assets\Brushes.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Assets\DataGridStyles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Assets\ProgressBarStyles.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Assets\ScrollBarStyles.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -166,6 +269,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\AsyncOperationsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\ErrorWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -174,11 +281,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\FileInfo.xaml">
-      <Generator>MSBuild:Compile</Generator>
+    <Page Include="Views\FilePropertiesDialog.xaml">
       <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\Home.xaml">
+    <Page Include="Views\Files.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -188,11 +295,12 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
     <None Include="Properties\AppManifest.xml" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Assets\logo-raven.png" />
+    <Resource Include="Assets\Images\logo-raven.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RavenFS.Client.Silverlight\RavenFS.Client.Silverlight.csproj">
@@ -201,6 +309,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Assets\Images\VirtualFolder.png" />
+    <None Include="External\MultiBinding\Licence.htm" />
+    <Resource Include="Assets\Images\Upload.png" />
     <Resource Include="Assets\Images\add.png" />
     <Resource Include="Assets\Images\BackgroundTexture.png" />
     <Resource Include="Assets\Images\BackgroundTextureBottom.png" />
@@ -218,10 +329,14 @@
     <Resource Include="Assets\Images\Error.png" />
     <Resource Include="Assets\Images\FooterTexture.png" />
     <Resource Include="Assets\Images\HtmlBalanceBracesHS.png" />
+    <Resource Include="Assets\Images\Success.png" />
+    <Resource Include="Assets\Images\Close.png" />
+    <Resource Include="Assets\Images\ClearList.png" />
+    <Resource Include="Assets\Images\CopyError.png" />
+    <Resource Include="Assets\Images\Folder.png" />
     <Content Include="Assets\Images\ImageCredits.txt" />
     <Resource Include="Assets\Images\Info.png" />
     <Resource Include="Assets\Images\Query.png" />
-    <Resource Include="Assets\Images\RavenDBLogo.png" />
     <Resource Include="Assets\Images\RefreshSmall.png" />
     <Resource Include="Assets\Images\Remove.png" />
     <Resource Include="Assets\Images\Save.png" />

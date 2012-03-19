@@ -31,7 +31,7 @@ namespace RavenFS.Infrastructure
 		{
 			storage = new Storage.TransactionalStorage("Data.ravenfs", new NameValueCollection());
 			search = new IndexStorage("Index.ravenfs", new NameValueCollection());
-            signatureRepository = new SimpleSignatureRepository(Path.Combine(Directory.GetCurrentDirectory(), "localrepo"));
+			signatureRepository = new SimpleSignatureRepository(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Signatures.ravenfs"));
             sigGenerator = new SigGenerator(signatureRepository);
 			storage.Initialize();
 			search.Initialize();

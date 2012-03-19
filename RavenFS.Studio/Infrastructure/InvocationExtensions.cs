@@ -2,7 +2,8 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Threading.Tasks;
-using Raven.Client.Extensions;
+using RavenFS.Client;
+using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio.Infrastructure
 {
@@ -73,7 +74,37 @@ namespace RavenFS.Studio.Infrastructure
 			}).Unwrap();
 		}
 
-		public static Task ContinueOnSuccessInTheUIThread(this Task parent, Action action)
+        public static Task UpdateOperationWithOutcome(this Task parent, AsyncOperationModel operation)
+        {
+            return parent.ContinueOnUIThread(
+                task =>
+                    {
+                        if (task.IsFaulted)
+                        {
+                            operation.Faulted(task.Exception);
+                        }
+                        else
+                        {
+                            operation.Completed();
+                        }
+                    });
+        }
+
+        public static Task ContinueOnUIThread(this Task parent, Action<Task> action)
+        {
+            return parent.ContinueWith(
+                action,
+                Schedulers.UIThread);
+        }
+
+        public static Task ContinueOnUIThread<TResult>(this Task<TResult> parent, Action<Task<TResult>> action)
+        {
+            return parent.ContinueWith(
+                action,
+                Schedulers.UIThread);
+        }
+
+	    public static Task ContinueOnSuccessInTheUIThread(this Task parent, Action action)
 		{
 			return parent.ContinueOnSuccess(() =>
 			{

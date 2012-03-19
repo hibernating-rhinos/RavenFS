@@ -3,27 +3,27 @@ using System.Windows;
 using System.Windows.Browser;
 using System.Windows.Controls;
 using System.Windows.Input;
+using RavenFS.Client;
 using RavenFS.Studio.Infrastructure;
+using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio.Commands
 {
-	public class DownloadCommand : Command
+    public class DownloadCommand : VirtualItemCommand<FileSystemModel>
 	{
-		private string FileName;
-
-		public DownloadCommand() : this("")
+        public DownloadCommand(Observable<VirtualItem<FileSystemModel>> observableFileInfo)
+            : base(observableFileInfo) 
 		{	
 		}
 
-		public DownloadCommand(string fileName)
-		{
-			FileName = fileName;
-		}
+        protected override bool CanExecuteOverride(FileSystemModel item)
+        {
+            return item is FileModel;
+        }
 
-		public override void Execute(object parameter)
-		{
-			var url = ApplicationModel.GetFileUrl(FileName);
-			HtmlPage.Window.Navigate(url);
-		}
+        protected override void ExecuteOverride(FileSystemModel item)
+        {
+            Navigation.Download(item.FullPath);
+        }
 	}
 }

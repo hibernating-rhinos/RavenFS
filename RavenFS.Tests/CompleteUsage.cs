@@ -5,7 +5,7 @@ using Xunit;
 
 namespace RavenFS.Tests
 {
-	public class CompleteUsage : IisExpressTestClient
+	public class CompleteUsage : WebApiTest
 	{
 		[Fact]
 		public void HowToUseTheClient()
@@ -23,7 +23,7 @@ namespace RavenFS.Tests
 
 			searchTask.Wait();
 
-			Assert.Equal("dragon.design", searchTask.Result[0].Name);
+			Assert.Equal("dragon.design", searchTask.Result.Files[0].Name);
 		}
 	}
 }

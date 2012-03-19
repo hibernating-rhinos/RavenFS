@@ -12,11 +12,12 @@
     <RootNamespace>RavenFS.Client.Silverlight</RootNamespace>
     <AssemblyName>RavenFS.Client.Silverlight</AssemblyName>
     <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
     <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
     <SilverlightApplication>false</SilverlightApplication>
     <ValidateXaml>true</ValidateXaml>
     <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <!-- This property group is only here to support building this project using the 
        MSBuild 3.5 toolset. In order to work correctly with this older toolset, it needs 
@@ -29,7 +30,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>Bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;TRACE;SILVERLIGHT</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SILVERLIGHT;CLIENT</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
@@ -39,34 +40,37 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>Bin\Release</OutputPath>
-    <DefineConstants>TRACE;SILVERLIGHT</DefineConstants>
+    <DefineConstants>TRACE;SILVERLIGHT;CLIENT</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-      <Reference Include="AsyncCtpLibrary_Silverlight, Version=1.0.4107.18177, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-          <HintPath>..\packages\AsyncCTP.0.3\lib\sl40\AsyncCtpLibrary_Silverlight.dll</HintPath>
-      </Reference>
-      <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="AsyncCtpLibrary_Silverlight5">
+      <HintPath>..\packages\AsyncCTP.0.3\lib\sl50\AsyncCtpLibrary_Silverlight5.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
-    <Reference Include="Newtonsoft.Json.Silverlight">
-      <HintPath>..\packages\Newtonsoft.Json.4.0.2\lib\sl4\Newtonsoft.Json.Silverlight.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\sl4\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows" />
     <Reference Include="system" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml" />
     <Reference Include="System.Net" />
-    <Reference Include="System.Windows.Browser" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\RavenFS.Client\AsyncExtensions.cs">
       <Link>AsyncExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\ExceptionExtensions.cs">
+      <Link>ExceptionExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\FileInfo.cs">
       <Link>FileInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\FilesSortOptions.cs">
+      <Link>FilesSortOptions.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\ListenableStream.cs">
       <Link>ListenableStream.cs</Link>
@@ -92,6 +96,9 @@
     <Compile Include="..\RavenFS.Client\SynchronizationReport.cs">
       <Link>SynchronizationReport.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS\Extensions\MetadataExtensions.cs">
+      <Link>Imports\MetadataExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS\Util\NameValueCollectionJsonConverter.cs">
       <Link>NameValueCollectionJsonConverter.cs</Link>
     </Compile>
@@ -102,6 +109,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>

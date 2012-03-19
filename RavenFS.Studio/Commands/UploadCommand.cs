@@ -1,41 +1,67 @@
-﻿using System.Windows.Controls;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Controls;
 using RavenFS.Client;
 using RavenFS.Studio.Infrastructure;
+using RavenFS.Studio.Models;
+using FileInfo = System.IO.FileInfo;
 
 namespace RavenFS.Studio.Commands
 {
 	public class UploadCommand : Command
 	{
-		private readonly Observable<long> totalUploadFileSize;
-		private readonly Observable<long> totalBytesUploaded;
+	    private readonly Observable<string> currentFolder;
 
-		public UploadCommand(Observable<long> totalUploadFileSize, Observable<long> totalBytesUploaded)
+	    public UploadCommand(Observable<string> currentFolder)
 		{
-			this.totalUploadFileSize = totalUploadFileSize;
-			this.totalBytesUploaded = totalBytesUploaded;
+		    this.currentFolder = currentFolder;
 		}
 
-		public override void Execute(object parameter)
+	    public override void Execute(object parameter)
 		{
-			var fileDialog = new OpenFileDialog();
-			var result = fileDialog.ShowDialog();
-			if (result != true)
-				return;
+		    var files = parameter as IList<FileInfo>;
+            
+            if (files == null)
+            {
+                var fileDialog = new OpenFileDialog()
+                                     {
+                                         Multiselect = true
+                                     };
+                var result = fileDialog.ShowDialog();
+                if (result.HasValue && result.Value)
+                {
+                    files = fileDialog.Files.ToList();
+                }
+            }
 
-			var stream = fileDialog.File.OpenRead();
-			totalUploadFileSize.Value = stream.Length;
-			ApplicationModel.Client.UploadAsync(fileDialog.File.Name, new NameValueCollection(), stream, Progress)
-				.ContinueWith(task =>
-				{
-					stream.Dispose();
-					task.Wait();
-					return task;
-				});
+            if (files != null)
+            {
+                foreach (var file in files)
+                {
+                    QueueForUpload(file, currentFolder.Value);
+                }
+            }
 		}
 
-		private void Progress(string file, int uploaded)
-		{
-			totalBytesUploaded.Value = uploaded;
-		}
+	    private static void QueueForUpload(FileInfo file, string folder)
+	    {
+	        var operation = new AsyncOperationModel()
+	                            {
+	                                Description = "Uploading " + file.Name + " to " + folder,
+	                            };
+
+            var stream = file.OpenRead();
+            var fileSize = stream.Length;
+
+	        ApplicationModel.Current.Client.UploadAsync(
+	            folder + "/" + file.Name,
+	            new NameValueCollection(),
+	            stream,
+	            (fileName, bytesUploaded) => operation.ProgressChanged(bytesUploaded, fileSize))
+                .UpdateOperationWithOutcome(operation)
+	            .ContinueOnUIThread(task => stream.Dispose());
+
+	        ApplicationModel.Current.AsyncOperations.RegisterOperation(operation);
+	    }
 	}
 }

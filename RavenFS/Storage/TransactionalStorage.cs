@@ -10,6 +10,7 @@ using System.IO;
 using System.Runtime.ConstrainedExecution;
 using System.Threading;
 using Microsoft.Isam.Esent.Interop;
+using RavenFS.Extensions;
 
 namespace RavenFS.Storage
 {
@@ -38,13 +39,11 @@ namespace RavenFS.Storage
 			}
 		}
 
-		public TransactionalStorage(string database, NameValueCollection settings)
+		public TransactionalStorage(string path, NameValueCollection settings)
 		{
 			this.settings = settings;
-			path = database;
-			if (Path.IsPathRooted(database) == false)
-				path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, database);
-			this.database = Path.Combine(path, "Data.ravenfs");
+			this.path = path.ToFullPath();
+			this.database = Path.Combine(this.path, "Data.ravenfs");
 
 			new StorageConfigurator(settings).LimitSystemCache();
 

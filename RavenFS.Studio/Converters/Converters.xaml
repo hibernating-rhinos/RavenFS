@@ -1,7 +1,22 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:Converters="clr-namespace:RavenFS.Studio.Converters">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:Converters="clr-namespace:RavenFS.Studio.Converters"
+    xmlns:Models="clr-namespace:RavenFS.Studio.Models"
+    xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions">
+    
+    <Converters:DateStringToFormattedDateConverter x:Key="Converter_DateStringToFormattedDate"/>
+    <Converters:EnumToVisibilityConverter x:Key="Converter_VisibileOnlyWhenAsyncOperationStatusIsProcessing" Type="{z:Type Name=Models:AsyncOperationStatus}" ValuesWhenVisibile="Processing"/>
+    <Converters:EnumToVisibilityConverter x:Key="Converter_VisibileExceptWhenAsyncOperationStatusIsProcessing" Type="{z:Type Name=Models:AsyncOperationStatus}" ValuesWhenCollapsed="Processing"/>
+    <Converters:AsyncOperationStatusConverter x:Key="Converter_AsyncOperationStatus" />
+    <Converters:ValueGreaterThanConverter x:Key="Converter_VisibleWhenValueGreaterThan" ValueWhenTrue="{z:Static Member=Visibility.Visible}" ValueWhenFalse="{z:Static Member=Visibility.Collapsed}"/>
+    <Converters:ValueGreaterThanConverter x:Key="Converter_CollapsedWhenValueGreaterThan" ValueWhenTrue="{z:Static Member=Visibility.Collapsed}" ValueWhenFalse="{z:Static Member=Visibility.Visible}"/>
 
-    <Converters:NameValueCollectionToMultiLineStringConverter x:Key="NameValueCollectionToMultiLineString" />
+    <Converters:StringIsNullOrEmptyConverter x:Key="Converter_VisibleWhenStringIsNullOrEmpty" ValueWhenTrue="{z:Static Member=Visibility.Visible}" ValueWhenFalse="{z:Static Member=Visibility.Collapsed}"/>
+    <Converters:StringIsNullOrEmptyConverter x:Key="Converter_CollapsedWhenStringIsNullOrEmpty" ValueWhenTrue="{z:Static Member=Visibility.Collapsed}" ValueWhenFalse="{z:Static Member=Visibility.Visible}"/>
 
+    <Converters:BooleanConverter x:Key="Converter_VisibleWhenTrue" ValueWhenTrue="{z:Static Member=Visibility.Visible}" ValueWhenFalse="{z:Static Member=Visibility.Collapsed}"/>
+    <Converters:BooleanConverter x:Key="Converter_CollapsedWhenTrue" ValueWhenTrue="{z:Static Member=Visibility.Collapsed}" ValueWhenFalse="{z:Static Member=Visibility.Visible}"/>
+
+    <Converters:FileSystemModelToIconConverter x:Key="Converter_FileSystemModelToIcon"/>
+    <Converters:VirtualFolderToolTipConverter x:Key="Converter_VirtualFolderToolTip"/>
 </ResourceDictionary>

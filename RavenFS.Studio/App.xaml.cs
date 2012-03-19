@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -25,10 +26,16 @@ namespace RavenFS.Studio
 
         private void Application_Startup(object sender, StartupEventArgs e)
         {
+            SetupSchedulers();
             this.RootVisual = new MainPage();
         }
 
-		private void Application_UnhandledException(object sender, ApplicationUnhandledExceptionEventArgs e)
+        private void SetupSchedulers()
+        {
+            Schedulers.UIThread = TaskScheduler.FromCurrentSynchronizationContext();
+        }
+
+        private void Application_UnhandledException(object sender, ApplicationUnhandledExceptionEventArgs e)
 		{
 			if (System.Diagnostics.Debugger.IsAttached) return;
 

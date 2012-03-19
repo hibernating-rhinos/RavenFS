@@ -11,14 +11,12 @@ namespace RavenFS.Rdc
         private readonly ISignatureRepository _localSignatureRepository;
         private readonly ISignatureRepository _remoteCacheSignatureRepository;
         private readonly RavenFileSystemClient _ravenFileSystemClient;
-        private readonly NeedListParser _needListParser;
 
         public RemoteRdcManager(RavenFileSystemClient ravenFileSystemClient, ISignatureRepository localSignatureRepository, ISignatureRepository remoteCacheSignatureRepository)
         {
             _localSignatureRepository = localSignatureRepository;
             _remoteCacheSignatureRepository = remoteCacheSignatureRepository;
             _ravenFileSystemClient = ravenFileSystemClient;
-            _needListParser = new NeedListParser();
         }
 
 
@@ -30,7 +28,7 @@ namespace RavenFS.Rdc
         /// <returns></returns>
         public SignatureManifest SynchronizeSignatures(DataInfo dataInfo)
         {
-            var remoteSignatureManifest = _ravenFileSystemClient.GetRdcManifestAsync(dataInfo.Name).Result;
+            var remoteSignatureManifest = _ravenFileSystemClient.Synchronization.GetRdcManifestAsync(dataInfo.Name).Result;
             if (remoteSignatureManifest.Signatures.Count > 0)
             {
                 InternalSynchronizeSignatures(dataInfo, remoteSignatureManifest);
@@ -84,7 +82,7 @@ namespace RavenFS.Rdc
                                                                   new SignatureInfo(remoteSigSigName));
                 using (var output = _remoteCacheSignatureRepository.CreateContent(remoteSigName))
                 {
-                    _needListParser.Parse(source, seed, output, needList);
+                    NeedListParser.Parse(source, seed, output, needList);
                 }
             }
         }

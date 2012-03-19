@@ -15,16 +15,21 @@ namespace RavenFS.Studio.Infrastructure
 
 		private static readonly DispatcherTimer dispatcherTimer;
 
+	    private bool isLoaded;
+
 		static View()
 		{
 			CurrentViews = new List<View>();
-			dispatcherTimer = new DispatcherTimer
-			{
-				Interval = TimeSpan.FromSeconds(1),
-			};
-			dispatcherTimer.Tick += DispatcherTimerOnTick;
-			dispatcherTimer.Start();
 
+            if (!DesignerProperties.IsInDesignTool)
+            {
+                dispatcherTimer = new DispatcherTimer
+                                      {
+                                          Interval = TimeSpan.FromSeconds(1),
+                                      };
+                dispatcherTimer.Tick += DispatcherTimerOnTick;
+                dispatcherTimer.Start();
+            }
 		}
 
 		private static void DispatcherTimerOnTick(object sender, EventArgs eventArgs)
@@ -73,27 +78,56 @@ namespace RavenFS.Studio.Infrastructure
 			action(model);
 		}
 
-		// Dependency property that is bound against the DataContext.
-		// When its value (i.e. the control's DataContext) changes,
-		// call DataContextWatcher_Changed.
-		public static DependencyProperty DataContextWatcherProperty = DependencyProperty.Register(
-		  "DataContextWatcher",
-		  typeof(object),
-		  typeof(View),
-			  new PropertyMetadata(DataContextWatcherChanged));
-
-		private static void DataContextWatcherChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-		{
-			InvokeTimerTicked(e.NewValue);
-		}
-
 		public View()
 		{
-			SetBinding(DataContextWatcherProperty, new Binding());
-
-			Loaded += (sender, args) => CurrentViews.Add(this);
-
-			Unloaded += (sender, args) => CurrentViews.Remove(this);
+            if (!DesignerProperties.IsInDesignTool)
+            {
+                Loaded += OnLoaded;
+                DataContextChanged += OnDataContextChanged;
+                Unloaded += OnUnloaded;
+            }
 		}
+
+	    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs args)
+	    {
+	        InvokeTimerTicked(args.NewValue);
+            if (isLoaded)
+            {
+                NotifyModelLoaded();
+            }
+	    }
+
+	    private void OnUnloaded(object sender, RoutedEventArgs args)
+	    {
+	        CurrentViews.Remove(this);
+            if (Model != null)
+            {
+                Model.NotifyViewUnloaded();
+            }
+
+            isLoaded = false;
+	    }
+
+	    private void OnLoaded(object sender, RoutedEventArgs args)
+	    {
+	        isLoaded = true;
+	        CurrentViews.Add(this);
+	        NotifyModelLoaded();
+	    }
+
+	    private void NotifyModelLoaded()
+	    {
+	        if (Model != null)
+	        {
+	            if (Model is PageModel)
+	            {
+	                (Model as PageModel).QueryParameters = NavigationContext.QueryString;
+	            }
+
+	            Model.NotifyViewLoaded();
+	        }
+	    }
+
+	    protected Model Model {get { return DataContext as Model; }}
 	}
 }

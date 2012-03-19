@@ -15,3 +15,7 @@ RavenFS/Index.ravenfs/*
 /Deploy/*
 /RavenFS/RavenFS.Publish.xml
 Packages.dgml
+
+RavenFS.Web/Data.ravenfs/*
+RavenFS.Web/Index.ravenfs/*
+RavenFS/~/

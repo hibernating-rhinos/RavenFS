@@ -5,7 +5,7 @@ using Xunit;
 
 namespace RavenFS.Tests.Bugs
 {
-	public class UpdatingMetadata : IisExpressTestClient
+	public class UpdatingMetadata : WebApiTest
 	{
 		
 		[Fact]

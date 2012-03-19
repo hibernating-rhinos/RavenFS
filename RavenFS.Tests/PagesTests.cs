@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
+using RavenFS.Extensions;
 using RavenFS.Tests.Tools;
 using RavenFS.Util;
 using Xunit;
@@ -130,12 +131,12 @@ namespace RavenFS.Tests
 				var file = accessor.GetFile("test.csv", 0, 4);
 				var bytes = new byte[4];
 
-				accessor.ReadPage(file.Pages[0].Key, bytes);
+				accessor.ReadPage(file.Pages[0].Id, bytes);
 				Assert.Equal(new byte[] { 1, 2, 3, 4 }, bytes);
 
-				accessor.ReadPage(file.Pages[1].Key, bytes);
+				accessor.ReadPage(file.Pages[1].Id, bytes);
 				Assert.Equal(new byte[] {5, 6, 7, 8}, bytes);
-				accessor.ReadPage(file.Pages[2].Key, bytes);
+				accessor.ReadPage(file.Pages[2].Id, bytes);
 				Assert.Equal(new byte[] {6, 7, 8, 9}, bytes);
 			});
 		}
@@ -143,7 +144,7 @@ namespace RavenFS.Tests
 		[Fact]
 		public void CanInsertAndReadPage()
 		{
-			HashKey key = null;
+			int key = 0;
 			storage.Batch(accessor =>
 			{
 				key = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 4);

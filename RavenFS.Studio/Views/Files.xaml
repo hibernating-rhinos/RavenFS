@@ -1,0 +1,174 @@
+﻿<Infrastructure:View x:Class="RavenFS.Studio.Views.Files"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
+                     xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+                     xmlns:b="clr-namespace:RavenFS.Studio.Behaviors"
+                     xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
+                     xmlns:Models="clr-namespace:RavenFS.Studio.Models"
+                     xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
+                     xmlns:Views="clr-namespace:RavenFS.Studio.Views"
+                     xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" mc:Ignorable="d"
+                     d:DesignWidth="640"
+                     d:DesignHeight="480"
+                     Title="Home"
+                     Style="{StaticResource Style_Page}"
+                     Infrastructure:ModelResolver.AttachModel="FilesPageModel" d:DataContext="{d:DesignInstance Models:FilesPageModel}">
+
+    <Grid Margin="{StaticResource Margin_ContentPage}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <Border Style="{StaticResource Style_Border_Header}">
+            <toolkit:DockPanel Margin="4" LastChildFill="False">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Files" Style="{StaticResource Style_TextBlock_Breadcrumb}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                         VerticalAlignment="Center"
+                            Margin="5,0,5,0" 
+                            toolkit:DockPanel.Dock="Right">
+                </StackPanel>
+            </toolkit:DockPanel>
+        </Border>
+
+        <Border Grid.Row="1" Style="{StaticResource Style_Border_Toolbar}">
+            <toolkit:DockPanel Margin="4" LastChildFill="False">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button VerticalAlignment="Center"
+				            Command="{Binding Upload}">
+
+                      <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="{StaticResource Image_Upload_Small}" Stretch="None" Margin="0,0,2,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Upload" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                    <Button Content="Add Folder"
+                            VerticalAlignment="Center"
+                            Command="{Binding AddFolder}" Margin="5,0,0,0"/>
+                    <Button Content="Download"
+                            VerticalAlignment="Center"
+                            Command="{Binding Download}" Margin="5,0,0,0"/>
+                    <Button Content="Delete"
+                            VerticalAlignment="Center"
+                            Command="{Binding Delete}" Margin="5,0,0,0"/>
+                    <Button Content="Edit Properties"
+                            VerticalAlignment="Center"
+                            Command="{Binding EditProperties}" Margin="5,0,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                         VerticalAlignment="Center"
+                            Margin="5,0,5,0" 
+                            toolkit:DockPanel.Dock="Right">
+                    <Button Content="Pending Operations"
+                            VerticalAlignment="Center"
+                            Command="{StaticResource ShowOperationsPaneCommand}" Margin="5,0,0,0"/>
+                </StackPanel>
+            </toolkit:DockPanel>
+        </Border>
+
+        <Border Grid.Row="2" Style="{StaticResource Style_Border_Toolbar}">
+            <toolkit:DockPanel>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Image Source="{StaticResource Image_RavenLogo}" Width="16" Stretch="Uniform" Margin="4,0" VerticalAlignment="Center"/>
+                    <HyperlinkButton Style="{StaticResource Style_Link_Breadcrumb}" 
+                                Command="{StaticResource NavigateToCommand}"
+                                 CommandParameter="/files"
+                                 Content="RavenFS">
+                </HyperlinkButton>
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding BreadcrumbTrail}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text=">" Margin="2,0" VerticalAlignment="Center"/>
+                                <Image Source="{StaticResource Image_Folder_Tiny}" Width="14" Stretch="Uniform" Margin="3,0" VerticalAlignment="Center"/>
+                                <HyperlinkButton Style="{StaticResource Style_Link_Breadcrumb}" 
+                                    Command="{StaticResource NavigateToCommand}"
+                                    CommandParameter="{Binding FullPath, StringFormat='/files{0}'}"
+                                    VerticalAlignment="Center"
+                                    Content="{Binding Name}">
+                                </HyperlinkButton>
+                            </StackPanel>
+                            
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </toolkit:DockPanel>
+        </Border>
+        
+        <sdk:DataGrid x:Name="DataGrid" Grid.Row="3" 
+                      AutoGenerateColumns="False" 
+                      IsReadOnly="True" 
+                      ItemsSource="{Binding Files}"
+                      Margin="0,0,0,10"
+                      SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}">
+            <i:Interaction.Behaviors>
+                <b:ExecuteCommandOnFileDrop Command="{Binding Upload}"/>
+                <b:DataGridRowDoubleClickCommandBehavior Command="{Binding Navigate}"/>
+            </i:Interaction.Behaviors>
+            <i:Interaction.Triggers>
+                <b:StudioKeyTrigger Key="Delete">
+                    <i:InvokeCommandAction Command="{Binding Delete}"/>
+                </b:StudioKeyTrigger>
+            </i:Interaction.Triggers>
+            <sdk:DataGrid.Columns>
+                <sdk:DataGridTemplateColumn Header="Name" Width="*">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <toolkit:DockPanel  Margin="4" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+                                <Image Width="16" 
+                                       toolkit:DockPanel.Dock="Left"
+                                       Source="{Binding Item, Converter={StaticResource Converter_FileSystemModelToIcon}}" Stretch="None"
+                                       ToolTipService.ToolTip="{Binding Item, Converter={StaticResource Converter_VirtualFolderToolTip}}"/>
+                                <TextBlock Text="{Binding Item.Name, FallbackValue=...}"
+                                           HorizontalAlignment="Left"
+                                           b:FadeTrimming.IsEnabled="True" 
+                                           b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                           Margin="4, 0,0,0"/>
+                            </toolkit:DockPanel>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Header="Size" Width="100">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Item.FormattedTotalSize}" 
+                                       b:FadeTrimming.IsEnabled="True" 
+                                       b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Header="Last Modified" Width="150">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Item.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDate}}" 
+                                       b:FadeTrimming.IsEnabled="True" 
+                                       b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+        
+        <Views:AsyncOperationsView Grid.Row="4"/>
+    </Grid>
+</Infrastructure:View>
