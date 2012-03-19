@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BigFileHandling.cs" />
+    <Compile Include="Bugs\CaseSensitiveFileDeletion.cs" />
     <Compile Include="Bugs\Queries.cs" />
     <Compile Include="Bugs\UpdatingMetadata.cs" />
     <Compile Include="Bugs\UploadDownload.cs" />

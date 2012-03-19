@@ -174,5 +174,6 @@ namespace RavenFS.Tests
 			var strings = client.GetFoldersAsync().Result;
 			Assert.Equal(new[] { "/test", "/why" }, strings);
 		}
+
 	}
 }
