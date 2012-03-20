@@ -5,6 +5,7 @@ using System.Net.Http;
 using RavenFS.Client;
 using RavenFS.Rdc;
 using RavenFS.Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper.Unmanaged;
 
 namespace RavenFS.Controllers
 {

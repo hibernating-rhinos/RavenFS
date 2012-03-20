@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Threading;
+using RavenFS.Rdc.Wrapper.Unmanaged;
 
 namespace RavenFS.Rdc.Wrapper
 {
