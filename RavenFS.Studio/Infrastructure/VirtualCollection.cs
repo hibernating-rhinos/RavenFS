@@ -25,13 +25,14 @@ namespace RavenFS.Studio.Infrastructure
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        private uint _state; // used to ensure that data-requests are not stale
         private readonly SparseList<VirtualItem<T>> _virtualItems;
         private readonly HashSet<int> _fetchedPages = new HashSet<int>();
         private readonly HashSet<int> _requestedPages = new HashSet<int>();
         private int _itemCount;
         private readonly TaskScheduler _synchronizationContextScheduler;
         private bool _isRefreshDeferred;
-        private bool _isRefreshInProgress;
+        private InterimDataMode? _pendingRefreshType;
         private int _currentItem;
         private SortDescriptionCollection _sortDescriptions = new SortDescriptionCollection();
 
@@ -57,9 +58,9 @@ namespace RavenFS.Studio.Infrastructure
             Refresh();
         }
 
-        private void HandleSourceCollectionChanged(object sender, EventArgs e)
+        private void HandleSourceCollectionChanged(object sender, VirtualCollectionChangedEventArgs e)
         {
-           Task.Factory.StartNew(Refresh, CancellationToken.None, TaskCreationOptions.None, _synchronizationContextScheduler);
+           Task.Factory.StartNew(() => Refresh(e.Mode), CancellationToken.None, TaskCreationOptions.None, _synchronizationContextScheduler);
         }
 
         private int DetermineSparseListPageSize(int fetchPageSize)
@@ -78,23 +79,6 @@ namespace RavenFS.Studio.Infrastructure
                 // return the smallest multiple of fetchPageSize that is bigger than TargetSparseListPageSize
                 return (int)Math.Ceiling((double)TargetSparseListPageSize / fetchPageSize) * fetchPageSize;
             }
-        }
-
-        private void UpdateItemCount(int newItemCount)
-        {
-            _isRefreshInProgress = false;
-
-            var wasCurrentBeyondLast = IsCurrentAfterLast;
-
-            _itemCount = newItemCount;
-
-            if (IsCurrentAfterLast && !wasCurrentBeyondLast)
-            {
-                UpdateCurrentPosition(_itemCount - 1, allowCancel: false);
-            }
-
-            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         private void MarkExistingItemsAsStale()
@@ -116,15 +100,17 @@ namespace RavenFS.Studio.Infrastructure
 
         private void BeginGetPage(int page)
         {
-            if (_isRefreshInProgress || IsPageAlreadyRequested(page))
+            if (IsPageAlreadyRequested(page))
             {
                 return;
             }
 
             _requestedPages.Add(page);
 
+            var stateAsOfNow = _state;
+
             _source.GetPageAsync(page*_pageSize, _pageSize, _sortDescriptions).ContinueWith(
-                t => UpdatePage(page, t.Result),
+                t => UpdatePage(page, t.Result, stateAsOfNow),
                 _synchronizationContextScheduler);
         }
 
@@ -133,8 +119,14 @@ namespace RavenFS.Studio.Infrastructure
             return _fetchedPages.Contains(page) || _requestedPages.Contains(page);
         }
 
-        private void UpdatePage(int page, IList<T> results)
+        private void UpdatePage(int page, IList<T> results, uint stateWhenRequested)
         {
+            if (stateWhenRequested != _state)
+            {
+                // this request may contain out-of-date data, so ignore it
+                return;
+            }
+
             _requestedPages.Remove(page);
             _fetchedPages.Add(page);
 
@@ -168,21 +160,85 @@ namespace RavenFS.Studio.Infrastructure
 
         public void Refresh()
         {
-            if (_isRefreshInProgress)
+            Refresh(InterimDataMode.Clear);
+        }
+
+        public void Refresh(InterimDataMode mode)
+        {
+            if (_isRefreshDeferred)
             {
+                if (!_pendingRefreshType.HasValue || (_pendingRefreshType == InterimDataMode.ShowStaleData && mode == InterimDataMode.Clear))
+                {
+                    _pendingRefreshType = mode;
+                }
                 return;
             }
 
-            _isRefreshInProgress = true;
+            _state++;
 
-            MarkExistingItemsAsStale();
+            if (mode == InterimDataMode.ShowStaleData)
+            {
+                MarkExistingItemsAsStale();
+            }
+            else
+            {
+                ClearExistingData();
+            }
 
             _fetchedPages.Clear();
             _requestedPages.Clear();
 
+            UpdateCount();
 
-            UpdateItemCount(_source.Count);
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
 
+        private void DoDeferredRefresh()
+        {
+            _isRefreshDeferred = false;
+
+            if (_pendingRefreshType.HasValue)
+            {
+                Refresh(_pendingRefreshType.Value);
+            }
+
+            _pendingRefreshType = null;
+        }
+
+        private void ClearExistingData()
+        {
+            foreach (var page in _fetchedPages)
+            {
+                var startIndex = page * _pageSize;
+                var endIndex = (page + 1) * _pageSize;
+
+                for (int i = startIndex; i < endIndex; i++)
+                {
+                    if (_virtualItems[i] != null)
+                    {
+                        _virtualItems[i].Item = null;
+                    }
+                }
+            }
+        }
+
+        private void UpdateCount()
+        {
+            if (_itemCount == _source.Count)
+            {
+                return;
+            }
+
+            var wasCurrentBeyondLast = IsCurrentAfterLast;
+
+            _itemCount = _source.Count;
+
+            if (IsCurrentAfterLast && !wasCurrentBeyondLast)
+            {
+                UpdateCurrentPosition(_itemCount - 1, allowCancel: false);
+            }
+
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
         }
 
         public int IndexOf(VirtualItem<T> item)
@@ -210,7 +266,7 @@ namespace RavenFS.Studio.Infrastructure
         {
             _isRefreshDeferred = true;
 
-            return Disposable.Create(() => { _isRefreshDeferred = false; Refresh(); });
+            return Disposable.Create(DoDeferredRefresh);
         }
 
         public bool MoveCurrentToFirst()

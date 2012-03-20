@@ -127,7 +127,7 @@ namespace RavenFS.Studio.Models
 
             if (fileCountChanged || forceCollectionRefresh)
             {
-                OnCollectionChanged(EventArgs.Empty);
+                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.ShowStaleData));
             }
         }
     }

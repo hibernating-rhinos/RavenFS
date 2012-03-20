@@ -40,7 +40,7 @@ namespace RavenFS.Studio.Models
             if (!isPruningFolders)
             {
                 UpdateVirtualFolders();
-                OnCollectionChanged(EventArgs.Empty);
+                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.ShowStaleData));
             }
         }
 
@@ -130,7 +130,7 @@ namespace RavenFS.Studio.Models
                                       var folders = t.Result.Select(n => new DirectoryModel() {FullPath = n}).ToArray();
                                       PruneVirtualFolders(folders);
                                       SetFolders(folders);
-                                      OnCollectionChanged(EventArgs.Empty);
+                                      OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.ShowStaleData));
                                   }, synchronizationContextScheduler);
         }
 

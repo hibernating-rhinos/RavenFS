@@ -165,6 +165,7 @@
     <Compile Include="Infrastructure\MarkupExtensions\StaticExtension.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\TypeExtension.cs" />
     <Compile Include="Infrastructure\SparseList.cs" />
+    <Compile Include="Infrastructure\VirtualCollectionChangedEventArgs.cs" />
     <Compile Include="Infrastructure\VirtualCollectionSource.cs" />
     <Compile Include="Infrastructure\VirtualItem.cs" />
     <Compile Include="Models\ApplicationModel.cs" />

@@ -29,9 +29,9 @@ namespace RavenFS.Studio.Infrastructure
             source2.CollectionChanged += HandleChildCollectionChanged;
         }
 
-        private void HandleChildCollectionChanged(object sender, EventArgs e)
+        private void HandleChildCollectionChanged(object sender, VirtualCollectionChangedEventArgs e)
         {
-            OnCollectionChanged(EventArgs.Empty);
+            OnCollectionChanged(e);
         }
 
         public override int Count

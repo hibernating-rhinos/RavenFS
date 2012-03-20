@@ -86,7 +86,6 @@ namespace RavenFS.Studio.Models
 
 	    protected override Task TimerTickedAsync()
 		{
-            filesSource.Refresh();
 		    return Completed;
 		}
 	}

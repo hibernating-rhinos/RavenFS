@@ -7,15 +7,15 @@ namespace RavenFS.Studio.Infrastructure
 {
     public abstract class VirtualCollectionSource<T> : IVirtualCollectionSource<T>
     {
-        public event EventHandler<EventArgs> CollectionChanged;
+        public event EventHandler<VirtualCollectionChangedEventArgs> CollectionChanged;
 
         public abstract int Count { get; }
 
         public abstract Task<IList<T>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions);
 
-        protected void OnCollectionChanged(EventArgs e)
+        protected void OnCollectionChanged(VirtualCollectionChangedEventArgs e)
         {
-            EventHandler<EventArgs> handler = CollectionChanged;
+            var handler = CollectionChanged;
             if (handler != null) handler(this, e);
         }
     }
