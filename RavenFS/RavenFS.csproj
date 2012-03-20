@@ -135,6 +135,7 @@
     <Compile Include="Controllers\SearchController.cs" />
     <Compile Include="Controllers\StaticController.cs" />
     <Compile Include="Controllers\StatsController.cs" />
+    <Compile Include="Controllers\SynchronizationController.cs" />
     <Compile Include="Extensions\ConcurrentDictionaryExtensions.cs" />
     <Compile Include="Extensions\IOExtensions.cs" />
     <Compile Include="Extensions\MetadataExtensions.cs" />
