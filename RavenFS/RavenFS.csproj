@@ -154,7 +154,6 @@
     <Compile Include="NonAdminHttp.cs" />
     <Compile Include="RavenFileSystem.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
-    <Compile Include="Rdc\ILocalRdcManager.cs" />
     <Compile Include="Rdc\IPartialDataAccess.cs" />
     <Compile Include="Rdc\RemotePartialAccess.cs" />
     <Compile Include="Rdc\RemoteRdcManager.cs" />
