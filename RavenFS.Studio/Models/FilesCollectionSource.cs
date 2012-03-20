@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -51,15 +52,42 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize)
+        public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
-            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, FilesSortOptions.Name, start, pageSize)
+            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), start, pageSize)
                         .ContinueWith(t =>
                                           {
                                               var result = (IList<FileSystemModel>) ToFileSystemModels(t.Result.Files).Take(pageSize).ToArray();
                                               UpdateCount(t.Result.FileCount);
                                               return result;
                                           });
+        }
+
+        private FilesSortOptions MapSortDescription(IList<SortDescription> sortDescriptions)
+        {
+            var sortDescription = sortDescriptions.FirstOrDefault();
+
+            FilesSortOptions sort = FilesSortOptions.Default;
+
+            if (sortDescription.PropertyName == "Name")
+            {
+                sort = FilesSortOptions.Name;
+            }
+            else if (sortDescription.PropertyName == "Size")
+            {
+                sort = FilesSortOptions.Size;
+            }
+            else if (sortDescription.PropertyName == "LastModified")
+            {
+                sort = FilesSortOptions.LastModified;
+            }
+
+            if (sortDescription.Direction == ListSortDirection.Descending)
+            {
+                sort |= FilesSortOptions.Desc;
+            }
+
+            return sort;
         }
 
         private static IEnumerable<FileSystemModel> ToFileSystemModels(IEnumerable<FileInfo> files)

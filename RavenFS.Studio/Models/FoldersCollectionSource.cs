@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -83,7 +84,7 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize)
+        public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
             lock (_lock)
             {
@@ -94,7 +95,25 @@ namespace RavenFS.Studio.Models
 
                 var count = Math.Min(Math.Max(Count- start,0), pageSize);
 
-                return TaskEx.FromResult((IList<FileSystemModel>)(virtualFolders.Concat(folders).Skip(start).Take(count).ToArray()));
+                return TaskEx.FromResult((IList<FileSystemModel>)(virtualFolders.Concat(folders).Apply(e => ApplySort(e, sortDescriptions)).Skip(start).Take(count).ToArray()));
+            }
+        }
+
+        private IEnumerable<FileSystemModel> ApplySort(IEnumerable<FileSystemModel> files, IList<SortDescription> sortDescriptions)
+        {
+            var sort = sortDescriptions.FirstOrDefault();
+
+            if (sort.PropertyName == "Name" && sort.Direction == ListSortDirection.Ascending)
+            {
+                return files.OrderBy(f => f.Name);
+            }
+            else if (sort.PropertyName == "Name" && sort.Direction == ListSortDirection.Descending)
+            {
+                return files.OrderByDescending(f => f.Name);
+            }
+            else
+            {
+                return files;
             }
         }
 

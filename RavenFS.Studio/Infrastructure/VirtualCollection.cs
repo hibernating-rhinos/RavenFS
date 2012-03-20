@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
+using System.Reactive.Disposables;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,8 +30,10 @@ namespace RavenFS.Studio.Infrastructure
         private readonly HashSet<int> _requestedPages = new HashSet<int>();
         private int _itemCount;
         private readonly TaskScheduler _synchronizationContextScheduler;
+        private bool _isRefreshDeferred;
         private bool _isRefreshInProgress;
         private int _currentItem;
+        private SortDescriptionCollection _sortDescriptions = new SortDescriptionCollection();
 
         public VirtualCollection(IVirtualCollectionSource<T> source, int pageSize)
         {
@@ -40,14 +43,21 @@ namespace RavenFS.Studio.Infrastructure
             }
 
             _source = source;
-            _source.CollectionChanged += HandleCollectionCollectionChanged;
+            _source.CollectionChanged += HandleSourceCollectionChanged;
             _pageSize = pageSize;
             _virtualItems = new SparseList<VirtualItem<T>>(DetermineSparseListPageSize(pageSize));
             _currentItem = -1;
             _synchronizationContextScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+
+            (_sortDescriptions as INotifyCollectionChanged).CollectionChanged += HandleSortDescriptionsChanged;
         }
 
-        private void HandleCollectionCollectionChanged(object sender, EventArgs e)
+        private void HandleSortDescriptionsChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            Refresh();
+        }
+
+        private void HandleSourceCollectionChanged(object sender, EventArgs e)
         {
            Task.Factory.StartNew(Refresh, CancellationToken.None, TaskCreationOptions.None, _synchronizationContextScheduler);
         }
@@ -113,7 +123,7 @@ namespace RavenFS.Studio.Infrastructure
 
             _requestedPages.Add(page);
 
-            _source.GetPageAsync(page*_pageSize, _pageSize).ContinueWith(
+            _source.GetPageAsync(page*_pageSize, _pageSize, _sortDescriptions).ContinueWith(
                 t => UpdatePage(page, t.Result),
                 _synchronizationContextScheduler);
         }
@@ -198,7 +208,9 @@ namespace RavenFS.Studio.Infrastructure
 
         public IDisposable DeferRefresh()
         {
-            throw new NotImplementedException();
+            _isRefreshDeferred = true;
+
+            return Disposable.Create(() => { _isRefreshDeferred = false; Refresh(); });
         }
 
         public bool MoveCurrentToFirst()
@@ -251,12 +263,12 @@ namespace RavenFS.Studio.Infrastructure
 
         public SortDescriptionCollection SortDescriptions
         {
-            get { throw new NotImplementedException(); }
+            get { return _sortDescriptions; }
         }
 
         public bool CanSort
         {
-            get { return false; }
+            get { return true; }
         }
 
         public bool CanGroup

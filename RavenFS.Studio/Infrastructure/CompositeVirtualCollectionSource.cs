@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -48,18 +49,18 @@ namespace RavenFS.Studio.Infrastructure
             get { return source2; }
         }
 
-        public override Task<IList<T>> GetPageAsync(int start, int pageSize)
+        public override Task<IList<T>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
             var source1Count = Source1.Count;
 
             if (start < source1Count - pageSize)
             {
-                return Source1.GetPageAsync(start, pageSize);
+                return Source1.GetPageAsync(start, pageSize, sortDescriptions);
             }
             else if (start > source1Count)
             {
                 var source2Start = start - source1Count;
-                return Source2.GetPageAsync(source2Start, pageSize);
+                return Source2.GetPageAsync(source2Start, pageSize, sortDescriptions);
             }
             else
             {
@@ -67,8 +68,8 @@ namespace RavenFS.Studio.Infrastructure
                 var source2PageSize = pageSize - source1PageSize;
 
                 // we need to mash up the two sources to provide a full page
-                var source1Results = Source1.GetPageAsync(start, source1PageSize);
-                var source2Results = Source2.GetPageAsync(0, source2PageSize);
+                var source1Results = Source1.GetPageAsync(start, source1PageSize, sortDescriptions);
+                var source2Results = Source2.GetPageAsync(0, source2PageSize, sortDescriptions);
 
                 var result =
                     TaskEx.WhenAll(source1Results, source2Results)

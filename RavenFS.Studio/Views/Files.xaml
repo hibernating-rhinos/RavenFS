@@ -127,7 +127,7 @@
                 </b:StudioKeyTrigger>
             </i:Interaction.Triggers>
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTemplateColumn Header="Name" Width="*">
+                <sdk:DataGridTemplateColumn Header="Name" Width="*" CanUserSort="True" SortMemberPath="Name">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <toolkit:DockPanel  Margin="4" VerticalAlignment="Center" HorizontalAlignment="Stretch">
@@ -144,7 +144,7 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="Size" Width="100">
+                <sdk:DataGridTemplateColumn Header="Size" Width="100" CanUserSort="True" SortMemberPath="Size">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Item.FormattedTotalSize}" 
@@ -155,7 +155,7 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="Last Modified" Width="150">
+                <sdk:DataGridTemplateColumn Header="Last Modified" Width="150" CanUserSort="True" SortMemberPath="LastModified">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Item.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDate}}" 

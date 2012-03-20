@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace RavenFS.Studio.Infrastructure
@@ -10,7 +11,7 @@ namespace RavenFS.Studio.Infrastructure
 
         public abstract int Count { get; }
 
-        public abstract Task<IList<T>> GetPageAsync(int start, int pageSize);
+        public abstract Task<IList<T>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions);
 
         protected void OnCollectionChanged(EventArgs e)
         {
