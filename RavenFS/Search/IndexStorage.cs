@@ -146,9 +146,11 @@ namespace RavenFS.Search
 
 		public void Delete(string key)
 		{
+		    var lowerKey = key.ToLowerInvariant();
+
 			lock (writerLock)
 			{
-				writer.DeleteDocuments(new Term("__key", key));
+                writer.DeleteDocuments(new Term("__key", lowerKey));
 				writer.Optimize();
 				writer.Commit();
 				ReplaceSearcher();
