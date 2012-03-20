@@ -76,6 +76,8 @@
     <Compile Include="RDC\IO\TestUtils.cs" />
     <Compile Include="RDC\NeedListGeneratorTest.cs" />
     <Compile Include="RDC\SigGeneratorTest.cs" />
+    <Compile Include="Signatures.cs" />
+    <Compile Include="StorageTest.cs" />
     <Compile Include="Tools\HttpWebRequestExtensions.cs" />
     <Compile Include="Tools\IisDeploymentUtil.cs" />
     <Compile Include="MultiHostTestBase.cs" />

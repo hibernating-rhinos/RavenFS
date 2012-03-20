@@ -466,54 +466,89 @@ namespace RavenFS.Storage
 
 		}
 
-		public Stream GetSignature(string name)
+		public IEnumerable<SignatureLevels> GetSignatures(string name)
 		{
 			Api.JetSetCurrentIndex(session, Signatures, "by_name");
 			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
-				throw new InvalidOperationException("Could not find signature named: " + name);
+				yield break;
+			
+			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			Api.TrySetIndexRange(session, Signatures, SetIndexRangeGrbit.RangeInclusive | SetIndexRangeGrbit.RangeUpperLimit);
 
-			var stream = new ColumnStream(session, Signatures, tableColumnsCache.SignaturesColumns["data"]);
-			return new BufferedStream(stream);
+			do
+			{
+				yield return new SignatureLevels
+				{
+					Id = Api.RetrieveColumnAsInt32(session, Signatures, tableColumnsCache.SignaturesColumns["id"]).Value,
+					Level = Api.RetrieveColumnAsInt32(session, Signatures, tableColumnsCache.SignaturesColumns["level"]).Value,
+				};
+			} while (Api.TryMoveNext(session, Signatures));
 		}
 
-		public long GetSignatureSize(string name)
+		public void ClearSignatures(string name)
 		{
 			Api.JetSetCurrentIndex(session, Signatures, "by_name");
 			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
-				throw new InvalidOperationException("Could not find signature named: " + name);
+				return;
+
+			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			Api.TrySetIndexRange(session, Signatures, SetIndexRangeGrbit.RangeInclusive | SetIndexRangeGrbit.RangeUpperLimit);
+
+			do
+			{
+				Api.JetDelete(session, Signatures);
+			} while (Api.TryMoveNext(session, Signatures));
+		}
+
+
+		public long GetSignatureSize(int id, int level)
+		{
+			Api.JetSetCurrentIndex(session, Signatures, "by_id");
+			Api.MakeKey(session, Signatures, id, MakeKeyGrbit.NewKey);
+			Api.MakeKey(session, Signatures, level, MakeKeyGrbit.None);
+			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
+				throw new InvalidOperationException("Could not find signature with id " + id + " and level " + level);
 
 			return Api.RetrieveColumnSize(session, Signatures, tableColumnsCache.SignaturesColumns["data"]) ?? 0;
 		}
 
-		public DateTime? GetSignatureLastModified(string name)
+		public void GetSignatureStream(int id, int level, Action<Stream> action)
 		{
-			Api.JetSetCurrentIndex(session, Signatures, "by_name");
-			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			Api.JetSetCurrentIndex(session, Signatures, "by_id");
+			Api.MakeKey(session, Signatures, id, MakeKeyGrbit.NewKey);
+			Api.MakeKey(session, Signatures, level, MakeKeyGrbit.None);
 			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
-				throw new InvalidOperationException("Could not find signature named: " + name);
-			
-			return Api.RetrieveColumnAsDateTime(session, Signatures, tableColumnsCache.SignaturesColumns["modified"]);
+				throw new InvalidOperationException("Could not find signature with id " + id + " and level " + level);
+
+
+			using (var stream = new ColumnStream(session, Signatures, tableColumnsCache.SignaturesColumns["data"]))
+			using (var buffer = new BufferedStream(stream))
+			{
+				action(buffer);
+				buffer.Flush();
+				stream.Flush();
+			}
 		}
 
-		public Stream CreateSignature(string name)
+		public void AddSignature(string name, int level, Action<Stream> action)
 		{
-			Api.JetSetCurrentIndex(session, Signatures, "by_name");
-			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
-			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
+			using (var update = new Update(session, Signatures, JET_prep.Insert))
 			{
-				using(var update = new Update(session, Signatures, JET_prep.Insert))
+				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["name"], name, Encoding.Unicode);
+				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["level"], level);
+
+				using(var stream = new ColumnStream(session, Signatures, tableColumnsCache.SignaturesColumns["data"]))
+				using(var buffer = new BufferedStream(stream))
 				{
-					Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["name"], name, Encoding.Unicode);
-					Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["data"], new byte[0]);
-					Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["modified"], DateTime.UtcNow);
-
-					update.Save();
+					action(buffer);
+					buffer.Flush();
+					stream.Flush();
 				}
-			}
 
-			return GetSignature(name);
+				update.Save();
+			}
 		}
 	}
 }

@@ -151,9 +151,9 @@ namespace RavenFS.Storage
 				cp = JET_CP.Unicode
 			}, null, 0, out columnid);
 
-			Api.JetAddColumn(session, tableid, "modified", new JET_COLUMNDEF
+			Api.JetAddColumn(session, tableid, "level", new JET_COLUMNDEF
 			{
-				coltyp = JET_coltyp.DateTime,
+				coltyp = JET_coltyp.Long,
 				grbit = ColumndefGrbit.ColumnNotNULL,
 				cp = JET_CP.Unicode
 			}, null, 0, out columnid);
@@ -165,12 +165,12 @@ namespace RavenFS.Storage
 				grbit = ColumndefGrbit.ColumnNotNULL
 			}, null, 0, out columnid);
 
-			string indexDef = "+id\0\0";
+			string indexDef = "+id\0+level\0\0";
 			Api.JetCreateIndex(session, tableid, "by_id", CreateIndexGrbit.IndexPrimary, indexDef, indexDef.Length,
 							   80);
 
 			indexDef = "+name\0\0";
-			Api.JetCreateIndex(session, tableid, "by_name", CreateIndexGrbit.IndexUnique, indexDef, indexDef.Length,
+			Api.JetCreateIndex(session, tableid, "by_name", CreateIndexGrbit.IndexDisallowNull, indexDef, indexDef.Length,
 							   80);
 		}
 		private void CreateUsageTable(JET_DBID dbid)
