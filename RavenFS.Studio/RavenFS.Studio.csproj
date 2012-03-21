@@ -122,6 +122,7 @@
     <Compile Include="Commands\NavigateToFileSystemModelCommand.cs" />
     <Compile Include="Commands\NavigateToNextPageCommand.cs" />
     <Compile Include="Commands\NavigateToPrevPageCommand.cs" />
+    <Compile Include="Commands\RenameFileCommand.cs" />
     <Compile Include="Commands\ShowOperationsPaneCommand.cs" />
     <Compile Include="Commands\UploadCommand.cs" />
     <Compile Include="Commands\DeleteCommand.cs" />
@@ -291,7 +292,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
     <None Include="Properties\AppManifest.xml" />
   </ItemGroup>

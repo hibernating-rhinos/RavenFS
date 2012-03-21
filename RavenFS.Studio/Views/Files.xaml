@@ -61,6 +61,9 @@
                     <Button Content="Delete"
                             VerticalAlignment="Center"
                             Command="{Binding Delete}" Margin="5,0,0,0"/>
+                    <Button Content="Rename"
+                            VerticalAlignment="Center"
+                            Command="{Binding RenameFile}" Margin="5,0,0,0"/>
                     <Button Content="Edit Properties"
                             VerticalAlignment="Center"
                             Command="{Binding EditProperties}" Margin="5,0,0,0"/>
@@ -124,6 +127,9 @@
             <i:Interaction.Triggers>
                 <b:StudioKeyTrigger Key="Delete">
                     <i:InvokeCommandAction Command="{Binding Delete}"/>
+                </b:StudioKeyTrigger>
+                <b:StudioKeyTrigger Key="F2">
+                    <i:InvokeCommandAction Command="{Binding RenameFile}"/>
                 </b:StudioKeyTrigger>
             </i:Interaction.Triggers>
             <sdk:DataGrid.Columns>
