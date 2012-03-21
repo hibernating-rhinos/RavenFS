@@ -14,41 +14,20 @@ using RavenFS.Extensions;
 
 namespace RavenFS.Controllers
 {
-    public class SynchonizationController : RavenController
+    public class SynchronizationController : RavenController
     {
-        private readonly IDictionary<string, ISignatureRepository> _remoteSignatureCaches = new Dictionary<string, ISignatureRepository>();
-
-        private NameValueCollection _knownServers;
-        private NameValueCollection KnownServers
+        public HttpResponseMessage<SynchronizationReport> Get(string fileName, string sourceServerUrl)
         {
-            get
-            {
-                if (_knownServers == null)
-                {
-                    Storage.Batch(accessor => _knownServers = accessor.GetConfig("knownServers"));
-                }
-                return _knownServers;
-            }
-        }
 
-        public SynchonizationController()
-        {
-            foreach (var item in KnownServers.AllKeys)
-            {
-                _remoteSignatureCaches[item] = new SimpleSignatureRepository(Path.Combine(Directory.GetCurrentDirectory(), item));
-            }
-        }
+            var remoteSignatureCache = new SimpleSignatureRepository(GetTemporaryDirectory());
 
-        public HttpResponseMessage<SynchronizationReport> Synchronize(string sourceServerName, string fileName)
-        {
-            var sourceServerUrl = KnownServers[sourceServerName];
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
             var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
-            var remoteRdcManager = new RemoteRdcManager(sourceRavenFileSystemClient, SignatureRepository, _remoteSignatureCaches[sourceServerName]);
+            var remoteRdcManager = new RemoteRdcManager(sourceRavenFileSystemClient, SignatureRepository, remoteSignatureCache);
 
             if (String.IsNullOrEmpty(sourceServerUrl))
             {
-                throw new Exception("Unknown server identifier " + sourceServerName);
+                throw new Exception("Unknown server identifier " + sourceServerUrl);
             }
             var sourceMetadataAsync = sourceRavenFileSystemClient.GetMetadataForAsync(fileName)
                 .ContinueWith(task => task.Result.UpdateLastModified());
@@ -60,7 +39,7 @@ namespace RavenFS.Controllers
             SynchronizationReport report = null;
             if (sourceSignatureManifest.Signatures.Count > 0)
             {
-                report = Synchronize(sourceServerName, sourceServerUrl, fileName, sourceSignatureManifest, seedSignatureManifest, sourceMetadataAsync.Result);
+                report = Synchronize(remoteSignatureCache, sourceServerUrl, fileName, sourceSignatureManifest, seedSignatureManifest, sourceMetadataAsync);
             }
             else
             {
@@ -70,17 +49,23 @@ namespace RavenFS.Controllers
             return new HttpResponseMessage<SynchronizationReport>(report);
         }
 
-        private SynchronizationReport Synchronize(string sourceServerName, string sourceServerUrl, string fileName, SignatureManifest sourceSignatureManifest, SignatureManifest seedSignatureManifest, NameValueCollection sourceMetadata)
+        private static string GetTemporaryDirectory()
+        {
+            var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Directory.CreateDirectory(tempDirectory);
+            return tempDirectory;
+        }
+
+        private SynchronizationReport Synchronize(ISignatureRepository remoteSignatureRepository, string sourceServerUrl, string fileName, SignatureManifest sourceSignatureManifest, SignatureManifest seedSignatureManifest, Task<NameValueCollection> sourceMetadata)
         {
             var result = new SynchronizationReport { FileName = fileName };
             var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
             var sourceSignatureInfo = new SignatureInfo(sourceSignatureManifest.Signatures.Last().Name);
 
             using (
-                var needListGenerator = new NeedListGenerator(SignatureRepository,
-                                                              _remoteSignatureCaches[sourceServerName]))
+                var needListGenerator = new NeedListGenerator(SignatureRepository, remoteSignatureRepository))
             using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
-                                                                         sourceMetadata))
+                                                                         sourceMetadata.Result.FilterHeaders()))
             {
                 var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
                 NeedListParser.Parse(
@@ -100,7 +85,7 @@ namespace RavenFS.Controllers
         {
             var result = new SynchronizationReport { FileName = fileName };
             using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
-                                                                         sourceMetadataAsync.Result))
+                                                                         sourceMetadataAsync.Result.FilterHeaders()))
             {
                 sourceRavenFileSystemClient.DownloadAsync(fileName, outputFile).Wait();
             }

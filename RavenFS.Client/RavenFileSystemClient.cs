@@ -292,7 +292,7 @@ namespace RavenFS.Client
 
 		public Task<SynchronizationReport> StartSynchronizationAsync(string serverIdentifier, string fileName)
 		{
-			var requestUriString = ServerUrl + "/synchronize/" + Uri.EscapeDataString(serverIdentifier) + "/" + Uri.EscapeDataString(fileName); ;
+            var requestUriString = String.Format("{0}/synchronization?fileName={1}&sourceServerUrl={2}", ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(serverIdentifier));
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 			return request.GetResponseAsync()
 				.ContinueWith(task =>

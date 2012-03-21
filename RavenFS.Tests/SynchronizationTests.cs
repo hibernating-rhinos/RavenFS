@@ -10,10 +10,10 @@ namespace RavenFS.Tests
 {
     public class SynchronizationTests : MultiHostTestBase
     {
-		//[Theory]
+		[Theory]
 		//[InlineData(1)]
-		//[InlineData(5000)]
-		[Fact(Skip = "Syncronization isn't supported right now, we don't have a valid implementation for it.")]
+		[InlineData(5000)]
+		// [Fact(Skip = "Syncronization isn't supported right now, we don't have a valid implementation for it.")]
         public void Synchronize_file_with_different_beginning(int size)
         {
             var differenceChunk = new MemoryStream();
@@ -40,7 +40,7 @@ namespace RavenFS.Tests
             sourceContent.Position = 0;
             sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-            var result = seedClient.StartSynchronizationAsync("server1", "test.txt").Result;
+            var result = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.txt").Result;
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
             string resultMD5 = null;
