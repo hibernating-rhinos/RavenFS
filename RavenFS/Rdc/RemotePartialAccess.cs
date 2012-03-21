@@ -19,7 +19,7 @@ namespace RavenFS.Rdc
 
         public void CopyTo(Stream target, long from, long length)
         {
-            _ravenFileSystemClient.DownloadAsync(_fileName, target, from, from + length - 1).Wait();
+            _ravenFileSystemClient.DownloadAsync(_fileName, target, from, from + length).Wait();
         }
     }
 }
