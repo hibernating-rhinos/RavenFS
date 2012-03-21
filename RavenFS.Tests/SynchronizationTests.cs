@@ -68,9 +68,9 @@ namespace RavenFS.Tests
             Assert.True(resultMD5 == sourceMD5);
         }
 
-		//[Theory]
-		//[InlineData(1024 * 1024 * 80)]
-		[Fact(Skip = "Syncronization isn't supported right now, we don't have a valid implementation for it.")]
+		[Theory]
+		[InlineData(1024 * 1024 * 80)]
+		//[Fact(Skip = "Syncronization isn't supported right now, we don't have a valid implementation for it.")]
 		public void Big_file_test(long size)
         {
             var sourceContent = new RandomStream(size, 1);
@@ -87,9 +87,9 @@ namespace RavenFS.Tests
                                };
 
             seedClient.UploadAsync("test.bin", seedMetadata, seedContent).Wait();           
-            sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();            
+            sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-            var result = seedClient.StartSynchronizationAsync("server1", "test.bin").Result;            
+            var result = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Result;            
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);            
         }
 

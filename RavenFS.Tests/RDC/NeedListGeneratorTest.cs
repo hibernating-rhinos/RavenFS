@@ -5,6 +5,7 @@ using System.Linq;
 
 using RavenFS.Rdc.Utils.IO;
 using RavenFS.Tests;
+using RavenFS.Util;
 using Xunit;
 
 
@@ -38,8 +39,7 @@ namespace RavenFS.Rdc.Wrapper.Test
         {
         	IList<SignatureInfo> sourceSignatureInfos;
         	IList<SignatureInfo> seedSignatureInfos;
-        	long sourceSize;
-        	using (var generator = new SigGenerator(_signatureRepository))
+            using (var generator = new SigGenerator(_signatureRepository))
         	{
         		seedSignatureInfos = generator.GenerateSignatures(GetSeedStream());
         	}
@@ -48,7 +48,7 @@ namespace RavenFS.Rdc.Wrapper.Test
         	{
         		sourceSignatureInfos = generator.GenerateSignatures(sourceStream);
         	}
-			sourceSize = sourceStream.Length;
+			var sourceSize = sourceStream.Length;
         	using (var tested = new NeedListGenerator(_signatureRepository, _signatureRepository))
         	{
         		var result = tested.CreateNeedsList(seedSignatureInfos.Last(), sourceSignatureInfos.Last());
@@ -56,6 +56,61 @@ namespace RavenFS.Rdc.Wrapper.Test
 
         		Assert.Equal(0, sourceSize - result.Sum(x => Convert.ToInt32(x.BlockLength)));
         	}
+        }
+
+        [MtaFact]
+        public void Synchronize_file_with_different_beginning()
+        {
+            const int size = 5000;
+            var differenceChunk = new MemoryStream();
+            var sw = new StreamWriter(differenceChunk);
+
+            sw.Write("Coconut is Stupid");
+            sw.Flush();
+
+            var sourceContent = PrepareSourceStream(size);
+            sourceContent.Position = 0;
+            var seedContent = new CombinedStream(differenceChunk, sourceContent);
+
+            IList<SignatureInfo> sourceSignatureInfos;
+            IList<SignatureInfo> seedSignatureInfos;
+            using (var generator = new SigGenerator(_signatureRepository))
+            {
+                seedContent.Seek(0, SeekOrigin.Begin);
+                seedSignatureInfos = generator.GenerateSignatures(seedContent);
+            }
+            using (var generator = new SigGenerator(_signatureRepository))
+            {
+                sourceContent.Seek(0, SeekOrigin.Begin);
+                sourceSignatureInfos = generator.GenerateSignatures(sourceContent);
+            }
+            var sourceSize = sourceContent.Length;
+
+            using (var tested = new NeedListGenerator(_signatureRepository, _signatureRepository))
+            {
+                var result = tested.CreateNeedsList(seedSignatureInfos.Last(), sourceSignatureInfos.Last());
+                Assert.NotNull(result);
+                Assert.Equal(2, result.Count);
+                Assert.Equal(0, sourceSize - result.Sum(x => Convert.ToInt32(x.BlockLength)));
+            }
+        }
+
+        private static MemoryStream PrepareSourceStream(int lines)
+        {
+            var ms = new MemoryStream();
+            var writer = new StreamWriter(ms);
+
+            for (var i = 1; i <= lines; i++)
+            {
+                for (var j = 0; j < 100; j++)
+                {
+                    writer.Write(i.ToString("D4"));
+                }
+                writer.Write("\n");
+            }
+            writer.Flush();
+
+            return ms;
         }
     }
 }
