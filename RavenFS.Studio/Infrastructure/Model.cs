@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reactive;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 namespace RavenFS.Studio.Infrastructure
@@ -9,6 +11,7 @@ namespace RavenFS.Studio.Infrastructure
 		private DateTime lastRefresh;
 		protected TimeSpan RefreshRate { get; set; }
 	    protected static Task _completedTask;
+	    private Subject<Unit> unloaded;
 
 		protected Model()
 		{
@@ -83,6 +86,11 @@ namespace RavenFS.Studio.Infrastructure
 
 	    public void NotifyViewUnloaded()
 	    {
+            if (unloaded != null)
+            {
+                unloaded.OnNext(Unit.Default);
+            }
+
 	        OnViewUnloaded();
 	    }
 
@@ -95,5 +103,10 @@ namespace RavenFS.Studio.Infrastructure
 	    {
 
 	    }
+
+	    protected IObservable<Unit> Unloaded
+	    {
+	        get { return unloaded ?? (unloaded = new Subject<Unit>()); }
+	    } 
 	}
 }

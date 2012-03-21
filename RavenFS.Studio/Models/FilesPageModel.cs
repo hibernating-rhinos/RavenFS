@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Reactive.Concurrency;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Browser;
@@ -10,6 +11,7 @@ using RavenFS.Studio.Commands;
 using RavenFS.Studio.Infrastructure;
 using System.Linq;
 using RavenFS.Studio.Extensions;
+using System.Reactive.Linq;
 
 namespace RavenFS.Studio.Models
 {
@@ -47,6 +49,11 @@ namespace RavenFS.Studio.Models
                                                  {
                                                      filesSource.CurrentFolder = CurrentFolder.Value;
                                                      UpdateBreadCrumbs();
+                                                     ApplicationModel.Current.Client.Notifications.FolderChanges(
+                                                         CurrentFolder.Value)
+                                                         .TakeUntil(Unloaded.Amb(CurrentFolder.ObserveChanged()))
+                                                         .ObserveOn(DispatcherScheduler.Instance)
+                                                         .Subscribe(_ => filesSource.Refresh());
                                                  };
             BreadcrumbTrail = new ObservableCollection<DirectoryModel>();
 		}
@@ -83,10 +90,5 @@ namespace RavenFS.Studio.Models
             }
 	        return folder;
 	    }
-
-	    protected override Task TimerTickedAsync()
-		{
-		    return Completed;
-		}
 	}
 }
