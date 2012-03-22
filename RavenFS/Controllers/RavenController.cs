@@ -120,8 +120,18 @@ namespace RavenFS.Controllers
 
 				length = (to - from);
 
-				contentRange = new ContentRangeHeaderValue(from, to, resultContent.Length);
-				resultContent = new LimitedStream(resultContent, from, to);
+                // "to" in Content-Range points on the last byte. In other words the set is: <from..to>  not <from..to)
+                if (from < to)
+                {
+                    contentRange = new ContentRangeHeaderValue(from, to - 1, resultContent.Length);
+                    resultContent = new LimitedStream(resultContent, from, to);
+                }
+                else
+                {
+                    contentRange = new ContentRangeHeaderValue(0);
+                    resultContent = Stream.Null;
+                }
+			    
 			}
 			else
 			{
@@ -143,6 +153,5 @@ namespace RavenFS.Controllers
 
 			return response;
 		}
-
 	}
 }
