@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,8 +26,11 @@ namespace RavenFS.Studio.Models
         private IList<FileSystemModel> folders;
         private IList<FileSystemModel> virtualFolders; 
         private string currentFolder;
-        private TaskScheduler synchronizationContextScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+        private readonly TaskScheduler synchronizationContextScheduler = TaskScheduler.FromCurrentSynchronizationContext();
         private bool isPruningFolders;
+        private string searchPattern;
+        private string searchPatternRegEx;
+        private IList<FileSystemModel> combinedFilteredList = new List<FileSystemModel>(); 
 
         public FoldersCollectionSource()
         {
@@ -50,6 +54,31 @@ namespace RavenFS.Studio.Models
             {
                 virtualFolders =
                     ApplicationModel.Current.VirtualFolders.GetSubFolders(currentFolder).Cast<FileSystemModel>().ToList();
+                UpdateCombinedFilteredList();
+            }
+        }
+
+        private void UpdateCombinedFilteredList()
+        {
+            lock (_lock)
+            {
+                combinedFilteredList.Clear();
+
+                var items = virtualFolders.EmptyIfNull().Concat(folders.EmptyIfNull()).Where(f => MatchesSearchPattern(f.Name));
+
+                combinedFilteredList.AddRange(items);
+            }
+        }
+
+        private bool MatchesSearchPattern(string name)
+        {
+            if (string.IsNullOrEmpty(searchPatternRegEx))
+            {
+                return true;
+            }
+            else
+            {
+                return Regex.IsMatch(name, searchPatternRegEx, RegexOptions.IgnoreCase);
             }
         }
 
@@ -76,12 +105,34 @@ namespace RavenFS.Studio.Models
             {
                 lock (_lock)
                 {
-                    var foldersCount = folders != null ? folders.Count : 0;
-                    var virtualFoldersCount = virtualFolders != null ? virtualFolders.Count : 0;
-
-                    return foldersCount + virtualFoldersCount;
+                    return combinedFilteredList.Count;
                 }
             }
+        }
+
+        public string SearchPattern
+        {
+            get {
+                return searchPattern;
+            }
+            set
+            {
+                if (searchPattern == value)
+                {
+                    return;
+                }
+                searchPattern = value;
+                searchPatternRegEx = string.IsNullOrEmpty(searchPattern) ? "" : WildcardToRegex(searchPattern);
+                UpdateCombinedFilteredList();
+                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.Clear));
+            }
+        }
+
+        public static string WildcardToRegex(string pattern)
+        {
+            return "^" + Regex.Escape(pattern).
+            Replace("\\*", ".*").
+            Replace("\\?", ".") + "$";
         }
 
         public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
@@ -95,7 +146,7 @@ namespace RavenFS.Studio.Models
 
                 var count = Math.Min(Math.Max(Count- start,0), pageSize);
 
-                return TaskEx.FromResult((IList<FileSystemModel>)(virtualFolders.Concat(folders).Apply(e => ApplySort(e, sortDescriptions)).Skip(start).Take(count).ToArray()));
+                return TaskEx.FromResult((IList<FileSystemModel>)(combinedFilteredList.Apply(e => ApplySort(e, sortDescriptions)).Skip(start).Take(count).ToArray()));
             }
         }
 
@@ -149,6 +200,8 @@ namespace RavenFS.Studio.Models
             {
                 this.folders = folders;
             }
+
+            UpdateCombinedFilteredList();
         }
     }
 }

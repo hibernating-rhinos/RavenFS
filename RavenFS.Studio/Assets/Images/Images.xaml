@@ -29,6 +29,10 @@
                  UriSource="Undo.png" />
     <BitmapImage x:Key="Image_Query_Small"
                  UriSource="Query.png" />
+    <BitmapImage x:Key="Image_Search_Tiny"
+                 UriSource="SearchTiny.png" />
+    <BitmapImage x:Key="Image_Search_Small"
+                 UriSource="SearchSmall.png" />
     <BitmapImage x:Key="Image_Edit_Small"
                  UriSource="Edit.png" />
     <BitmapImage x:Key="Image_Reformat_Small"

@@ -25,6 +25,7 @@ namespace RavenFS.Studio.Models
         private object lockObject = new object();
         private string currentFolder;
         private int fileCount;
+        private string searchPattern;
 
         public FilesCollectionSource()
         {
@@ -52,9 +53,24 @@ namespace RavenFS.Studio.Models
             }
         }
 
+        public string SearchPattern
+        {
+            get { return searchPattern; }
+            set
+            {
+                if (searchPattern == value)
+                {
+                    return;
+                }
+                searchPattern = value;
+                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.Clear));
+                Refresh();
+            }
+        }
+
         public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
-            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), fileNameSearchPattern:"", start: start, pageSize: pageSize)
+            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), fileNameSearchPattern:searchPattern, start: start, pageSize: pageSize)
                         .ContinueWith(t =>
                                           {
                                               var result = (IList<FileSystemModel>) ToFileSystemModels(t.Result.Files).Take(pageSize).ToArray();
@@ -109,7 +125,7 @@ namespace RavenFS.Studio.Models
 
         private void BeginGetCount()
         {
-            ApplicationModel.Current.Client.GetFilesAsync(currentFolder, pageSize: 1)
+            ApplicationModel.Current.Client.GetFilesAsync(currentFolder, fileNameSearchPattern:searchPattern, pageSize: 1)
                 .ContinueWith(t => 
                     UpdateCount(t.Result.FileCount, forceCollectionRefresh: true), 
                 TaskContinuationOptions.ExecuteSynchronously);

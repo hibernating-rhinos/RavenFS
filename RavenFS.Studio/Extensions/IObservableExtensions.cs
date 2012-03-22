@@ -63,9 +63,9 @@ namespace RavenFS.Studio.Extensions
                 handler => source.PropertyChanged -= handler);
         } 
 
-        public static IObservable<Unit> ObserveChanged<T>(this Observable<T> observable)
+        public static IObservable<T> ObserveChanged<T>(this Observable<T> observable)
         {
-            return observable.ObservePropertyChanged("Value").Select(_ => Unit.Default);
+            return observable.ObservePropertyChanged("Value").Select(_ => observable.Value);
         }
     }
 }

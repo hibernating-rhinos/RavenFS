@@ -308,6 +308,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Assets\Images\SearchSmall.png" />
+    <Resource Include="Assets\Images\SearchTiny.png" />
     <Resource Include="Assets\Images\VirtualFolder.png" />
     <None Include="External\MultiBinding\Licence.htm" />
     <Resource Include="Assets\Images\Upload.png" />

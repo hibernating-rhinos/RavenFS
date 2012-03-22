@@ -47,5 +47,15 @@ namespace RavenFS.Studio.Models
         {
             get { return Source2 as FilesCollectionSource; }
         }
+
+        public string SearchPattern
+        {
+            get { return FoldersCollection.SearchPattern; }
+            set
+            {
+                FoldersCollection.SearchPattern = value;
+                FilesCollection.SearchPattern = value;
+            }
+        }
     }
 }

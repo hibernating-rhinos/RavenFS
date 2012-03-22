@@ -37,5 +37,10 @@ namespace RavenFS.Studio.Extensions
         {
             return new HashSet<T>(items);
         } 
+
+        public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> items)
+        {
+            return items ?? new T[0];
+        } 
     }
 }
