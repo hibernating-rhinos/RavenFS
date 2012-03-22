@@ -51,19 +51,11 @@ namespace RavenFS.Tests
                 resultFileContent.Position = 0;
                 resultMD5 = resultFileContent.GetMD5Hash();
                 resultFileContent.Position = 0;
-                using(var f = File.Create(@"c:\temp\result.txt"))
-                {
-                    resultFileContent.CopyTo(f);
-                }
             }
             
             sourceContent.Position = 0;
             var sourceMD5 = sourceContent.GetMD5Hash();
             sourceContent.Position = 0;
-            using (var f = File.Create(@"c:\temp\source.txt"))
-            {
-                sourceContent.CopyTo(f);
-            }
             
             Assert.True(resultMD5 == sourceMD5);
         }

@@ -53,8 +53,7 @@ namespace RavenFS.Util
             return WritePages(output, fileAndPages.Pages, pageIndex, offset)
                 .ContinueWith(task =>
                 {
-                    if (task.Exception != null)
-                        task.Wait(); // throw 
+					task.AssertNotFaulted();
 
                     return WriteFile(output, filename, fromPage + fileAndPages.Pages.Count, null);
                 }).Unwrap();
