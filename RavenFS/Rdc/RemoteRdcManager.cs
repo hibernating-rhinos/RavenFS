@@ -109,7 +109,7 @@ namespace RavenFS.Rdc
                 return NeedListParser.ParseAsync(source, seed, output, needList)
 					.ContinueWith( task =>
 					{
-						output.Close();
+						output.Dispose();
 						return task;
 					}).Unwrap();
                 

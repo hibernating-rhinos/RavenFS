@@ -60,7 +60,7 @@ namespace RavenFS.Rdc.Wrapper
             var eof = false;
             var eofOutput = false;
             // prepare streams
-            var sigStreams = (result.Select(item => _signatureRepository.CreateContent(item.Name))).ToList();
+            var sigStreams = result.Select(item => _signatureRepository.CreateContent(item.Name)).ToList();
 
             var inputBuffer = new RdcBufferPointer
             {
@@ -130,7 +130,6 @@ namespace RavenFS.Rdc.Wrapper
                 }
                 foreach (var item in sigStreams)
                 {
-                    item.Close();
                     item.Dispose();
                 }
             }
