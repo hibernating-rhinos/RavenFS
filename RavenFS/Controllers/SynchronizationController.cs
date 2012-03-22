@@ -19,7 +19,6 @@ namespace RavenFS.Controllers
     {
         public Task<HttpResponseMessage<SynchronizationReport>> Get(string fileName, string sourceServerUrl)
         {
-
             var remoteSignatureCache = new SimpleSignatureRepository(GetTemporaryDirectory());
 
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
@@ -43,17 +42,13 @@ namespace RavenFS.Controllers
                         return sourceMetadataAsync.ContinueWith(
                             sourceMetadataTask =>
                             {
-                                return (sourceSignatureManifest.Signatures.Count > 0
-                                    ? Synchronize(remoteSignatureCache, sourceServerUrl, fileName,
+                                if(sourceSignatureManifest.Signatures.Count > 0)
+									return  Synchronize(remoteSignatureCache, sourceServerUrl, fileName,
                                                   sourceSignatureManifest, seedSignatureManifest,
-                                                  sourceMetadataTask.Result)
-                                    : Download(sourceRavenFileSystemClient, fileName, sourceMetadataAsync)).
-                                        ContinueWith(
-                                            synchronizationTask =>
-                                            new HttpResponseMessage<SynchronizationReport>(
-                                                synchronizationTask.Result));
-                            }).Unwrap();
-
+                                                  sourceMetadataTask.Result);
+                            	return Download(sourceRavenFileSystemClient, fileName, sourceMetadataAsync);
+                            }).Unwrap()
+							.ContinueWith( synchronizationTask => new HttpResponseMessage<SynchronizationReport>(synchronizationTask.Result));
                     }).Unwrap();
         }
 
@@ -108,19 +103,17 @@ namespace RavenFS.Controllers
                 task => StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
                                                              task.Result.FilterHeaders()))
                 .ContinueWith(
-                    task =>
-                    {
-                        return sourceRavenFileSystemClient.DownloadAsync(fileName, task.Result)
-                            .ContinueWith(
-                                _ =>
-                                {
-                                    task.Result.Dispose();
-                                    var result = new SynchronizationReport { FileName = fileName };
-                                    result.BytesCopied =
-                                        StorageStream.Reading(Storage, fileName + ".result").Length;
-                                    return result;
-                                });
-                    }).Unwrap();
+                    task => sourceRavenFileSystemClient.DownloadAsync(fileName, task.Result)
+                            	.ContinueWith(
+                            		_ =>
+                            		{
+                            			task.Result.Dispose();
+                            			return new SynchronizationReport
+                            			{
+                            				FileName = fileName,
+                            				BytesCopied = StorageStream.Reading(Storage, fileName + ".result").Length
+                            			};
+                            		})).Unwrap();
         }
 
 
