@@ -145,12 +145,12 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\ErrorLoggingConcurrentMergeScheduler.cs" />
-    <Compile Include="Infrastructure\AbstractAsyncHandler.cs" />
     <Compile Include="Infrastructure\JsonNetFormatter.cs" />
     <Compile Include="Infrastructure\LimitedStream.cs" />
     <Compile Include="Infrastructure\RavenReadOnlyStream.cs" />
     <Compile Include="Infrastructure\RedirectHandler.cs" />
     <Compile Include="Infrastructure\RedirectRouteHandler.cs" />
+    <Compile Include="Infrastructure\TaskExtensions.cs" />
     <Compile Include="Infrastructure\Workarounds\ReadAsSingleObjectPolicy.cs" />
     <Compile Include="NonAdminHttp.cs" />
     <Compile Include="RavenFileSystem.cs" />
@@ -236,12 +236,8 @@
     <Compile Include="Storage\TableColumnsCache.cs" />
     <Compile Include="Util\CombinedStream.cs" />
     <Compile Include="Util\DispsableAction.cs" />
-    <Compile Include="Infrastructure\HandlerMetadataAttribute.cs" />
-    <Compile Include="Infrastructure\HandlerMetadata.cs" />
-    <Compile Include="Infrastructure\RouterHandlerFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\BufferPool.cs" />
-    <Compile Include="Util\FileAccessTool.cs" />
     <Compile Include="Util\HashKey.cs" />
     <Compile Include="Util\IBufferPool.cs" />
     <Compile Include="Util\JsonSerializerFactory.cs" />

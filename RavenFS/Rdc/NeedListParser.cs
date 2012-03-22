@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;																																																																																																																																											   g System.IO;																																																																																																																																											   
+using System.IO;
 using System.Threading.Tasks;
 using RavenFS.Infrastructure;
 using RavenFS.Rdc.Wrapper;
@@ -33,7 +33,8 @@ namespace RavenFS.Rdc
 
 			return task.ContinueWith(resultTask =>
 			{
-				task.AssertNotFaulted();
+				if (resultTask.Status == TaskStatus.Faulted)
+					resultTask.Wait(); // throws
 				return ParseAsync(source, seed, output, needList, position + 1);
 			}).Unwrap();
 		}

@@ -153,8 +153,7 @@ namespace RavenFS.Controllers
 				.Unwrap()
 				.ContinueWith(task =>
 				{
-					if (task.Status == TaskStatus.Faulted)
-						task.Wait();//throw
+					task.AssertNotFaulted();
 
 					return new HttpResponseMessage(HttpStatusCode.Created);
 				});
@@ -255,8 +254,7 @@ namespace RavenFS.Controllers
 				return WritePages(output, fileAndPages.Pages, pageIndex, offset)
 					.ContinueWith(task =>
 					{
-						if (task.Status != TaskStatus.RanToCompletion)
-							task.Wait(); // throw 
+						task.AssertNotFaulted();
 
 						return WriteFile(output, filename, fromPage + fileAndPages.Pages.Count, null);
 					}).Unwrap();
