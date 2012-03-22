@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using RavenFS.Util;
 using RavenFS.Rdc.Wrapper;
@@ -19,9 +20,9 @@ namespace RavenFS.Rdc
             _signatureRepository = signatureRepository;
         }
 
-        public void CopyTo(Stream target, long from, long length)
+        public Task CopyToAsync(Stream target, long from, long length)
         {
-            new NarrowedStream(_signatureRepository.GetContentForReading(_sigName), from, from + length - 1).CopyTo(target);
+            return new NarrowedStream(_signatureRepository.GetContentForReading(_sigName), from, from + length - 1).CopyToAsync(target);
         }
     }
 }

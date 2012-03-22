@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Rdc.Wrapper;
 
@@ -19,21 +20,25 @@ namespace RavenFS.Rdc
             _ravenFileSystemClient = ravenFileSystemClient;
         }
 
-
-
         /// <summary>
         /// Returns signature manifest and synchronizes remote cache sig repository
         /// </summary>
         /// <param name="dataInfo"></param>
         /// <returns></returns>
-        public SignatureManifest SynchronizeSignatures(DataInfo dataInfo)
+        public Task<SignatureManifest> SynchronizeSignatures(DataInfo dataInfo)
         {
-            var remoteSignatureManifest = _ravenFileSystemClient.Synchronization.GetRdcManifestAsync(dataInfo.Name).Result;
-            if (remoteSignatureManifest.Signatures.Count > 0)
-            {
-                InternalSynchronizeSignatures(dataInfo, remoteSignatureManifest);
-            }
-            return remoteSignatureManifest;
+            var result = _ravenFileSystemClient.Synchronization.GetRdcManifestAsync(dataInfo.Name)
+                .ContinueWith(
+                    task =>
+                        {
+                            var remoteSignatureManifest = task.Result;
+                            if (remoteSignatureManifest.Signatures.Count > 0)
+                            {
+                                InternalSynchronizeSignatures(dataInfo, remoteSignatureManifest);
+                            }
+                            return remoteSignatureManifest;
+                        });
+            return result;
         }
 
         private void InternalSynchronizeSignatures(DataInfo dataInfo, SignatureManifest remoteSignatureManifest)
@@ -49,7 +54,7 @@ namespace RavenFS.Rdc
             {
                 var curr = sigPairs[i];
                 var prev = sigPairs[i - 1];
-                Synchronize(curr.Local, prev.Local, curr.Remote, prev.Remote);
+                Synchronize(curr.Local, prev.Local, curr.Remote, prev.Remote).Wait();
             }
         }
 
@@ -72,7 +77,7 @@ namespace RavenFS.Rdc
                                         (local, remote) => new LocalRemotePair { Local = local, Remote = remote }).ToList();
         }
 
-        private void Synchronize(string localSigName, string localSigSigName, string remoteSigName, string remoteSigSigName)
+        private Task Synchronize(string localSigName, string localSigSigName, string remoteSigName, string remoteSigSigName)
         {
             using (var needListGenerator = new NeedListGenerator(_localSignatureRepository, _remoteCacheSignatureRepository))            
             {
@@ -80,10 +85,9 @@ namespace RavenFS.Rdc
                 var seed = new SignaturePartialAccess(localSigName, _localSignatureRepository);
                 var needList = needListGenerator.CreateNeedsList(new SignatureInfo(localSigSigName),
                                                                   new SignatureInfo(remoteSigSigName));
-                using (var output = _remoteCacheSignatureRepository.CreateContent(remoteSigName))
-                {
-                    NeedListParser.Parse(source, seed, output, needList);
-                }
+                var output = _remoteCacheSignatureRepository.CreateContent(remoteSigName);
+                return NeedListParser.ParseAsync(source, seed, output, needList).ContinueWith( _ => output.Close());
+                
             }
         }
     }

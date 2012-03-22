@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using RavenFS.Storage;
 using RavenFS.Util;
@@ -17,9 +18,9 @@ namespace RavenFS.Rdc
             _stream = StorageStream.Reading(transactionalStorage, fileName);
         }
 
-        public void CopyTo(Stream target, long from, long length)
+        public Task CopyToAsync(Stream target, long from, long length)
         {            
-            new NarrowedStream(_stream, from, from + length - 1).CopyTo(target);
+            return new NarrowedStream(_stream, from, from + length - 1).CopyToAsync(target);
         }
     }
 }

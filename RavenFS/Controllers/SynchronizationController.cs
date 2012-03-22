@@ -16,7 +16,7 @@ namespace RavenFS.Controllers
 {
     public class SynchronizationController : RavenController
     {
-        public HttpResponseMessage<SynchronizationReport> Get(string fileName, string sourceServerUrl)
+        public Task<HttpResponseMessage<SynchronizationReport>> Get(string fileName, string sourceServerUrl)
         {
 
             var remoteSignatureCache = new SimpleSignatureRepository(GetTemporaryDirectory());
@@ -34,19 +34,26 @@ namespace RavenFS.Controllers
             var localFileDataInfo = GetLocalFileDataInfo(fileName);
 
             var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
-            var sourceSignatureManifest = remoteRdcManager.SynchronizeSignatures(localFileDataInfo);
+            return remoteRdcManager.SynchronizeSignatures(localFileDataInfo)
+                .ContinueWith(
+                    task =>
+                    {
+                        var sourceSignatureManifest = task.Result;
+                        return sourceMetadataAsync.ContinueWith(
+                            sourceMetadataTask =>
+                            {
+                                return (sourceSignatureManifest.Signatures.Count > 0
+                                    ? Synchronize(remoteSignatureCache, sourceServerUrl, fileName,
+                                                  sourceSignatureManifest, seedSignatureManifest,
+                                                  sourceMetadataTask.Result)
+                                    : Download(sourceRavenFileSystemClient, fileName, sourceMetadataAsync)).
+                                        ContinueWith(
+                                            synchronizationTask =>
+                                            new HttpResponseMessage<SynchronizationReport>(
+                                                synchronizationTask.Result));
+                            }).Unwrap();
 
-            SynchronizationReport report = null;
-            if (sourceSignatureManifest.Signatures.Count > 0)
-            {
-                report = Synchronize(remoteSignatureCache, sourceServerUrl, fileName, sourceSignatureManifest, seedSignatureManifest, sourceMetadataAsync);
-            }
-            else
-            {
-                report = Download(sourceRavenFileSystemClient, fileName, sourceMetadataAsync);
-            }
-
-            return new HttpResponseMessage<SynchronizationReport>(report);
+                    }).Unwrap();
         }
 
         private static string GetTemporaryDirectory()
@@ -56,41 +63,62 @@ namespace RavenFS.Controllers
             return tempDirectory;
         }
 
-        private SynchronizationReport Synchronize(ISignatureRepository remoteSignatureRepository, string sourceServerUrl, string fileName, SignatureManifest sourceSignatureManifest, SignatureManifest seedSignatureManifest, Task<NameValueCollection> sourceMetadata)
+        private Task<SynchronizationReport> Synchronize(ISignatureRepository remoteSignatureRepository, string sourceServerUrl, string fileName, SignatureManifest sourceSignatureManifest, SignatureManifest seedSignatureManifest, NameValueCollection sourceMetadata)
         {
-            var result = new SynchronizationReport { FileName = fileName };
             var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
             var sourceSignatureInfo = new SignatureInfo(sourceSignatureManifest.Signatures.Last().Name);
+            var needListGenerator = new NeedListGenerator(SignatureRepository, remoteSignatureRepository);
+            var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search,
+                                                                  fileName + ".result",
+                                                                  sourceMetadata.FilterHeaders());
+            var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 
-            using (
-                var needListGenerator = new NeedListGenerator(SignatureRepository, remoteSignatureRepository))
-            using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
-                                                                         sourceMetadata.Result.FilterHeaders()))
-            {
-                var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
-                NeedListParser.Parse(
-                    new RemotePartialAccess(sourceServerUrl, fileName),
-                    new StoragePartialAccess(Storage, fileName),
-                    outputFile, needList);
-                result.BytesTransfered =
-                    needList.Sum(item => item.BlockType == RdcNeedType.Source ? (long)item.BlockLength : 0L);
-                result.BytesCopied =
-                    needList.Sum(item => item.BlockType == RdcNeedType.Seed ? (long)item.BlockLength : 0L);
-                result.NeedListLength = needList.Count;
-            }
-            return result;
+            return NeedListParser.ParseAsync(
+                new RemotePartialAccess(sourceServerUrl, fileName),
+                new StoragePartialAccess(Storage, fileName),
+                outputFile, needList).ContinueWith(
+                    _ =>
+                    {
+                        outputFile.Dispose();
+                        needListGenerator.Dispose();
+                        var result = new SynchronizationReport { FileName = fileName };
+                        result.BytesTransfered =
+                            needList.Sum(
+                                item =>
+                                item.BlockType == RdcNeedType.Source
+                                    ? (long)item.BlockLength
+                                    : 0L);
+                        result.BytesCopied =
+                            needList.Sum(
+                                item =>
+                                item.BlockType == RdcNeedType.Seed
+                                    ? (long)item.BlockLength
+                                    : 0L);
+                        result.NeedListLength = needList.Count;
+                        return result;
+                    });
+
         }
 
-        private SynchronizationReport Download(RavenFileSystemClient sourceRavenFileSystemClient, string fileName, Task<NameValueCollection> sourceMetadataAsync)
+        private Task<SynchronizationReport> Download(RavenFileSystemClient sourceRavenFileSystemClient, string fileName, Task<NameValueCollection> sourceMetadataAsync)
         {
-            var result = new SynchronizationReport { FileName = fileName };
-            using (var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
-                                                                         sourceMetadataAsync.Result.FilterHeaders()))
-            {
-                sourceRavenFileSystemClient.DownloadAsync(fileName, outputFile).Wait();
-            }
-            result.BytesCopied = StorageStream.Reading(Storage, fileName + ".result").Length;
-            return result;
+            return sourceMetadataAsync.ContinueWith(
+                task => StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
+                                                             task.Result.FilterHeaders()))
+                .ContinueWith(
+                    task =>
+                    {
+                        return sourceRavenFileSystemClient.DownloadAsync(fileName, task.Result)
+                            .ContinueWith(
+                                _ =>
+                                {
+                                    task.Result.Dispose();
+                                    var result = new SynchronizationReport { FileName = fileName };
+                                    result.BytesCopied =
+                                        StorageStream.Reading(Storage, fileName + ".result").Length;
+                                    return result;
+                                });
+                    }).Unwrap();
         }
 
 
