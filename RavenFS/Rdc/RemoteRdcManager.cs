@@ -52,15 +52,7 @@ namespace RavenFS.Rdc
         	var highestSigName = sigPairs.First().Remote;
         	var highestSigContent = _remoteCacheSignatureRepository.CreateContent(highestSigName);
         	return _ravenFileSystemClient.DownloadSignatureAsync(highestSigName, highestSigContent)
-        		.ContinueWith(task =>
-        		{
-					for (var i = 1; i < sigPairs.Count(); i++)
-					{
-						var curr = sigPairs[i];
-						var prev = sigPairs[i - 1];
-						Synchronize(curr.Local, prev.Local, curr.Remote, prev.Remote).Wait();
-					}
-        		})
+        		.ContinueWith(task => SynchronizePairAsync(1, sigPairs))
         		.ContinueWith(task =>
         		{
         			highestSigContent.Dispose();
@@ -68,6 +60,23 @@ namespace RavenFS.Rdc
         		}).Unwrap();
         	
         }
+
+    	private Task SynchronizePairAsync(int index, IList<LocalRemotePair> sigPairs)
+    	{
+    		if (index >= sigPairs.Count)
+    			return new CompletedTask();
+
+    		var curr = sigPairs[index];
+    		var prev = sigPairs[index - 1];
+
+    		return SynchronizeAsync(curr.Local, prev.Local, curr.Remote, prev.Remote)
+    			.ContinueWith(task =>
+    			{
+    				task.AssertNotFaulted();
+
+    				return SynchronizePairAsync(index + 1, sigPairs);
+    			}).Unwrap();
+    	}
 
     	private class LocalRemotePair
         {
@@ -88,7 +97,7 @@ namespace RavenFS.Rdc
                                         (local, remote) => new LocalRemotePair { Local = local, Remote = remote }).ToList();
         }
 
-        private Task Synchronize(string localSigName, string localSigSigName, string remoteSigName, string remoteSigSigName)
+        private Task SynchronizeAsync(string localSigName, string localSigSigName, string remoteSigName, string remoteSigSigName)
         {
             using (var needListGenerator = new NeedListGenerator(_localSignatureRepository, _remoteCacheSignatureRepository))            
             {
