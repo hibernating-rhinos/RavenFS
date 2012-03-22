@@ -32,7 +32,7 @@ namespace RavenFS.Infrastructure
         protected override void Initialize(System.Web.Http.Controllers.HttpControllerContext controllerContext)
         {
             var factory = new PersistentConnectionFactory(Resolver);
-            connection = factory.CreateInstance(typeof (T)) as T;
+        	connection = (T) factory.CreateInstance(typeof (T));
             connection.Initialize(Resolver);
 
             base.Initialize(controllerContext);
@@ -43,7 +43,7 @@ namespace RavenFS.Infrastructure
             ControllerContext = controllerContext;
 
             var factory = new PersistentConnectionFactory(Resolver);
-            connection = factory.CreateInstance(typeof(T)) as T;
+        	connection = (T) factory.CreateInstance(typeof (T));
             connection.Initialize(Resolver);
 
             var response = new HttpResponseMessage();
