@@ -86,7 +86,12 @@ namespace RavenFS.Rdc
                 var needList = needListGenerator.CreateNeedsList(new SignatureInfo(localSigSigName),
                                                                   new SignatureInfo(remoteSigSigName));
                 var output = _remoteCacheSignatureRepository.CreateContent(remoteSigName);
-                return NeedListParser.ParseAsync(source, seed, output, needList).ContinueWith( _ => output.Close());
+                return NeedListParser.ParseAsync(source, seed, output, needList)
+					.ContinueWith( task =>
+					{
+						output.Close();
+						return task;
+					}).Unwrap();
                 
             }
         }
