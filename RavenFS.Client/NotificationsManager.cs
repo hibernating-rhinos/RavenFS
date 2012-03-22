@@ -8,8 +8,8 @@ namespace RavenFS.Client
 {
     public class NotificationsManager
     {
-        private RavenFileSystemClient client;
-        private object lockObject = new object();
+        private readonly RavenFileSystemClient client;
+        private readonly object lockObject = new object();
         private Connection notificationClient;
         private int currentObservers;
 
@@ -38,8 +38,8 @@ namespace RavenFS.Client
 
             var canonicalisedFolder = folder.TrimStart('/');
 
-            var observable = Observable.Create<FileChange>(
-                (inner) =>
+            return Observable.Create<FileChange>(
+                inner =>
                     {
                         var connection = GetConnection();
                         StartListening();
@@ -62,9 +62,6 @@ namespace RavenFS.Client
                                        StopListening();
                                    };
                     });
-           
-
-            return observable;
         }
 
         private void StopListening()
