@@ -30,7 +30,7 @@ namespace RavenFS.Studio.Models
 
         protected override void OnViewLoaded()
         {
-            if (File == null)
+            if (File != null)
             {
                 StatusMessage = string.Format("Loading details for file '{0}'", File.Name);
 
