@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Rdc.Wrapper;
+using RavenFS.Infrastructure;
 
 namespace RavenFS.Rdc
 {
@@ -25,40 +26,50 @@ namespace RavenFS.Rdc
         /// </summary>
         /// <param name="dataInfo"></param>
         /// <returns></returns>
-        public Task<SignatureManifest> SynchronizeSignatures(DataInfo dataInfo)
+        public Task<SignatureManifest> SynchronizeSignaturesAsync(DataInfo dataInfo)
         {
-            var result = _ravenFileSystemClient.Synchronization.GetRdcManifestAsync(dataInfo.Name)
-                .ContinueWith(
-                    task =>
-                        {
-                            var remoteSignatureManifest = task.Result;
-                            if (remoteSignatureManifest.Signatures.Count > 0)
-                            {
-                                InternalSynchronizeSignatures(dataInfo, remoteSignatureManifest);
-                            }
-                            return remoteSignatureManifest;
-                        });
-            return result;
+        	return _ravenFileSystemClient.Synchronization.GetRdcManifestAsync(dataInfo.Name)
+            	.ContinueWith(task =>
+            	{
+            		var remoteSignatureManifest1 = task.Result;
+            		if (remoteSignatureManifest1.Signatures.Count > 0)
+            		{
+            			return InternalSynchronizeSignaturesAsync(dataInfo, remoteSignatureManifest1)
+            				.ContinueWith(task1 =>
+            				{
+            					task1.AssertNotFaulted();
+            					return remoteSignatureManifest1;
+            				});
+            		}
+            		return (Task<SignatureManifest>) new CompletedTask<SignatureManifest>(remoteSignatureManifest1);
+            	}).Unwrap();
         }
 
-        private void InternalSynchronizeSignatures(DataInfo dataInfo, SignatureManifest remoteSignatureManifest)
+        private Task InternalSynchronizeSignaturesAsync(DataInfo dataInfo, SignatureManifest remoteSignatureManifest)
         {
-            var sigPairs = PrepareSigPairs(dataInfo, remoteSignatureManifest);
+        	var sigPairs = PrepareSigPairs(dataInfo, remoteSignatureManifest);
 
-            var highestSigName = sigPairs.First().Remote;
-            using (var highestSigContent = _remoteCacheSignatureRepository.CreateContent(highestSigName))
-            {
-                _ravenFileSystemClient.DownloadSignatureAsync(highestSigName, highestSigContent).Wait();
-            }
-            for (var i = 1; i < sigPairs.Count(); i++)
-            {
-                var curr = sigPairs[i];
-                var prev = sigPairs[i - 1];
-                Synchronize(curr.Local, prev.Local, curr.Remote, prev.Remote).Wait();
-            }
+        	var highestSigName = sigPairs.First().Remote;
+        	var highestSigContent = _remoteCacheSignatureRepository.CreateContent(highestSigName);
+        	return _ravenFileSystemClient.DownloadSignatureAsync(highestSigName, highestSigContent)
+        		.ContinueWith(task =>
+        		{
+					for (var i = 1; i < sigPairs.Count(); i++)
+					{
+						var curr = sigPairs[i];
+						var prev = sigPairs[i - 1];
+						Synchronize(curr.Local, prev.Local, curr.Remote, prev.Remote).Wait();
+					}
+        		})
+        		.ContinueWith(task =>
+        		{
+        			highestSigContent.Dispose();
+        			return task;
+        		}).Unwrap();
+        	
         }
 
-        private class LocalRemotePair
+    	private class LocalRemotePair
         {
             public string Local { get; set; }
             public string Remote { get; set; }

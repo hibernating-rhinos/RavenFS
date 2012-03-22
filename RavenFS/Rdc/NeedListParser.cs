@@ -33,8 +33,7 @@ namespace RavenFS.Rdc
 
 			return task.ContinueWith(resultTask =>
 			{
-				if (resultTask.Status == TaskStatus.Faulted)
-					resultTask.Wait(); // throws
+				resultTask.AssertNotFaulted();
 				return ParseAsync(source, seed, output, needList, position + 1);
 			}).Unwrap();
 		}

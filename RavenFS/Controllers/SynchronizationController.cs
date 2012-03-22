@@ -34,7 +34,7 @@ namespace RavenFS.Controllers
             var localFileDataInfo = GetLocalFileDataInfo(fileName);
 
             var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
-            return remoteRdcManager.SynchronizeSignatures(localFileDataInfo)
+            return remoteRdcManager.SynchronizeSignaturesAsync(localFileDataInfo)
                 .ContinueWith(
                     task =>
                     {
