@@ -154,6 +154,7 @@
     <Compile Include="Infrastructure\Workarounds\ReadAsSingleObjectPolicy.cs" />
     <Compile Include="NonAdminHttp.cs" />
     <Compile Include="RavenFileSystem.cs" />
+    <Compile Include="Infrastructure\CompletedTask.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
     <Compile Include="Rdc\IPartialDataAccess.cs" />
     <Compile Include="Rdc\RemotePartialAccess.cs" />
