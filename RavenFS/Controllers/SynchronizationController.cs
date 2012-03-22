@@ -11,6 +11,7 @@ using RavenFS.Rdc.Wrapper;
 using RavenFS.Storage;
 using RavenFS.Util;
 using RavenFS.Extensions;
+using RavenFS.Infrastructure;
 
 namespace RavenFS.Controllers
 {
@@ -81,21 +82,22 @@ namespace RavenFS.Controllers
                     {
                         outputFile.Dispose();
                         needListGenerator.Dispose();
-                        var result = new SynchronizationReport { FileName = fileName };
-                        result.BytesTransfered =
-                            needList.Sum(
-                                item =>
-                                item.BlockType == RdcNeedType.Source
-                                    ? (long)item.BlockLength
-                                    : 0L);
-                        result.BytesCopied =
-                            needList.Sum(
-                                item =>
-                                item.BlockType == RdcNeedType.Seed
-                                    ? (long)item.BlockLength
-                                    : 0L);
-                        result.NeedListLength = needList.Count;
-                        return result;
+						_.AssertNotFaulted();
+                    	return new SynchronizationReport
+                    	{
+                    		FileName = fileName,
+                    		BytesTransfered = needList.Sum(
+                    			item =>
+                    			item.BlockType == RdcNeedType.Source
+                    				? (long) item.BlockLength
+                    				: 0L),
+                    		BytesCopied = needList.Sum(
+                    			item =>
+                    			item.BlockType == RdcNeedType.Seed
+                    				? (long) item.BlockLength
+                    				: 0L),
+                    		NeedListLength = needList.Count
+                    	};
                     });
 
         }
