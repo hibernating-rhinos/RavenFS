@@ -54,6 +54,7 @@ namespace RavenFS.Studio.Models
                                                      ApplicationModel.Current.Client.Notifications.FolderChanges(
                                                          CurrentFolder.Value)
                                                          .TakeUntil(Unloaded.Amb(CurrentFolder.ObserveChanged()))
+                                                         .Throttle(TimeSpan.FromSeconds(1))
                                                          .ObserveOn(DispatcherScheduler.Instance)
                                                          .Subscribe(_ => filesSource.Refresh());
                                                  };
