@@ -51,7 +51,7 @@ namespace RavenFS.Controllers
 			name = Uri.UnescapeDataString(name); 
 			Search.Delete(name);
 			Storage.Batch(accessor => accessor.Delete(name));
-            Publisher.Publish(new FileChange() { File = name, Action = FileChangeAction.Delete});
+            Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Delete});
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
@@ -85,7 +85,7 @@ namespace RavenFS.Controllers
 			{
 				Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
 				Search.Index(name, headers);
-                Publisher.Publish(new FileChange() { File = name, Action = FileChangeAction.Update });
+                Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Update });
 			}
 			catch (FileNotFoundException)
 			{
@@ -108,7 +108,7 @@ namespace RavenFS.Controllers
 				});
 				Search.Delete(name);
 				Search.Index(rename, fileAndPages.Metadata);
-                Publisher.Publish(new FileChange() { File = rename, Action = FileChangeAction.Rename });
+                Publisher.Publish(new FileChange { File = rename, Action = FileChangeAction.Rename });
 			}
 			catch (FileNotFoundException)
 			{
@@ -149,7 +149,7 @@ namespace RavenFS.Controllers
 							headers.UpdateLastModified();// update with the final file size
 							headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
 							Search.Index(name, headers);
-                            Publisher.Publish(new FileChange() { Action = FileChangeAction.Add, File = name});
+							Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });
 							readFileToDatabase.Dispose();
 							return readingTask;
 						})
