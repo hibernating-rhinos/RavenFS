@@ -325,20 +325,30 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, int start = 0, int pageSize = 25)
+		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int start = 0, int pageSize = 25)
 		{
-			if (folder == null) throw new ArgumentNullException("folder");
-			if(folder.StartsWith("/") == false)
-				throw new ArgumentException("folder must starts with a /","folder");
-			int level;
-			if (folder == "/")
-				level = 1;
-			else
-				level = folder.Count(ch => ch == '/') + 1;
-			return SearchAsync("__directory:" + folder + " AND __level:" + level, GetSortFields(options), start, pageSize);
+		    var folderQueryPart = GetFolderQueryPart(folder);
+		    var fileNameQueryPart = string.IsNullOrEmpty(fileNameSearchPattern) ? "" : " AND __key:" + fileNameSearchPattern;
+
+		    return SearchAsync(folderQueryPart + fileNameQueryPart, GetSortFields(options), start, pageSize);
 		}
 
-		private static string[] GetSortFields(FilesSortOptions options)
+	    private static string GetFolderQueryPart(string folder)
+	    {
+	        if (folder == null) throw new ArgumentNullException("folder");
+	        if (folder.StartsWith("/") == false)
+	            throw new ArgumentException("folder must starts with a /", "folder");
+	        int level;
+	        if (folder == "/")
+	            level = 1;
+	        else
+	            level = folder.Count(ch => ch == '/') + 1;
+
+	        string folderQueryPart = "__directory:" + folder + " AND __level:" + level;
+	        return folderQueryPart;
+	    }
+
+	    private static string[] GetSortFields(FilesSortOptions options)
 		{
 			string sort = null;
 			switch (options & ~FilesSortOptions.Desc)

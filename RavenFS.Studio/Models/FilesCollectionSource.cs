@@ -54,7 +54,7 @@ namespace RavenFS.Studio.Models
 
         public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
-            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), start, pageSize)
+            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), fileNameSearchPattern:"", start: start, pageSize: pageSize)
                         .ContinueWith(t =>
                                           {
                                               var result = (IList<FileSystemModel>) ToFileSystemModels(t.Result.Files).Take(pageSize).ToArray();

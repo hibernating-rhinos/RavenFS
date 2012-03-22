@@ -145,6 +145,21 @@ namespace RavenFS.Tests
 			Assert.Equal(new string[] { "test/abc.txt", "test/ced.txt" }, strings);
 		}
 
+        [Fact]
+        public void CanSearchForFilesByPattern()
+        {
+            var client = NewClient();
+            var ms = new MemoryStream();
+
+            client.UploadAsync("abc.txt", ms).Wait();
+            client.UploadAsync("def.txt", ms).Wait();
+            client.UploadAsync("dhi.txt", ms).Wait();
+
+            var fileNames =
+                client.GetFilesAsync("/", fileNameSearchPattern: "d*").Result.Files.Select(x => x.Name).ToArray();
+            Assert.Equal(new string[] { "def.txt", "dhi.txt"}, fileNames);
+        }
+
 		[Fact]
 		public void CanPage()
 		{
