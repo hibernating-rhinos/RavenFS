@@ -141,6 +141,7 @@
     <Compile Include="Controllers\FilesController.cs" />
     <Compile Include="Controllers\FoldersController.cs" />
     <Compile Include="Controllers\NotificationsController.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Notifications\NotificationEndpoint.cs" />
     <Compile Include="Controllers\RavenController.cs" />
     <Compile Include="Controllers\RdcController.cs" />

@@ -160,6 +160,38 @@ namespace RavenFS.Tests
             Assert.Equal(new string[] { "def.txt", "dhi.txt"}, fileNames);
         }
 
+        [Fact]
+        public void CanSearchForFilesByPatternBeginningWithMultiCharacterWildcard()
+        {
+            var client = NewClient();
+            var ms = new MemoryStream();
+
+            client.UploadAsync("abc.txt", ms).Wait();
+            client.UploadAsync("def.txt", ms).Wait();
+            client.UploadAsync("ghi.png", ms).Wait();
+            client.UploadAsync("jkl.png", ms).Wait();
+
+            var fileNames =
+                client.GetFilesAsync("/", fileNameSearchPattern: "*.png").Result.Files.Select(x => x.Name).ToArray();
+            Assert.Equal(new string[] { "ghi.png", "jkl.png" }, fileNames);
+        }
+
+        [Fact]
+        public void CanSearchForFilesByPatternBeginningWithSingleCharacterWildcard()
+        {
+            var client = NewClient();
+            var ms = new MemoryStream();
+
+            client.UploadAsync("abc.txt", ms).Wait();
+            client.UploadAsync("def.txt", ms).Wait();
+            client.UploadAsync("ghi.png", ms).Wait();
+            client.UploadAsync("jkl.png", ms).Wait();
+
+            var fileNames =
+                client.GetFilesAsync("/", fileNameSearchPattern: "?bc?txt").Result.Files.Select(x => x.Name).ToArray();
+            Assert.Equal(new string[] { "abc.txt" }, fileNames);
+        }
+
 		[Fact]
 		public void CanPage()
 		{

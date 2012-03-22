@@ -60,7 +60,7 @@ namespace RavenFS.Search
 			return results.ToArray();
 		}
 
-		private TopDocs ExecuteQuery(string[] sortFields, Query q, int size)
+	    private TopDocs ExecuteQuery(string[] sortFields, Query q, int size)
 		{
 			TopDocs topDocs;
 			if (sortFields != null && sortFields.Length > 0)
@@ -112,6 +112,8 @@ namespace RavenFS.Search
 		{
 			var doc = new Document();
 			doc.Add(new Field("__key", lowerKey, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+            // the reversed version of the key is used to allow searches that start with wildcards
+			doc.Add(new Field("__rkey", lowerKey.Reverse(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
 			int level = 0;
 			var directoryName = Path.GetDirectoryName(lowerKey);
 			do
