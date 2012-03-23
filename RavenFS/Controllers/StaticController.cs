@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -9,28 +13,69 @@ namespace RavenFS.Controllers
 	{
 		public HttpResponseMessage ClientAccessPolicy()
 		{
-			const string access =
-				@"<?xml version='1.0' encoding='utf-8'?>
-<access-policy>
-  <cross-domain-access>
-    <policy>
-      <allow-from http-methods='*' http-request-headers='*'>
-        <domain uri='*' />
-      </allow-from>
-      <grant-to>
-        <resource include-subpaths='true' path='/' />
-      </grant-to>
-    </policy>
-  </cross-domain-access>
-</access-policy>";
+			var manifestResourceStream = typeof (StaticController).Assembly.GetManifestResourceStream("RavenFS.Static.ClientAccessPolicy.xml");
+
 			return new HttpResponseMessage(HttpStatusCode.OK)
 			{
-				Content = new StringContent(access)
+				Content = new StreamContent(manifestResourceStream)
 				{
 					Headers =
 						{
 							ContentType = new MediaTypeHeaderValue("text/xml")
 						}
+				}
+			};
+		}
+
+		public Stream GetRavenStudioStream()
+		{
+			return (from path in RavenStudioPotentialPaths 
+					where File.Exists(path) 
+					select File.OpenRead(path)).FirstOrDefault();
+		}
+
+		private static IEnumerable<string> RavenStudioPotentialPaths
+		{
+			get
+			{
+				yield return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RavenFS.Studio.xap");
+				yield return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\RavenFS.Studio\Bin\Debug", "RavenFS.Studio.xap");
+			}
+		}
+
+		public HttpResponseMessage RavenStudioXap()
+		{
+			var ravenStudioStream = GetRavenStudioStream();
+			if (ravenStudioStream == null)
+			{
+				return new HttpResponseMessage(HttpStatusCode.NotFound);
+			}
+			return new HttpResponseMessage(HttpStatusCode.OK)
+			{
+				Content = new StreamContent(ravenStudioStream)
+				{
+					Headers =
+					{
+						ContentType = new MediaTypeHeaderValue("application/x-silverlight-2")
+					}
+				}
+			};
+		}
+
+		public HttpResponseMessage Root()
+		{
+			var file = RavenStudioPotentialPaths.Any(File.Exists) ? "RavenFS.Studio.html" : "studio_not_found.html";
+
+			var manifestResourceStream = typeof(StaticController).Assembly.GetManifestResourceStream("RavenFS.Static." + file);
+
+			return new HttpResponseMessage(HttpStatusCode.OK)
+			{
+				Content = new StreamContent(manifestResourceStream)
+				{
+					Headers =
+					{
+						ContentType = new MediaTypeHeaderValue("text/html")
+					}
 				}
 			};
 		}

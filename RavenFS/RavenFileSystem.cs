@@ -127,6 +127,17 @@ namespace RavenFS
 				defaults: new {controller = "static", action = "ClientAccessPolicy"});
 
 			config.Routes.MapHttpRoute(
+				name: "RavenFS.Studio.xap",
+				routeTemplate: "RavenFS.Studio.xap",
+				defaults: new { controller = "static", action = "RavenStudioXap" });
+
+			config.Routes.MapHttpRoute(
+				name: "Empty",
+				routeTemplate: "",
+				defaults: new { controller = "static", action = "Root" });
+
+
+			config.Routes.MapHttpRoute(
 				name: "rdc",
 				routeTemplate: "rdc/{action}/{*filename}",
 				defaults: new { controller = "rdc", filename = RouteParameter.Optional }

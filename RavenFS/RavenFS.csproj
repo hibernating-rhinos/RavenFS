@@ -122,6 +122,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Global.asax" />
+    <EmbeddedResource Include="Static\ClientAccessPolicy.xml" />
+    <EmbeddedResource Include="Static\RavenFS.Studio.html" />
+    <EmbeddedResource Include="Static\studio_not_found.html" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
