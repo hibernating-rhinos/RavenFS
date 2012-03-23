@@ -206,6 +206,20 @@ namespace RavenFS.Tests
             Assert.Equal(new string[] { "test/abc.txt" }, fileNames);
         }
 
+        [Fact]
+        public void CanSearchPatternContainingNoWildcardsDoesStartsWithSearchByDefault()
+        {
+            var client = NewClient();
+            var ms = new MemoryStream();
+
+            client.UploadAsync("abc.txt", ms).Wait();
+            client.UploadAsync("def.txt", ms).Wait();
+
+            var fileNames =
+                client.GetFilesAsync("/", fileNameSearchPattern: "a").Result.Files.Select(x => x.Name).ToArray();
+            Assert.Equal(new string[] { "abc.txt" }, fileNames);
+        }
+
 		[Fact]
 		public void CanPage()
 		{

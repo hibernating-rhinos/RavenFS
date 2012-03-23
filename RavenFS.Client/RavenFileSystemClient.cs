@@ -328,12 +328,12 @@ namespace RavenFS.Client
 		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int start = 0, int pageSize = 25)
 		{
 		    var folderQueryPart = GetFolderQueryPart(folder);
-		    var fileNameQueryPart = GetFileNameQueryPart(fileNameSearchPattern);
 
-			if (fileNameQueryPart.EndsWith("*") == false && fileNameQueryPart.EndsWith("?") == false)
+            if (string.IsNullOrEmpty(fileNameSearchPattern) == false && fileNameSearchPattern.Contains("*") == false && fileNameSearchPattern.Contains("?") == false)
 			{
-				fileNameQueryPart = fileNameQueryPart + "*";
+                fileNameSearchPattern = fileNameSearchPattern + "*";
 			}
+		    var fileNameQueryPart = GetFileNameQueryPart(fileNameSearchPattern);
 
 		    return SearchAsync(folderQueryPart + fileNameQueryPart, GetSortFields(options), start, pageSize);
 		}
