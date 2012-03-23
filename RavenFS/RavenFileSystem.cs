@@ -6,13 +6,16 @@ using System.Web.Http;
 using System.Web.Http.ModelBinding;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using RavenFS.Controllers;
 using RavenFS.Extensions;
 using RavenFS.Infrastructure;
 using RavenFS.Infrastructure.Workarounds;
+using RavenFS.Notifications;
 using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
 using RavenFS.Util;
+using SignalR.Infrastructure;
 
 namespace RavenFS
 {
@@ -23,6 +26,7 @@ namespace RavenFS
 		private readonly IndexStorage search;
 		private readonly SimpleSignatureRepository signatureRepository;
 		private readonly SigGenerator sigGenerator;
+	    private readonly NotificationPublisher notificationPublisher;
 
 		public TransactionalStorage Storage
 		{
@@ -43,6 +47,7 @@ namespace RavenFS
 			search = new IndexStorage(this.path, new NameValueCollection());
 			signatureRepository = new SimpleSignatureRepository(this.path);
 			sigGenerator = new SigGenerator(signatureRepository);
+            notificationPublisher = new NotificationPublisher();
 			storage.Initialize();
 			search.Initialize();
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
@@ -81,8 +86,13 @@ namespace RavenFS
 			get { return sigGenerator; }
 		}
 
+	    public NotificationPublisher Publisher
+	    {
+	        get { return notificationPublisher; }
+	    }
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
+
+	    [MethodImpl(MethodImplOptions.Synchronized)]
 		public void Start(HttpConfiguration config)
 		{
 			config.ServiceResolver.SetResolver(type =>
@@ -134,6 +144,11 @@ namespace RavenFS
 				routeTemplate: "{controller}/{*name}",
 				defaults: new { controller = "files", name = RouteParameter.Optional }
 				);
+
+            config.Routes.MapHttpRoute(
+                "Notifications", 
+                routeTemplate: "notifications/{*path}", 
+                defaults: new {controller = "notifications"});
 
 		}
 	}

@@ -30,6 +30,8 @@ namespace RavenFS.Client
 			this.baseUrl = baseUrl;
 			if (this.ServerUrl.EndsWith("/"))
 				this.baseUrl = this.ServerUrl.Substring(0, this.ServerUrl.Length - 1);
+
+            Notifications = new NotificationsManager(this);
 		}
 
 		public string ServerUrl
@@ -270,8 +272,10 @@ namespace RavenFS.Client
 			get { return new ConfigurationClient(this);}
 		}
 
+        public NotificationsManager Notifications { get; private set; }
 
-		public Task DownloadSignatureAsync(string sigName, Stream destination, long? from = null, long? to = null)
+
+	    public Task DownloadSignatureAsync(string sigName, Stream destination, long? from = null, long? to = null)
 		{
 			return DownloadAsync("/rdc/signatures/", sigName, destination, from, to);
 		}
@@ -321,20 +325,54 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, int start = 0, int pageSize = 25)
+		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int start = 0, int pageSize = 25)
 		{
-			if (folder == null) throw new ArgumentNullException("folder");
-			if(folder.StartsWith("/") == false)
-				throw new ArgumentException("folder must starts with a /","folder");
-			int level;
-			if (folder == "/")
-				level = 1;
-			else
-				level = folder.Count(ch => ch == '/') + 1;
-			return SearchAsync("__directory:" + folder + " AND __level:" + level, GetSortFields(options), start, pageSize);
+		    var folderQueryPart = GetFolderQueryPart(folder);
+		    var fileNameQueryPart = GetFileNameQueryPart(fileNameSearchPattern);
+
+		    return SearchAsync(folderQueryPart + fileNameQueryPart, GetSortFields(options), start, pageSize);
 		}
 
-		private static string[] GetSortFields(FilesSortOptions options)
+	    private static string GetFileNameQueryPart(string fileNameSearchPattern)
+	    {
+	        if (string.IsNullOrEmpty(fileNameSearchPattern))
+	        {
+	            return "";
+	        }
+	        else if (fileNameSearchPattern.StartsWith("*") || (fileNameSearchPattern.StartsWith("?")))
+	        {
+	            return " AND __rkey:" + Reverse(fileNameSearchPattern);
+	        }
+            else
+	        {
+	            return " AND __key:" + fileNameSearchPattern;
+	        }
+	    }
+
+        private static string Reverse(string value)
+        {
+            var characters = value.ToCharArray();
+            Array.Reverse(characters);
+
+            return new string(characters);
+        }
+
+	    private static string GetFolderQueryPart(string folder)
+	    {
+	        if (folder == null) throw new ArgumentNullException("folder");
+	        if (folder.StartsWith("/") == false)
+	            throw new ArgumentException("folder must starts with a /", "folder");
+	        int level;
+	        if (folder == "/")
+	            level = 1;
+	        else
+	            level = folder.Count(ch => ch == '/') + 1;
+
+	        string folderQueryPart = "__directory:" + folder + " AND __level:" + level;
+	        return folderQueryPart;
+	    }
+
+	    private static string[] GetSortFields(FilesSortOptions options)
 		{
 			string sort = null;
 			switch (options & ~FilesSortOptions.Desc)

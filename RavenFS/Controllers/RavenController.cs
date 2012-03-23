@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using RavenFS.Infrastructure;
+using RavenFS.Notifications;
 using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
@@ -37,6 +38,11 @@ namespace RavenFS.Controllers
 				return ravenFileSystem;
 			}
 		}
+
+	    public NotificationPublisher Publisher
+	    {
+	        get { return ravenFileSystem.Publisher; }
+	    }
 
 		protected Task<T> Result<T>(T result)
 		{

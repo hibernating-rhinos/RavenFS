@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Extensions
 {
@@ -50,6 +53,19 @@ namespace RavenFS.Studio.Extensions
             return Observable.FromEvent<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
                 handler => (s, e) => handler(e), handler => collection.CollectionChanged += handler,
                 handler => collection.CollectionChanged -= handler);
+        }
+
+        public static IObservable<EventPattern<PropertyChangedEventArgs>> ObservePropertyChanged(this INotifyPropertyChanged source, string propertyName)
+        {
+            return Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>(
+                handler => (s, e) => handler(s, e),
+                handler => source.PropertyChanged += handler,
+                handler => source.PropertyChanged -= handler);
         } 
+
+        public static IObservable<T> ObserveChanged<T>(this Observable<T> observable)
+        {
+            return observable.ObservePropertyChanged("Value").Select(_ => observable.Value);
+        }
     }
 }

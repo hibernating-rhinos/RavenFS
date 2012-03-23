@@ -33,12 +33,13 @@ namespace RavenFS.Studio.Infrastructure.Input
 			return tcs.Task;
         }
 
-		public static Task<string> QuestionAsync(string title, string question, Func<string,string> validator = null)
+		public static Task<string> QuestionAsync(string title, string question, Func<string,string> validator = null, string defaultAnswer = "")
 		{
 			var dataContext = new InputModel
 			{
 				Title = title,
 				Message = question,
+                Answer = defaultAnswer,
                 ValidationCallback = validator,
 			};
 			var inputWindow = new InputWindow

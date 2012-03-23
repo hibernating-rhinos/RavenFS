@@ -72,8 +72,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="SignalR.Client">
+      <HintPath>..\packages\SignalR.Client.0.4.0.2\lib\net40\SignalR.Client.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Reactive">
+      <HintPath>..\packages\Rx-Main.1.0.11226\lib\Net4\System.Reactive.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
@@ -82,10 +88,12 @@
     </Compile>
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="ExceptionExtensions.cs" />
+    <Compile Include="FileChange.cs" />
     <Compile Include="FileInfo.cs" />
     <Compile Include="FilesSortOptions.cs" />
     <Compile Include="ListenableStream.cs" />
     <Compile Include="MultiPartParser.cs" />
+    <Compile Include="NotificationsManager.cs" />
     <Compile Include="RavenFileSystemClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RdcStats.cs" />

@@ -18,6 +18,7 @@ namespace RavenFS
             // turn this on so we don't a conflict between the /search endpoint handled by the SearchController
             // and the Search folder.
 		    RouteTable.Routes.RouteExistingFiles = true;
+
 		}
 
 		protected void Application_End(object sender, EventArgs e)

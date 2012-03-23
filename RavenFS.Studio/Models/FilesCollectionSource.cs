@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -24,6 +25,7 @@ namespace RavenFS.Studio.Models
         private object lockObject = new object();
         private string currentFolder;
         private int fileCount;
+        private string searchPattern;
 
         public FilesCollectionSource()
         {
@@ -51,15 +53,57 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize)
+        public string SearchPattern
         {
-            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, FilesSortOptions.Name, start, pageSize)
+            get { return searchPattern; }
+            set
+            {
+                if (searchPattern == value)
+                {
+                    return;
+                }
+                searchPattern = value;
+                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.Clear));
+                Refresh();
+            }
+        }
+
+        public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
+        {
+            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), fileNameSearchPattern:searchPattern, start: start, pageSize: pageSize)
                         .ContinueWith(t =>
                                           {
                                               var result = (IList<FileSystemModel>) ToFileSystemModels(t.Result.Files).Take(pageSize).ToArray();
                                               UpdateCount(t.Result.FileCount);
                                               return result;
                                           });
+        }
+
+        private FilesSortOptions MapSortDescription(IList<SortDescription> sortDescriptions)
+        {
+            var sortDescription = sortDescriptions.FirstOrDefault();
+
+            FilesSortOptions sort = FilesSortOptions.Default;
+
+            if (sortDescription.PropertyName == "Name")
+            {
+                sort = FilesSortOptions.Name;
+            }
+            else if (sortDescription.PropertyName == "Size")
+            {
+                sort = FilesSortOptions.Size;
+            }
+            else if (sortDescription.PropertyName == "LastModified")
+            {
+                sort = FilesSortOptions.LastModified;
+            }
+
+            if (sortDescription.Direction == ListSortDirection.Descending)
+            {
+                sort |= FilesSortOptions.Desc;
+            }
+
+            return sort;
         }
 
         private static IEnumerable<FileSystemModel> ToFileSystemModels(IEnumerable<FileInfo> files)
@@ -81,7 +125,7 @@ namespace RavenFS.Studio.Models
 
         private void BeginGetCount()
         {
-            ApplicationModel.Current.Client.GetFilesAsync(currentFolder, pageSize: 1)
+            ApplicationModel.Current.Client.GetFilesAsync(currentFolder, fileNameSearchPattern:searchPattern, pageSize: 1)
                 .ContinueWith(t => 
                     UpdateCount(t.Result.FileCount, forceCollectionRefresh: true), 
                 TaskContinuationOptions.ExecuteSynchronously);
@@ -99,7 +143,7 @@ namespace RavenFS.Studio.Models
 
             if (fileCountChanged || forceCollectionRefresh)
             {
-                OnCollectionChanged(EventArgs.Empty);
+                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.ShowStaleData));
             }
         }
     }

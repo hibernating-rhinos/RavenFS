@@ -16,6 +16,11 @@ namespace RavenFS.Studio.Extensions
 {
     public static class IEnumerableExtensions
     {
+        public static IEnumerable<T> Apply<T>(this IEnumerable<T> enumerable, Func<IEnumerable<T>, IEnumerable<T>> action)
+        {
+            return action(enumerable);
+        } 
+
         public static NameValueCollection ToNameValueCollection(this IEnumerable<EditableKeyValue> items)
         {
             var collection = new NameValueCollection();
@@ -31,6 +36,11 @@ namespace RavenFS.Studio.Extensions
         public static HashSet<T> ToHashSet<T>(this IEnumerable<T> items)
         {
             return new HashSet<T>(items);
+        } 
+
+        public static IEnumerable<T> EmptyIfNull<T>(this IEnumerable<T> items)
+        {
+            return items ?? new T[0];
         } 
     }
 }
