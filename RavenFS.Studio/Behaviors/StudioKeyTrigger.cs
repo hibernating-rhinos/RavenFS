@@ -14,6 +14,15 @@ namespace RavenFS.Studio.Behaviors
 	    public static readonly DependencyProperty KeyProperty =
 	        DependencyProperty.Register("Key", typeof (Key), typeof (StudioKeyTrigger), new PropertyMetadata(default(Key)));
 
+        public static readonly DependencyProperty ModifiersProperty =
+            DependencyProperty.Register("Modifiers", typeof (ModifierKeys), typeof (StudioKeyTrigger), new PropertyMetadata(default(ModifierKeys)));
+
+        public ModifierKeys Modifiers
+        {
+            get { return (ModifierKeys) GetValue(ModifiersProperty); }
+            set { SetValue(ModifiersProperty, value); }
+        }
+
 	    public Key Key
 	    {
 	        get { return (Key) GetValue(KeyProperty); }
@@ -28,7 +37,7 @@ namespace RavenFS.Studio.Behaviors
         protected override void OnEvent(System.EventArgs eventArgs)
         {
             var keyEventArgs = eventArgs as KeyEventArgs;
-            if (keyEventArgs.Key == Key)
+            if (keyEventArgs.Key == Key && Keyboard.Modifiers == Modifiers)
             {
                 InvokeActions(null);
             }

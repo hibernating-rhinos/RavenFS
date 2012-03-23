@@ -18,6 +18,16 @@ namespace RavenFS.Studio.Infrastructure.MarkupExtensions
     {
         public string Member { get; set; }
 
+        public StaticExtension()
+        {
+            
+        }
+
+        public StaticExtension(string member)
+        {
+            Member = member;
+        }
+
         public object ProvideValue(IServiceProvider serviceProvider)
         {
             if (string.IsNullOrEmpty(Member))

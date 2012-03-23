@@ -10,6 +10,7 @@ using System.Windows.Browser;
 using System.Windows.Input;
 using Microsoft.Expression.Interactivity.Core;
 using RavenFS.Client;
+using RavenFS.Studio.Behaviors;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Infrastructure;
 using System.Linq;
@@ -23,6 +24,8 @@ namespace RavenFS.Studio.Models
 	{
 	    private const int DefaultPageSize = 50;
         private const string SearchPatternValidationRegEx = @"^[\*\?\w|\-\.\s]*$";
+	    public static string SearchStartedMessage = "SearchStarted";
+
 	    private ICommand downloadCommand;
 	    private ICommand deleteCommand;
 	    private ICommand editCommand;
@@ -34,7 +37,9 @@ namespace RavenFS.Studio.Models
 	    private ICommand showSearchCommand;
         private FileSystemCollectionSource filesSource;
 
-        public ICommand RenameFile { get { return renameFileCommand ?? (renameFileCommand = new RenameFileCommand(SelectedFile)); } }
+	    public event EventHandler<UIMessageEventArgs> UIMessage;
+        
+	    public ICommand RenameFile { get { return renameFileCommand ?? (renameFileCommand = new RenameFileCommand(SelectedFile)); } }
         public ICommand AddFolder { get { return addFolderCommand ?? (addFolderCommand = new AddFolderCommand(CurrentFolder)); } }
         public ICommand Navigate { get { return navigateCommand ?? (navigateCommand = new NavigateToFileSystemModelCommand()); } }
         public ICommand Upload { get { return uploadCommand ?? (uploadCommand = new UploadCommand(CurrentFolder)); } }
@@ -46,7 +51,11 @@ namespace RavenFS.Studio.Models
 	    {
 	        get
 	        {
-	            return showSearchCommand ?? (showSearchCommand = new ActionCommand(() => IsSearchVisible.Value = true));
+	            return showSearchCommand ?? (showSearchCommand = new ActionCommand(() =>
+	                                                                                   {
+	                                                                                       IsSearchVisible.Value = true; 
+                                                                                           OnUIMessage(new UIMessageEventArgs(SearchStartedMessage));
+	                                                                                   }));
 	        }
 	    }
 	    
@@ -85,7 +94,7 @@ namespace RavenFS.Studio.Models
                                                      ApplicationModel.Current.Client.Notifications.FolderChanges(
                                                          CurrentFolder.Value)
                                                          .TakeUntil(Unloaded.Amb(CurrentFolder.ObserveChanged().Select(_ => Unit.Default)))
-                                                         .Throttle(TimeSpan.FromSeconds(1))
+                                                         .Throttle(TimeSpan.FromSeconds(0.25))
                                                          .ObserveOn(DispatcherScheduler.Instance)
                                                          .Subscribe(_ => filesSource.Refresh());
                                                  };
@@ -148,5 +157,11 @@ namespace RavenFS.Studio.Models
             }
 	        return folder;
 	    }
+        
+        protected void OnUIMessage(UIMessageEventArgs e)
+        {
+            EventHandler<UIMessageEventArgs> handler = UIMessage;
+            if (handler != null) handler(this, e);
+        }
 	}
 }
