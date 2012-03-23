@@ -330,26 +330,28 @@ namespace RavenFS.Client
 		    var folderQueryPart = GetFolderQueryPart(folder);
 		    var fileNameQueryPart = GetFileNameQueryPart(fileNameSearchPattern);
 
+			if (fileNameQueryPart.EndsWith("*") == false && fileNameQueryPart.EndsWith("?") == false)
+			{
+				fileNameQueryPart = fileNameQueryPart + "*";
+			}
+
 		    return SearchAsync(folderQueryPart + fileNameQueryPart, GetSortFields(options), start, pageSize);
 		}
 
 	    private static string GetFileNameQueryPart(string fileNameSearchPattern)
 	    {
-	        if (string.IsNullOrEmpty(fileNameSearchPattern))
+	    	if (string.IsNullOrEmpty(fileNameSearchPattern))
 	        {
 	            return "";
 	        }
-	        else if (fileNameSearchPattern.StartsWith("*") || (fileNameSearchPattern.StartsWith("?")))
-	        {
-	            return " AND __rfileName:" + Reverse(fileNameSearchPattern);
-	        }
-            else
-	        {
-	            return " AND __fileName:" + fileNameSearchPattern;
-	        }
+	    	if (fileNameSearchPattern.StartsWith("*") || (fileNameSearchPattern.StartsWith("?")))
+	    	{
+	    		return " AND __rfileName:" + Reverse(fileNameSearchPattern);
+	    	}
+	    	return " AND __fileName:" + fileNameSearchPattern;
 	    }
 
-        private static string Reverse(string value)
+		private static string Reverse(string value)
         {
             var characters = value.ToCharArray();
             Array.Reverse(characters);
