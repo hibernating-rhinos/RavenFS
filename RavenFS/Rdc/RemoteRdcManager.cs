@@ -41,7 +41,7 @@ namespace RavenFS.Rdc
             					return remoteSignatureManifest1;
             				});
             		}
-            		return (Task<SignatureManifest>) new CompletedTask<SignatureManifest>(remoteSignatureManifest1);
+            		return new CompletedTask<SignatureManifest>(remoteSignatureManifest1);
             	}).Unwrap();
         }
 

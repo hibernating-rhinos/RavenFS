@@ -21,10 +21,10 @@ namespace RavenFS.Infrastructure
 			this.val = val;
 		}
 
-		public static implicit operator Task(CompletedTask<T> _)
+		public static implicit operator Task<T>(CompletedTask<T> item)
 		{
 			var tcs = new TaskCompletionSource<T>();
-			tcs.SetResult(_.val);
+            tcs.SetResult(item.val);
 			return tcs.Task;
 		}
 	}
