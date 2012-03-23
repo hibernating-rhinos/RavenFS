@@ -550,5 +550,22 @@ namespace RavenFS.Storage
 				update.Save();
 			}
 		}
+
+		public IEnumerable<string> GetConfigNames(int start, int pageSize)
+		{
+			Api.JetSetCurrentIndex(session, Config, "by_name");
+			Api.MoveBeforeFirst(session, Config);
+			for (int i = 0; i < start; i++)
+			{
+				if(Api.TryMoveNext(session, Config) == false)
+					yield break;
+			}
+
+			int count = 0;
+			while (Api.TryMoveNext(session, Config) && ++count < pageSize) 
+			{
+				yield return Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["name"]);
+			}
+		}
 	}
 }

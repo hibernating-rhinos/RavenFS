@@ -416,6 +416,21 @@ namespace RavenFS.Client
 				this.ravenFileSystemClient = ravenFileSystemClient;
 			}
 
+			public Task<string[]> GetConfigNames(int start = 0, int pageSize= 25)
+			{
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/config?start=" + start + "&pageSize=" + pageSize;
+				var request = (HttpWebRequest) WebRequest.Create(requestUriString);
+				return request.GetResponseAsync()
+					.ContinueWith(task =>
+					{
+						using(var responseStream = task.Result.GetResponseStream())
+						{
+							return jsonSerializer.Deserialize<string[]>(new JsonTextReader(new StreamReader(responseStream)));
+						}
+					})
+					.TryThrowBetteError();
+			}
+
 			public Task SetConfig(string name, NameValueCollection data)
 			{
 				var requestUriString = ravenFileSystemClient.ServerUrl + "/config/" + StringUtils.UrlEncode(name);

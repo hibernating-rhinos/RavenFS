@@ -33,6 +33,29 @@ namespace RavenFS.Tests
 
 		}
 
+
+		[Fact]
+		public void CanGetConfigNames()
+		{
+			var client = NewClient();
+
+			Assert.Null(client.Config.GetConfig("test").Result);
+
+			client.Config.SetConfig("test", new NameValueCollection
+			{
+				{"test", "there"},
+				{"hi", "you"}
+			}).Wait();
+
+			client.Config.SetConfig("test2", new NameValueCollection
+			{
+				{"test", "there"},
+				{"hi", "you"}
+			}).Wait();
+			var names = client.Config.GetConfigNames().Result;
+			Assert.Equal(new[]{"test", "test2"}, names);
+		}
+
 		[Fact]
 		public void CanDelConfig()
 		{
