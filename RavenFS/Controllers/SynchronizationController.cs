@@ -29,8 +29,7 @@ namespace RavenFS.Controllers
             {
                 throw new Exception("Unknown server identifier " + sourceServerUrl);
             }
-            var sourceMetadataAsync = sourceRavenFileSystemClient.GetMetadataForAsync(fileName)
-                .ContinueWith(task => task.Result.UpdateLastModified());
+        	var sourceMetadataAsync = sourceRavenFileSystemClient.GetMetadataForAsync(fileName);
             var localFileDataInfo = GetLocalFileDataInfo(fileName);
 
             var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
