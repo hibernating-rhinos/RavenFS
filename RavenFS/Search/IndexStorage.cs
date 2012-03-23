@@ -112,8 +112,12 @@ namespace RavenFS.Search
 		{
 			var doc = new Document();
 			doc.Add(new Field("__key", lowerKey, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
-            // the reversed version of the key is used to allow searches that start with wildcards
-			doc.Add(new Field("__rkey", lowerKey.Reverse(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+
+		    var fileName = Path.GetFileName(lowerKey);
+		    doc.Add(new Field("__fileName", fileName, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+		    // the reversed version of the file name is used to allow searches that start with wildcards
+		    doc.Add(new Field("__rfileName", fileName.Reverse(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+
 			int level = 0;
 			var directoryName = Path.GetDirectoryName(lowerKey);
 			do

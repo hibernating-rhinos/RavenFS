@@ -192,6 +192,20 @@ namespace RavenFS.Tests
             Assert.Equal(new string[] { "abc.txt" }, fileNames);
         }
 
+        [Fact]
+        public void CanSearchForFilesByNameWithinAFolder()
+        {
+            var client = NewClient();
+            var ms = new MemoryStream();
+
+            client.UploadAsync("test/abc.txt", ms).Wait();
+            client.UploadAsync("test/def.txt", ms).Wait();
+
+            var fileNames =
+                client.GetFilesAsync("/test", fileNameSearchPattern: "a*").Result.Files.Select(x => x.Name).ToArray();
+            Assert.Equal(new string[] { "test/abc.txt" }, fileNames);
+        }
+
 		[Fact]
 		public void CanPage()
 		{

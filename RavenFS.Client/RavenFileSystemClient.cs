@@ -341,11 +341,11 @@ namespace RavenFS.Client
 	        }
 	        else if (fileNameSearchPattern.StartsWith("*") || (fileNameSearchPattern.StartsWith("?")))
 	        {
-	            return " AND __rkey:" + Reverse(fileNameSearchPattern);
+	            return " AND __rfileName:" + Reverse(fileNameSearchPattern);
 	        }
             else
 	        {
-	            return " AND __key:" + fileNameSearchPattern;
+	            return " AND __fileName:" + fileNameSearchPattern;
 	        }
 	    }
 
