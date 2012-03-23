@@ -40,7 +40,7 @@ namespace RavenFS
 
 		public BufferPool BufferPool { get; private set; }
 
-		public RavenFileSystem(string path = "~")
+		public RavenFileSystem(string path = @"~\Data")
 		{
 			this.path = path.ToFullPath();
 			storage = new TransactionalStorage(this.path, new NameValueCollection());
