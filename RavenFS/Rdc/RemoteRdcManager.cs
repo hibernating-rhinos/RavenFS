@@ -52,12 +52,12 @@ namespace RavenFS.Rdc
         	var highestSigName = sigPairs.First().Remote;
         	var highestSigContent = _remoteCacheSignatureRepository.CreateContent(highestSigName);
         	return _ravenFileSystemClient.DownloadSignatureAsync(highestSigName, highestSigContent)
-        		.ContinueWith(task => SynchronizePairAsync(1, sigPairs))
-        		.ContinueWith(task =>
-        		{
-        			highestSigContent.Dispose();
-        			return task;
-        		}).Unwrap();
+				.ContinueWith(task =>
+				{
+					highestSigContent.Dispose();
+					return task;
+				}).Unwrap()
+				.ContinueWith(task => SynchronizePairAsync(1, sigPairs));
         	
         }
 
