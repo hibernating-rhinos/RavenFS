@@ -62,6 +62,11 @@ namespace RavenFS.Controllers
 			};
 		}
 
+		public HttpResponseMessage FavIcon()
+		{
+			return new HttpResponseMessage(HttpStatusCode.NotFound);
+		}
+
 		public HttpResponseMessage Root()
 		{
 			var file = RavenStudioPotentialPaths.Any(File.Exists) ? "RavenFS.Studio.html" : "studio_not_found.html";

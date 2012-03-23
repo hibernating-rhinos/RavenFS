@@ -127,6 +127,11 @@ namespace RavenFS
 				defaults: new {controller = "static", action = "ClientAccessPolicy"});
 
 			config.Routes.MapHttpRoute(
+			name: "favicon.ico",
+			routeTemplate: "favicon.ico",
+			defaults: new { controller = "static", action = "FavIcon" });
+
+			config.Routes.MapHttpRoute(
 				name: "RavenFS.Studio.xap",
 				routeTemplate: "RavenFS.Studio.xap",
 				defaults: new { controller = "static", action = "RavenStudioXap" });
