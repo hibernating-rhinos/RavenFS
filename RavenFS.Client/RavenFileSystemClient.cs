@@ -328,6 +328,11 @@ namespace RavenFS.Client
 		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int start = 0, int pageSize = 25)
 		{
 		    var folderQueryPart = GetFolderQueryPart(folder);
+
+            if (string.IsNullOrEmpty(fileNameSearchPattern) == false && fileNameSearchPattern.Contains("*") == false && fileNameSearchPattern.Contains("?") == false)
+			{
+                fileNameSearchPattern = fileNameSearchPattern + "*";
+			}
 		    var fileNameQueryPart = GetFileNameQueryPart(fileNameSearchPattern);
 
 		    return SearchAsync(folderQueryPart + fileNameQueryPart, GetSortFields(options), start, pageSize);
@@ -335,21 +340,18 @@ namespace RavenFS.Client
 
 	    private static string GetFileNameQueryPart(string fileNameSearchPattern)
 	    {
-	        if (string.IsNullOrEmpty(fileNameSearchPattern))
+	    	if (string.IsNullOrEmpty(fileNameSearchPattern))
 	        {
 	            return "";
 	        }
-	        else if (fileNameSearchPattern.StartsWith("*") || (fileNameSearchPattern.StartsWith("?")))
-	        {
-	            return " AND __rkey:" + Reverse(fileNameSearchPattern);
-	        }
-            else
-	        {
-	            return " AND __key:" + fileNameSearchPattern;
-	        }
+	    	if (fileNameSearchPattern.StartsWith("*") || (fileNameSearchPattern.StartsWith("?")))
+	    	{
+	    		return " AND __rfileName:" + Reverse(fileNameSearchPattern);
+	    	}
+	    	return " AND __fileName:" + fileNameSearchPattern;
 	    }
 
-        private static string Reverse(string value)
+		private static string Reverse(string value)
         {
             var characters = value.ToCharArray();
             Array.Reverse(characters);
@@ -414,6 +416,21 @@ namespace RavenFS.Client
 						}
 				};
 				this.ravenFileSystemClient = ravenFileSystemClient;
+			}
+
+			public Task<string[]> GetConfigNames(int start = 0, int pageSize= 25)
+			{
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/config?start=" + start + "&pageSize=" + pageSize;
+				var request = (HttpWebRequest) WebRequest.Create(requestUriString);
+				return request.GetResponseAsync()
+					.ContinueWith(task =>
+					{
+						using(var responseStream = task.Result.GetResponseStream())
+						{
+							return jsonSerializer.Deserialize<string[]>(new JsonTextReader(new StreamReader(responseStream)));
+						}
+					})
+					.TryThrowBetteError();
 			}
 
 			public Task SetConfig(string name, NameValueCollection data)

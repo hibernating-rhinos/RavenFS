@@ -40,7 +40,7 @@ namespace RavenFS
 
 		public BufferPool BufferPool { get; private set; }
 
-		public RavenFileSystem(string path = "~")
+		public RavenFileSystem(string path = @"~\Data")
 		{
 			this.path = path.ToFullPath();
 			storage = new TransactionalStorage(this.path, new NameValueCollection());
@@ -125,6 +125,22 @@ namespace RavenFS
 				name: "ClientAccessPolicy.xml",
 				routeTemplate: "ClientAccessPolicy.xml",
 				defaults: new {controller = "static", action = "ClientAccessPolicy"});
+
+			config.Routes.MapHttpRoute(
+			name: "favicon.ico",
+			routeTemplate: "favicon.ico",
+			defaults: new { controller = "static", action = "FavIcon" });
+
+			config.Routes.MapHttpRoute(
+				name: "RavenFS.Studio.xap",
+				routeTemplate: "RavenFS.Studio.xap",
+				defaults: new { controller = "static", action = "RavenStudioXap" });
+
+			config.Routes.MapHttpRoute(
+				name: "Empty",
+				routeTemplate: "",
+				defaults: new { controller = "static", action = "Root" });
+
 
 			config.Routes.MapHttpRoute(
 				name: "rdc",

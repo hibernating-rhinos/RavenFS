@@ -112,9 +112,13 @@
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
     <Compile Include="Behaviors\ExecuteCommandOnFileDrop.cs" />
     <Compile Include="Behaviors\FadeTrimming.cs" />
+    <Compile Include="Behaviors\FocusElementAction.cs" />
     <Compile Include="Behaviors\LinkHighlighter.cs" />
     <Compile Include="Behaviors\PreventEditingReadOnlyRows.cs" />
+    <Compile Include="Behaviors\SelectAllAction.cs" />
     <Compile Include="Behaviors\StudioKeyTrigger.cs" />
+    <Compile Include="Behaviors\UIMessageEventArgs.cs" />
+    <Compile Include="Behaviors\UIMessageTrigger.cs" />
     <Compile Include="Commands\AddFolderCommand.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
     <Compile Include="Commands\HideOperationsPaneCommand.cs" />

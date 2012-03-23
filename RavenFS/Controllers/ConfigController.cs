@@ -7,11 +7,22 @@ using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
 using RavenFS.Util;
+using System.Linq;
 
 namespace RavenFS.Controllers
 {
 	public class ConfigController : RavenController
 	{
+		public string[] Get()
+		{
+			string[] names = null;
+			Storage.Batch(accessor =>
+			{
+				names = accessor.GetConfigNames(Paging.Start, Paging.PageSize).ToArray();
+			});
+			return names;
+		}
+
 		public HttpResponseMessage<NameValueCollection> Get(string name)
 		{
 			try

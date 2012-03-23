@@ -10,7 +10,9 @@
                      xmlns:Models="clr-namespace:RavenFS.Studio.Models"
                      xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
                      xmlns:Views="clr-namespace:RavenFS.Studio.Views"
-                     xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" mc:Ignorable="d"
+                     xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+                     xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
+                     mc:Ignorable="d"
                      d:DesignWidth="640"
                      d:DesignHeight="480"
                      Title="Home"
@@ -24,6 +26,11 @@
             <DoubleAnimation Storyboard.TargetName="SearchBar" Storyboard.TargetProperty="Height" To="36" Duration="0:0:0.1"/>
         </Storyboard>
     </UserControl.Resources>
+    <i:Interaction.Triggers>
+        <b:StudioKeyTrigger Key="F" Modifiers="Control">
+            <i:InvokeCommandAction Command="{Binding ShowSearch}"/>
+        </b:StudioKeyTrigger>
+    </i:Interaction.Triggers>
     <Grid Margin="{StaticResource Margin_ContentPage}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -78,7 +85,7 @@
                     <Button VerticalAlignment="Stretch"
                             Command="{Binding ShowSearch}" 
                             Margin="5,0,0,-7" 
-                            ToolTipService.ToolTip="Search"
+                            ToolTipService.ToolTip="Search within folder"
                             Style="{StaticResource Style_Button_Chromeless}">
                         <Grid>
                             <!-- We put this toggle button inside another button and cover
@@ -117,8 +124,18 @@
             <Border VerticalAlignment="Top" Height="36">
                 <toolkit:DockPanel Margin="4" LastChildFill="False" >
                     <TextBlock Text="Search:" VerticalAlignment="Center" FontWeight="Bold" Margin="5,0,5,0"/>
-                    <TextBox Text="{Binding SearchPattern.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="220" Margin="5,2,5,2"/>
-                    <Button Command="{Binding ClearSearch}"
+                    <TextBox Text="{Binding SearchPattern.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="220" Margin="5,2,5,2">
+                        <i:Interaction.Triggers>
+                            <b:StudioKeyTrigger Key="Escape">
+                                <i:InvokeCommandAction Command="{Binding ClearSearch}"/>
+                            </b:StudioKeyTrigger>
+                            <b:UIMessageTrigger SourceObject="{Binding}" Message="{z:Static Member=Models:FilesPageModel.SearchStartedMessage}">
+                                <b:FocusElementAction/>
+                                <b:SelectAllAction/>
+                            </b:UIMessageTrigger>
+                        </i:Interaction.Triggers>
+                    </TextBox>
+                  <Button Command="{Binding ClearSearch}"
                             ToolTipService.ToolTip="Clear Search"
                             VerticalAlignment="Center"
                                 Style="{StaticResource Style_Button_MouseOverChrome}">
