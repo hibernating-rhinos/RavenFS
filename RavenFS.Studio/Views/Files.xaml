@@ -79,6 +79,9 @@
                     <Button Content="Rename"
                             VerticalAlignment="Center"
                             Command="{Binding RenameFile}" Margin="5,0,0,0"/>
+                    <Button Content="Move"
+                            VerticalAlignment="Center"
+                            Command="{Binding MoveFile}" Margin="5,0,0,0"/>
                     <Button Content="Edit Properties"
                             VerticalAlignment="Center"
                             Command="{Binding EditProperties}" Margin="5,0,0,0"/>
