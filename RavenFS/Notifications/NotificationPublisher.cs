@@ -11,6 +11,10 @@ namespace RavenFS.Notifications
         public NotificationPublisher()
         {
             dependencyResolver = new DefaultDependencyResolver();
+
+            var serializer = new TypeHidingJsonSerializer();
+            dependencyResolver.Register(typeof(IJsonSerializer), () => serializer);
+
             connection = dependencyResolver.Resolve<IConnectionManager>().GetConnection<NotificationEndpoint>();
         }
 
@@ -19,7 +23,7 @@ namespace RavenFS.Notifications
             get { return dependencyResolver; }
         }
 
-        public void Publish(FileChange change)
+        public void Publish(Notification change)
         {
             connection.Broadcast(change);
         }

@@ -96,5 +96,37 @@ namespace RavenFS.Tests
 
             Assert.Equal(0, notifications.Count);
         }
+
+        [Fact]
+        public void NotificationsIsReceivedWhenConfigIsUpdated()
+        {
+            var client = NewClient();
+            client.Notifications.Connect().Wait();
+
+            var notificationTask = client.Notifications.ConfigChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+
+            client.Config.SetConfig("Test", new NameValueCollection()).Wait();
+
+            var configChange = notificationTask.Result;
+
+            Assert.Equal("Test", configChange.Name);
+            Assert.Equal(ConfigChangeAction.Set, configChange.Action);
+        }
+
+        [Fact]
+        public void NotificationsIsReceivedWhenConfigIsDeleted()
+        {
+            var client = NewClient();
+            client.Notifications.Connect().Wait();
+
+            var notificationTask = client.Notifications.ConfigChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+
+            client.Config.DeleteConfig("Test").Wait();
+
+            var configChange = notificationTask.Result;
+
+            Assert.Equal("Test", configChange.Name);
+            Assert.Equal(ConfigChangeAction.Delete, configChange.Action);
+        }
     }
 }

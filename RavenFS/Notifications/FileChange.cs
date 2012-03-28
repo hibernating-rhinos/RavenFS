@@ -1,6 +1,6 @@
 ﻿namespace RavenFS.Notifications
 {
-    public class FileChange
+    public class FileChange : Notification
     {
         public string File { get; set; }
 

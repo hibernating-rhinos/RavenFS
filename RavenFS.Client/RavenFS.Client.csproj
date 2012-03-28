@@ -87,12 +87,14 @@
       <Link>NameValueCollectionJsonConverter.cs</Link>
     </Compile>
     <Compile Include="AsyncExtensions.cs" />
+    <Compile Include="ConfigChange.cs" />
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="FileChange.cs" />
     <Compile Include="FileInfo.cs" />
     <Compile Include="FilesSortOptions.cs" />
     <Compile Include="ListenableStream.cs" />
     <Compile Include="MultiPartParser.cs" />
+    <Compile Include="Notification.cs" />
     <Compile Include="NotificationsManager.cs" />
     <Compile Include="RavenFileSystemClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -102,6 +104,7 @@
     <Compile Include="SignatureManifest.cs" />
     <Compile Include="StringUtils.cs" />
     <Compile Include="SynchronizationReport.cs" />
+    <Compile Include="NotificationJSonUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

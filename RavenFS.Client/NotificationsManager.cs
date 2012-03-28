@@ -1,5 +1,7 @@
 using System;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using SignalR.Client;
@@ -12,7 +14,8 @@ namespace RavenFS.Client
         private readonly object lockObject = new object();
         private Connection notificationClient;
         private int currentObservers;
-
+        private readonly Subject<Notification> rawNotifications = new Subject<Notification>();
+        
         public NotificationsManager(RavenFileSystemClient client)
         {
             this.client = client;
@@ -26,8 +29,13 @@ namespace RavenFS.Client
         /// <returns>A Task that completes once the connection is established.</returns>
         public Task Connect()
         {
-            return GetConnection().Start();
+            return GetOrCreateConnection().Start();
         }
+
+        public IObservable<ConfigChange> ConfigChanges()
+        {
+            return Notifications().OfType<ConfigChange>();
+        } 
 
         public IObservable<FileChange> FolderChanges(string folder)
         {
@@ -38,30 +46,18 @@ namespace RavenFS.Client
 
             var canonicalisedFolder = folder.TrimStart('/');
 
-            return Observable.Create<FileChange>(
-                inner =>
-                    {
-                        var connection = GetConnection();
-                        StartListening();
+            return Notifications()
+                .OfType<FileChange>()
+                .Where(f => f.File.StartsWith(canonicalisedFolder, StringComparison.InvariantCultureIgnoreCase));
+        }
 
-                        Action<string> messageHandler =
-                            message =>
-                                {
-                                    var fileChange = JsonConvert.DeserializeObject<FileChange>(message);
-                                    if (fileChange.File.StartsWith(canonicalisedFolder, StringComparison.InvariantCultureIgnoreCase))
-                                    {
-                                        inner.OnNext(fileChange);
-                                    }
-                                };
+        public IObservable<Notification> Notifications()
+        {
+            StartListening();
 
-                        connection.Received += messageHandler;
-
-                        return () =>
-                                   {
-                                       connection.Received -= messageHandler;
-                                       StopListening();
-                                   };
-                    });
+            return Observable.Create<Notification>((observer) => new CompositeDisposable(
+                                                                rawNotifications.Subscribe(observer),
+                                                                Disposable.Create(StopListening)));
         }
 
         private void StopListening()
@@ -72,7 +68,7 @@ namespace RavenFS.Client
 
                 if (currentObservers == 0)
                 {
-                    GetConnection().Stop();
+                    GetOrCreateConnection().Stop();
                 }
             }
         }
@@ -83,20 +79,29 @@ namespace RavenFS.Client
             {
                 if (currentObservers == 0)
                 {
-                    GetConnection().Start();
+                    GetOrCreateConnection().Start();
                 }
 
                 currentObservers++;
             }
         }
 
-        private Connection GetConnection()
+        private Connection GetOrCreateConnection()
         {
             lock (lockObject)
             {
-                return notificationClient ?? (notificationClient = new Connection(client.ServerUrl + "/notifications"));
+                if (notificationClient == null)
+                {
+                    notificationClient = new Connection(client.ServerUrl + "/notifications");
+                    notificationClient.Received += message =>
+                                                       {
+                                                           var notification = NotificationJSonUtilities.Parse<Notification>(message);
+                                                           rawNotifications.OnNext(notification);
+                                                       };
+                }
+
+                return notificationClient;
             }
-            
         }
     }
 }

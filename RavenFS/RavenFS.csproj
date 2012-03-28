@@ -145,6 +145,8 @@
     <Compile Include="Controllers\FoldersController.cs" />
     <Compile Include="Controllers\NotificationsController.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Notifications\ConfigChange.cs" />
+    <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationEndpoint.cs" />
     <Compile Include="Controllers\RavenController.cs" />
     <Compile Include="Controllers\RdcController.cs" />
@@ -175,6 +177,7 @@
     <Compile Include="Infrastructure\Workarounds\ReadAsSingleObjectPolicy.cs" />
     <Compile Include="NonAdminHttp.cs" />
     <Compile Include="Notifications\NotificationPublisher.cs" />
+    <Compile Include="Notifications\TypeHidingJsonSerializer.cs" />
     <Compile Include="RavenFileSystem.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
     <Compile Include="Rdc\IPartialDataAccess.cs" />
