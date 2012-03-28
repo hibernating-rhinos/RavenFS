@@ -148,6 +148,7 @@
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Extensions\IListExtensions.cs" />
     <Compile Include="Extensions\IObservableExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="External\MultiBinding\IMultiValueConverter.cs" />
     <Compile Include="External\MultiBinding\MultiBinding.cs" />
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
@@ -192,6 +193,7 @@
     <Compile Include="Models\AsyncOperationsModel.cs" />
     <Compile Include="Models\AsyncOperationStatus.cs" />
     <Compile Include="Models\AsyncOperationsViewModel.cs" />
+    <Compile Include="Models\NameValueCollectionEditorModel.cs" />
     <Compile Include="Models\DirectoryModel.cs" />
     <Compile Include="Models\EditableKeyValue.cs" />
     <Compile Include="Models\EditableKeyValueCollection.cs" />
@@ -205,6 +207,7 @@
     <Compile Include="Models\FileSystemCollectionSource.cs" />
     <Compile Include="Models\FileSystemModel.cs" />
     <Compile Include="Models\FoldersCollectionSource.cs" />
+    <Compile Include="Models\ReplicationPageModel.cs" />
     <Compile Include="Models\VirtualFoldersManager.cs" />
     <Compile Include="Views\AsyncOperationsView.xaml.cs">
       <DependentUpon>AsyncOperationsView.xaml</DependentUpon>
@@ -225,12 +228,19 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Views\Replication.xaml.cs">
+      <DependentUpon>Replication.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Views\Replication.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Resource Include="Assets\Styles.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
