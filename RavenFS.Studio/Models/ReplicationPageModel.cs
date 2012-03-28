@@ -4,6 +4,8 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,28 +25,51 @@ namespace RavenFS.Studio.Models
 {
     public class ReplicationPageModel : PageModel
     {
-        public ObservableCollection<string> AvailableConfigurations { get; private set; }
-        public Observable<string> SelectedConfiguration { get; private set; } 
+        public ObservableCollection<ConfigurationModel> AvailableConfigurations { get; private set; }
+        public Observable<ConfigurationModel> SelectedConfiguration { get; private set; } 
         public Observable<NameValueCollectionEditorModel> ConfigurationSettings { get; private set; }
 
         private ICommand addNewConfiguration;
         private ICommand saveConfiguration;
         private ICommand deleteConfiguration;
+        private ICommand discardChanges;
 
         public ICommand AddNewConfiguration { get { return addNewConfiguration ?? new ActionCommand(HandleAddNewConfiguration);  } }
         public ICommand SaveConfiguration { get { return saveConfiguration ?? new ActionCommand(HandleSaveConfiguration);  } }
         public ICommand DeleteConfiguration { get { return deleteConfiguration ?? new ActionCommand(HandleDeleteConfiguration);  } }
-
-        public string lastSelectedConfiguration;
+        public ICommand DiscardChanges { get { return discardChanges ?? new ActionCommand(HandleDiscardChanges); } }
 
         public ReplicationPageModel()
         {
-            AvailableConfigurations = new ObservableCollection<string>();
+            AvailableConfigurations = new ObservableCollection<ConfigurationModel>();
 
-            SelectedConfiguration = new Observable<string>() { Value = ""};
+            SelectedConfiguration = new Observable<ConfigurationModel>() { Value = null };
             SelectedConfiguration.PropertyChanged += HandleSelectedConfigurationChanged;
 
             ConfigurationSettings = new Observable<NameValueCollectionEditorModel>();
+        }
+
+        private void HandleDiscardChanges()
+        {
+            var configuration = SelectedConfiguration.Value;
+
+            if (configuration == null)
+            {
+                return;
+            }
+
+            AskUser.ConfirmationAsync(
+                "Discard Changes",
+                string.Format("Are you sure you want to discard the changes you have made to configuration '{0}'",configuration.Name))
+                .ContinueWhenTrueInTheUIThread(() =>
+                                                   {
+                                                       ApplicationModel.Current.ModifiedConfigurations.Remove(
+                                                           configuration.Name);
+                                                       configuration.IsModified = false;
+                                                       BeginEditConfiguration(configuration);
+                                                   });
+
+
         }
 
         private void HandleAddNewConfiguration()
@@ -54,114 +79,142 @@ namespace RavenFS.Studio.Models
                                         {
                                             if (!t.IsCanceled)
                                             {
-                                                ApplicationModel.Current.ModifiedConfigurations.Add(t.Result, new NameValueCollection());
-                                                AvailableConfigurations.Add(t.Result);
-                                                SelectedConfiguration.Value = t.Result;
+                                                var newName = t.Result;
+                                                ApplicationModel.Current.ModifiedConfigurations.Add(newName, new NameValueCollection());
+                                                BeginLoadConfigurations().ContinueOnSuccessInTheUIThread(() => SelectedConfiguration.Value = AvailableConfigurations.FirstOrDefault(c => c.Name.Equals(newName)));
                                             }
                                         });
         }
 
         private void HandleSaveConfiguration()
         {
-            if (SelectedConfiguration.Value.IsNullOrEmpty() 
-                || !ApplicationModel.Current.ModifiedConfigurations.ContainsKey(SelectedConfiguration.Value))
+            var configuration = SelectedConfiguration.Value;
+
+            if (configuration == null
+                || !configuration.IsModified)
             {
                 return;
             }
 
-            ApplicationModel.Current.AsyncOperations.Do(() =>
-                                                            {
-                                                                string configName = SelectedConfiguration.Value;
-                                                                return SaveConfigurationAsync(configName, ApplicationModel.Current.ModifiedConfigurations[configName]);
-                                                            }, string.Format("Saving configuration '{0}'", SelectedConfiguration.Value));
+            ApplicationModel.Current.AsyncOperations.Do(
+                () =>
+                SaveConfigurationAsync(configuration,
+                                       ApplicationModel.Current.ModifiedConfigurations[configuration.Name]),
+                string.Format("Saving configuration '{0}'", configuration));
         }
 
         private void HandleDeleteConfiguration()
         {
-            string currentConfiguration = SelectedConfiguration.Value;
+            var currentConfiguration = SelectedConfiguration.Value;
 
-            if (currentConfiguration.IsNullOrEmpty())
+            if (currentConfiguration == null)
             {
                 return;
             }
 
             AskUser.ConfirmationAsync(
                 "Delete Configuration",
-                string.Format("Are you sure you want to delete configuration '{0}'?", currentConfiguration))
+                string.Format("Are you sure you want to delete configuration '{0}'?", currentConfiguration.Name))
                 .ContinueWhenTrueInTheUIThread(
-                    () => ApplicationModel.Current.AsyncOperations.Do(
-                        () => ApplicationModel.Current.Client.Config.DeleteConfig(currentConfiguration),
-                        string.Format("Deleting configuration '{0}'", currentConfiguration)));
+                    () =>
+                        {
+                            AvailableConfigurations.Remove(currentConfiguration);
+                            ApplicationModel.Current.AsyncOperations.Do(
+                                () => DeleteConfigurationAsync(currentConfiguration),
+                                string.Format("Deleting configuration '{0}'", currentConfiguration));
+                        });
         }
 
-        private Task SaveConfigurationAsync(string configName, NameValueCollection configValues)
+        private static Task DeleteConfigurationAsync(ConfigurationModel configuration)
         {
-            return ApplicationModel.Current.Client.Config.SetConfig(configName, configValues)
+            return ApplicationModel.Current.Client.Config.DeleteConfig(configuration.Name)
+                .ContinueOnSuccessInTheUIThread(() => ApplicationModel.Current.ModifiedConfigurations.Remove(configuration.Name));
+        }
+
+        private Task SaveConfigurationAsync(ConfigurationModel configuration, NameValueCollection configValues)
+        {
+            return ApplicationModel.Current.Client.Config.SetConfig(configuration.Name, configValues)
                 .ContinueOnUIThread(t =>
                                         {
                                             if (t.Status == TaskStatus.RanToCompletion)
                                             {
-                                                ApplicationModel.Current.ModifiedConfigurations.Remove(configName);
+                                                ApplicationModel.Current.ModifiedConfigurations.Remove(configuration.Name);
+                                                configuration.IsModified = false;
                                             }
                                         });
         }
 
         private void HandleSelectedConfigurationChanged(object sender, PropertyChangedEventArgs e)
         {
-            string currentConfiguration = SelectedConfiguration.Value;
-            if (!string.IsNullOrEmpty(currentConfiguration))
+            BeginEditConfiguration(SelectedConfiguration.Value);
+        }
+
+        private void BeginEditConfiguration(ConfigurationModel configuration)
+        {
+            if (configuration != null)
             {
-                if (ApplicationModel.Current.ModifiedConfigurations.ContainsKey(currentConfiguration))
+                if (ApplicationModel.Current.ModifiedConfigurations.ContainsKey(configuration.Name))
                 {
-                    EditConfigurationValues(currentConfiguration, ApplicationModel.Current.ModifiedConfigurations[currentConfiguration]);
+                    EditConfigurationValues(configuration,
+                                            ApplicationModel.Current.ModifiedConfigurations[configuration.Name]);
                 }
                 else
                 {
                     ConfigurationSettings.Value = null;
-                    ApplicationModel.Current.Client.Config.GetConfig(currentConfiguration)
-                        .ContinueOnUIThread(t => EditConfigurationValues(currentConfiguration, t.Result));
+                    ApplicationModel.Current.Client.Config.GetConfig(configuration.Name)
+                        .ContinueOnUIThread(t => EditConfigurationValues(configuration, t.Result));
                 }
             }
         }
 
-        private void EditConfigurationValues(string currentConfiguration, NameValueCollection settings)
+        private void EditConfigurationValues(ConfigurationModel currentConfiguration, NameValueCollection settings)
         {
             if (SelectedConfiguration.Value != currentConfiguration)
             {
                 return;
             }
 
-            ConfigurationSettings.Value = new NameValueCollectionEditorModel(settings);
-            ConfigurationSettings.Value.Changed += delegate
+            var editor = new NameValueCollectionEditorModel(settings);
+            editor.Changed += delegate
                                                  {
                                                      ApplicationModel.Current
-                                                         .ModifiedConfigurations[currentConfiguration] = ConfigurationSettings.Value.GetCurrent();
+                                                         .ModifiedConfigurations[currentConfiguration.Name] = editor.GetCurrent();
+                                                     currentConfiguration.IsModified = true;
                                                  };
+            ConfigurationSettings.Value = editor;
         }
 
 
         protected override void OnViewLoaded()
         {
             BeginLoadConfigurations();
+            ApplicationModel.Current.Client.Notifications
+                .ConfigChanges()
+                .Throttle(TimeSpan.FromSeconds(1))
+                .TakeUntil(Unloaded)
+                .ObserveOn(DispatcherScheduler.Instance)
+                .Subscribe(_ => BeginLoadConfigurations());
         }
 
-        private void BeginLoadConfigurations()
+        private Task BeginLoadConfigurations()
         {
-            ApplicationModel.Current.Client.Config
+            return ApplicationModel.Current.Client.Config
                 .GetConfigNames(pageSize: 1024)
                 .ContinueOnUIThread(UpdateUIWithConfigurations);
         }
 
         private void UpdateUIWithConfigurations(Task<string[]> configurations)
         {
-            var currentConfiguration = SelectedConfiguration.Value;
+            AvailableConfigurations.UpdateFromOrdered(
+                ApplicationModel.Current.ModifiedConfigurations.Keys
+                    .Concat(configurations.Result)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .Select(n => new ConfigurationModel(n)),
+                    m => m.Name.ToLowerInvariant());
 
-            AvailableConfigurations.Clear();
-            AvailableConfigurations.AddRange(ApplicationModel.Current.ModifiedConfigurations.Keys);
-            AvailableConfigurations.AddRange(configurations.Result);
 
-            SelectedConfiguration.Value = currentConfiguration;
-            if (string.IsNullOrEmpty(SelectedConfiguration.Value))
+            if (SelectedConfiguration.Value == null)
             {
                 SelectedConfiguration.Value = AvailableConfigurations.FirstOrDefault();
             }

@@ -27,12 +27,21 @@ namespace RavenFS.Studio.Models
 
         public EditableKeyValueCollection(IEnumerable<EditableKeyValue> values) : base(values)
         {
+            foreach (var item in this)
+            {
+                AttachPropertyChangeHandler(item);
+            }
         }
 
         protected override void InsertItem(int index, EditableKeyValue item)
         {
-            item.PropertyChanged += HandlePropertyChanged;
+            AttachPropertyChangeHandler(item);
             base.InsertItem(index, item);
+        }
+
+        private void AttachPropertyChangeHandler(EditableKeyValue item)
+        {
+            item.PropertyChanged += HandlePropertyChanged;
         }
 
         protected override void RemoveItem(int index)

@@ -39,6 +39,7 @@ namespace RavenFS.Studio.Models
                                                  }));
 
             editableCollection.KeyValueChanged += delegate { OnChanged(EventArgs.Empty); };
+            editableCollection.CollectionChanged += delegate { OnChanged(EventArgs.Empty); };
 
             EditableValues = editableCollection;
             AddEmptyItem();
