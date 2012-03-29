@@ -197,6 +197,7 @@
     <Compile Include="Rdc\Wrapper\SigGenerator.cs" />
     <Compile Include="Rdc\Wrapper\SignatureInfo.cs" />
     <Compile Include="Rdc\Wrapper\SimpleSignatureRepository.cs" />
+    <Compile Include="Rdc\Wrapper\StorageSignatureRepository.cs" />
     <Compile Include="Rdc\Wrapper\Unmanaged\FindSimilarFileIndexResults.cs" />
     <Compile Include="Rdc\Wrapper\Unmanaged\FindSimilarResults.cs" />
     <Compile Include="Rdc\Wrapper\Unmanaged\GeneratorParametersType.cs" />

@@ -19,6 +19,11 @@ namespace RavenFS.Rdc.Wrapper
 			Name = name;
 		}
 
+        public SignatureInfo(int level, string fileName)
+        {
+            Name = fileName + "." + level + ".sig";
+        }
+
 		public string Name { get; set; }
 
 		public long Length { get; set; }
