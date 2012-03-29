@@ -28,6 +28,8 @@ namespace RavenFS.Studio.Models
 
 	    public RavenFileSystemClient Client { get; private set; }
 
+        public string LastSearch { get; set; }
+
 		private static string DetermineUri()
 		{
             if (DesignerProperties.IsInDesignTool)

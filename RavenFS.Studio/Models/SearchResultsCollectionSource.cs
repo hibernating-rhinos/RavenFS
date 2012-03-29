@@ -14,6 +14,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using RavenFS.Client;
 using RavenFS.Studio.Infrastructure;
+using RavenFS.Studio.Extensions;
 
 namespace RavenFS.Studio.Models
 {
@@ -113,10 +114,17 @@ namespace RavenFS.Studio.Models
 
         private void BeginGetCount()
         {
-            ApplicationModel.Current.Client.SearchAsync(searchPattern, null, pageSize: 1)
-                .ContinueWith(t => 
-                    UpdateCount(t.Result.FileCount, forceCollectionRefresh: true), 
-                TaskContinuationOptions.ExecuteSynchronously);
+            if (searchPattern.IsNullOrEmpty())
+            {
+                UpdateCount(0, forceCollectionRefresh: true);
+            }
+            else
+            {
+                ApplicationModel.Current.Client.SearchAsync(searchPattern, null, pageSize: 1)
+                    .ContinueWith(t =>
+                                  UpdateCount(t.Result.FileCount, forceCollectionRefresh: true),
+                                  TaskContinuationOptions.ExecuteSynchronously);
+            }
         }
 
         private void UpdateCount(int newCount, bool forceCollectionRefresh = false)
