@@ -36,14 +36,19 @@
                 Grid.ColumnSpan="2"
                 Style="{StaticResource Style_Border_Toolbar}">
             <toolkit:DockPanel Margin="0,6" LastChildFill="True">
-                <Button Content="Search" Command="{Binding Search}" toolkit:DockPanel.Dock="Right" Margin="5,0"/>
-                <TextBox Text="{Binding Query.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch" >
-                    <i:Interaction.Triggers>
-                        <b:StudioKeyTrigger Key="Enter">
-                            <i:InvokeCommandAction Command="{Binding Search}"/>
-                        </b:StudioKeyTrigger>
-                    </i:Interaction.Triggers>
-                </TextBox>
+                <Button Content="Search" Command="{Binding Search}" toolkit:DockPanel.Dock="Right" Margin="5,0,0,0"/>
+                <Grid>
+                    <TextBox Text="{Binding Query.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch" >
+                        <i:Interaction.Triggers>
+                            <b:StudioKeyTrigger Key="Enter">
+                                <i:InvokeCommandAction Command="{Binding Search}"/>
+                            </b:StudioKeyTrigger>
+                        </i:Interaction.Triggers>
+                    </TextBox>
+                    <Button Command="{Binding ClearSearch}" HorizontalAlignment="Right" Style="{StaticResource Style_Button_Chromeless}" ToolTipService.ToolTip="Clear" Margin="0,0,2,0">
+                        <Image Source="{StaticResource Image_Close}" Width="16" Stretch="Uniform"/>
+                    </Button>
+                </Grid>
             </toolkit:DockPanel>
         </Border>
 

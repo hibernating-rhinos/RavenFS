@@ -21,6 +21,7 @@ namespace RavenFS.Studio.Models
     {
         private readonly SearchResultsCollectionSource resultsSource;
         private ICommand searchCommand;
+        private ICommand clearSearchCommand;
 
         public SearchPageModel()
         {
@@ -29,7 +30,16 @@ namespace RavenFS.Studio.Models
             Query = new Observable<string>();
         }
 
-        public ICommand Search { get { return searchCommand ?? (searchCommand = new ActionCommand(() => resultsSource.SearchPattern = Query.Value)); } }
+        public ICommand Search { get { return searchCommand ?? (searchCommand = new ActionCommand(HandleSearch)); } }
+
+        public ICommand ClearSearch
+        {
+            get { return clearSearchCommand ?? (clearSearchCommand = new ActionCommand(() =>
+                                                                                           {
+                                                                                               Query.Value = "";
+                                                                                               HandleSearch();
+                                                                                           })); }
+        }
 
         public Observable<string> Query { get; private set; }
 
@@ -43,6 +53,11 @@ namespace RavenFS.Studio.Models
                                                         .ObserveOn(DispatcherScheduler.Instance)
                                                         .Where(_ => !Query.Value.IsNullOrEmpty())
                                                         .Subscribe(_ => resultsSource.Refresh());
+        }
+
+        private void HandleSearch()
+        {
+            resultsSource.SearchPattern = Query.Value;
         }
     }
 }
