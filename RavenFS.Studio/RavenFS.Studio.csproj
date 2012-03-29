@@ -108,6 +108,8 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Behaviors\ChangeDependencyPropertyAction.cs" />
+    <Compile Include="Behaviors\OpenPopupAction.cs" />
+    <Compile Include="Behaviors\ClosePopupAction.cs" />
     <Compile Include="Behaviors\DataGridRowDoubleClickCommandBehavior.cs" />
     <Compile Include="Behaviors\DataTriggerEvaluateOnLoad.cs" />
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
@@ -157,6 +159,23 @@
     <Compile Include="External\MultiBinding\MultiBinding.cs" />
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
     <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\FileNameEndsWithClauseBuilder.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\FileNameStartsWithClauseBuilder.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\SearchClauseBuilder.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModel.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModelView.xaml.cs">
+      <DependentUpon>SingleInputSearchClauseModelView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Features\Search\SearchClauseBuilderModel.cs" />
+    <Compile Include="Features\Search\SearchClauseBuilderView.xaml.cs">
+      <DependentUpon>SearchClauseBuilderView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Impl\PopupPlacement\Popup.cs" />
+    <Compile Include="Impl\PopupPlacement\PopupHorizontalAlignment.cs" />
+    <Compile Include="Impl\PopupPlacement\PopupOrientation.cs" />
+    <Compile Include="Impl\PopupPlacement\PopupOrientationCollection.cs" />
+    <Compile Include="Impl\PopupPlacement\PopupPlacement.cs" />
+    <Compile Include="Impl\PopupPlacement\PopupVerticalAlignment.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
     <Compile Include="Infrastructure\CompositeVirtualCollectionSource.cs" />
     <Compile Include="Infrastructure\IObservable.cs" />
@@ -247,6 +266,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModelView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Features\Search\SearchClauseBuilderView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\Search.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -337,6 +364,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Impl\PopupPlacement\Credit.txt" />
     <Resource Include="Assets\Images\SearchSmall.png" />
     <Resource Include="Assets\Images\SearchTiny.png" />
     <Resource Include="Assets\Images\VirtualFolder.png" />
@@ -374,6 +402,7 @@
     <Resource Include="Assets\Images\Undo.png" />
     <Resource Include="Assets\Images\Warning.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

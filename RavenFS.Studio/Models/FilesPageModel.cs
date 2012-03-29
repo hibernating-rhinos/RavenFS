@@ -37,8 +37,6 @@ namespace RavenFS.Studio.Models
 	    private ICommand clearSearchCommand;
 	    private ICommand showSearchCommand;
         private FileSystemCollectionSource filesSource;
-
-	    public event EventHandler<UIMessageEventArgs> UIMessage;
         
 	    public ICommand RenameFile { get { return renameFileCommand ?? (renameFileCommand = new RenameFileCommand(SelectedFile)); } }
         public ICommand MoveFile { get { return moveFileCommand ?? (moveFileCommand = new MoveFileCommand(SelectedFile)); } }
@@ -159,11 +157,5 @@ namespace RavenFS.Studio.Models
             }
 	        return folder;
 	    }
-        
-        protected void OnUIMessage(UIMessageEventArgs e)
-        {
-            EventHandler<UIMessageEventArgs> handler = UIMessage;
-            if (handler != null) handler(this, e);
-        }
 	}
 }

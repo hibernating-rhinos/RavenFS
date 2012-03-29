@@ -1,18 +1,13 @@
 ﻿using System;
-using System.Net;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
+using System.Reflection;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
-using Microsoft.Expression.Interactivity.Core;
+using RavenFS.Studio.Features.Search;
+using RavenFS.Studio.Features.Search.ClauseBuilders;
 using RavenFS.Studio.Infrastructure;
-using ActionCommand = RavenFS.Studio.Infrastructure.ActionCommand;
 using RavenFS.Studio.Extensions;
 
 namespace RavenFS.Studio.Models
@@ -22,6 +17,7 @@ namespace RavenFS.Studio.Models
         private readonly SearchResultsCollectionSource resultsSource;
         private ICommand searchCommand;
         private ICommand clearSearchCommand;
+        private IList<SearchClauseBuilderModel> searchClauseBuilders;
 
         public SearchPageModel()
         {
@@ -45,6 +41,17 @@ namespace RavenFS.Studio.Models
 
         public VirtualCollection<FileSystemModel> Results { get; private set; }
 
+
+        public IList<SearchClauseBuilderModel> SearchClauseBuilders
+        {
+            get { return searchClauseBuilders; }
+            private set
+            {
+                searchClauseBuilders = value;
+                OnPropertyChanged("SearchClauseBuilders");
+            }
+        }
+
         protected override void OnViewLoaded()
         {
             Query.Value = ApplicationModel.Current.LastSearch;
@@ -56,6 +63,44 @@ namespace RavenFS.Studio.Models
                                                         .ObserveOn(DispatcherScheduler.Instance)
                                                         .Where(_ => !Query.Value.IsNullOrEmpty())
                                                         .Subscribe(_ => resultsSource.Refresh());
+
+            CreateSearchClauseBuilders();
+        }
+
+        private void CreateSearchClauseBuilders()
+        {
+            var searchClauseBuilderType = typeof (SearchClauseBuilder);
+            var builders = searchClauseBuilderType.Assembly
+                .GetTypes()
+                .Where(t => t.Namespace == searchClauseBuilderType.Namespace
+                            && searchClauseBuilderType.IsAssignableFrom(t)
+                            && !t.IsAbstract)
+                .Select(t => Activator.CreateInstance(t) as SearchClauseBuilder)
+                .ToList();
+
+            var models = builders.Select(b => new SearchClauseBuilderModel(b, HandleBuilderAddSearchClause)).ToList();
+
+            SearchClauseBuilders = models;
+        }
+
+        private void HandleBuilderAddSearchClause(string clause)
+        {
+            var query = Query.Value;
+
+            if (query.IsNullOrEmpty())
+            {
+                Query.Value = clause;
+            }
+            else if (query.Contains(" OR "))
+            {
+                Query.Value = query + " OR " + clause;
+            }
+            else
+            {
+                Query.Value = query + " AND " + clause;
+            }
+
+            HandleSearch();
         }
 
         private void HandleSearch()

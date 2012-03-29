@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Ink;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
-namespace RavenFS.Studio.Infrastructure
+namespace RavenFS.Studio.Features.Search
 {
-    public abstract class PageModel : Model
+    public partial class SearchClauseBuilderView : UserControl
     {
-        public IDictionary<string, string> QueryParameters { get; set; }
+        public SearchClauseBuilderView()
+        {
+            InitializeComponent();
+        }
     }
 }
