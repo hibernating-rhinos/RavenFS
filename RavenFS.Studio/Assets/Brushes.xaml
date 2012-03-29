@@ -32,8 +32,18 @@
         </ImageBrush.Transform>
     </ImageBrush>
 
+    <Color x:Key="Color_ControlBorder">#FFEAE7E4</Color>
+    <SolidColorBrush x:Key="Brush_ControlBorder" Color="{StaticResource Color_ControlBorder}"/>
+
+    <Color x:Key="Color_HeaderText">#FFA2183E</Color>
+    <SolidColorBrush x:Key="Brush_HeaderText" Color="{StaticResource Color_HeaderText}"/>
+    
 	<Color x:Key="Color_Contrast">#FF9A002B</Color>
 	<SolidColorBrush x:Key="Brush_ContrastColor" Color="{StaticResource Color_Contrast}"/>
+
+    <Color x:Key="Color_ItemSelected">#EFCDD7</Color>
+    <SolidColorBrush x:Key="Brush_ItemSelected" Color="{StaticResource Color_ItemSelected}"/>
+    
     <LinearGradientBrush x:Key="Brush_HeaderBackground"  EndPoint="0.5,1" StartPoint="0.5,0">
         <GradientStop Color="#C5F7F7F7" Offset="0.049"/>
         <GradientStop Color="#C1E8E8E8" Offset="0.74"/>

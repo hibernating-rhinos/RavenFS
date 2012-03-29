@@ -175,6 +175,10 @@ namespace RavenFS.Studio.Models
                         .ContinueOnUIThread(t => EditConfigurationValues(configuration, t.Result));
                 }
             }
+            else
+            {
+                ConfigurationSettings.Value = null;
+            }
         }
 
         private void EditConfigurationValues(ConfigurationModel currentConfiguration, NameValueCollection settings)

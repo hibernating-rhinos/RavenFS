@@ -68,31 +68,43 @@
             </toolkit:DockPanel>
         </Border>
 
-        <ListBox Grid.Row="2" Grid.Column="0" ItemsSource="{Binding AvailableConfigurations}"
-                 SelectedItem="{Binding SelectedConfiguration.Value, Mode=TwoWay}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock x:Name="TextBlock">
-                        <Run Text="{Binding Name}"/>
-                        <Run x:Name="NeedsSavingGlyph" Text=""/>
-                        <i:Interaction.Triggers>
-                            <b:DataTriggerEvaluateOnLoad Binding="{Binding IsModified}" Value="True" Comparison="Equal">
-                                <ei:ChangePropertyAction TargetName="TextBlock" PropertyName="FontWeight" Value="{z:Static Member=FontWeights.Bold}"/>
-                                <ei:ChangePropertyAction TargetName="NeedsSavingGlyph" PropertyName="Text" Value=" *"/>
-                            </b:DataTriggerEvaluateOnLoad>
-                            <b:DataTriggerEvaluateOnLoad Binding="{Binding IsModified}" Value="False" Comparison="Equal">
-                                <ei:ChangePropertyAction TargetName="TextBlock" PropertyName="FontWeight" Value="{z:Static Member=FontWeights.Normal}"/>
-                                <ei:ChangePropertyAction TargetName="NeedsSavingGlyph" PropertyName="Text" Value=""/>
-                            </b:DataTriggerEvaluateOnLoad>
-                        </i:Interaction.Triggers>
-                    </TextBlock>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <toolkit:DockPanel Grid.Row="2" Grid.Column="0">
+            <TextBlock Text="Configurations" Foreground="{StaticResource Brush_HeaderText}" Margin="5,4"
+                       toolkit:DockPanel.Dock="Top"/>
+            <ListBox ItemsSource="{Binding AvailableConfigurations}"
+                     SelectedItem="{Binding SelectedConfiguration.Value, Mode=TwoWay}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock x:Name="TextBlock">
+                            <Run Text="{Binding Name}"/>
+                            <Run x:Name="NeedsSavingGlyph" Text=""/>
+                            <i:Interaction.Triggers>
+                                <b:DataTriggerEvaluateOnLoad Binding="{Binding IsModified}" Value="True" Comparison="Equal">
+                                    <ei:ChangePropertyAction TargetName="TextBlock" PropertyName="FontWeight" Value="{z:Static Member=FontWeights.Bold}"/>
+                                    <ei:ChangePropertyAction TargetName="NeedsSavingGlyph" PropertyName="Text" Value=" *"/>
+                                </b:DataTriggerEvaluateOnLoad>
+                                <b:DataTriggerEvaluateOnLoad Binding="{Binding IsModified}" Value="False" Comparison="Equal">
+                                    <ei:ChangePropertyAction TargetName="TextBlock" PropertyName="FontWeight" Value="{z:Static Member=FontWeights.Normal}"/>
+                                    <ei:ChangePropertyAction TargetName="NeedsSavingGlyph" PropertyName="Text" Value=""/>
+                                </b:DataTriggerEvaluateOnLoad>
+                            </i:Interaction.Triggers>
+                        </TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </toolkit:DockPanel>
 
-      <sdk:DataGrid 
-                    Grid.Row="2"
-                    Grid.Column="1"
+        <Grid Grid.Row="2"
+              Grid.Column="1"
+              Margin="10,0,0,0">
+            <Border Background="White">
+                <RichTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="15">
+                    <Paragraph>
+                        Select a configuration to view and edit it, or <Hyperlink Command="{Binding AddNewConfiguration}">Add a New Configuration</Hyperlink>
+                    </Paragraph>
+                </RichTextBlock>
+            </Border>
+            <sdk:DataGrid 
                       x:Name="DataGrid"
                       ItemsSource="{Binding ConfigurationSettings.Value.EditableValues}" 
                       Margin="0" 
@@ -102,63 +114,67 @@
                       CanUserSortColumns="True"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Auto"
-                      FrozenColumnCount="1">
-            <i:Interaction.Triggers>
-                <b:StudioKeyTrigger Key="Delete" SourceObject="{Binding ElementName=DataGrid}">
-                    <i:InvokeCommandAction Command="{Binding ConfigurationSettings.Value.DeleteMetadataItemCommand}" CommandParameter="{Binding ElementName=DataGrid, Path=SelectedItem}"/>
-                </b:StudioKeyTrigger>
-            </i:Interaction.Triggers>
-            <i:Interaction.Behaviors>
-                <b:PreventEditingReadOnlyRows IsReadOnlyBinding="{Binding IsReadOnly}"/>
-            </i:Interaction.Behaviors>
-            <sdk:DataGrid.Columns>
-                <sdk:DataGridTemplateColumn Header="Key" Width="Auto" IsReadOnly="False">
-                    <sdk:DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <TextBlock Text="{Binding Key}" 
+                      FrozenColumnCount="1"
+                      Visibility="{Binding ConfigurationSettings.Value, Converter={StaticResource Converter_CollapsedWhenNull}}"
+                >
+                <i:Interaction.Triggers>
+                    <b:StudioKeyTrigger Key="Delete" SourceObject="{Binding ElementName=DataGrid}">
+                        <i:InvokeCommandAction Command="{Binding ConfigurationSettings.Value.DeleteMetadataItemCommand}" CommandParameter="{Binding ElementName=DataGrid, Path=SelectedItem}"/>
+                    </b:StudioKeyTrigger>
+                </i:Interaction.Triggers>
+                <i:Interaction.Behaviors>
+                    <b:PreventEditingReadOnlyRows IsReadOnlyBinding="{Binding IsReadOnly}"/>
+                </i:Interaction.Behaviors>
+                <sdk:DataGrid.Columns>
+                    <sdk:DataGridTemplateColumn Header="Key" Width="Auto" IsReadOnly="False">
+                        <sdk:DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBlock Text="{Binding Key}" 
                                            Visibility="{Binding Key, Converter={StaticResource Converter_CollapsedWhenStringIsNullOrEmpty}}"
                                            b:FadeTrimming.IsEnabled="True" 
                                            b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
                                            VerticalAlignment="Center"
                                            Margin="4"/>
-                                <TextBlock Text="[New Key]" 
+                                    <TextBlock Text="[New Key]" 
                                            Visibility="{Binding Key, Converter={StaticResource Converter_VisibleWhenStringIsNullOrEmpty}}"
                                            b:FadeTrimming.IsEnabled="True" 
                                            ToolTipService.ToolTip="Double-click to edit"
                                            VerticalAlignment="Center"
                                            Foreground="Gray"
                                            Margin="4"/>
-                            </Grid>
-                        </DataTemplate>
-                    </sdk:DataGridTemplateColumn.CellTemplate>
-                    <sdk:DataGridTemplateColumn.CellEditingTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <TextBox Text="{Binding Key, Mode=TwoWay}"/>
-                            </Grid>
-                        </DataTemplate>
-                    </sdk:DataGridTemplateColumn.CellEditingTemplate>
-                </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="Value" Width="Auto" IsReadOnly="False">
-                    <sdk:DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Value}" 
+                                </Grid>
+                            </DataTemplate>
+                        </sdk:DataGridTemplateColumn.CellTemplate>
+                        <sdk:DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBox Text="{Binding Key, Mode=TwoWay}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </sdk:DataGridTemplateColumn.CellEditingTemplate>
+                    </sdk:DataGridTemplateColumn>
+                    <sdk:DataGridTemplateColumn Header="Value" Width="Auto" IsReadOnly="False">
+                        <sdk:DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Value}" 
                                        b:FadeTrimming.IsEnabled="True" 
                                        b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
                                        VerticalAlignment="Center"
                                        Margin="4"/>
-                        </DataTemplate>
-                    </sdk:DataGridTemplateColumn.CellTemplate>
-                    <sdk:DataGridTemplateColumn.CellEditingTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <TextBox Text="{Binding Value, Mode=TwoWay}"/>
-                            </Grid>
-                        </DataTemplate>
-                    </sdk:DataGridTemplateColumn.CellEditingTemplate>
-                </sdk:DataGridTemplateColumn>
-            </sdk:DataGrid.Columns>
-        </sdk:DataGrid>
+                            </DataTemplate>
+                        </sdk:DataGridTemplateColumn.CellTemplate>
+                        <sdk:DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <TextBox Text="{Binding Value, Mode=TwoWay}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </sdk:DataGridTemplateColumn.CellEditingTemplate>
+                    </sdk:DataGridTemplateColumn>
+                </sdk:DataGrid.Columns>
+            </sdk:DataGrid>
+        </Grid>
+      
     </Grid>
 </Infrastructure:View>

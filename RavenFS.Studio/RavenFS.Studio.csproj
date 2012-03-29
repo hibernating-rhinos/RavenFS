@@ -139,6 +139,7 @@
     <Compile Include="Commands\VirtualItemCommand.cs" />
     <Compile Include="Converters\AsyncOperationStatusConverter.cs" />
     <Compile Include="Commands\CopyExceptionToClipboardCommand.cs" />
+    <Compile Include="Converters\NullConverter.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
     <Compile Include="Converters\BooleanConverter.cs" />

@@ -13,15 +13,15 @@ using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Converters
 {
-    public class NullConverter : IValueConverter
+    public class StringIsNullOrEmptyConverter : IValueConverter
     {
-        public object ValueWhenNull { get; set; }
+        public object ValueWhenTrue { get; set; }
 
-        public object ValueWhenNotNull { get; set; }
+        public object ValueWhenFalse { get; set; }
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value == null ? ValueWhenNull : ValueWhenNotNull;
+            return string.IsNullOrEmpty(value as string) ? ValueWhenTrue : ValueWhenFalse;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
