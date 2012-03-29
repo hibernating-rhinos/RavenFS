@@ -109,6 +109,7 @@
     </Compile>
     <Compile Include="Behaviors\ChangeDependencyPropertyAction.cs" />
     <Compile Include="Behaviors\DataGridRowDoubleClickCommandBehavior.cs" />
+    <Compile Include="Behaviors\DataTriggerEvaluateOnLoad.cs" />
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
     <Compile Include="Behaviors\ExecuteCommandOnFileDrop.cs" />
     <Compile Include="Behaviors\FadeTrimming.cs" />

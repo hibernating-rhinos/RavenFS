@@ -220,7 +220,7 @@ namespace RavenFS.Studio.Models
                     .Concat(configurations.Result)
                     .Distinct()
                     .OrderBy(x => x)
-                    .Select(n => new ConfigurationModel(n)),
+                    .Select(n => new ConfigurationModel(n) { IsModified = ApplicationModel.Current.ModifiedConfigurations.ContainsKey(n) }),
                     m => m.Name.ToLowerInvariant());
 
 

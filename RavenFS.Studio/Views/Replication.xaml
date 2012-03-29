@@ -76,14 +76,14 @@
                         <Run Text="{Binding Name}"/>
                         <Run x:Name="NeedsSavingGlyph" Text=""/>
                         <i:Interaction.Triggers>
-                            <ei:DataTrigger Binding="{Binding IsModified}" Value="True" Comparison="Equal">
+                            <b:DataTriggerEvaluateOnLoad Binding="{Binding IsModified}" Value="True" Comparison="Equal">
                                 <ei:ChangePropertyAction TargetName="TextBlock" PropertyName="FontWeight" Value="{z:Static Member=FontWeights.Bold}"/>
                                 <ei:ChangePropertyAction TargetName="NeedsSavingGlyph" PropertyName="Text" Value=" *"/>
-                            </ei:DataTrigger>
-                            <ei:DataTrigger Binding="{Binding IsModified}" Value="False" Comparison="Equal">
+                            </b:DataTriggerEvaluateOnLoad>
+                            <b:DataTriggerEvaluateOnLoad Binding="{Binding IsModified}" Value="False" Comparison="Equal">
                                 <ei:ChangePropertyAction TargetName="TextBlock" PropertyName="FontWeight" Value="{z:Static Member=FontWeights.Normal}"/>
                                 <ei:ChangePropertyAction TargetName="NeedsSavingGlyph" PropertyName="Text" Value=""/>
-                            </ei:DataTrigger>
+                            </b:DataTriggerEvaluateOnLoad>
                         </i:Interaction.Triggers>
                     </TextBlock>
                 </DataTemplate>
