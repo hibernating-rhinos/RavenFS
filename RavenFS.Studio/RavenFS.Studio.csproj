@@ -119,6 +119,7 @@
     <Compile Include="Behaviors\StudioKeyTrigger.cs" />
     <Compile Include="Behaviors\UIMessageEventArgs.cs" />
     <Compile Include="Behaviors\UIMessageTrigger.cs" />
+    <Compile Include="Commands\ActionObservableDependantCommand.cs" />
     <Compile Include="Commands\AddFolderCommand.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
     <Compile Include="Commands\MoveFileCommand.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="Commands\NavigateToFileSystemModelCommand.cs" />
     <Compile Include="Commands\NavigateToNextPageCommand.cs" />
     <Compile Include="Commands\NavigateToPrevPageCommand.cs" />
+    <Compile Include="Commands\ObservableDependantCommand.cs" />
     <Compile Include="Commands\RenameFileCommand.cs" />
     <Compile Include="Commands\ShowOperationsPaneCommand.cs" />
     <Compile Include="Commands\UploadCommand.cs" />

@@ -17,6 +17,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using RavenFS.Client;
 using RavenFS.Extensions;
+using RavenFS.Studio.Commands;
 using RavenFS.Studio.Extensions;
 using RavenFS.Studio.Infrastructure;
 using RavenFS.Studio.Infrastructure.Input;
@@ -35,9 +36,40 @@ namespace RavenFS.Studio.Models
         private ICommand discardChanges;
 
         public ICommand AddNewConfiguration { get { return addNewConfiguration ?? new ActionCommand(HandleAddNewConfiguration);  } }
-        public ICommand SaveConfiguration { get { return saveConfiguration ?? new ActionCommand(HandleSaveConfiguration);  } }
-        public ICommand DeleteConfiguration { get { return deleteConfiguration ?? new ActionCommand(HandleDeleteConfiguration);  } }
-        public ICommand DiscardChanges { get { return discardChanges ?? new ActionCommand(HandleDiscardChanges); } }
+
+        public ICommand SaveConfiguration
+        {
+            get
+            {
+                return saveConfiguration
+                       ??
+                       new ActionObservableDependantCommand<ConfigurationModel>(SelectedConfiguration,
+                                                                                HandleSaveConfiguration,
+                                                                                configuration => configuration != null && configuration.IsModified);
+            }
+        }
+
+        public ICommand DeleteConfiguration
+        {
+            get
+            {
+                return deleteConfiguration ??
+                       new ActionObservableDependantCommand<ConfigurationModel>(SelectedConfiguration,
+                                                                                HandleDeleteConfiguration,
+                                                                                configuration => configuration != null);
+            }
+        }
+
+        public ICommand DiscardChanges
+        {
+            get
+            {
+                return discardChanges
+                       ?? new ActionObservableDependantCommand<ConfigurationModel>(SelectedConfiguration,
+                                                                                   HandleDiscardChanges,
+                                                                                   configuration => configuration != null && configuration.IsModified);
+            }
+        }
 
         public ReplicationPageModel()
         {
@@ -49,15 +81,8 @@ namespace RavenFS.Studio.Models
             ConfigurationSettings = new Observable<NameValueCollectionEditorModel>();
         }
 
-        private void HandleDiscardChanges()
+        private void HandleDiscardChanges(ConfigurationModel configuration)
         {
-            var configuration = SelectedConfiguration.Value;
-
-            if (configuration == null)
-            {
-                return;
-            }
-
             AskUser.ConfirmationAsync(
                 "Discard Changes",
                 string.Format("Are you sure you want to discard the changes you have made to configuration '{0}'",configuration.Name))
@@ -86,16 +111,8 @@ namespace RavenFS.Studio.Models
                                         });
         }
 
-        private void HandleSaveConfiguration()
+        private void HandleSaveConfiguration(ConfigurationModel configuration)
         {
-            var configuration = SelectedConfiguration.Value;
-
-            if (configuration == null
-                || !configuration.IsModified)
-            {
-                return;
-            }
-
             ApplicationModel.Current.AsyncOperations.Do(
                 () =>
                 SaveConfigurationAsync(configuration,
@@ -103,25 +120,18 @@ namespace RavenFS.Studio.Models
                 string.Format("Saving configuration '{0}'", configuration));
         }
 
-        private void HandleDeleteConfiguration()
+        private void HandleDeleteConfiguration(ConfigurationModel configuration)
         {
-            var currentConfiguration = SelectedConfiguration.Value;
-
-            if (currentConfiguration == null)
-            {
-                return;
-            }
-
             AskUser.ConfirmationAsync(
                 "Delete Configuration",
-                string.Format("Are you sure you want to delete configuration '{0}'?", currentConfiguration.Name))
+                string.Format("Are you sure you want to delete configuration '{0}'?", configuration.Name))
                 .ContinueWhenTrueInTheUIThread(
                     () =>
                         {
-                            AvailableConfigurations.Remove(currentConfiguration);
+                            AvailableConfigurations.Remove(configuration);
                             ApplicationModel.Current.AsyncOperations.Do(
-                                () => DeleteConfigurationAsync(currentConfiguration),
-                                string.Format("Deleting configuration '{0}'", currentConfiguration));
+                                () => DeleteConfigurationAsync(configuration),
+                                string.Format("Deleting configuration '{0}'", configuration));
                         });
         }
 
