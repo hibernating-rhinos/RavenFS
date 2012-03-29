@@ -198,6 +198,7 @@
     <Compile Include="Models\AsyncOperationStatus.cs" />
     <Compile Include="Models\AsyncOperationsViewModel.cs" />
     <Compile Include="Models\ConfigurationModel.cs" />
+    <Compile Include="Models\SearchResultsCollectionSource.cs" />
     <Compile Include="Models\NameValueCollectionEditorModel.cs" />
     <Compile Include="Models\DirectoryModel.cs" />
     <Compile Include="Models\EditableKeyValue.cs" />
@@ -213,9 +214,13 @@
     <Compile Include="Models\FileSystemModel.cs" />
     <Compile Include="Models\FoldersCollectionSource.cs" />
     <Compile Include="Models\ReplicationPageModel.cs" />
+    <Compile Include="Models\SearchPageModel.cs" />
     <Compile Include="Models\VirtualFoldersManager.cs" />
     <Compile Include="Views\AsyncOperationsView.xaml.cs">
       <DependentUpon>AsyncOperationsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Search.xaml.cs">
+      <DependentUpon>Search.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ErrorWindow.xaml.cs">
       <DependentUpon>ErrorWindow.xaml</DependentUpon>
@@ -242,6 +247,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Views\Search.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Views\Replication.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

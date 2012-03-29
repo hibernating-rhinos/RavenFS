@@ -1,0 +1,121 @@
+﻿<Infrastructure:View x:Class="RavenFS.Studio.Views.Search" 
+           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+           xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+           mc:Ignorable="d"
+           xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
+            xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
+            xmlns:Models="clr-namespace:RavenFS.Studio.Models"
+                 xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
+                 xmlns:b="clr-namespace:RavenFS.Studio.Behaviors"
+                 xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+                 xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
+                     xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
+                    xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
+            Title="Search - RavenFS"
+            Style="{StaticResource Style_Page}"
+            Infrastructure:ModelResolver.AttachModel="SearchPageModel" d:DataContext="{d:DesignInstance Models:SearchPageModel}" d:DesignHeight="154" d:DesignWidth="907">
+    <Grid Margin="{StaticResource Margin_ContentPage}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Style="{StaticResource Style_Border_Header}"
+                Grid.ColumnSpan="2">
+            <toolkit:DockPanel Margin="4" LastChildFill="False">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Search" Style="{StaticResource Style_TextBlock_Breadcrumb}"/>
+                </StackPanel>
+            </toolkit:DockPanel>
+        </Border>
+
+        <Border Grid.Row="1" 
+                Grid.ColumnSpan="2"
+                Style="{StaticResource Style_Border_Toolbar}">
+            <toolkit:DockPanel Margin="0,6" LastChildFill="True">
+                <Button Content="Search" Command="{Binding Search}" toolkit:DockPanel.Dock="Right" Margin="5,0"/>
+                <TextBox Text="{Binding Query.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch" >
+                    <i:Interaction.Triggers>
+                        <b:StudioKeyTrigger Key="Enter">
+                            <i:InvokeCommandAction Command="{Binding Search}"/>
+                        </b:StudioKeyTrigger>
+                    </i:Interaction.Triggers>
+                </TextBox>
+            </toolkit:DockPanel>
+        </Border>
+
+        <sdk:DataGrid x:Name="DataGrid" Grid.Row="2" 
+                      AutoGenerateColumns="False" 
+                      IsReadOnly="True" 
+                      ItemsSource="{Binding Results}"
+                      Margin="0,0,0,10"
+                      SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}">
+            <i:Interaction.Behaviors>
+                <b:DataGridRowDoubleClickCommandBehavior Command="{Binding Navigate}"/>
+            </i:Interaction.Behaviors>
+            <i:Interaction.Triggers>
+                <b:StudioKeyTrigger Key="Delete">
+                    <i:InvokeCommandAction Command="{Binding Delete}"/>
+                </b:StudioKeyTrigger>
+            </i:Interaction.Triggers>
+            <sdk:DataGrid.Columns>
+                <sdk:DataGridTemplateColumn Header="Name" Width="*" CanUserSort="True" SortMemberPath="Name">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <toolkit:DockPanel  Margin="4" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+                                <Image Width="16" 
+                                       toolkit:DockPanel.Dock="Left"
+                                       Source="{Binding Item, Converter={StaticResource Converter_FileSystemModelToIcon}}" Stretch="None"
+                                       ToolTipService.ToolTip="{Binding Item, Converter={StaticResource Converter_VirtualFolderToolTip}}"/>
+                                <TextBlock Text="{Binding Item.Name, FallbackValue=...}"
+                                           HorizontalAlignment="Left"
+                                           b:FadeTrimming.IsEnabled="True" 
+                                           b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                           Margin="4, 0,0,0"/>
+                            </toolkit:DockPanel>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Header="Folder" Width="*" CanUserSort="False" >
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <toolkit:DockPanel  Margin="4" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+                                <TextBlock Text="{Binding Item.Folder}"
+                                           HorizontalAlignment="Left"
+                                           b:FadeTrimming.IsEnabled="True" 
+                                           b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                           Margin="4, 0,0,0"/>
+                            </toolkit:DockPanel>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Header="Size" Width="100" CanUserSort="True" SortMemberPath="Size">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Item.FormattedTotalSize}" 
+                                       b:FadeTrimming.IsEnabled="True" 
+                                       b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Header="Last Modified" Width="150" CanUserSort="True" SortMemberPath="LastModified">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Item.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDate}}" 
+                                       b:FadeTrimming.IsEnabled="True" 
+                                       b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+      
+    </Grid>
+</Infrastructure:View>
