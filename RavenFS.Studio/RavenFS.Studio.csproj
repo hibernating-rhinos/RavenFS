@@ -108,7 +108,10 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Behaviors\ChangeDependencyPropertyAction.cs" />
+    <Compile Include="Behaviors\OpenPopupAction.cs" />
+    <Compile Include="Behaviors\ClosePopupAction.cs" />
     <Compile Include="Behaviors\DataGridRowDoubleClickCommandBehavior.cs" />
+    <Compile Include="Behaviors\DataTriggerEvaluateOnLoad.cs" />
     <Compile Include="Behaviors\DoubleClickBehavior.cs" />
     <Compile Include="Behaviors\ExecuteCommandOnFileDrop.cs" />
     <Compile Include="Behaviors\FadeTrimming.cs" />
@@ -119,13 +122,16 @@
     <Compile Include="Behaviors\StudioKeyTrigger.cs" />
     <Compile Include="Behaviors\UIMessageEventArgs.cs" />
     <Compile Include="Behaviors\UIMessageTrigger.cs" />
+    <Compile Include="Commands\ActionObservableDependantCommand.cs" />
     <Compile Include="Commands\AddFolderCommand.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
+    <Compile Include="Commands\MoveFileCommand.cs" />
     <Compile Include="Commands\HideOperationsPaneCommand.cs" />
     <Compile Include="Commands\NavigateToCommand.cs" />
     <Compile Include="Commands\NavigateToFileSystemModelCommand.cs" />
     <Compile Include="Commands\NavigateToNextPageCommand.cs" />
     <Compile Include="Commands\NavigateToPrevPageCommand.cs" />
+    <Compile Include="Commands\ObservableDependantCommand.cs" />
     <Compile Include="Commands\RenameFileCommand.cs" />
     <Compile Include="Commands\ShowOperationsPaneCommand.cs" />
     <Compile Include="Commands\UploadCommand.cs" />
@@ -135,6 +141,7 @@
     <Compile Include="Commands\VirtualItemCommand.cs" />
     <Compile Include="Converters\AsyncOperationStatusConverter.cs" />
     <Compile Include="Commands\CopyExceptionToClipboardCommand.cs" />
+    <Compile Include="Converters\NullConverter.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
     <Compile Include="Converters\BooleanConverter.cs" />
@@ -147,10 +154,28 @@
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Extensions\IListExtensions.cs" />
     <Compile Include="Extensions\IObservableExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="External\MultiBinding\IMultiValueConverter.cs" />
     <Compile Include="External\MultiBinding\MultiBinding.cs" />
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
     <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\FileNameEndsWithClauseBuilder.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\FileNameStartsWithClauseBuilder.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\SearchClauseBuilder.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModel.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModelView.xaml.cs">
+      <DependentUpon>SingleInputSearchClauseModelView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Features\Search\SearchClauseBuilderModel.cs" />
+    <Compile Include="Features\Search\SearchClauseBuilderView.xaml.cs">
+      <DependentUpon>SearchClauseBuilderView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Impl\PopupPlacement\Popup.cs" />
+    <Compile Include="Impl\PopupPlacement\PopupHorizontalAlignment.cs" />
+    <Compile Include="Impl\PopupPlacement\PopupOrientation.cs" />
+    <Compile Include="Impl\PopupPlacement\PopupOrientationCollection.cs" />
+    <Compile Include="Impl\PopupPlacement\PopupPlacement.cs" />
+    <Compile Include="Impl\PopupPlacement\PopupVerticalAlignment.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
     <Compile Include="Infrastructure\CompositeVirtualCollectionSource.cs" />
     <Compile Include="Infrastructure\IObservable.cs" />
@@ -191,6 +216,9 @@
     <Compile Include="Models\AsyncOperationsModel.cs" />
     <Compile Include="Models\AsyncOperationStatus.cs" />
     <Compile Include="Models\AsyncOperationsViewModel.cs" />
+    <Compile Include="Models\ConfigurationModel.cs" />
+    <Compile Include="Models\SearchResultsCollectionSource.cs" />
+    <Compile Include="Models\NameValueCollectionEditorModel.cs" />
     <Compile Include="Models\DirectoryModel.cs" />
     <Compile Include="Models\EditableKeyValue.cs" />
     <Compile Include="Models\EditableKeyValueCollection.cs" />
@@ -204,9 +232,14 @@
     <Compile Include="Models\FileSystemCollectionSource.cs" />
     <Compile Include="Models\FileSystemModel.cs" />
     <Compile Include="Models\FoldersCollectionSource.cs" />
+    <Compile Include="Models\ReplicationPageModel.cs" />
+    <Compile Include="Models\SearchPageModel.cs" />
     <Compile Include="Models\VirtualFoldersManager.cs" />
     <Compile Include="Views\AsyncOperationsView.xaml.cs">
       <DependentUpon>AsyncOperationsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Search.xaml.cs">
+      <DependentUpon>Search.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ErrorWindow.xaml.cs">
       <DependentUpon>ErrorWindow.xaml</DependentUpon>
@@ -224,12 +257,31 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Views\Replication.xaml.cs">
+      <DependentUpon>Replication.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModelView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Features\Search\SearchClauseBuilderView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Search.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Replication.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Resource Include="Assets\Styles.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -312,6 +364,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Impl\PopupPlacement\Credit.txt" />
     <Resource Include="Assets\Images\SearchSmall.png" />
     <Resource Include="Assets\Images\SearchTiny.png" />
     <Resource Include="Assets\Images\VirtualFolder.png" />
@@ -349,6 +402,7 @@
     <Resource Include="Assets\Images\Undo.png" />
     <Resource Include="Assets\Images\Warning.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

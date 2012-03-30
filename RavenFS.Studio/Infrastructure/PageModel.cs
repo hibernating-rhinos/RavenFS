@@ -12,7 +12,7 @@ using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Infrastructure
 {
-    public class PageModel : Model
+    public abstract class PageModel : Model
     {
         public IDictionary<string, string> QueryParameters { get; set; }
     }

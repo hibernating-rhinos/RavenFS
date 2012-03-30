@@ -60,6 +60,9 @@
     <Reference Include="System.Reactive">
       <HintPath>..\packages\Rx-Main.1.0.11226\lib\SL5\System.Reactive.dll</HintPath>
     </Reference>
+    <Reference Include="System.Threading.Tasks.SL5, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.3.0\lib\sl50\System.Threading.Tasks.SL5.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows" />
     <Reference Include="system" />
     <Reference Include="System.Core" />
@@ -68,6 +71,9 @@
   <ItemGroup>
     <Compile Include="..\RavenFS.Client\AsyncExtensions.cs">
       <Link>AsyncExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\ConfigChange.cs">
+      <Link>ConfigChange.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\ExceptionExtensions.cs">
       <Link>ExceptionExtensions.cs</Link>
@@ -86,6 +92,12 @@
     </Compile>
     <Compile Include="..\RavenFS.Client\MultiPartParser.cs">
       <Link>MultiPartParser.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Notification.cs">
+      <Link>Notification.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\NotificationJSonUtilities.cs">
+      <Link>NotificationJSonUtilities.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\NotificationsManager.cs">
       <Link>NotificationsManager.cs</Link>

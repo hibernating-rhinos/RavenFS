@@ -64,20 +64,22 @@ namespace RavenFS.Tests
         }
 
         [Fact]
-        public void NotificationReceivedWhenFileRenamed()
+        public void NotificationsReceivedWhenFileRenamed()
         {
             var client = NewClient();
             client.UploadAsync("abc.txt", new MemoryStream()).Wait();
             client.Notifications.Connect().Wait();
 
-            var notificationTask = client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+            var notificationTask = client.Notifications.FolderChanges("/").Buffer(TimeSpan.FromSeconds(2)).Take(1).ToTask();
 
             client.RenameAsync("abc.txt", "newName.txt").Wait();
 
-            var fileChange = notificationTask.Result;
+            var fileChanges = notificationTask.Result;
 
-            Assert.Equal("newName.txt", fileChange.File);
-            Assert.Equal(FileChangeAction.Rename, fileChange.Action);
+            Assert.Equal("abc.txt", fileChanges[0].File);
+            Assert.Equal(FileChangeAction.Renaming, fileChanges[0].Action);
+            Assert.Equal("newName.txt", fileChanges[1].File);
+            Assert.Equal(FileChangeAction.Renamed, fileChanges[1].Action);
         }
 
         [Fact]
@@ -93,6 +95,38 @@ namespace RavenFS.Tests
             var notifications = notificationTask.Result;
 
             Assert.Equal(0, notifications.Count);
+        }
+
+        [Fact]
+        public void NotificationsIsReceivedWhenConfigIsUpdated()
+        {
+            var client = NewClient();
+            client.Notifications.Connect().Wait();
+
+            var notificationTask = client.Notifications.ConfigChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+
+            client.Config.SetConfig("Test", new NameValueCollection()).Wait();
+
+            var configChange = notificationTask.Result;
+
+            Assert.Equal("Test", configChange.Name);
+            Assert.Equal(ConfigChangeAction.Set, configChange.Action);
+        }
+
+        [Fact]
+        public void NotificationsIsReceivedWhenConfigIsDeleted()
+        {
+            var client = NewClient();
+            client.Notifications.Connect().Wait();
+
+            var notificationTask = client.Notifications.ConfigChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+
+            client.Config.DeleteConfig("Test").Wait();
+
+            var configChange = notificationTask.Result;
+
+            Assert.Equal("Test", configChange.Name);
+            Assert.Equal(ConfigChangeAction.Delete, configChange.Action);
         }
     }
 }

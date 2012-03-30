@@ -2,11 +2,14 @@
 using System.Reactive;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
+using RavenFS.Studio.Behaviors;
 
 namespace RavenFS.Studio.Infrastructure
 {
-	public class Model : NotifyPropertyChangedBase
+	public abstract class Model : NotifyPropertyChangedBase
 	{
+        public event EventHandler<UIMessageEventArgs> UIMessage;
+
 		private Task currentTask;
 		private DateTime lastRefresh;
 		protected TimeSpan RefreshRate { get; set; }
@@ -107,6 +110,12 @@ namespace RavenFS.Studio.Infrastructure
 	    protected IObservable<Unit> Unloaded
 	    {
 	        get { return unloaded ?? (unloaded = new Subject<Unit>()); }
-	    } 
+	    }
+
+	    protected void OnUIMessage(UIMessageEventArgs e)
+	    {
+	        EventHandler<UIMessageEventArgs> handler = UIMessage;
+	        if (handler != null) handler(this, e);
+	    }
 	}
 }

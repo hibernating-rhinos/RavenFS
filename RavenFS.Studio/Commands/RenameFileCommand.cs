@@ -13,6 +13,7 @@ using RavenFS.Studio.Infrastructure;
 using RavenFS.Studio.Infrastructure.Input;
 using RavenFS.Studio.Models;
 using RavenFS.Studio.Views;
+using RavenFS.Studio.Extensions;
 
 namespace RavenFS.Studio.Commands
 {
@@ -46,7 +47,7 @@ namespace RavenFS.Studio.Commands
                             return;
                         }
 
-                        var newFullPath = folder + "/" + newName;
+                        var newFullPath = folder + (folder.IsNullOrEmpty() ? "" : "/") + newName;
                         ApplicationModel.Current.AsyncOperations.Do(
                             () => ApplicationModel.Current.Client.RenameAsync(item.FullPath, newFullPath), 
                             string.Format("Renaming '{0}' to '{1}'", fileName, newName));

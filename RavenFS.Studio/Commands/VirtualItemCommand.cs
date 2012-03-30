@@ -13,45 +13,18 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Commands
 {
-    public class VirtualItemCommand<T> : Command where T : class
+    public class VirtualItemCommand<T> : ObservableDependantCommand<VirtualItem<T>> where T : class
     {
-        private readonly Observable<VirtualItem<T>> observableItem;
-        private VirtualItem<T> currentItem;
- 
-        public VirtualItemCommand(Observable<VirtualItem<T>> observableItem)
+        public VirtualItemCommand(Observable<VirtualItem<T>> observableItem) : base(observableItem)
         {
-            this.observableItem = observableItem;
-            observableItem.PropertyChanged += HandleObservableItemChanged;
-        }
-
-        private void HandleObservableItemChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (currentItem != null)
-            {
-                currentItem.PropertyChanged -= HandleVirtualItemChanged;
-            }
-
-            currentItem = observableItem.Value;
-
-            if (currentItem != null)
-            {
-                currentItem.PropertyChanged += HandleVirtualItemChanged;
-            }
-
-            RaiseCanExecuteChanged();
-        }
-
-        private void HandleVirtualItemChanged(object sender, PropertyChangedEventArgs e)
-        {
-            RaiseCanExecuteChanged();
         }
 
         public sealed override bool CanExecute(object parameter)
         {
-            return observableItem.Value != null 
-                && observableItem.Value.IsRealized 
-                && !observableItem.Value.IsStale
-                && CanExecuteOverride(currentItem.Item);
+            return CurrentValue != null
+                && CurrentValue.IsRealized
+                && !CurrentValue.IsStale
+                && CanExecuteOverride(CurrentValue.Item);
         }
 
         protected virtual bool CanExecuteOverride(T item)
@@ -63,7 +36,7 @@ namespace RavenFS.Studio.Commands
         {
             if (CanExecute(null))
             {
-                ExecuteOverride(currentItem.Item);
+                ExecuteOverride(CurrentValue.Item);
             }
         }
 

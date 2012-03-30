@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="RavenFS.Studio.Features.Search.ClauseBuilders.SingleInputSearchClauseModelView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                xmlns:ClauseBuilders="clr-namespace:RavenFS.Studio.Features.Search.ClauseBuilders"
+             xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors" mc:Ignorable="d"
+    Width="200" Height="28" d:DataContext="{d:DesignInstance ClauseBuilders:SingleInputSearchClauseModel}">
+    
+    <toolkit:DockPanel x:Name="LayoutRoot">
+        <TextBlock Text="{Binding InputName}" toolkit:DockPanel.Dock="Left" VerticalAlignment="Center" FontWeight="Bold"/>
+        <TextBox Text="{Binding Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,0,0,0" VerticalAlignment="Center">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="Loaded">
+                    <Behaviors:FocusElementAction />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </TextBox>
+    </toolkit:DockPanel>
+</UserControl>

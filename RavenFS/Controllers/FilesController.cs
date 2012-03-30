@@ -108,7 +108,8 @@ namespace RavenFS.Controllers
 				});
 				Search.Delete(name);
 				Search.Index(rename, fileAndPages.Metadata);
-                Publisher.Publish(new FileChange { File = rename, Action = FileChangeAction.Rename });
+                Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Renaming });
+                Publisher.Publish(new FileChange { File = rename, Action = FileChangeAction.Renamed });
 			}
 			catch (FileNotFoundException)
 			{

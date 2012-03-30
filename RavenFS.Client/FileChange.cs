@@ -1,6 +1,6 @@
 namespace RavenFS.Client
 {
-    public class FileChange
+    public class FileChange : Notification
     {
         public string File { get; set; }
 
@@ -12,6 +12,13 @@ namespace RavenFS.Client
         Add,
         Delete,
         Update,
-        Rename,
+        /// <summary>
+        /// This action is raised for the original file name before a rename operation
+        /// </summary>
+        Renaming,
+        /// <summary>
+        /// This action is raised for the final file name after a rename operation
+        /// </summary>
+        Renamed
     }
 }

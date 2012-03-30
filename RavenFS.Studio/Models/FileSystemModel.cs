@@ -14,12 +14,12 @@ namespace RavenFS.Studio.Models
     public class FileSystemModel
     {
         private string fullPath;
-        private string name;
 
-        public string Name
+        public string Name { get; private set; }
+
+        public string Folder
         {
-            get { return name; }
-            private set { name = value; }
+            get; private set;
         }
 
         public string FullPath
@@ -28,7 +28,18 @@ namespace RavenFS.Studio.Models
             set
             {
                 fullPath = value;
-                name = fullPath.Substring(fullPath.LastIndexOf("/", StringComparison.InvariantCulture) + 1);
+                var lastSlash = fullPath.LastIndexOf("/", StringComparison.InvariantCulture);
+
+                if (lastSlash > 0)
+                {
+                    Name = fullPath.Substring(lastSlash + 1);
+                    Folder = fullPath.Substring(0, lastSlash);
+                }
+                else
+                {
+                    Name = fullPath;
+                    Folder = "/";
+                }
             }
         }
     }
