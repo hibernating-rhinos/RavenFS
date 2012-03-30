@@ -88,13 +88,16 @@ namespace RavenFS.Rdc.Wrapper
                         accessor.AddSignature(fileName, level,
                                               stream =>
                                               {
-                                                  var cachedSigContent =
-                                                      _cacheRepository.GetContentForReading(item1.Name);
-                                                  cachedSigContent.CopyTo(stream);
+                                                  using (var cachedSigContent =
+                                                      _cacheRepository.GetContentForReading(item1.Name))
+                                                  {
+                                                      cachedSigContent.CopyTo(stream);
+                                                  }
                                               });
                         level++;
                     }
                 });
+            _cacheRepository.Clean(fileName);
         }
 
 
