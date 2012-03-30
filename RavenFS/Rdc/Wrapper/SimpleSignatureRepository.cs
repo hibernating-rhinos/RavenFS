@@ -10,9 +10,7 @@ namespace RavenFS.Rdc.Wrapper
 {
     public class SimpleSignatureRepository : ISignatureRepository
     {
-        private string _baseDirectory;
-        private IDictionary<string, IEnumerable<string>> _sigNamesCache = new Dictionary<string, IEnumerable<string>>();
-        private IDictionary<string, DateTime> _sigCreationTimes = new Dictionary<string, DateTime>();
+        private readonly string _baseDirectory;
 
         public SimpleSignatureRepository(string path)
         {
@@ -47,47 +45,33 @@ namespace RavenFS.Rdc.Wrapper
             return result;
         }
 
-        // TODO remove memory cache
         public void AssingToFileName(IEnumerable<SignatureInfo> signatureInfos)
         {
-            var fileNames = from item in signatureInfos
-                            group item by item.FileName
-                                into fileNameNamesGroup
-                                select fileNameNamesGroup.Key;
-            if (fileNames.Count() > 1)
-            {
-                throw new ArgumentException("All SignatureInfo should belong to the same file", "signatureInfos");
-            }
-            var fileName = fileNames.First();
-            _sigNamesCache[fileName] = signatureInfos.Select(item => item.Name).ToList();
-            _sigCreationTimes[fileName] = DateTime.Now;
+            // nothing to do
         }
 
         public IEnumerable<SignatureInfo> GetByFileName(string fileName)
         {
-            IEnumerable<string> result;
-            if (_sigNamesCache.TryGetValue(fileName, out result))
-            {
-                foreach (var item in result)
-                {
-                    yield return GetByName(item);
-                }
-            }
+            return from item in Directory.GetFiles(_baseDirectory, fileName + "*.sig")
+                   select SignatureInfo.Parse(item);
         }
 
         public DateTime? GetLastUpdate(string fileName)
         {
-            DateTime result;
-            if (_sigCreationTimes.TryGetValue(fileName, out result))
+            var preResult = from item in Directory.GetFiles(_baseDirectory, fileName + "*.sig")
+                            let lastWriteTime = new FileInfo(item).LastWriteTime
+                            orderby lastWriteTime descending
+                            select lastWriteTime;
+            if (preResult.Count() > 0)
             {
-                return result;
+                return preResult.First();
             }
             return null;
         }
 
         private string NameToPath(string name)
         {
-            return Path.GetFullPath(Path.Combine(_baseDirectory, name + ".sig"));
+            return Path.GetFullPath(Path.Combine(_baseDirectory, name));
         }
     }
 }

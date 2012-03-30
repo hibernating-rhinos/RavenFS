@@ -15,7 +15,8 @@ namespace RavenFS.Rdc.Wrapper
 
         public StorageSignatureRepository(TransactionalStorage storage)
         {
-            _cacheRepository = new SimpleSignatureRepository();
+            var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            _cacheRepository = new SimpleSignatureRepository(tempDirectory);
             _storage = storage;
         }
 

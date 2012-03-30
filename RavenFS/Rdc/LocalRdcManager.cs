@@ -30,7 +30,6 @@ namespace RavenFS.Rdc
             if (lastUpdate == null || lastUpdate < dataInfo.CreatedAt)
             {
                 signatureInfos = PrepareSignatures(dataInfo.Name);
-                //_signatureRepository.AssingToFileName(signatureInfos, dataInfo.Name);
             } 
             else
             {
