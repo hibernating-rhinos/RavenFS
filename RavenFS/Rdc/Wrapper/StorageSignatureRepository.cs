@@ -135,6 +135,7 @@ namespace RavenFS.Rdc.Wrapper
 
         public DateTime? GetLastUpdate(string fileName)
         {
+            // TODO API needed to get last SIG files generation
             return null;
         }
 
