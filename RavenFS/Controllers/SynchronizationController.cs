@@ -19,7 +19,7 @@ namespace RavenFS.Controllers
     {
         public Task<HttpResponseMessage<SynchronizationReport>> Get(string fileName, string sourceServerUrl)
         {
-            var remoteSignatureCache = new VolatileSignatureRepository(GetTemporaryDirectory());
+            var remoteSignatureCache = new VolatileSignatureRepository(TempDirectoryTools.Create());
 
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
             var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
@@ -49,13 +49,6 @@ namespace RavenFS.Controllers
                             }).Unwrap()
 							.ContinueWith( synchronizationTask => new HttpResponseMessage<SynchronizationReport>(synchronizationTask.Result));
                     }).Unwrap();
-        }
-
-        private static string GetTemporaryDirectory()
-        {
-            var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            Directory.CreateDirectory(tempDirectory);
-            return tempDirectory;
         }
 
         private Task<SynchronizationReport> Synchronize(ISignatureRepository remoteSignatureRepository, string sourceServerUrl, string fileName, SignatureManifest sourceSignatureManifest, SignatureManifest seedSignatureManifest, NameValueCollection sourceMetadata)

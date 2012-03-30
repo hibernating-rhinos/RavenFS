@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
+using RavenFS.Infrastructure;
 using RavenFS.Storage;
 
 namespace RavenFS.Rdc.Wrapper
@@ -15,7 +16,7 @@ namespace RavenFS.Rdc.Wrapper
 
         public StorageSignatureRepository(TransactionalStorage storage)
         {
-            var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            var tempDirectory = TempDirectoryTools.Create();
             _cacheRepository = new VolatileSignatureRepository(tempDirectory);
             _storage = storage;
         }

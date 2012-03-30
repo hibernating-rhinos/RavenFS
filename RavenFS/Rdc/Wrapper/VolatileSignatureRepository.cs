@@ -15,10 +15,7 @@ namespace RavenFS.Rdc.Wrapper
         public VolatileSignatureRepository(string path)
         {
         	_baseDirectory = path.ToFullPath();
-            if (!Directory.Exists(_baseDirectory))
-            {
-                Directory.CreateDirectory(_baseDirectory);
-            }
+            Directory.CreateDirectory(_baseDirectory);
         }
 
 		public VolatileSignatureRepository()
@@ -89,7 +86,7 @@ namespace RavenFS.Rdc.Wrapper
 
         public void Dispose()
         {
-            Directory.Delete(_baseDirectory);
+            Directory.Delete(_baseDirectory, true);
         }
     }
 }
