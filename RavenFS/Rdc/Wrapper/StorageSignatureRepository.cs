@@ -10,13 +10,13 @@ namespace RavenFS.Rdc.Wrapper
 {
     public class StorageSignatureRepository : ISignatureRepository
     {
-        private readonly SimpleSignatureRepository _cacheRepository;
+        private readonly VolatileSignatureRepository _cacheRepository;
         private readonly TransactionalStorage _storage;
 
         public StorageSignatureRepository(TransactionalStorage storage)
         {
             var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            _cacheRepository = new SimpleSignatureRepository(tempDirectory);
+            _cacheRepository = new VolatileSignatureRepository(tempDirectory);
             _storage = storage;
         }
 

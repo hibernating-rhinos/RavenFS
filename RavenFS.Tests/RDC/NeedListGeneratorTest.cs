@@ -13,7 +13,7 @@ namespace RavenFS.Rdc.Wrapper.Test
 {
     public class NeedListGeneratorTest
     {
-        private readonly ISignatureRepository _signatureRepository = new SimpleSignatureRepository();
+        private readonly ISignatureRepository _signatureRepository = new VolatileSignatureRepository();
 
     	private static RandomlyModifiedStream GetSeedStream()
     	{

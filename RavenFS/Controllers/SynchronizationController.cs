@@ -19,7 +19,7 @@ namespace RavenFS.Controllers
     {
         public Task<HttpResponseMessage<SynchronizationReport>> Get(string fileName, string sourceServerUrl)
         {
-            var remoteSignatureCache = new SimpleSignatureRepository(GetTemporaryDirectory());
+            var remoteSignatureCache = new VolatileSignatureRepository(GetTemporaryDirectory());
 
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
             var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);

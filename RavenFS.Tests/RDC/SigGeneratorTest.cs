@@ -7,7 +7,7 @@ namespace RavenFS.Rdc.Wrapper.Test
 {
     public class SigGeneratorTest
     {
-        private readonly ISignatureRepository _signatureRepository = new SimpleSignatureRepository();
+        private readonly ISignatureRepository _signatureRepository = new VolatileSignatureRepository();
 		Stream stream = new MemoryStream();
 		public SigGeneratorTest()
 		{

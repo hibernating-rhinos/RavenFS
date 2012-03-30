@@ -131,7 +131,6 @@ namespace RavenFS.Rdc.Wrapper
                 {
                     item.Dispose();
                 }
-                // TODO: consider using special stream type which would auto assign during disposition
             }
             result.Reverse();
             _signatureRepository.AssingToFileName(result);
