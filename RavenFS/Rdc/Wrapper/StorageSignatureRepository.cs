@@ -124,6 +124,11 @@ namespace RavenFS.Rdc.Wrapper
             return result;
         }
 
+        public void Clean(string fileName)
+        {
+            _storage.Batch(accessor => accessor.ClearSignatures(fileName));
+        }
+
         public DateTime? GetLastUpdate(string fileName)
         {
             return null;

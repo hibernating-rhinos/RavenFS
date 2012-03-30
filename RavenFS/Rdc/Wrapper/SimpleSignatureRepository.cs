@@ -52,13 +52,21 @@ namespace RavenFS.Rdc.Wrapper
 
         public IEnumerable<SignatureInfo> GetByFileName(string fileName)
         {
-            return from item in Directory.GetFiles(_baseDirectory, fileName + "*.sig")
+            return from item in GetSigFileNamesByFileName(fileName)
                    select SignatureInfo.Parse(item);
+        }
+
+        public void Clean(string fileName)
+        {
+            foreach (var item in GetSigFileNamesByFileName(fileName))
+            {
+                File.Delete(item);
+            }
         }
 
         public DateTime? GetLastUpdate(string fileName)
         {
-            var preResult = from item in Directory.GetFiles(_baseDirectory, fileName + "*.sig")
+            var preResult = from item in GetSigFileNamesByFileName(fileName)
                             let lastWriteTime = new FileInfo(item).LastWriteTime
                             orderby lastWriteTime descending
                             select lastWriteTime;
@@ -67,6 +75,11 @@ namespace RavenFS.Rdc.Wrapper
                 return preResult.First();
             }
             return null;
+        }
+
+        private IEnumerable<string> GetSigFileNamesByFileName(string fileName)
+        {
+            return Directory.GetFiles(_baseDirectory, fileName + "*.sig");
         }
 
         private string NameToPath(string name)
