@@ -133,7 +133,7 @@ namespace RavenFS.Rdc.Wrapper
                 }
             }
             result.Reverse();
-            _signatureRepository.AssingToFileName(result);
+            _signatureRepository.Flush(result);
             return result;
         }
 

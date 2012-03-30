@@ -11,7 +11,7 @@ namespace RavenFS.Rdc.Wrapper
 {
     public class StorageSignatureRepository : ISignatureRepository
     {
-        private readonly VolatileSignatureRepository _cacheRepository;
+        private readonly ISignatureRepository _cacheRepository;
         private readonly TransactionalStorage _storage;
 
         public StorageSignatureRepository(TransactionalStorage storage)
@@ -66,7 +66,7 @@ namespace RavenFS.Rdc.Wrapper
         }
 
 
-        public void AssingToFileName(IEnumerable<SignatureInfo> signatureInfos)
+        public void Flush(IEnumerable<SignatureInfo> signatureInfos)
         {
             var fileNames = from item in signatureInfos
                             group item by item.FileName

@@ -8,13 +8,9 @@ namespace RavenFS.Rdc.Wrapper
     {
         Stream GetContentForReading(string sigName);        
         Stream CreateContent(string sigName);       
-        SignatureInfo GetByName(string sigName);
-        // TODO: this method has bad name
-        void AssingToFileName(IEnumerable<SignatureInfo> signatureInfos);
+        void Flush(IEnumerable<SignatureInfo> signatureInfos);
         IEnumerable<SignatureInfo> GetByFileName(string fileName);
-
         void Clean(string fileName);
-
         DateTime? GetLastUpdate(string fileName);
     }
 }

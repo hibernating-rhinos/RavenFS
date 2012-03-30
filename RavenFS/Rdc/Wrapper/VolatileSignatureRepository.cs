@@ -42,7 +42,7 @@ namespace RavenFS.Rdc.Wrapper
             return result;
         }
 
-        public void AssingToFileName(IEnumerable<SignatureInfo> signatureInfos)
+        public void Flush(IEnumerable<SignatureInfo> signatureInfos)
         {
             // nothing to do
         }
