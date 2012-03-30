@@ -34,7 +34,7 @@ namespace RavenFS.Rdc.Wrapper
             _signatureRepository = signatureRepository;
         }
 
-        public IList<SignatureInfo> GenerateSignatures(Stream source)
+        public IList<SignatureInfo> GenerateSignatures(Stream source, string fileName)
         {
             _recursionDepth = EvaluatetRecursionDepth(source);
             if (_recursionDepth == 0)
@@ -44,8 +44,7 @@ namespace RavenFS.Rdc.Wrapper
             var rdcGenerator = InitializeRdcGenerator();
             try
             {
-                var result = Process(source, rdcGenerator);
-                return result.Reverse().ToList();
+                return Process(source, rdcGenerator, fileName);
             }
             finally
             {
@@ -53,9 +52,9 @@ namespace RavenFS.Rdc.Wrapper
             }
         }
 
-        private IList<SignatureInfo> Process(Stream source, IRdcGenerator rdcGenerator)
+        private IList<SignatureInfo> Process(Stream source, IRdcGenerator rdcGenerator, string fileName)
         {
-            var result = Enumerable.Range(0, _recursionDepth).Select(i => new SignatureInfo()).ToList();
+            var result = Enumerable.Range(0, _recursionDepth).Reverse().Select(i => new SignatureInfo(i, fileName)).ToList();
 
             var eof = false;
             var eofOutput = false;
@@ -132,7 +131,10 @@ namespace RavenFS.Rdc.Wrapper
                 {
                     item.Dispose();
                 }
+                // TODO: consider using special stream type which would auto assign during disposition
             }
+            result.Reverse();
+            _signatureRepository.AssingToFileName(result);
             return result;
         }
 

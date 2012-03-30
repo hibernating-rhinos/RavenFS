@@ -29,7 +29,7 @@ namespace RavenFS.Rdc.Wrapper.Test
         {
             using (var rested = new SigGenerator(_signatureRepository))
             {
-                var result = rested.GenerateSignatures(stream);
+                var result = rested.GenerateSignatures(stream, "test");
                 Assert.Equal(2, result.Count);
                 Assert.Equal("91b64180c75ef27213398979cc20bfb7", _signatureRepository.GetContentForReading(result[0].Name).GetMD5Hash());
                 Assert.Equal("9fe9d408aed35769e25ece3a56f2d12f", _signatureRepository.GetContentForReading(result[1].Name).GetMD5Hash());

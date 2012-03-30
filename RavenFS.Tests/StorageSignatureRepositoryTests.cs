@@ -56,7 +56,7 @@ namespace RavenFS.Tests
             {
                 sigContent.WriteByte(3);
             }
-            tested.AssingToFileName(new[] { new SignatureInfo { Length = 1, Name = "test.bin.0.sig"} }, "test.bin");
+            tested.AssingToFileName(new[] { SignatureInfo.Parse("test.bin.0.sig") } );
 
             var result = tested.GetByName("test.bin.0.sig");
             Assert.Equal("test.bin.0.sig", result.Name);

@@ -41,12 +41,12 @@ namespace RavenFS.Rdc.Wrapper.Test
         	IList<SignatureInfo> seedSignatureInfos;
             using (var generator = new SigGenerator(_signatureRepository))
         	{
-        		seedSignatureInfos = generator.GenerateSignatures(GetSeedStream());
+        		seedSignatureInfos = generator.GenerateSignatures(GetSeedStream(), "test");
         	}
 			var sourceStream = GetSourceStream();
 			using (var generator = new SigGenerator(_signatureRepository))
         	{
-        		sourceSignatureInfos = generator.GenerateSignatures(sourceStream);
+        		sourceSignatureInfos = generator.GenerateSignatures(sourceStream, "test");
         	}
 			var sourceSize = sourceStream.Length;
         	using (var tested = new NeedListGenerator(_signatureRepository, _signatureRepository))
@@ -77,12 +77,12 @@ namespace RavenFS.Rdc.Wrapper.Test
             using (var generator = new SigGenerator(_signatureRepository))
             {
                 seedContent.Seek(0, SeekOrigin.Begin);
-                seedSignatureInfos = generator.GenerateSignatures(seedContent);
+                seedSignatureInfos = generator.GenerateSignatures(seedContent, "test1");
             }
             using (var generator = new SigGenerator(_signatureRepository))
             {
                 sourceContent.Seek(0, SeekOrigin.Begin);
-                sourceSignatureInfos = generator.GenerateSignatures(sourceContent);
+                sourceSignatureInfos = generator.GenerateSignatures(sourceContent, "test2");
             }
             var sourceSize = sourceContent.Length;
 

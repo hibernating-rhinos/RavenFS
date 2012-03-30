@@ -103,8 +103,8 @@ namespace RavenFS.Rdc
             {
                 var source = new RemoteSignaturePartialAccess(_ravenFileSystemClient, remoteSigName);
                 var seed = new SignaturePartialAccess(localSigName, _localSignatureRepository);
-                var needList = needListGenerator.CreateNeedsList(new SignatureInfo(localSigSigName),
-                                                                  new SignatureInfo(remoteSigSigName));
+                var needList = needListGenerator.CreateNeedsList(SignatureInfo.Parse(localSigSigName),
+                                                                  SignatureInfo.Parse(remoteSigSigName));
                 var output = _remoteCacheSignatureRepository.CreateContent(remoteSigName);
                 return NeedListParser.ParseAsync(source, seed, output, needList)
 					.ContinueWith( task =>

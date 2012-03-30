@@ -38,20 +38,27 @@ namespace RavenFS.Rdc.Wrapper
             return File.Create(NameToPath(sigName));
         }
 
-        public SignatureInfo GetByName(string name)
+        public SignatureInfo GetByName(string sigName)
         {
-            var fullPath = NameToPath(name);
+            var fullPath = NameToPath(sigName);
             var fi = new FileInfo(fullPath);
-            return
-                new SignatureInfo
-                    {
-                        Name = name,
-                        Length = fi.Length
-                    };
+            var result = SignatureInfo.Parse(sigName);
+            result.Length = fi.Length;
+            return result;
         }
 
-        public void AssingToFileName(IEnumerable<SignatureInfo> signatureInfos, string fileName)
+        // TODO remove memory cache
+        public void AssingToFileName(IEnumerable<SignatureInfo> signatureInfos)
         {
+            var fileNames = from item in signatureInfos
+                            group item by item.FileName
+                                into fileNameNamesGroup
+                                select fileNameNamesGroup.Key;
+            if (fileNames.Count() > 1)
+            {
+                throw new ArgumentException("All SignatureInfo should belong to the same file", "signatureInfos");
+            }
+            var fileName = fileNames.First();
             _sigNamesCache[fileName] = signatureInfos.Select(item => item.Name).ToList();
             _sigCreationTimes[fileName] = DateTime.Now;
         }

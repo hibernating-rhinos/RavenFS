@@ -60,8 +60,8 @@ namespace RavenFS.Controllers
 
         private Task<SynchronizationReport> Synchronize(ISignatureRepository remoteSignatureRepository, string sourceServerUrl, string fileName, SignatureManifest sourceSignatureManifest, SignatureManifest seedSignatureManifest, NameValueCollection sourceMetadata)
         {
-            var seedSignatureInfo = new SignatureInfo(seedSignatureManifest.Signatures.Last().Name);
-            var sourceSignatureInfo = new SignatureInfo(sourceSignatureManifest.Signatures.Last().Name);
+            var seedSignatureInfo = SignatureInfo.Parse(seedSignatureManifest.Signatures.Last().Name);
+            var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
             var needListGenerator = new NeedListGenerator(SignatureRepository, remoteSignatureRepository);
             var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search,
                                                                   fileName + ".result",

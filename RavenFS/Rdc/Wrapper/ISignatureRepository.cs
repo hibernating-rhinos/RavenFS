@@ -9,7 +9,8 @@ namespace RavenFS.Rdc.Wrapper
         Stream GetContentForReading(string sigName);        
         Stream CreateContent(string sigName);       
         SignatureInfo GetByName(string sigName);
-        void AssingToFileName(IEnumerable<SignatureInfo> signatureInfos, String fileName);
+        // TODO: this method is not needed. 
+        void AssingToFileName(IEnumerable<SignatureInfo> signatureInfos);
         IEnumerable<SignatureInfo> GetByFileName(string fileName);
 
         DateTime? GetLastUpdate(string fileName);

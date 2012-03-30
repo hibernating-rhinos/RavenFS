@@ -24,7 +24,7 @@ namespace RavenFS
 		private readonly string path;
 		private readonly TransactionalStorage storage;
 		private readonly IndexStorage search;
-		private readonly SimpleSignatureRepository signatureRepository;
+		private readonly ISignatureRepository signatureRepository;
 		private readonly SigGenerator sigGenerator;
 	    private readonly NotificationPublisher notificationPublisher;
 
@@ -45,7 +45,7 @@ namespace RavenFS
 			this.path = path.ToFullPath();
 			storage = new TransactionalStorage(this.path, new NameValueCollection());
 			search = new IndexStorage(this.path, new NameValueCollection());
-			signatureRepository = new SimpleSignatureRepository(this.path);
+            signatureRepository = new StorageSignatureRepository(storage);
 			sigGenerator = new SigGenerator(signatureRepository);
             notificationPublisher = new NotificationPublisher();
 			storage.Initialize();
@@ -76,7 +76,7 @@ namespace RavenFS
 			sigGenerator.Dispose();
 		}
 
-		public SimpleSignatureRepository SignatureRepository
+		public ISignatureRepository SignatureRepository
 		{
 			get { return signatureRepository; }
 		}

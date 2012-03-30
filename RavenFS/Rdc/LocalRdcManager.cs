@@ -30,7 +30,7 @@ namespace RavenFS.Rdc
             if (lastUpdate == null || lastUpdate < dataInfo.CreatedAt)
             {
                 signatureInfos = PrepareSignatures(dataInfo.Name);
-                _signatureRepository.AssingToFileName(signatureInfos, dataInfo.Name);
+                //_signatureRepository.AssingToFileName(signatureInfos, dataInfo.Name);
             } 
             else
             {
@@ -56,8 +56,7 @@ namespace RavenFS.Rdc
             FileAndPages fileAndPages = null;
             _transactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(filename, 0, 0));
             var input = StorageStream.Reading(_transactionalStorage, fileAndPages.Name);
-            return _sigGenerator.GenerateSignatures(input);
-
+            return _sigGenerator.GenerateSignatures(input, filename);
         }
 
         private static IList<Signature> SignatureInfosToSignatures(IEnumerable<SignatureInfo> signatureInfos)

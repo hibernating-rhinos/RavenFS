@@ -10,8 +10,8 @@ namespace RavenFS.Rdc.Wrapper
 {
     public class StorageSignatureRepository : ISignatureRepository
     {
-        private ISignatureRepository _cacheRepository;
-        private TransactionalStorage _storage;
+        private readonly SimpleSignatureRepository _cacheRepository;
+        private readonly TransactionalStorage _storage;
 
         public StorageSignatureRepository(TransactionalStorage storage)
         {
@@ -52,55 +52,56 @@ namespace RavenFS.Rdc.Wrapper
                 accessor =>
                 {
                     var signatureLevel = GetSignatureLevel(sigName, accessor);
-                    if (signatureLevel != null)
-                    {
-                        result =
-                            new SignatureInfo
-                                {
-                                    Length = accessor.GetSignatureSize(signatureLevel.Id, signatureLevel.Level),
-                                    Name = sigName
-                                };
-
-                    }
-                    else
+                    if (signatureLevel == null)
                     {
                         throw new FileNotFoundException(sigName + " not found in the repo");
                     }
+                    result = SignatureInfo.Parse(sigName);
+                    result.Length = accessor.GetSignatureSize(signatureLevel.Id, signatureLevel.Level);
+
                 });
             return result;
         }
 
 
-        public void AssingToFileName(IEnumerable<SignatureInfo> signatureInfos, string fileName)
+        public void AssingToFileName(IEnumerable<SignatureInfo> signatureInfos)
         {
-            var level = 0;
-            foreach (var item in signatureInfos)
+            var fileNames = from item in signatureInfos
+                            group item by item.FileName
+                            into fileNameNamesGroup
+                            select fileNameNamesGroup.Key;
+            if (fileNames.Count() > 1)
             {
-                var level1 = level;
-                var item2 = item;
-                _storage.Batch(
-                    accessor =>
+                throw new ArgumentException("All SignatureInfo should belong to the same file", "signatureInfos");
+            }
+            var fileName = fileNames.First();
+                             
+            _storage.Batch(
+                accessor =>
+                {
+                    accessor.ClearSignatures(fileName);
+                    var level = 0;
+                    foreach (var item in signatureInfos)
                     {
-                        accessor.ClearSignatures(fileName);
-                        var item1 = item2;
-                        accessor.AddSignature(fileName, level1,
+                        var item1 = item;
+                        accessor.AddSignature(fileName, level,
                                               stream =>
                                               {
                                                   var cachedSigContent =
                                                       _cacheRepository.GetContentForReading(item1.Name);
                                                   cachedSigContent.CopyTo(stream);
                                               });
-                    });
-                level++;
-            }
+                        level++;
+                    }
+                });
         }
 
 
         private static SignatureLevels GetSignatureLevel(string sigName, StorageActionsAccessor accessor)
         {
             var fileNameAndLevel = ExtractFileNameAndLevel(sigName);
-            var signatureLevels = accessor.GetSignatures(fileNameAndLevel.Item1);
-            return signatureLevels.FirstOrDefault(item => item.Level == fileNameAndLevel.Item2);
+            var signatureLevels = accessor.GetSignatures(fileNameAndLevel.FileName);
+            return signatureLevels.FirstOrDefault(item => item.Level == fileNameAndLevel.Level);
         }
 
         public IEnumerable<SignatureInfo> GetByFileName(string fileName)
@@ -124,19 +125,12 @@ namespace RavenFS.Rdc.Wrapper
 
         public DateTime? GetLastUpdate(string fileName)
         {
-            throw new NotImplementedException();
+            return null;
         }
 
-        private static readonly Regex SigFileNamePattern = new Regex(@"^(.*?)\.([0-9])\.sig$");
-
-        private static Tuple<string, int> ExtractFileNameAndLevel(string sigName)
+        private static SignatureInfo ExtractFileNameAndLevel(string sigName)
         {
-            var matcher = SigFileNamePattern.Match(sigName);
-            if (matcher.Success)
-            {
-                return new Tuple<string, int>(matcher.Groups[1].Value, int.Parse(matcher.Groups[2].Value));
-            }
-            throw new FormatException("SigName: " + sigName + " is not valid");
+            return SignatureInfo.Parse(sigName);
         }
     }
 }

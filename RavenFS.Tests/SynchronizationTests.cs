@@ -60,9 +60,9 @@ namespace RavenFS.Tests
             Assert.True(resultMD5 == sourceMD5);
         }
 
-		//[Theory]
-		//[InlineData(1024 * 1024 * 80)]
-		[Fact(Skip = "Long test")]
+		[Theory]
+		[InlineData(1024 * 1024 * 80)]
+		//[Fact(Skip = "Long test")]
 		public void Big_file_test(long size)
         {
             var sourceContent = new RandomStream(size, 1);
