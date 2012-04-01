@@ -245,6 +245,7 @@
     <Compile Include="Rdc\Wrapper\SimilarityTraitsMapping.cs" />
     <Compile Include="Rdc\Wrapper\SimilarityTraitsTable.cs" />
     <Compile Include="Rdc\Wrapper\SimpleSignatureRepository.cs" />
+    <Compile Include="Search\IndexSearcherHolder.cs" />
     <Compile Include="Search\IndexStorage.cs" />
     <Compile Include="Search\LowerCaseKeywordAnalyzer.cs" />
     <Compile Include="Storage\EsentExtension.cs" />
