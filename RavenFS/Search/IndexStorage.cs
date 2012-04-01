@@ -139,6 +139,7 @@ namespace RavenFS.Search
 			if (long.TryParse(metadata["Content-Length"], out len))
 			{
 				doc.Add(new Field("__size", len.ToString("D20"), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+				doc.Add(new NumericField("__size_numeric", Field.Store.NO, true).SetLongValue(len));
 			}
 
 			return doc;
