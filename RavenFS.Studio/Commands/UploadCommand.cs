@@ -53,11 +53,16 @@ namespace RavenFS.Studio.Commands
             var stream = file.OpenRead();
             var fileSize = stream.Length;
 
+	    	var fileName = file.Name;
+
+			if (folder != "/")
+				fileName = folder + "/" + file.Name;
+
 	        ApplicationModel.Current.Client.UploadAsync(
-	            folder + "/" + file.Name,
+	            fileName,
 	            new NameValueCollection(),
 	            stream,
-	            (fileName, bytesUploaded) => operation.ProgressChanged(bytesUploaded, fileSize))
+	            (_, bytesUploaded) => operation.ProgressChanged(bytesUploaded, fileSize))
                 .UpdateOperationWithOutcome(operation)
 	            .ContinueOnUIThread(task => stream.Dispose());
 
