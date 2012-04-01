@@ -156,6 +156,12 @@ namespace RavenFS
 				);
 
 			config.Routes.MapHttpRoute(
+				name: "search",
+				routeTemplate: "search/{action}",
+				defaults: new { controller = "search", action = "get" }
+				);
+
+			config.Routes.MapHttpRoute(
 				name: "Default",
 				routeTemplate: "{controller}/{*name}",
 				defaults: new { controller = "files", name = RouteParameter.Optional }
