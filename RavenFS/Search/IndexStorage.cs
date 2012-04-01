@@ -46,8 +46,16 @@ namespace RavenFS.Search
 			IndexSearcher searcher;
 			using(GetSearcher(out searcher))
 			{
-				var queryParser = new QueryParser(Version.LUCENE_29, "", analyzer);
-				var q = queryParser.Parse(query);
+				Query q;
+				if(string.IsNullOrEmpty(query))
+				{
+					q = new MatchAllDocsQuery();
+				}
+				else
+				{
+					var queryParser = new QueryParser(Version.LUCENE_29, "", analyzer);
+					q = queryParser.Parse(query);
+				}
 
 				var topDocs = ExecuteQuery(searcher, sortFields, q, pageSize + start);
 
