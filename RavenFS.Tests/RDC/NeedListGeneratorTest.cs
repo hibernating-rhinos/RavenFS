@@ -11,9 +11,9 @@ using Xunit;
 
 namespace RavenFS.Rdc.Wrapper.Test
 {
-    public class NeedListGeneratorTest
+    public class NeedListGeneratorTest : IDisposable
     {
-        private readonly ISignatureRepository _signatureRepository = new VolatileSignatureRepository(TempDirectoryTools.Create());
+        private ISignatureRepository _signatureRepository;
 
     	private static RandomlyModifiedStream GetSeedStream()
     	{
@@ -24,6 +24,11 @@ namespace RavenFS.Rdc.Wrapper.Test
     	{
     		return new RandomStream(15*1024*1024, 1);
     	}
+
+        public NeedListGeneratorTest()
+        {
+            _signatureRepository = new VolatileSignatureRepository(TempDirectoryTools.Create());
+        }
 
     	[MtaFact]
         public void ctor_and_dispose()
@@ -111,6 +116,15 @@ namespace RavenFS.Rdc.Wrapper.Test
             writer.Flush();
 
             return ms;
+        }
+
+        public void Dispose()
+        {
+            if (_signatureRepository != null)
+            {
+                _signatureRepository.Dispose();
+                _signatureRepository = null;
+            }
         }
     }
 }
