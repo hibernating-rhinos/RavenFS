@@ -2,7 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-
+using RavenFS.Infrastructure;
 using RavenFS.Rdc.Utils.IO;
 using RavenFS.Tests;
 using RavenFS.Util;
@@ -13,7 +13,7 @@ namespace RavenFS.Rdc.Wrapper.Test
 {
     public class NeedListGeneratorTest
     {
-        private readonly ISignatureRepository _signatureRepository = new VolatileSignatureRepository();
+        private readonly ISignatureRepository _signatureRepository = new VolatileSignatureRepository(TempDirectoryTools.Create());
 
     	private static RandomlyModifiedStream GetSeedStream()
     	{

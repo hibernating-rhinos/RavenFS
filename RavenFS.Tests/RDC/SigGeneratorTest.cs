@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using RavenFS.Infrastructure;
 using RavenFS.Rdc.Utils.IO;
 using RavenFS.Tests;
 using Xunit;
@@ -7,7 +8,7 @@ namespace RavenFS.Rdc.Wrapper.Test
 {
     public class SigGeneratorTest
     {
-        private readonly ISignatureRepository _signatureRepository = new VolatileSignatureRepository();
+        private readonly ISignatureRepository _signatureRepository = new VolatileSignatureRepository(TempDirectoryTools.Create());
 		Stream stream = new MemoryStream();
 		public SigGeneratorTest()
 		{

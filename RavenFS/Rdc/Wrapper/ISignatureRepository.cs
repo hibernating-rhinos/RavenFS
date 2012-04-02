@@ -4,7 +4,7 @@ using System.IO;
 
 namespace RavenFS.Rdc.Wrapper
 {
-    public interface ISignatureRepository
+    public interface ISignatureRepository : IDisposable
     {
         Stream GetContentForReading(string sigName);        
         Stream CreateContent(string sigName);       

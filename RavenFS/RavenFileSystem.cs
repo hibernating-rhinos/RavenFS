@@ -70,7 +70,8 @@ namespace RavenFS
 		{
 			AppDomain.CurrentDomain.ProcessExit -= ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload -= ShouldDispose;
-			
+
+            signatureRepository.Dispose();
 			storage.Dispose();
 			search.Dispose();
 			sigGenerator.Dispose();

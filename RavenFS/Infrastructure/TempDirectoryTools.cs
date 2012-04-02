@@ -13,7 +13,7 @@ namespace RavenFS.Infrastructure
             string tempDirectory;
             do
             {
-                tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                tempDirectory = Path.Combine(Path.GetTempPath(), "test-" + Path.GetRandomFileName());
             } while (Directory.Exists(tempDirectory)); 
             Directory.CreateDirectory(tempDirectory);
             return tempDirectory;

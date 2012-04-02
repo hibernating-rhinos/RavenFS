@@ -29,7 +29,7 @@ namespace RavenFS.Controllers
             {
                 throw new Exception("Unknown server identifier " + sourceServerUrl);
             }
-        	var sourceMetadataAsync = sourceRavenFileSystemClient.GetMetadataForAsync(fileName);
+            var sourceMetadataAsync = sourceRavenFileSystemClient.GetMetadataForAsync(fileName);
             var localFileDataInfo = GetLocalFileDataInfo(fileName);
 
             var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
@@ -41,14 +41,21 @@ namespace RavenFS.Controllers
                         return sourceMetadataAsync.ContinueWith(
                             sourceMetadataTask =>
                             {
-                                if(sourceSignatureManifest.Signatures.Count > 0)
-									return  Synchronize(remoteSignatureCache, sourceServerUrl, fileName,
-                                                  sourceSignatureManifest, seedSignatureManifest,
-                                                  sourceMetadataTask.Result);
-                            	return Download(sourceRavenFileSystemClient, fileName, sourceMetadataAsync);
+                                if (sourceSignatureManifest.Signatures.Count > 0)
+                                    return Synchronize(remoteSignatureCache, sourceServerUrl, fileName,
+                                                       sourceSignatureManifest, seedSignatureManifest,
+                                                       sourceMetadataTask.Result);
+                                return Download(sourceRavenFileSystemClient, fileName, sourceMetadataAsync);
                             }).Unwrap()
-							.ContinueWith( synchronizationTask => new HttpResponseMessage<SynchronizationReport>(synchronizationTask.Result));
-                    }).Unwrap();
+                            .ContinueWith(
+                                synchronizationTask =>
+                                    {
+                                        remoteSignatureCache.Dispose();
+                                        return new HttpResponseMessage<SynchronizationReport>(
+                                            synchronizationTask.Result);
+                                    });
+                    })
+                    .Unwrap();
         }
 
         private Task<SynchronizationReport> Synchronize(ISignatureRepository remoteSignatureRepository, string sourceServerUrl, string fileName, SignatureManifest sourceSignatureManifest, SignatureManifest seedSignatureManifest, NameValueCollection sourceMetadata)
@@ -69,22 +76,22 @@ namespace RavenFS.Controllers
                     {
                         outputFile.Dispose();
                         needListGenerator.Dispose();
-						_.AssertNotFaulted();
-                    	return new SynchronizationReport
-                    	{
-                    		FileName = fileName,
-                    		BytesTransfered = needList.Sum(
-                    			item =>
-                    			item.BlockType == RdcNeedType.Source
-                    				? (long) item.BlockLength
-                    				: 0L),
-                    		BytesCopied = needList.Sum(
-                    			item =>
-                    			item.BlockType == RdcNeedType.Seed
-                    				? (long) item.BlockLength
-                    				: 0L),
-                    		NeedListLength = needList.Count
-                    	};
+                        _.AssertNotFaulted();
+                        return new SynchronizationReport
+                        {
+                            FileName = fileName,
+                            BytesTransfered = needList.Sum(
+                                item =>
+                                item.BlockType == RdcNeedType.Source
+                                    ? (long)item.BlockLength
+                                    : 0L),
+                            BytesCopied = needList.Sum(
+                                item =>
+                                item.BlockType == RdcNeedType.Seed
+                                    ? (long)item.BlockLength
+                                    : 0L),
+                            NeedListLength = needList.Count
+                        };
                     });
 
         }
@@ -96,16 +103,16 @@ namespace RavenFS.Controllers
                                                              task.Result.FilterHeaders()))
                 .ContinueWith(
                     task => sourceRavenFileSystemClient.DownloadAsync(fileName, task.Result)
-                            	.ContinueWith(
-                            		_ =>
-                            		{
-                            			task.Result.Dispose();
-                            			return new SynchronizationReport
-                            			{
-                            				FileName = fileName,
-                            				BytesCopied = StorageStream.Reading(Storage, fileName + ".result").Length
-                            			};
-                            		})).Unwrap();
+                                .ContinueWith(
+                                    _ =>
+                                    {
+                                        task.Result.Dispose();
+                                        return new SynchronizationReport
+                                        {
+                                            FileName = fileName,
+                                            BytesCopied = StorageStream.Reading(Storage, fileName + ".result").Length
+                                        };
+                                    })).Unwrap();
         }
 
 

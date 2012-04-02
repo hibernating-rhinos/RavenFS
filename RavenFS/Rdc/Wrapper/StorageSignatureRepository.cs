@@ -140,5 +140,10 @@ namespace RavenFS.Rdc.Wrapper
         {
             return SignatureInfo.Parse(sigName);
         }
+
+        public void Dispose()
+        {
+            _cacheRepository.Dispose();
+        }
     }
 }

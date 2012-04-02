@@ -6,7 +6,7 @@ using RavenFS.Extensions;
 
 namespace RavenFS.Rdc.Wrapper
 {
-    public class VolatileSignatureRepository : ISignatureRepository, IDisposable
+    public class VolatileSignatureRepository : ISignatureRepository
     {
         private readonly string _baseDirectory;
 
@@ -14,11 +14,6 @@ namespace RavenFS.Rdc.Wrapper
         {
         	_baseDirectory = path.ToFullPath();
             Directory.CreateDirectory(_baseDirectory);
-        }
-
-		public VolatileSignatureRepository()
-			: this(AppDomain.CurrentDomain.BaseDirectory)
-        {
         }
 
         public Stream GetContentForReading(string sigName)
