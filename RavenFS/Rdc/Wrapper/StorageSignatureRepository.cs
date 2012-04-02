@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Web;
 using RavenFS.Infrastructure;
 using RavenFS.Storage;
 
@@ -23,7 +21,6 @@ namespace RavenFS.Rdc.Wrapper
 
         public Stream GetContentForReading(string sigName)
         {
-            // TODO: Change to some better stream
             var ms = new MemoryStream();
             _storage.Batch(
                 accessor =>
