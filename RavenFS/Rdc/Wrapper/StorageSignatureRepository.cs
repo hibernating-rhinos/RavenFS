@@ -132,8 +132,15 @@ namespace RavenFS.Rdc.Wrapper
 
         public DateTime? GetLastUpdate(string fileName)
         {
-            // TODO API needed to get last SIG files generation
-            return null;
+        	SignatureLevels firstOrDefault = null;
+			_storage.Batch(accessor =>
+			{
+				firstOrDefault = accessor.GetSignatures(fileName).FirstOrDefault();
+			});
+
+			if (firstOrDefault == null)
+				return null;
+        	return firstOrDefault.CreatedAt;
         }
 
         private static SignatureInfo ExtractFileNameAndLevel(string sigName)

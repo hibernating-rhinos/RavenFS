@@ -482,6 +482,7 @@ namespace RavenFS.Storage
 				{
 					Id = Api.RetrieveColumnAsInt32(session, Signatures, tableColumnsCache.SignaturesColumns["id"]).Value,
 					Level = Api.RetrieveColumnAsInt32(session, Signatures, tableColumnsCache.SignaturesColumns["level"]).Value,
+					CreatedAt = Api.RetrieveColumnAsDateTime(session, Signatures, tableColumnsCache.SignaturesColumns["created_at"]).Value
 				};
 			} while (Api.TryMoveNext(session, Signatures));
 		}
@@ -538,6 +539,7 @@ namespace RavenFS.Storage
 			{
 				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["name"], name, Encoding.Unicode);
 				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["level"], level);
+				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["created_at"], DateTime.UtcNow);
 
 				using(var stream = new ColumnStream(session, Signatures, tableColumnsCache.SignaturesColumns["data"]))
 				using(var buffer = new BufferedStream(stream))
