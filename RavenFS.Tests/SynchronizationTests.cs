@@ -61,8 +61,7 @@ namespace RavenFS.Tests
         }
 
 		[Theory]
-		[InlineData(1024 * 1024 * 80)]
-	    //[Fact(Skip = "Long test")]
+		[InlineData(1024 * 1024 * 10)]
 		public void Big_file_test(long size)
         {
             var sourceContent = new RandomStream(size, 1);
