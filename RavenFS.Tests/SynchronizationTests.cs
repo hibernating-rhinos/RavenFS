@@ -46,7 +46,7 @@ namespace RavenFS.Tests
             string resultMD5 = null;
             using(var resultFileContent = new MemoryStream())
             {                
-                var metadata = seedClient.DownloadAsync("test.txt.result", resultFileContent).Result;
+                var metadata = seedClient.DownloadAsync("test.txt", resultFileContent).Result;
                 Assert.Equal("some-value", metadata["SomeTest-metadata"]);
                 resultFileContent.Position = 0;
                 resultMD5 = resultFileContent.GetMD5Hash();

@@ -49,11 +49,11 @@ namespace RavenFS.Controllers
                             }).Unwrap()
                             .ContinueWith(
                                 synchronizationTask =>
-                                    {
-                                        remoteSignatureCache.Dispose();
-                                        return new HttpResponseMessage<SynchronizationReport>(
-                                            synchronizationTask.Result);
-                                    });
+                                {
+                                    remoteSignatureCache.Dispose();
+                                    return new HttpResponseMessage<SynchronizationReport>(
+                                        synchronizationTask.Result);
+                                });
                     })
                     .Unwrap();
         }
@@ -63,9 +63,11 @@ namespace RavenFS.Controllers
             var seedSignatureInfo = SignatureInfo.Parse(seedSignatureManifest.Signatures.Last().Name);
             var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
             var needListGenerator = new NeedListGenerator(SignatureRepository, remoteSignatureRepository);
+            var tempFileName = fileName + ".result";
             var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search,
-                                                                  fileName + ".result",
+                                                                  tempFileName,
                                                                   sourceMetadata.FilterHeaders());
+
             var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 
             return NeedListParser.ParseAsync(
@@ -77,6 +79,12 @@ namespace RavenFS.Controllers
                         outputFile.Dispose();
                         needListGenerator.Dispose();
                         _.AssertNotFaulted();
+                        Storage.Batch(
+                            accessor =>
+                            {
+                                accessor.Delete(fileName);
+                                accessor.RenameFile(tempFileName, fileName);
+                            });
                         return new SynchronizationReport
                         {
                             FileName = fileName,
@@ -98,8 +106,9 @@ namespace RavenFS.Controllers
 
         private Task<SynchronizationReport> Download(RavenFileSystemClient sourceRavenFileSystemClient, string fileName, Task<NameValueCollection> sourceMetadataAsync)
         {
+            var tempFileName = fileName + ".result";
             return sourceMetadataAsync.ContinueWith(
-                task => StorageStream.CreatingNewAndWritting(Storage, Search, fileName + ".result",
+                task => StorageStream.CreatingNewAndWritting(Storage, Search, tempFileName,
                                                              task.Result.FilterHeaders()))
                 .ContinueWith(
                     task => sourceRavenFileSystemClient.DownloadAsync(fileName, task.Result)
@@ -107,10 +116,16 @@ namespace RavenFS.Controllers
                                     _ =>
                                     {
                                         task.Result.Dispose();
+                                        Storage.Batch(
+                                           accessor =>
+                                               {
+                                                   accessor.Delete(fileName);
+                                                   accessor.RenameFile(tempFileName, fileName);
+                                               });
                                         return new SynchronizationReport
                                         {
                                             FileName = fileName,
-                                            BytesCopied = StorageStream.Reading(Storage, fileName + ".result").Length
+                                            BytesCopied = StorageStream.Reading(Storage, fileName).Length
                                         };
                                     })).Unwrap();
         }
