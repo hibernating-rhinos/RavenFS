@@ -46,7 +46,7 @@ namespace RavenFS.Tests
             string resultMD5 = null;
             using(var resultFileContent = new MemoryStream())
             {                
-                var metadata = seedClient.DownloadAsync("test.txt.result", resultFileContent).Result;
+                var metadata = seedClient.DownloadAsync("test.txt", resultFileContent).Result;
                 Assert.Equal("some-value", metadata["SomeTest-metadata"]);
                 resultFileContent.Position = 0;
                 resultMD5 = resultFileContent.GetMD5Hash();
@@ -61,8 +61,7 @@ namespace RavenFS.Tests
         }
 
 		[Theory]
-		[InlineData(1024 * 1024 * 80)]
-	    //[Fact(Skip = "Long test")]
+		[InlineData(1024 * 1024 * 10)]
 		public void Big_file_test(long size)
         {
             var sourceContent = new RandomStream(size, 1);
