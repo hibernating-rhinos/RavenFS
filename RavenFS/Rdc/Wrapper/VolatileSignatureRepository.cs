@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Xml.Linq;
 using RavenFS.Extensions;
 
 namespace RavenFS.Rdc.Wrapper
@@ -31,15 +29,6 @@ namespace RavenFS.Rdc.Wrapper
         public Stream CreateContent(string sigName)
         {
             return File.Create(NameToPath(sigName));
-        }
-
-        public SignatureInfo GetByName(string sigName)
-        {
-            var fullPath = NameToPath(sigName);
-            var fi = new FileInfo(fullPath);
-            var result = SignatureInfo.Parse(sigName);
-            result.Length = fi.Length;
-            return result;
         }
 
         public void Flush(IEnumerable<SignatureInfo> signatureInfos)
