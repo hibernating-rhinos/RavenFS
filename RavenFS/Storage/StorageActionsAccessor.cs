@@ -428,6 +428,26 @@ namespace RavenFS.Storage
 
 				update.Save();
 			}
+
+			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
+			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Usage, SeekGrbit.SeekGE) == false)
+				return;
+
+			do
+			{
+				var name = Api.RetrieveColumnAsString(session, Usage, tableColumnsCache.UsageColumns["name"]);
+				if (name != filename)
+					return;
+
+				using (var update = new Update(session, Usage, JET_prep.Replace))
+				{
+					Api.SetColumn(session, Usage, tableColumnsCache.UsageColumns["name"], rename, Encoding.Unicode);
+
+					update.Save();
+				}
+			} while (Api.TryMoveNext(session, Usage));
+
 		}
 
 		public NameValueCollection GetConfig(string name)
