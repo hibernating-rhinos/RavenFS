@@ -33,7 +33,7 @@ namespace RavenFS.Tests
 					};
 					disposables.Add(config);
 					var path = "~/" + port;
-					IOExtensions.DeleteDirectory(path);
+                    IOExtensions.DeleteDirectory(path.ToFullPath());
 					var ravenFileSystem = new RavenFileSystem(path);
 					ravenFileSystem.Start(config);
 					disposables.Add(ravenFileSystem);
