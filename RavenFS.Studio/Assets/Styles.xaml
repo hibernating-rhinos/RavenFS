@@ -145,6 +145,11 @@
         <Setter Property="CornerRadius" Value="4,4,0,0"/>
         <Setter Property="Background" Value="{StaticResource Brush_HeaderBackground}"/>
     </Style>
+    
+    <Style x:Key="Style_Border_Footer" TargetType="Border">
+        <Setter Property="CornerRadius" Value="0,0,4,4"/>
+        <Setter Property="Background" Value="{StaticResource Brush_Border_Footer}"/>
+    </Style>
 
     <Style x:Key="Style_Border_Toolbar" TargetType="Border">
         <Setter Property="CornerRadius" Value="0"/>
