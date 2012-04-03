@@ -17,6 +17,8 @@ namespace RavenFS.Search
 {
 	public class IndexStorage : IDisposable
 	{
+        private static readonly string[] NumericIndexFields = new[] { "__size_numeric" };
+
 		private readonly string path;
 		private FSDirectory directory;
 		private LowerCaseKeywordAnalyzer analyzer;
@@ -53,7 +55,7 @@ namespace RavenFS.Search
 				}
 				else
 				{
-					var queryParser = new QueryParser(Version.LUCENE_29, "", analyzer);
+                    var queryParser = new RavenQueryParser(analyzer, NumericIndexFields);
 					q = queryParser.Parse(query);
 				}
 
@@ -125,9 +127,9 @@ namespace RavenFS.Search
 			doc.Add(new Field("__key", lowerKey, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
 
 		    var fileName = Path.GetFileName(lowerKey);
-		    doc.Add(new Field("__fileName", fileName, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+		    doc.Add(new Field("__fileName", fileName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
 		    // the reversed version of the file name is used to allow searches that start with wildcards
-		    doc.Add(new Field("__rfileName", fileName.Reverse(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+		    doc.Add(new Field("__rfileName", fileName.Reverse(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
 
 			int level = 0;
 			var directoryName = Path.GetDirectoryName(lowerKey);
