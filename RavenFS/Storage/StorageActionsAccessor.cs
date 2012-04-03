@@ -352,13 +352,13 @@ namespace RavenFS.Storage
 			if (!Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
 				return;
 
-			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
-			Api.JetSetIndexRange(session, Usage, SetIndexRangeGrbit.RangeInclusive);
-
 			Api.JetSetCurrentIndex(session, Pages, "by_id");
 
 			do
 			{
+				var file = Api.RetrieveColumnAsString(session, Usage, tableColumnsCache.UsageColumns["name"]);
+				if (file != filename)
+					return;
 				var pageId = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value;
 
 				Api.MakeKey(session, Pages, pageId, MakeKeyGrbit.NewKey);
