@@ -39,6 +39,7 @@
             <RowDefinition Height="Auto"/>
           <RowDefinition Height="*"/>
           <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
         <Border Style="{StaticResource Style_Border_Header}">
@@ -188,7 +189,7 @@
                       AutoGenerateColumns="False" 
                       IsReadOnly="True" 
                       ItemsSource="{Binding Files}"
-                      Margin="0,0,0,10"
+                      Margin="0,0,0,0"
                       SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}">
             <i:Interaction.Behaviors>
                 <b:ExecuteCommandOnFileDrop Command="{Binding Upload}"/>
@@ -244,7 +245,12 @@
                 </sdk:DataGridTemplateColumn>
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
-        
-        <Views:AsyncOperationsView Grid.Row="5"/>
+        <Border Grid.Row="5" Style="{StaticResource Style_Border_Footer}">
+            <TextBlock Margin="3">
+                <Run Text="{Binding Files.Count}"/>
+                <Run Text=" Files"/>
+            </TextBlock>
+        </Border>
+        <Views:AsyncOperationsView Grid.Row="6" Margin="0,10,0,0"/>
     </Grid>
 </Infrastructure:View>

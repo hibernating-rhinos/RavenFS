@@ -311,7 +311,11 @@ namespace RavenFS.Client
 
 		public Task<string[]> GetFoldersAsync(string from = null, int start = 0,int pageSize = 25)
 		{
-			string requestUriString = ServerUrl + "/folders/subdirectories/" + Uri.EscapeDataString(@from ?? "") + "?pageSize=" +
+			var path = @from ?? "";
+			if (path.StartsWith("/"))
+				path = path.Substring(1);
+
+			string requestUriString = ServerUrl + "/folders/subdirectories/" + Uri.EscapeUriString(path) + "?pageSize=" +
 			                          pageSize + "&start=" + start;
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 			return request.GetResponseAsync()
