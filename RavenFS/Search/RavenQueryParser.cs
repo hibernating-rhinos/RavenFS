@@ -18,15 +18,15 @@ namespace RavenFS.Search
             this.numericFields = new HashSet<string>(numericFields);
         }
 
-        protected override Lucene.Net.Search.Query NewRangeQuery(string field, string part1, string part2, bool inclusive)
+        protected override Query NewRangeQuery(string field, string part1, string part2, bool inclusive)
         {
             if (numericFields.Contains(field))
             {
-                int lower;
-                int upper;
+                long lower;
+				long upper;
 
-                int.TryParse(part1, out lower);
-                int.TryParse(part2, out upper);
+				long.TryParse(part1, out lower);
+				long.TryParse(part2, out upper);
 
                 var rangeQuery = NumericRangeQuery.NewLongRange(field, lower, upper, inclusive, inclusive);
 

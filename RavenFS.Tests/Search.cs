@@ -9,7 +9,7 @@ namespace RavenFS.Tests
 {
     public class Search : WebApiTest
     {
-        [Fact(Skip = "Broken - not sure why")]
+        [Fact]
         public void CanSearchForFilesBySize()
         {
             var client = NewClient();
