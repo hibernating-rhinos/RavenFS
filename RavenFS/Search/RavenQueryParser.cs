@@ -25,8 +25,15 @@ namespace RavenFS.Search
                 long lower;
 				long upper;
 
-				long.TryParse(part1, out lower);
-				long.TryParse(part2, out upper);
+				if (!long.TryParse(part1, out lower))
+				{
+				    lower = long.MinValue;
+				}
+
+				if (!long.TryParse(part2, out upper))
+				{
+				    upper = long.MaxValue;
+				}
 
                 var rangeQuery = NumericRangeQuery.NewLongRange(field, lower, upper, inclusive, inclusive);
 
