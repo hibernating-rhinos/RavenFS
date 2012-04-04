@@ -67,6 +67,9 @@
     <Reference Include="Microsoft.Expression.Interactions">
       <HintPath>..\SharedLibs\Silverlight\Microsoft.Expression.Interactions.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Windows.Controls.WatermarkedTextBox">
+      <HintPath>..\SharedLibs\Silverlight\Microsoft.Windows.Controls.WatermarkedTextBox.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="Newtonsoft.Json, Version=4.0.8.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="NLog">
@@ -159,8 +162,13 @@
     <Compile Include="External\MultiBinding\MultiBinding.cs" />
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
     <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\FileSizeRangeClauseModelView.xaml.cs">
+      <DependentUpon>FileSizeRangeClauseModelView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Features\Search\ClauseBuilders\FileNameEndsWithClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\FileNameStartsWithClauseBuilder.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\FileSizeRangeClauseBuilder.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\FileSizeRangeClauseModel.cs" />
     <Compile Include="Features\Search\ClauseBuilders\SearchClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModel.cs" />
     <Compile Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModelView.xaml.cs">
@@ -266,6 +274,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Assets\WatermarkedTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Features\Search\ClauseBuilders\FileSizeRangeClauseModelView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModelView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

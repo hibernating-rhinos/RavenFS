@@ -13,6 +13,7 @@
         <ResourceDictionary Source="DataGridStyles.xaml" />
         <ResourceDictionary Source="ProgressBarStyles.xaml" />
         <ResourceDictionary Source="ScrollBarStyles.xaml" />
+        <ResourceDictionary Source="WatermarkedTextBox.xaml" />
     </ResourceDictionary.MergedDictionaries>
     
     <Thickness x:Key="Margin_MainPageLeftRight">15,0</Thickness>

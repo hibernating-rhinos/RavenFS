@@ -1,0 +1,47 @@
+﻿<UserControl x:Class="RavenFS.Studio.Features.Search.ClauseBuilders.FileSizeRangeClauseModelView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                xmlns:ClauseBuilders="clr-namespace:RavenFS.Studio.Features.Search.ClauseBuilders"
+             xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+             xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors"
+             xmlns:Controls="clr-namespace:Microsoft.Windows.Controls;assembly=Microsoft.Windows.Controls.WatermarkedTextBox"
+             mc:Ignorable="d"
+     d:DataContext="{d:DesignInstance ClauseBuilders:FileSizeRangeClauseModel}">
+    
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="150"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="150"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="File Size Between" VerticalAlignment="Center" FontWeight="Bold" Grid.Column="0" Margin="0,0,5,0"/>
+        <Controls:WatermarkedTextBox Text="{Binding LowerLimit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                     Margin="0" 
+                                     Grid.Column="1"
+                                     VerticalAlignment="Center" 
+                                     Watermark="0 Kb">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="Loaded">
+                    <Behaviors:FocusElementAction />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </Controls:WatermarkedTextBox>
+        <TextBlock Text="and" toolkit:DockPanel.Dock="Left" VerticalAlignment="Center" FontWeight="Bold" Grid.Column="2"
+                   Margin="5,0"/>
+        <Controls:WatermarkedTextBox Text="{Binding UpperLimit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Watermark="Infinity"
+                                     Margin="0" 
+                                     VerticalAlignment="Center" 
+                                     Grid.Column="3"
+                                     />
+        <TextBlock Text="E.g. 512Kb, 10Mb or 2Gb" toolkit:DockPanel.Dock="Left" VerticalAlignment="Center" Foreground="Gray"  Grid.Column="1" Grid.Row="1"/>
+    </Grid>
+</UserControl>
