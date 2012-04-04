@@ -142,7 +142,7 @@ namespace RavenFS.Search
 				doc.Add(new Field("__directory", directoryName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
 				directoryName = Path.GetDirectoryName(directoryName);
 			} while (directoryName != null);
-			doc.Add(new Field("__modified", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture), Field.Store.NO,
+			doc.Add(new Field("__modified", DateTime.UtcNow.ToString("u", CultureInfo.InvariantCulture), Field.Store.NO,
 							  Field.Index.NOT_ANALYZED_NO_NORMS));
 			doc.Add(new Field("__level", level.ToString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
 			long len;
