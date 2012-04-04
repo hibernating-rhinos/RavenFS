@@ -52,7 +52,7 @@ namespace RavenFS.Studio.Models
 
         public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
-            return ApplicationModel.Current.Client.SearchAsync(searchPattern, null, start: start, pageSize: pageSize)
+            return ApplicationModel.Current.Client.SearchAsync(searchPattern, MapSortDescription(sortDescriptions), start: start, pageSize: pageSize)
                         .ContinueWith(t =>
                                           {
                                               var result = (IList<FileSystemModel>) ToFileSystemModels(t.Result.Files).Take(pageSize).ToArray();
@@ -61,31 +61,40 @@ namespace RavenFS.Studio.Models
                                           });
         }
 
-        private FilesSortOptions MapSortDescription(IList<SortDescription> sortDescriptions)
+        private string[] MapSortDescription(IList<SortDescription> sortDescriptions)
         {
             var sortDescription = sortDescriptions.FirstOrDefault();
 
             FilesSortOptions sort = FilesSortOptions.Default;
 
+            string sortField = "";
+
             if (sortDescription.PropertyName == "Name")
             {
-                sort = FilesSortOptions.Name;
+                sortField = "__fileName";
             }
             else if (sortDescription.PropertyName == "Size")
             {
-                sort = FilesSortOptions.Size;
+                sortField = "__size";
             }
             else if (sortDescription.PropertyName == "LastModified")
             {
-                sort = FilesSortOptions.LastModified;
+                sortField = "__modified";
             }
 
-            if (sortDescription.Direction == ListSortDirection.Descending)
+            if (sortField.Length > 0 && sortDescription.Direction == ListSortDirection.Descending)
             {
-                sort |= FilesSortOptions.Desc;
+                sortField = "-" + sortField;
             }
 
-            return sort;
+            if (!sortField.IsNullOrEmpty())
+            {
+                return new[] {sortField};
+            }
+            else
+            {
+                return new string[0];
+            }
         }
 
         private static IEnumerable<FileSystemModel> ToFileSystemModels(IEnumerable<FileInfo> files)
