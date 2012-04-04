@@ -167,6 +167,7 @@
     <Compile Include="Features\Search\ClauseBuilders\FileNameStartsWithClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\FileSizeRangeClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\FileSizeRangeClauseModel.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\InFolderClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\LastModifiedRangeClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\LastModifiedRangeClauseModel.cs" />
     <Compile Include="Features\Search\ClauseBuilders\LastModifiedRangeClauseModelView.xaml.cs">
