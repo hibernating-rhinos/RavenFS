@@ -7,8 +7,7 @@
              xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors"
-             xmlns:Controls="clr-namespace:Microsoft.Windows.Controls;assembly=Microsoft.Windows.Controls.WatermarkedTextBox"
-             mc:Ignorable="d"
+             xmlns:Controls="clr-namespace:Microsoft.Windows.Controls" mc:Ignorable="d"
      d:DataContext="{d:DesignInstance ClauseBuilders:FileSizeRangeClauseModel}">
     
     <Grid x:Name="LayoutRoot">
@@ -34,7 +33,7 @@
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </Controls:WatermarkedTextBox>
-        <TextBlock Text="and" toolkit:DockPanel.Dock="Left" VerticalAlignment="Center" FontWeight="Bold" Grid.Column="2"
+        <TextBlock Text="and" VerticalAlignment="Center" FontWeight="Bold" Grid.Column="2"
                    Margin="5,0"/>
         <Controls:WatermarkedTextBox Text="{Binding UpperLimit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      Watermark="Infinity"
@@ -42,6 +41,6 @@
                                      VerticalAlignment="Center" 
                                      Grid.Column="3"
                                      />
-        <TextBlock Text="E.g. 512Kb, 10Mb or 2Gb" toolkit:DockPanel.Dock="Left" VerticalAlignment="Center" Foreground="Gray"  Grid.Column="1" Grid.Row="1"/>
+        <TextBlock Text="E.g. 512Kb, 10Mb or 2Gb" VerticalAlignment="Center" Foreground="Gray"  Grid.Column="1" Grid.Row="1"/>
     </Grid>
 </UserControl>

@@ -22,7 +22,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
 
         public FileSizeRangeClauseBuilder()
         {
-            Description = "File Size Between...";
+            Description = "File Size...";
         }
 
         public override Model GetInputModel()

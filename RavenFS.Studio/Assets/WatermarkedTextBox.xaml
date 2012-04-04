@@ -1,8 +1,8 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:Microsoft.Windows.Controls;assembly=Microsoft.Windows.Controls.WatermarkedTextBox">
-    <Style TargetType="local:WatermarkedTextBox">
+    xmlns:Controls="clr-namespace:Microsoft.Windows.Controls">
+    <Style TargetType="Controls:WatermarkedTextBox">
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Background" Value="#FFFFFFFF" />
         <Setter Property="Foreground" Value="#FF000000" />
@@ -19,7 +19,7 @@
         </Setter>
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="local:WatermarkedTextBox">
+                <ControlTemplate TargetType="Controls:WatermarkedTextBox">
                     <Grid x:Name="Root" >
                         <Grid.Resources>
                             <SolidColorBrush x:Key="Background" Color="#FF003255"/>

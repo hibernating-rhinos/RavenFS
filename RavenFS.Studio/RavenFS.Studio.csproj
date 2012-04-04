@@ -67,9 +67,6 @@
     <Reference Include="Microsoft.Expression.Interactions">
       <HintPath>..\SharedLibs\Silverlight\Microsoft.Expression.Interactions.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Windows.Controls.WatermarkedTextBox">
-      <HintPath>..\SharedLibs\Silverlight\Microsoft.Windows.Controls.WatermarkedTextBox.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="Newtonsoft.Json, Version=4.0.8.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="NLog">
@@ -120,6 +117,7 @@
     <Compile Include="Behaviors\FadeTrimming.cs" />
     <Compile Include="Behaviors\FocusElementAction.cs" />
     <Compile Include="Behaviors\LinkHighlighter.cs" />
+    <Compile Include="Behaviors\PlaceCursorAtEndOfTextAction.cs" />
     <Compile Include="Behaviors\PreventEditingReadOnlyRows.cs" />
     <Compile Include="Behaviors\SelectAllAction.cs" />
     <Compile Include="Behaviors\StudioKeyTrigger.cs" />
@@ -169,6 +167,11 @@
     <Compile Include="Features\Search\ClauseBuilders\FileNameStartsWithClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\FileSizeRangeClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\FileSizeRangeClauseModel.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\LastModifiedRangeClauseBuilder.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\LastModifiedRangeClauseModel.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\LastModifiedRangeClauseModelView.xaml.cs">
+      <DependentUpon>LastModifiedRangeClauseModelView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Features\Search\ClauseBuilders\SearchClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModel.cs" />
     <Compile Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModelView.xaml.cs">
@@ -184,6 +187,8 @@
     <Compile Include="Impl\PopupPlacement\PopupOrientationCollection.cs" />
     <Compile Include="Impl\PopupPlacement\PopupPlacement.cs" />
     <Compile Include="Impl\PopupPlacement\PopupVerticalAlignment.cs" />
+    <Compile Include="Impl\WatermarkedTextBox\VisualStateHelper.cs" />
+    <Compile Include="Impl\WatermarkedTextBox\WatermarkedTextBox.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
     <Compile Include="Infrastructure\CompositeVirtualCollectionSource.cs" />
     <Compile Include="Infrastructure\IObservable.cs" />
@@ -281,6 +286,10 @@
     <Page Include="Features\Search\ClauseBuilders\FileSizeRangeClauseModelView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Features\Search\ClauseBuilders\LastModifiedRangeClauseModelView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Features\Search\ClauseBuilders\SingleInputSearchClauseModelView.xaml">
       <SubType>Designer</SubType>
@@ -381,6 +390,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Impl\PopupPlacement\Credit.txt" />
+    <Content Include="Impl\WatermarkedTextBox\Credits.txt" />
     <Resource Include="Assets\Images\SearchSmall.png" />
     <Resource Include="Assets\Images\SearchTiny.png" />
     <Resource Include="Assets\Images\VirtualFolder.png" />
