@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -58,6 +59,22 @@ namespace RavenFS.Tests
             var fileNames = files.Select(f => f.Name).ToArray();
 
             Assert.Equal(new[] { "3", "4", "5" }, fileNames);
+        }
+
+        [Fact]
+        public void CanGetSearchTerms()
+        {
+            var client = NewClient();
+
+            var ms = new MemoryStream();
+            client.UploadAsync("Test", new NameValueCollection() {{"TestKey", "TestValue"}}, ms).Wait();
+            client.UploadAsync("Test2", new NameValueCollection() {{"Another", "TestValue"}}, ms).Wait();
+
+            var terms = client.GetSearchFieldsAsync(0, pageSize: 1024).Result;
+
+            Assert.Contains("__key", terms);
+            Assert.Contains("TestKey", terms);
+            Assert.Contains("Another", terms);
         }
 
         private Stream StreamOfLength(int length)
