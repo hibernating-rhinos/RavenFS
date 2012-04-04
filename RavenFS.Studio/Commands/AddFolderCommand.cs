@@ -35,7 +35,7 @@ namespace RavenFS.Studio.Commands
                                             if (!t.IsCanceled)
                                             {
                                                 string path = folder + (folder.EndsWith("/") ? "" : "/") + t.Result;
-                                                ApplicationModel.Current.VirtualFolders.Add(path);
+                                                ApplicationModel.Current.State.VirtualFolders.Add(path);
                                             }
                                         });
         }

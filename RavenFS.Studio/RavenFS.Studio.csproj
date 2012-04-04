@@ -88,6 +88,7 @@
       <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Libraries\Client\System.Windows.Controls.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Controls.Data, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Windows.Controls.Input, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Windows.Controls.Input.Toolkit, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Windows.Controls.Navigation, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -120,6 +121,7 @@
     <Compile Include="Behaviors\PlaceCursorAtEndOfTextAction.cs" />
     <Compile Include="Behaviors\PreventEditingReadOnlyRows.cs" />
     <Compile Include="Behaviors\SelectAllAction.cs" />
+    <Compile Include="Behaviors\ShowAutoCompleteDropDown.cs" />
     <Compile Include="Behaviors\StudioKeyTrigger.cs" />
     <Compile Include="Behaviors\UIMessageEventArgs.cs" />
     <Compile Include="Behaviors\UIMessageTrigger.cs" />
@@ -160,6 +162,9 @@
     <Compile Include="External\MultiBinding\MultiBinding.cs" />
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
     <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\HasMetadataClauseModelView.xaml.cs">
+      <DependentUpon>HasMetadataClauseModelView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Features\Search\ClauseBuilders\FileSizeRangeClauseModelView.xaml.cs">
       <DependentUpon>FileSizeRangeClauseModelView.xaml</DependentUpon>
     </Compile>
@@ -167,6 +172,8 @@
     <Compile Include="Features\Search\ClauseBuilders\FileNameStartsWithClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\FileSizeRangeClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\FileSizeRangeClauseModel.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\HasMetadataClauseBuilder.cs" />
+    <Compile Include="Features\Search\ClauseBuilders\HasMetadataClauseModel.cs" />
     <Compile Include="Features\Search\ClauseBuilders\InFolderClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\LastModifiedRangeClauseBuilder.cs" />
     <Compile Include="Features\Search\ClauseBuilders\LastModifiedRangeClauseModel.cs" />
@@ -226,6 +233,7 @@
     </Compile>
     <Compile Include="Infrastructure\InvocationExtensions.cs" />
     <Compile Include="Infrastructure\View.cs" />
+    <Compile Include="Models\ApplicationState.cs" />
     <Compile Include="Models\AsyncOperationModel.cs" />
     <Compile Include="Models\AsyncOperationsModel.cs" />
     <Compile Include="Models\AsyncOperationStatus.cs" />
@@ -283,6 +291,10 @@
     <Page Include="Assets\WatermarkedTextBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Features\Search\ClauseBuilders\HasMetadataClauseModelView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Features\Search\ClauseBuilders\FileSizeRangeClauseModelView.xaml">
       <Generator>MSBuild:Compile</Generator>

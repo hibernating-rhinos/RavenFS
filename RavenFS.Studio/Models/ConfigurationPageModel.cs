@@ -88,7 +88,7 @@ namespace RavenFS.Studio.Models
                 string.Format("Are you sure you want to discard the changes you have made to configuration '{0}'",configuration.Name))
                 .ContinueWhenTrueInTheUIThread(() =>
                                                    {
-                                                       ApplicationModel.Current.ModifiedConfigurations.Remove(
+                                                       ApplicationModel.Current.State.ModifiedConfigurations.Remove(
                                                            configuration.Name);
                                                        configuration.IsModified = false;
                                                        BeginEditConfiguration(configuration);
@@ -105,7 +105,7 @@ namespace RavenFS.Studio.Models
                                             if (!t.IsCanceled)
                                             {
                                                 var newName = t.Result;
-                                                ApplicationModel.Current.ModifiedConfigurations.Add(newName, new NameValueCollection());
+                                                ApplicationModel.Current.State.ModifiedConfigurations.Add(newName, new NameValueCollection());
                                                 BeginLoadConfigurations().ContinueOnSuccessInTheUIThread(() => SelectedConfiguration.Value = AvailableConfigurations.FirstOrDefault(c => c.Name.Equals(newName)));
                                             }
                                         });
@@ -116,7 +116,7 @@ namespace RavenFS.Studio.Models
             ApplicationModel.Current.AsyncOperations.Do(
                 () =>
                 SaveConfigurationAsync(configuration,
-                                       ApplicationModel.Current.ModifiedConfigurations[configuration.Name]),
+                                       ApplicationModel.Current.State.ModifiedConfigurations[configuration.Name]),
                 string.Format("Saving configuration '{0}'", configuration));
         }
 
@@ -138,7 +138,7 @@ namespace RavenFS.Studio.Models
         private static Task DeleteConfigurationAsync(ConfigurationModel configuration)
         {
             return ApplicationModel.Current.Client.Config.DeleteConfig(configuration.Name)
-                .ContinueOnSuccessInTheUIThread(() => ApplicationModel.Current.ModifiedConfigurations.Remove(configuration.Name));
+                .ContinueOnSuccessInTheUIThread(() => ApplicationModel.Current.State.ModifiedConfigurations.Remove(configuration.Name));
         }
 
         private Task SaveConfigurationAsync(ConfigurationModel configuration, NameValueCollection configValues)
@@ -148,7 +148,7 @@ namespace RavenFS.Studio.Models
                                         {
                                             if (t.Status == TaskStatus.RanToCompletion)
                                             {
-                                                ApplicationModel.Current.ModifiedConfigurations.Remove(configuration.Name);
+                                                ApplicationModel.Current.State.ModifiedConfigurations.Remove(configuration.Name);
                                                 configuration.IsModified = false;
                                             }
                                         });
@@ -163,10 +163,10 @@ namespace RavenFS.Studio.Models
         {
             if (configuration != null)
             {
-                if (ApplicationModel.Current.ModifiedConfigurations.ContainsKey(configuration.Name))
+                if (ApplicationModel.Current.State.ModifiedConfigurations.ContainsKey(configuration.Name))
                 {
                     EditConfigurationValues(configuration,
-                                            ApplicationModel.Current.ModifiedConfigurations[configuration.Name]);
+                                            ApplicationModel.Current.State.ModifiedConfigurations[configuration.Name]);
                 }
                 else
                 {
@@ -192,7 +192,7 @@ namespace RavenFS.Studio.Models
             editor.Changed += delegate
                                                  {
                                                      ApplicationModel.Current
-                                                         .ModifiedConfigurations[currentConfiguration.Name] = editor.GetCurrent();
+                                                         .State.ModifiedConfigurations[currentConfiguration.Name] = editor.GetCurrent();
                                                      currentConfiguration.IsModified = true;
                                                  };
             ConfigurationSettings.Value = editor;
@@ -220,11 +220,11 @@ namespace RavenFS.Studio.Models
         private void UpdateUIWithConfigurations(Task<string[]> configurations)
         {
             AvailableConfigurations.UpdateFromOrdered(
-                ApplicationModel.Current.ModifiedConfigurations.Keys
+                ApplicationModel.Current.State.ModifiedConfigurations.Keys
                     .Concat(configurations.Result)
                     .Distinct()
                     .OrderBy(x => x)
-                    .Select(n => new ConfigurationModel(n) { IsModified = ApplicationModel.Current.ModifiedConfigurations.ContainsKey(n) }),
+                    .Select(n => new ConfigurationModel(n) { IsModified = ApplicationModel.Current.State.ModifiedConfigurations.ContainsKey(n) }),
                     m => m.Name.ToLowerInvariant());
 
 
