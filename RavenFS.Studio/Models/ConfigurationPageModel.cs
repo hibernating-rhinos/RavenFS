@@ -24,7 +24,7 @@ using RavenFS.Studio.Infrastructure.Input;
 
 namespace RavenFS.Studio.Models
 {
-    public class ReplicationPageModel : PageModel
+    public class ConfigurationPageModel : PageModel
     {
         public ObservableCollection<ConfigurationModel> AvailableConfigurations { get; private set; }
         public Observable<ConfigurationModel> SelectedConfiguration { get; private set; } 
@@ -71,7 +71,7 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        public ReplicationPageModel()
+        public ConfigurationPageModel()
         {
             AvailableConfigurations = new ObservableCollection<ConfigurationModel>();
 
