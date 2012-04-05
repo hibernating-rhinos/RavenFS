@@ -102,6 +102,26 @@ namespace RavenFS.Tests
             Assert.Equal("some-value", result1["SomeTest-metadata"]);
         }
 
+        [Fact(Skip = "Not implemented yet")]
+        public void Should_mark_file_as_conflicted()
+        {
+        }
+
+        [Fact(Skip = "Not implemented yet")]
+        public void Should_mark_file_to_be_resolved_using_theirs_strategy()
+        {
+        }
+
+        [Fact(Skip = "Not implemented yet")]
+        public void Should_mark_file_to_be_resolved_using_mine_strategy()
+        {
+        }
+
+        [Fact(Skip = "Not implemented yet")]
+        public void Should_lock_file_during_synchronization()
+        {
+        }
+
         private static MemoryStream PrepareSourceStream(int lines)
         {
             var ms = new MemoryStream();
