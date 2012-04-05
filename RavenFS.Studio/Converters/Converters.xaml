@@ -10,6 +10,8 @@
     <Converters:AsyncOperationStatusConverter x:Key="Converter_AsyncOperationStatus" />
     <Converters:ValueGreaterThanConverter x:Key="Converter_VisibleWhenValueGreaterThan" ValueWhenTrue="{z:Static Member=Visibility.Visible}" ValueWhenFalse="{z:Static Member=Visibility.Collapsed}"/>
     <Converters:ValueGreaterThanConverter x:Key="Converter_CollapsedWhenValueGreaterThan" ValueWhenTrue="{z:Static Member=Visibility.Collapsed}" ValueWhenFalse="{z:Static Member=Visibility.Visible}"/>
+    
+    <Converters:ValueGreaterThanConverter x:Key="Converter_TrueWhenGreaterThanZero" ValueWhenTrue="True" ValueWhenFalse="False"/>
 
     <Converters:StringIsNullOrEmptyConverter x:Key="Converter_VisibleWhenStringIsNullOrEmpty" ValueWhenTrue="{z:Static Member=Visibility.Visible}" ValueWhenFalse="{z:Static Member=Visibility.Collapsed}"/>
     <Converters:StringIsNullOrEmptyConverter x:Key="Converter_CollapsedWhenStringIsNullOrEmpty" ValueWhenTrue="{z:Static Member=Visibility.Collapsed}" ValueWhenFalse="{z:Static Member=Visibility.Visible}"/>
@@ -22,4 +24,8 @@
 
     <Converters:FileSystemModelToIconConverter x:Key="Converter_FileSystemModelToIcon"/>
     <Converters:VirtualFolderToolTipConverter x:Key="Converter_VirtualFolderToolTip"/>
+    
+    <Converters:IntegerToFormattedStringConverter x:Key="Converter_PendingOperationsCountToStatusConverter"
+                                                  FormatWhenZero="Idle" FormatWhenOne="1 Operation Pending"
+                                                  FormatWhenMany="{}{0} Operations Pending"/>
 </ResourceDictionary>

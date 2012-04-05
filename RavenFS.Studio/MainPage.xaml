@@ -5,7 +5,7 @@
 			 xmlns:uriMapper="clr-namespace:System.Windows.Navigation;assembly=System.Windows.Controls.Navigation"
 			 xmlns:TiledBG="clr-namespace:TiledBG;assembly=TiledBG"
              xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
-             FontFamily="Segoe UI"
+             xmlns:Views="clr-namespace:RavenFS.Studio.Views" FontFamily="Segoe UI"
              FontSize="12">
 
     <Grid x:Name="LayoutRoot"
@@ -160,7 +160,7 @@
 							  Source=""
 							  Navigated="ContentFrame_Navigated"
 							  NavigationFailed="ContentFrame_NavigationFailed"
-							  Margin="15,0">
+							  Margin="15,0,15,20">
                 <navigation:Frame.UriMapper>
                     <uriMapper:UriMapper>
                         <uriMapper:UriMapping Uri=""
@@ -172,6 +172,8 @@
                     </uriMapper:UriMapper>
                 </navigation:Frame.UriMapper>
             </navigation:Frame>
+
+            <Views:AsyncOperationsView Margin="15,0" VerticalAlignment="Bottom"/>
         </Grid>
 
         <!--<RavenControls:NotificationArea Grid.RowSpan="999"

@@ -1,0 +1,87 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:RavenFS.Studio.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d">
+
+
+    <Style TargetType="Controls:ActivityIndicator">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Controls:ActivityIndicator">
+                    <Grid x:Name="LayoutRoot">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="ActivityStates">
+                                <VisualState x:Name="Active">
+                                    <Storyboard>
+                                        <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)" Storyboard.TargetName="PowerLayer" RepeatBehavior="Forever">
+                                          <EasingColorKeyFrame KeyTime="0:0:0.0" Value="#F7686868"/>
+                                          <EasingColorKeyFrame KeyTime="0:0:0.4" Value="#00686868"/>
+                                          <EasingColorKeyFrame KeyTime="0:0:0.8" Value="#F7686868"/>
+                                        </ColorAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Inactive">
+                                    <Storyboard>
+                                        <ColorAnimation Duration="0" To="#FF686868" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)" Storyboard.TargetName="PowerLayer" d:IsOptimized="True"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="ErrorStates">
+                                <VisualState x:Name="Error">
+                                    <Storyboard>
+                                        <ColorAnimation Duration="0" To="#FFFF6900" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)" Storyboard.TargetName="ColorLayer" d:IsOptimized="True"/>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Normal">
+                                    <Storyboard>
+                                        <ColorAnimation Duration="0" To="#FF28E800" Storyboard.TargetProperty="(Shape.Fill).(SolidColorBrush.Color)" Storyboard.TargetName="ColorLayer" d:IsOptimized="True"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="1*"/>
+                                <RowDefinition Height="5*"/>
+                                <RowDefinition Height="6*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="5*"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <Ellipse x:Name="ColorLayer" Fill="#FF28E800" Grid.RowSpan="4" Grid.ColumnSpan="3"/>
+                            <Ellipse x:Name="PowerLayer" Fill="#FF686868" Grid.RowSpan="3" Grid.ColumnSpan="3"/>
+                            <Ellipse Stroke="#6A080000" Grid.RowSpan="4" Grid.ColumnSpan="3">
+                                <Ellipse.Fill>
+                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                        <GradientStop Color="#15120000" Offset="1"/>
+                                        <GradientStop Color="#35FFFFFF"/>
+                                        <GradientStop Color="#007F7575" Offset="0.513"/>
+                                    </LinearGradientBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <Ellipse Grid.RowSpan="4" Grid.ColumnSpan="3">
+                                <Ellipse.Fill>
+                                    <RadialGradientBrush>
+                                        <GradientStop Color="#92120000" Offset="1"/>
+                                        <GradientStop Color="#40FFFFFF"/>
+                                    </RadialGradientBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                            <Ellipse Margin="0" Grid.Column="1" Grid.Row="1">
+                                <Ellipse.Fill>
+                                    <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
+                                        <GradientStop Color="#54FFFFFF"/>
+                                        <GradientStop Color="Transparent" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                        </Grid>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

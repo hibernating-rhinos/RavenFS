@@ -128,6 +128,7 @@
     <Compile Include="Commands\ActionObservableDependantCommand.cs" />
     <Compile Include="Commands\AddFolderCommand.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
+    <Compile Include="Commands\ToggleOperationsPaneVisibilityCommand.cs" />
     <Compile Include="Commands\MoveFileCommand.cs" />
     <Compile Include="Commands\HideOperationsPaneCommand.cs" />
     <Compile Include="Commands\NavigateToCommand.cs" />
@@ -142,6 +143,7 @@
     <Compile Include="Commands\DownloadCommand.cs" />
     <Compile Include="Commands\EditFilePropertiesCommand.cs" />
     <Compile Include="Commands\VirtualItemCommand.cs" />
+    <Compile Include="Controls\ActivityIndicator.cs" />
     <Compile Include="Converters\AsyncOperationStatusConverter.cs" />
     <Compile Include="Commands\CopyExceptionToClipboardCommand.cs" />
     <Compile Include="Converters\NullConverter.cs" />
@@ -149,6 +151,7 @@
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
     <Compile Include="Converters\BooleanConverter.cs" />
     <Compile Include="Converters\FileSystemModelToIconConverter.cs" />
+    <Compile Include="Converters\IntegerToFormattedStringConverter.cs" />
     <Compile Include="Converters\StringIsNullOrEmptyConverter.cs" />
     <Compile Include="Converters\ValueGreaterThanConverter.cs" />
     <Compile Include="Converters\VirtualFolderToolTipConverter.cs" />
@@ -288,6 +291,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Assets\Vectors.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Assets\WatermarkedTextBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -311,6 +318,10 @@
     <Page Include="Features\Search\SearchClauseBuilderView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\Search.xaml">
       <Generator>MSBuild:Compile</Generator>

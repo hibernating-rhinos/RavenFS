@@ -11,22 +11,29 @@
              xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
              xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors" 
              xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
-             xmlns:m="clr-namespace:RavenFS.Studio.External.MultiBinding" mc:Ignorable="d"
+             xmlns:m="clr-namespace:RavenFS.Studio.External.MultiBinding"
+             xmlns:Controls="clr-namespace:RavenFS.Studio.Controls" mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="400"
     Infrastructure:ModelResolver.AttachModel="AsyncOperationsViewModel" d:DataContext="{d:DesignInstance Models:AsyncOperationsViewModel}">
     <UserControl.Resources>
         <Storyboard x:Key="HidePanel">
-            <DoubleAnimation Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="Height" To="0" Duration="0:0:0.25"/>
+            <DoubleAnimation Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="Height" To="35" Duration="0:0:0.25"/>
+            <DoubleAnimation Storyboard.TargetName="ExpandGlyph" Storyboard.TargetProperty="(ContentPresenter.RenderTransform).(RotateTransform.Angle)" To="0" Duration="0:0:0.25"/>
         </Storyboard>
         <Storyboard x:Key="ShowPanel">
             <DoubleAnimation Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="Height" To="200" Duration="0:0:0.25"/>
+            <DoubleAnimation Storyboard.TargetName="ExpandGlyph" Storyboard.TargetProperty="(ContentPresenter.RenderTransform).(RotateTransform.Angle)" To="180" Duration="0:0:0.25"/>
         </Storyboard>
     </UserControl.Resources>
-    <Grid x:Name="LayoutRoot" Background="White" Height="0" d:DesignHeight="100">
+    <Grid x:Name="LayoutRoot" Height="35" TextOptions.TextHintingMode="Animated">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <Grid.Effect>
+            <DropShadowEffect Opacity="0.1" Direction="45" BlurRadius="5"/>
+        </Grid.Effect>
         <i:Interaction.Triggers>
             <ei:DataTrigger Binding="{Binding Model.IsPaneVisible.Value}" Value="True" Comparison="Equal">
                 <ei:ControlStoryboardAction Storyboard="{StaticResource ShowPanel}" ControlStoryboardOption="Play"/>
@@ -36,10 +43,10 @@
             </ei:DataTrigger>
         </i:Interaction.Triggers>
 
-        <Border Style="{StaticResource Style_Border_Header}">
+        <Border CornerRadius="2,0,0,0" Grid.Row="1" Background="{StaticResource Brush_OperationsPaneHeader}">
             <toolkit:DockPanel Margin="4" LastChildFill="False">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Pending Operations" Style="{StaticResource Style_TextBlock_Breadcrumb}"/>
+                    <TextBlock Text="Pending Operations"  VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal"
                          VerticalAlignment="Center"
@@ -54,27 +61,51 @@
                     <CheckBox IsChecked="{Binding Model.ClearCompletedOperationsAutomatically.Value, Mode=TwoWay}" 
                               Content="Automatically clear finished operations"
                               VerticalAlignment="Center"
-                              Margin="5,0" />
-                  <Button Command="{StaticResource ClearCompletedOperationsCommand}"
+                              Margin="5,0"/>
+                    <Button Command="{StaticResource ClearCompletedOperationsCommand}"
                           ToolTipService.ToolTip="Clear list"
                           Style="{StaticResource Style_Button_MouseOverChrome}">
-                    <Image Source="{StaticResource Image_Clear_Tiny}" Stretch="None"/>
-                  </Button>
-                  <Button Command="{StaticResource HideOperationsPaneCommand}"
-                            ToolTipService.ToolTip="Hide"
-                            Style="{StaticResource Style_Button_MouseOverChrome}">
-                        <Image Source="{StaticResource Image_Close}" Stretch="None"/>
+                        <Image Source="{StaticResource Image_Clear_Tiny}" Stretch="None"/>
                     </Button>
                 </StackPanel>
             </toolkit:DockPanel>
         </Border>
-        
+
+        <Border Grid.Row="0" Height="35" Width="200" HorizontalAlignment="Right" CornerRadius="10,3,0,0"
+              ToolTipService.ToolTip="Click to show or hide the list of pending operations"
+              Margin="0,5,0,-5" Background="{StaticResource Brush_OperationsPaneHeader}">
+          <i:Interaction.Triggers>
+                <i:EventTrigger EventName="MouseLeftButtonUp">
+                    <i:InvokeCommandAction Command="{StaticResource ToggleOperationsPaneVisibilityCommand}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+            <toolkit:DockPanel VerticalAlignment="Center">
+                <Controls:ActivityIndicator toolkit:DockPanel.Dock="Left" Margin="5,0" 
+                                            IsActive="{Binding Model.PendingOperationsCount.Value, Converter={StaticResource Converter_TrueWhenGreaterThanZero}}" 
+                                            IsFault="{Binding Model.IsFault.Value}" 
+                                            VerticalAlignment="Center" Width="15" Height="15"/>
+
+                <Path x:Name="ExpandGlyph" toolkit:DockPanel.Dock="Right" VerticalAlignment="Center" Margin="5,0,14,0" RenderTransformOrigin="0.5,0.5"
+                Data="{StaticResource Drawing_ExpandArrow}" StrokeEndLineCap="Round" 
+                StrokeStartLineCap="Round" StrokeLineJoin="Round" StrokeThickness="2" Stroke="White" Height="10">
+                    <Path.RenderTransform>
+                        <RotateTransform Angle="0"/>
+                    </Path.RenderTransform>
+                </Path>
+                <TextBlock Text="{Binding Model.PendingOperationsCount.Value, Converter={StaticResource Converter_PendingOperationsCountToStatusConverter}}"
+                     Margin="5,0,0,0"
+                     VerticalAlignment="Center"/>
+            </toolkit:DockPanel>
+        </Border>
+
         <sdk:DataGrid 
             x:Name="DataGrid"
-            Grid.Row="1"
+            Grid.Row="2"
             ItemsSource="{Binding Model.Operations}" 
             AutoGenerateColumns="False" 
-            Style="{StaticResource Style_DataGrid_NoHeader}">
+            Style="{StaticResource Style_DataGrid_NoHeader}"
+            BorderThickness="1,0,1,0"
+            BorderBrush="#FF9E717D">
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTemplateColumn Width="*">
                     <sdk:DataGridTemplateColumn.CellTemplate>
@@ -87,7 +118,7 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Width="300">
+                <sdk:DataGridTemplateColumn Width="275">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Grid>

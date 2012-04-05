@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -31,6 +32,8 @@ namespace RavenFS.Studio.Models
             operations.CollectionChanged += HandleOperationsChanged;
 
             IsPaneVisible = new Observable<bool>();
+            PendingOperationsCount = new Observable<int>();
+            IsFault = new Observable<bool>();
 
             ClearCompletedOperationsAutomatically = new Observable<bool> {Value = true};
             ClearCompletedOperationsAutomatically.PropertyChanged += HandleClearCompletedOperationsAutomaticallyChanged;
@@ -55,10 +58,7 @@ namespace RavenFS.Studio.Models
 
         private void HandleOperationsChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.Action == NotifyCollectionChangedAction.Add)
-            {
-                IsPaneVisible.Value = true;
-            }
+            UpdateStatusProperties();
         }
 
         private void RemoveOperation(AsyncOperationModel operation)
@@ -81,14 +81,33 @@ namespace RavenFS.Studio.Models
         private void HandleOperationPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             var operation = (sender as AsyncOperationModel);
+            Debug.Assert(operation != null);
 
-            if (e.PropertyName == "Status" 
-                && ClearCompletedOperationsAutomatically.Value
-                && operation.Status == AsyncOperationStatus.Completed)
+            if (e.PropertyName == "Status")
             {
-                RemoveOperation(operation);
+                if (ClearCompletedOperationsAutomatically.Value
+                    && operation.Status == AsyncOperationStatus.Completed)
+                {
+                    RemoveOperation(operation);
+                }
+                else if (operation.Status == AsyncOperationStatus.Error && !IsPaneVisible.Value)
+                {
+                    IsPaneVisible.Value = true;
+                }
+
+                UpdateStatusProperties();
             }
         }
+
+        private void UpdateStatusProperties()
+        {
+            IsFault.Value = Operations.Any(o => o.Status == AsyncOperationStatus.Error);
+            PendingOperationsCount.Value = Operations.Count(o => o.Status == AsyncOperationStatus.Queued || o.Status == AsyncOperationStatus.Processing);
+        }
+
+        public Observable<bool> IsFault { get; private set; }
+
+        public Observable<int> PendingOperationsCount { get; private set; }
 
         public Observable<bool> IsPaneVisible { get; private set; }
 
