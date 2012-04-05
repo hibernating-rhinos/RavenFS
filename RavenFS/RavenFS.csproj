@@ -249,8 +249,10 @@
     <Compile Include="Rdc\Wrapper\Unmanaged\SimilarityTraitsMappedView.cs" />
     <Compile Include="Rdc\Wrapper\Unmanaged\SimilarityTraitsMapping.cs" />
     <Compile Include="Rdc\Wrapper\Unmanaged\SimilarityTraitsTable.cs" />
+    <Compile Include="Search\IndexSearcherHolder.cs" />
     <Compile Include="Search\IndexStorage.cs" />
     <Compile Include="Search\LowerCaseKeywordAnalyzer.cs" />
+    <Compile Include="Search\RavenQueryParser.cs" />
     <Compile Include="Storage\EsentExtension.cs" />
     <Compile Include="Notifications\FileChange.cs" />
     <Compile Include="Storage\FileHeader.cs" />

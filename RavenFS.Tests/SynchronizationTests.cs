@@ -13,7 +13,6 @@ namespace RavenFS.Tests
 		[Theory]
 		[InlineData(1)]
 		[InlineData(5000)]
-		// [Fact(Skip = "Syncronization isn't supported right now, we don't have a valid implementation for it.")]
         public void Synchronize_file_with_different_beginning(int size)
         {
             var differenceChunk = new MemoryStream();

@@ -356,9 +356,10 @@ namespace RavenFS.Storage
 
 			do
 			{
-				var file = Api.RetrieveColumnAsString(session, Usage, tableColumnsCache.UsageColumns["name"]);
-				if (file != filename)
-					return;
+				var rowName = Api.RetrieveColumnAsString(session, Usage, tableColumnsCache.UsageColumns["name"]);
+				if (rowName != filename)
+					break;
+
 				var pageId = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value;
 
 				Api.MakeKey(session, Pages, pageId, MakeKeyGrbit.NewKey);

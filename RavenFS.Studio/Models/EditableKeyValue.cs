@@ -23,8 +23,8 @@ namespace RavenFS.Studio.Models
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
         private List<ValidationResult> validationErrors = new List<ValidationResult>();
-        string key;
-        string value;
+        string key = string.Empty;
+        string value = string.Empty;
         private bool isReadOnly;
 
         [RegularExpression(@"^[\w|-]*$", ErrorMessage = "Key must consist only of letters, digits, underscores and dashes")]
@@ -33,9 +33,12 @@ namespace RavenFS.Studio.Models
             get { return key; }
             set
             {
-                key = value;
-                OnPropertyChanged("Key");
-                Validate();
+                if (key != value)
+                {
+                    key = value;
+                    OnPropertyChanged("Key");
+                    Validate();
+                }
             }
         }
 
@@ -49,8 +52,11 @@ namespace RavenFS.Studio.Models
             get { return value; }
             set
             {
-                this.value = value;
-                OnPropertyChanged("Value");
+                if (this.value != value)
+                {
+                    this.value = value;
+                    OnPropertyChanged("Value");
+                }
             }
         }
 

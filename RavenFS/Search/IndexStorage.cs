@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
-using System.Runtime.CompilerServices;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers;
@@ -18,12 +17,14 @@ namespace RavenFS.Search
 {
 	public class IndexStorage : IDisposable
 	{
+        private static readonly string[] NumericIndexFields = new[] { "__size_numeric" };
+
 		private readonly string path;
 		private FSDirectory directory;
 		private LowerCaseKeywordAnalyzer analyzer;
 		private IndexWriter writer;
 		private readonly object writerLock = new object();
-		private IndexSearcher searcher;
+		private readonly IndexSearcherHolder currentIndexSearcherHolder = new IndexSearcherHolder();
 
 		public IndexStorage(string path, NameValueCollection _)
 		{
@@ -39,28 +40,40 @@ namespace RavenFS.Search
 			analyzer = new LowerCaseKeywordAnalyzer();
 			writer = new IndexWriter(directory, analyzer, IndexWriter.MaxFieldLength.UNLIMITED);
 			writer.SetMergeScheduler(new ErrorLoggingConcurrentMergeScheduler());
-			searcher = new IndexSearcher(writer.GetReader());
+			currentIndexSearcherHolder.SetIndexSearcher(new IndexSearcher(directory, true));
 		}
 
 		public string[] Query(string query, string[] sortFields, int start, int pageSize, out int totalResults)
 		{
-			var queryParser = new QueryParser(Version.LUCENE_29, "", analyzer);
-			var q = queryParser.Parse(query);
-
-			var topDocs = ExecuteQuery(sortFields, q, pageSize + start);
-
-			var results = new List<string>();
-
-			for (var i = start; i < pageSize + start && i < topDocs.totalHits; i++)
+			IndexSearcher searcher;
+			using(GetSearcher(out searcher))
 			{
-				var document = searcher.Doc(topDocs.scoreDocs[i].doc);
-				results.Add(document.Get("__key"));
+				Query q;
+				if(string.IsNullOrEmpty(query))
+				{
+					q = new MatchAllDocsQuery();
+				}
+				else
+				{
+                    var queryParser = new RavenQueryParser(analyzer, NumericIndexFields);
+					q = queryParser.Parse(query);
+				}
+
+				var topDocs = ExecuteQuery(searcher, sortFields, q, pageSize + start);
+
+				var results = new List<string>();
+
+				for (var i = start; i < pageSize + start && i < topDocs.totalHits; i++)
+				{
+					var document = searcher.Doc(topDocs.scoreDocs[i].doc);
+					results.Add(document.Get("__key"));
+				}
+				totalResults = topDocs.totalHits;
+				return results.ToArray();
 			}
-			totalResults = topDocs.totalHits;
-			return results.ToArray();
 		}
 
-	    private TopDocs ExecuteQuery(string[] sortFields, Query q, int size)
+		private TopDocs ExecuteQuery(IndexSearcher searcher, string[] sortFields, Query q, int size)
 		{
 			TopDocs topDocs;
 			if (sortFields != null && sortFields.Length > 0)
@@ -114,9 +127,9 @@ namespace RavenFS.Search
 			doc.Add(new Field("__key", lowerKey, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
 
 		    var fileName = Path.GetFileName(lowerKey);
-		    doc.Add(new Field("__fileName", fileName, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+		    doc.Add(new Field("__fileName", fileName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
 		    // the reversed version of the file name is used to allow searches that start with wildcards
-		    doc.Add(new Field("__rfileName", fileName.Reverse(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+		    doc.Add(new Field("__rfileName", fileName.Reverse(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
 
 			int level = 0;
 			var directoryName = Path.GetDirectoryName(lowerKey);
@@ -136,16 +149,24 @@ namespace RavenFS.Search
 			if (long.TryParse(metadata["Content-Length"], out len))
 			{
 				doc.Add(new Field("__size", len.ToString("D20"), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+				doc.Add(new NumericField("__size_numeric", Field.Store.NO, true).SetLongValue(len));
 			}
 
 			return doc;
 		}
 
+		internal IDisposable GetSearcher(out IndexSearcher searcher)
+		{
+			return currentIndexSearcherHolder.GetSearcher(out searcher);
+		}
+
 		public void Dispose()
 		{
 			analyzer.Close();
-			searcher.GetIndexReader().Close();
-			searcher.Close();
+			if (currentIndexSearcherHolder != null)
+			{
+				currentIndexSearcherHolder.SetIndexSearcher(null);
+			}
 			writer.Close();
 			directory.Close();
 		}
@@ -165,42 +186,42 @@ namespace RavenFS.Search
 
 		private void ReplaceSearcher()
 		{
-			var currentSearcher = searcher;
-			currentSearcher.GetIndexReader().Close();
-			currentSearcher.Close();
-
-			searcher = new IndexSearcher(writer.GetReader());
+			currentIndexSearcherHolder.SetIndexSearcher(new IndexSearcher(writer.GetReader()));
 		}
 
 		public IEnumerable<string> GetTermsFor(string field, string fromValue)
 		{
-			var termEnum = searcher.GetIndexReader().Terms(new Term(field, fromValue ?? string.Empty));
-			try
+			IndexSearcher searcher;
+			using(GetSearcher(out searcher))
 			{
-				if (string.IsNullOrEmpty(fromValue) == false) // need to skip this value
+				var termEnum = searcher.GetIndexReader().Terms(new Term(field, fromValue ?? string.Empty));
+				try
 				{
-					while (termEnum.Term() == null || fromValue.Equals(termEnum.Term().Text()))
+					if (string.IsNullOrEmpty(fromValue) == false) // need to skip this value
 					{
-						if (termEnum.Next() == false)
-							yield break;
+						while (termEnum.Term() == null || fromValue.Equals(termEnum.Term().Text()))
+						{
+							if (termEnum.Next() == false)
+								yield break;
+						}
 					}
-				}
-				while (termEnum.Term() == null ||
-					field.Equals(termEnum.Term().Field()))
-				{
-					if (termEnum.Term() != null)
+					while (termEnum.Term() == null ||
+						field.Equals(termEnum.Term().Field()))
 					{
-						var item = termEnum.Term().Text();
+						if (termEnum.Term() != null)
+						{
+							var item = termEnum.Term().Text();
 							yield return item;
-					}
+						}
 
-					if (termEnum.Next() == false)
-						break;
+						if (termEnum.Next() == false)
+							break;
+					}
 				}
-			}
-			finally
-			{
-				termEnum.Close();
+				finally
+				{
+					termEnum.Close();
+				}
 			}
 		}
 	}
