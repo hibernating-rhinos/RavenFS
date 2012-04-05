@@ -19,18 +19,27 @@ namespace RavenFS.Controllers
     {
         public Task<HttpResponseMessage<SynchronizationReport>> Get(string fileName, string sourceServerUrl)
         {
-            var remoteSignatureCache = new VolatileSignatureRepository(TempDirectoryTools.Create());
-
-            var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
-            var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
-            var remoteRdcManager = new RemoteRdcManager(sourceRavenFileSystemClient, SignatureRepository, remoteSignatureCache);
 
             if (String.IsNullOrEmpty(sourceServerUrl))
             {
                 throw new Exception("Unknown server identifier " + sourceServerUrl);
             }
-            var sourceMetadataAsync = sourceRavenFileSystemClient.GetMetadataForAsync(fileName);
+
+            var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
             var localFileDataInfo = GetLocalFileDataInfo(fileName);
+            var sourceMetadataAsync = sourceRavenFileSystemClient.GetMetadataForAsync(fileName);
+
+            if (localFileDataInfo == null)
+            {
+                // if file doesn't exist locally - download it at all
+                return Download(sourceRavenFileSystemClient, fileName, sourceMetadataAsync)
+                    .ContinueWith(
+                        synchronizationTask => new HttpResponseMessage<SynchronizationReport>(synchronizationTask.Result));
+            }
+            
+            var remoteSignatureCache = new VolatileSignatureRepository(TempDirectoryTools.Create());
+            var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
+            var remoteRdcManager = new RemoteRdcManager(sourceRavenFileSystemClient, SignatureRepository, remoteSignatureCache);
 
             var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
             return remoteRdcManager.SynchronizeSignaturesAsync(localFileDataInfo)
@@ -118,10 +127,10 @@ namespace RavenFS.Controllers
                                         task.Result.Dispose();
                                         Storage.Batch(
                                            accessor =>
-                                               {
-                                                   accessor.Delete(fileName);
-                                                   accessor.RenameFile(tempFileName, fileName);
-                                               });
+                                           {
+                                               accessor.Delete(fileName);
+                                               accessor.RenameFile(tempFileName, fileName);
+                                           });
                                         return new SynchronizationReport
                                         {
                                             FileName = fileName,
@@ -134,7 +143,14 @@ namespace RavenFS.Controllers
         private DataInfo GetLocalFileDataInfo(string fileName)
         {
             FileAndPages fileAndPages = null;
-            Storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0, 0));
+            try
+            {
+                Storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0, 0));
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
             return new DataInfo
             {
                 CreatedAt = Convert.ToDateTime(fileAndPages.Metadata["Last-Modified"]),

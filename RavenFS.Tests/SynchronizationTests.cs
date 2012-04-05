@@ -10,9 +10,9 @@ namespace RavenFS.Tests
 {
     public class SynchronizationTests : MultiHostTestBase
     {
-		[Theory]
-		[InlineData(1)]
-		[InlineData(5000)]
+        [Theory]
+        [InlineData(1)]
+        [InlineData(5000)]
         public void Synchronize_file_with_different_beginning(int size)
         {
             var differenceChunk = new MemoryStream();
@@ -43,25 +43,25 @@ namespace RavenFS.Tests
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
             string resultMD5 = null;
-            using(var resultFileContent = new MemoryStream())
-            {                
+            using (var resultFileContent = new MemoryStream())
+            {
                 var metadata = seedClient.DownloadAsync("test.txt", resultFileContent).Result;
                 Assert.Equal("some-value", metadata["SomeTest-metadata"]);
                 resultFileContent.Position = 0;
                 resultMD5 = resultFileContent.GetMD5Hash();
                 resultFileContent.Position = 0;
             }
-            
+
             sourceContent.Position = 0;
             var sourceMD5 = sourceContent.GetMD5Hash();
             sourceContent.Position = 0;
-            
+
             Assert.True(resultMD5 == sourceMD5);
         }
 
-		[Theory]
-		[InlineData(1024 * 1024 * 10)]
-		public void Big_file_test(long size)
+        [Theory]
+        [InlineData(1024 * 1024 * 10)]
+        public void Big_file_test(long size)
         {
             var sourceContent = new RandomStream(size, 1);
             var seedContent = new RandomlyModifiedStream(new RandomStream(size, 1), 0.01);
@@ -76,11 +76,30 @@ namespace RavenFS.Tests
                                    {"SomeTest-metadata", "should-be-overwritten"}
                                };
 
-            seedClient.UploadAsync("test.bin", seedMetadata, seedContent).Wait();           
+            seedClient.UploadAsync("test.bin", seedMetadata, seedContent).Wait();
             sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-            var result = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Result;            
-            Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);            
+            var result = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Result;
+            Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
+        }
+
+        [Fact]
+        public void Should_download_file_from_source_if_it_doesnt_exist_on_seed()
+        {
+            var sourceContent1 = new RandomStream(10, 1);
+            var sourceMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "some-value"}
+                               };
+            var seedClient = NewClient(0);
+            var sourceClient = NewClient(1);
+
+            sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
+
+            var result0 = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Result;
+            var result1 = seedClient.GetMetadataForAsync("test.bin").Result;
+            Assert.Equal(sourceContent1.Length, result0.BytesCopied + result0.BytesTransfered);
+            Assert.Equal("some-value", result1["SomeTest-metadata"]);
         }
 
         private static MemoryStream PrepareSourceStream(int lines)
