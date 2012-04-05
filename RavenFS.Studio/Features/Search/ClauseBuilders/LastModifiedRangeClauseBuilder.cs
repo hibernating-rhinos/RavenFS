@@ -42,10 +42,10 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
         private static string ParseDateAndConvertToSortableFormat(string value, DateTime @default)
         {
             DateTime result;
-            return DateTime.TryParse(value, CultureInfo.CurrentUICulture, DateTimeStyles.None,
+            return DateTime.TryParse(value, CultureInfo.CurrentCulture, DateTimeStyles.None,
                                      out result)
-                       ? result.ToString(DateIndexFormat)
-                       : @default.ToString(DateIndexFormat);
+                       ? result.ToString(DateIndexFormat, CultureInfo.CurrentCulture)
+                       : @default.ToString(DateIndexFormat, CultureInfo.CurrentCulture);
         }
     }
 }
