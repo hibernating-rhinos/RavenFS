@@ -5,6 +5,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Windows.Input;
+using RavenFS.Studio.Commands;
 using RavenFS.Studio.Features.Search;
 using RavenFS.Studio.Features.Search.ClauseBuilders;
 using RavenFS.Studio.Infrastructure;
@@ -15,15 +16,30 @@ namespace RavenFS.Studio.Models
     public class SearchPageModel : PageModel
     {
         private readonly SearchResultsCollectionSource resultsSource;
+        private IList<SearchClauseBuilderModel> searchClauseBuilders;
         private ICommand searchCommand;
         private ICommand clearSearchCommand;
-        private IList<SearchClauseBuilderModel> searchClauseBuilders;
+
+        private ICommand downloadCommand;
+        private ICommand deleteCommand;
+        private ICommand editCommand;
+        private ICommand navigateCommand;
+        private ICommand renameFileCommand;
+        private ICommand moveFileCommand;
+
+        public ICommand RenameFile { get { return renameFileCommand ?? (renameFileCommand = new RenameFileCommand(SelectedFile)); } }
+        public ICommand MoveFile { get { return moveFileCommand ?? (moveFileCommand = new MoveFileCommand(SelectedFile)); } }
+        public ICommand Navigate { get { return navigateCommand ?? (navigateCommand = new NavigateToFileSystemModelCommand()); } }
+        public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedFile)); } }
+        public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedFile)); } }
+        public ICommand EditProperties { get { return editCommand ?? (editCommand = new EditFilePropertiesCommand(SelectedFile)); } }
 
         public SearchPageModel()
         {
             resultsSource = new SearchResultsCollectionSource();
             Results = new VirtualCollection<FileSystemModel>(resultsSource, 50);
             Query = new Observable<string>();
+            SelectedFile = new Observable<VirtualItem<FileSystemModel>>();
         }
 
         public ICommand Search { get { return searchCommand ?? (searchCommand = new ActionCommand(HandleSearch)); } }
@@ -40,7 +56,7 @@ namespace RavenFS.Studio.Models
         public Observable<string> Query { get; private set; }
 
         public VirtualCollection<FileSystemModel> Results { get; private set; }
-
+        public Observable<VirtualItem<FileSystemModel>> SelectedFile { get; private set; }
 
         public IList<SearchClauseBuilderModel> SearchClauseBuilders
         {

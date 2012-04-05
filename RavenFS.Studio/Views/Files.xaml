@@ -199,14 +199,15 @@
                 <toolkit:ContextMenu>
                     <toolkit:MenuItem Header="Download"
                             Command="{Binding Download}"/>
+                    <toolkit:Separator/>
                     <toolkit:MenuItem Header="Delete"
                             Command="{Binding Delete}"/>
                     <toolkit:MenuItem Header="Rename"
                             Command="{Binding RenameFile}"/>
-                    <toolkit:MenuItem Header="Move"
+                  <toolkit:MenuItem Header="Edit Properties"
+                                    Command="{Binding EditProperties}"/>
+                  <toolkit:MenuItem Header="Move"
                             Command="{Binding MoveFile}"/>
-                    <toolkit:MenuItem Header="Edit Properties"
-                            Command="{Binding EditProperties}"/>
                 </toolkit:ContextMenu>
             </toolkit:ContextMenuService.ContextMenu>
             <sdk:DataGrid.Columns>

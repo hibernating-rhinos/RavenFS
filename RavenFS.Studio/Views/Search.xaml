@@ -82,13 +82,32 @@
                       Margin="0,0,0,0"
                       SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}">
             <i:Interaction.Behaviors>
-                <b:DataGridRowDoubleClickCommandBehavior Command="{Binding Navigate}"/>
+                <b:DataGridRowDoubleClickCommandBehavior Command="{Binding Download}"/>
+                <b:SelectRowOnRightClickBehavior/>
             </i:Interaction.Behaviors>
             <i:Interaction.Triggers>
                 <b:StudioKeyTrigger Key="Delete">
                     <i:InvokeCommandAction Command="{Binding Delete}"/>
                 </b:StudioKeyTrigger>
+                <b:StudioKeyTrigger Key="F2">
+                    <i:InvokeCommandAction Command="{Binding RenameFile}"/>
+                </b:StudioKeyTrigger>
             </i:Interaction.Triggers>
+            <toolkit:ContextMenuService.ContextMenu>
+                <toolkit:ContextMenu>
+                    <toolkit:MenuItem Header="Download"
+                            Command="{Binding Download}"/>
+                    <toolkit:Separator/>
+                    <toolkit:MenuItem Header="Delete"
+                            Command="{Binding Delete}"/>
+                    <toolkit:MenuItem Header="Rename"
+                            Command="{Binding RenameFile}"/>
+                    <toolkit:MenuItem Header="Edit Properties"
+                                    Command="{Binding EditProperties}"/>
+                    <toolkit:MenuItem Header="Move"
+                            Command="{Binding MoveFile}"/>
+                </toolkit:ContextMenu>
+            </toolkit:ContextMenuService.ContextMenu>
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTemplateColumn Header="Name" Width="*" CanUserSort="True" SortMemberPath="Name">
                     <sdk:DataGridTemplateColumn.CellTemplate>
