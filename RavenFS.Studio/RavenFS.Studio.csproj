@@ -129,11 +129,12 @@
     <Compile Include="Commands\ActionObservableDependantCommand.cs" />
     <Compile Include="Commands\AddFolderCommand.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
+    <Compile Include="Commands\NavigateToFileSystemModelCommand.cs" />
     <Compile Include="Commands\ToggleOperationsPaneVisibilityCommand.cs" />
     <Compile Include="Commands\MoveFileCommand.cs" />
     <Compile Include="Commands\HideOperationsPaneCommand.cs" />
     <Compile Include="Commands\NavigateToCommand.cs" />
-    <Compile Include="Commands\NavigateToFileSystemModelCommand.cs" />
+    <Compile Include="Commands\NavigateToParentFolderCommand.cs" />
     <Compile Include="Commands\NavigateToNextPageCommand.cs" />
     <Compile Include="Commands\NavigateToPrevPageCommand.cs" />
     <Compile Include="Commands\ObservableDependantCommand.cs" />

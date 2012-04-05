@@ -103,6 +103,8 @@
             </i:Interaction.Triggers>
             <toolkit:ContextMenuService.ContextMenu>
                 <toolkit:ContextMenu>
+                    <toolkit:MenuItem Header="Open Parent Folder"
+                            Command="{Binding OpenParentFolder}"/>
                     <toolkit:MenuItem Header="Download"
                             Command="{Binding Download}"/>
                     <toolkit:Separator/>

@@ -29,7 +29,7 @@ namespace RavenFS.Studio.Models
 
         public ICommand RenameFile { get { return renameFileCommand ?? (renameFileCommand = new RenameFileCommand(SelectedFile)); } }
         public ICommand MoveFile { get { return moveFileCommand ?? (moveFileCommand = new MoveFileCommand(SelectedFile)); } }
-        public ICommand Navigate { get { return navigateCommand ?? (navigateCommand = new NavigateToFileSystemModelCommand()); } }
+        public ICommand OpenParentFolder { get { return navigateCommand ?? (navigateCommand = new NavigateToParentFolderCommand(SelectedFile)); } }
         public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedFile)); } }
         public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedFile)); } }
         public ICommand EditProperties { get { return editCommand ?? (editCommand = new EditFilePropertiesCommand(SelectedFile)); } }
