@@ -92,7 +92,8 @@ namespace RavenFS.Controllers
 				int.TryParse(QueryString["start"], out start);
 
 				int pageSize;
-				int.TryParse(QueryString["pageSize"], out pageSize);
+				if (int.TryParse(QueryString["pageSize"], out pageSize) == false)
+					pageSize = 25;
 
 				paging = new PagingInfo
 				{
