@@ -14,9 +14,9 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Views
 {
-    public partial class Replication : View
+    public partial class Configuration : View
     {
-        public Replication()
+        public Configuration()
         {
             InitializeComponent();
         }

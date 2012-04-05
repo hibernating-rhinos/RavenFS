@@ -107,7 +107,7 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="Folder" Width="*" CanUserSort="False" >
+                <sdk:DataGridTemplateColumn Header="Folder" Width="*" CanUserSort="False">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <toolkit:DockPanel  Margin="4" VerticalAlignment="Center" HorizontalAlignment="Stretch">

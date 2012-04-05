@@ -102,9 +102,9 @@
 								 Style="{StaticResource Style_Text_HeaderLink}">
                 </HyperlinkButton>
                 <toolkit:Separator Style="{StaticResource Style_Separator_HeaderLink}" />
-                <HyperlinkButton Content="Replication"
+                <HyperlinkButton Content="Configuration"
 								 Command="{StaticResource NavigateToCommand}"
-								 CommandParameter="/replication"
+								 CommandParameter="/configuration"
 								 Style="{StaticResource Style_Text_HeaderLink}">
                 </HyperlinkButton>
                 <toolkit:Separator Style="{StaticResource Style_Separator_HeaderLink}" />

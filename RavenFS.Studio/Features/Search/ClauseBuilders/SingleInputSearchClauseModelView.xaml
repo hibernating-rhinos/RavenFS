@@ -7,16 +7,27 @@
              xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors" mc:Ignorable="d"
-    Width="200" Height="28" d:DataContext="{d:DesignInstance ClauseBuilders:SingleInputSearchClauseModel}">
+    Width="200" d:DataContext="{d:DesignInstance ClauseBuilders:SingleInputSearchClauseModel}">
     
-    <toolkit:DockPanel x:Name="LayoutRoot">
-        <TextBlock Text="{Binding InputName}" toolkit:DockPanel.Dock="Left" VerticalAlignment="Center" FontWeight="Bold"/>
-        <TextBox Text="{Binding Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5,0,0,0" VerticalAlignment="Center">
+    <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="{Binding InputName}" toolkit:DockPanel.Dock="Left" VerticalAlignment="Center" FontWeight="Bold"
+                   Margin="0,0,5,0"/>
+        <TextBox Text="{Binding Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,0" VerticalAlignment="Center"
+                 Grid.Column="1">
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="Loaded">
                     <Behaviors:FocusElementAction />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </TextBox>
-    </toolkit:DockPanel>
+        <TextBlock Text="{Binding Example}" VerticalAlignment="Center" Foreground="Gray"  Grid.Column="1" Grid.Row="1"/>
+    </Grid>
 </UserControl>

@@ -54,7 +54,7 @@ namespace RavenFS.Studio.Models
 
         protected override void OnViewLoaded()
         {
-            Query.Value = ApplicationModel.Current.LastSearch;
+            Query.Value = ApplicationModel.Current.State.LastSearch;
             HandleSearch();
 
             ApplicationModel.Current.Client.Notifications.FolderChanges("/")
@@ -106,7 +106,7 @@ namespace RavenFS.Studio.Models
         private void HandleSearch()
         {
             resultsSource.SearchPattern = Query.Value;
-            ApplicationModel.Current.LastSearch = Query.Value;
+            ApplicationModel.Current.State.LastSearch = Query.Value;
         }
     }
 }

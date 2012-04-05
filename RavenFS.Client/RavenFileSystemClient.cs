@@ -96,6 +96,21 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
+        public Task<string[]> GetSearchFieldsAsync(int start = 0, int pageSize = 25)
+        {
+            var requestUriString = string.Format("{0}/search/terms?start={1}&pageSize={2}", ServerUrl, start, pageSize);
+            var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+            return request.GetResponseAsync()
+                .ContinueWith(task =>
+                {
+                    using (var stream = task.Result.GetResponseStream())
+                    {
+                        return new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(stream)));
+                    }
+                })
+                .TryThrowBetteError();
+        }
+
 		public Task<SearchResults> SearchAsync(string query, string[] sortFields = null, int start = 0, int pageSize = 25)
 		{
 			var requestUriBuilder = new StringBuilder(ServerUrl)

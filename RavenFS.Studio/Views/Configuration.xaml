@@ -1,4 +1,4 @@
-﻿<Infrastructure:View x:Class="RavenFS.Studio.Views.Replication" 
+﻿<Infrastructure:View x:Class="RavenFS.Studio.Views.Configuration" 
            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -15,7 +15,7 @@
                     xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
             Title="Replication - RavenFS"
             Style="{StaticResource Style_Page}"
-            Infrastructure:ModelResolver.AttachModel="ReplicationPageModel" d:DataContext="{d:DesignInstance Models:ReplicationPageModel}">
+            Infrastructure:ModelResolver.AttachModel="ConfigurationPageModel" d:DataContext="{d:DesignInstance Models:ConfigurationPageModel}">
     <Grid Margin="{StaticResource Margin_ContentPage}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -31,7 +31,7 @@
                 Grid.ColumnSpan="2">
             <toolkit:DockPanel Margin="4" LastChildFill="False">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Replication" Style="{StaticResource Style_TextBlock_Breadcrumb}"/>
+                    <TextBlock Text="Configuration" Style="{StaticResource Style_TextBlock_Breadcrumb}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal"
                          VerticalAlignment="Center"

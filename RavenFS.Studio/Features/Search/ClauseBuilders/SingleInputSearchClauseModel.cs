@@ -17,5 +17,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
                 OnPropertyChanged("Input");
             }
         }
+
+        public string Example { get; set; }
     }
 }
