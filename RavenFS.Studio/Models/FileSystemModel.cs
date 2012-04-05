@@ -34,6 +34,10 @@ namespace RavenFS.Studio.Models
                 {
                     Name = fullPath.Substring(lastSlash + 1);
                     Folder = fullPath.Substring(0, lastSlash);
+                    if (!Folder.StartsWith("/"))
+                    {
+                        Folder = "/" + Folder;
+                    }
                 }
                 else if (lastSlash == 0)
                 {
