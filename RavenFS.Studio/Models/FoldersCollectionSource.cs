@@ -34,7 +34,7 @@ namespace RavenFS.Studio.Models
 
         public FoldersCollectionSource()
         {
-            ApplicationModel.Current.VirtualFolders.VirtualFolders
+            ApplicationModel.Current.State.VirtualFolders.VirtualFolders
                 .ObserveCollectionChanged()
                 .SubscribeWeakly(this, (t, e) => t.HandleVirtualFoldersChanged(e));    
         }
@@ -53,7 +53,7 @@ namespace RavenFS.Studio.Models
             lock (_lock)
             {
                 virtualFolders =
-                    ApplicationModel.Current.VirtualFolders.GetSubFolders(currentFolder).Cast<FileSystemModel>().ToList();
+                    ApplicationModel.Current.State.VirtualFolders.GetSubFolders(currentFolder).Cast<FileSystemModel>().ToList();
                 UpdateCombinedFilteredList();
             }
         }
@@ -188,7 +188,7 @@ namespace RavenFS.Studio.Models
         private void PruneVirtualFolders(DirectoryModel[] folders)
         {
             isPruningFolders = true;
-            ApplicationModel.Current.VirtualFolders.PruneFoldersThatNowExist(folders);
+            ApplicationModel.Current.State.VirtualFolders.PruneFoldersThatNowExist(folders);
             isPruningFolders = false;
 
             UpdateVirtualFolders();

@@ -12,11 +12,12 @@ using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Behaviors
 {
-    public class FocusElementAction : TargetedTriggerAction<Control>
+    public class PlaceCursorAtEndOfTextAction : TargetedTriggerAction<TextBox>
     {
         protected override void Invoke(object parameter)
         {
-            Target.Focus();
+            Target.SelectionLength = 0;
+            Target.SelectionStart = Target.Text.Length;
         }
     }
 }

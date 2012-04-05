@@ -27,17 +27,22 @@
             </pb:Popup.PreferredOrientations>
             
           <Border Background="White" BorderThickness="1" BorderBrush="{StaticResource Brush_ControlBorder}">
-            <i:Interaction.Triggers>
-              <b:StudioKeyTrigger Key="Enter">
-                <b:ClosePopupAction TargetName="Popup"/>
-                <i:InvokeCommandAction Command="{Binding Complete}"/>
-              </b:StudioKeyTrigger>
-              <b:StudioKeyTrigger Key="Escape">
-                <b:ClosePopupAction TargetName="Popup"/>
-              </b:StudioKeyTrigger>
-            </i:Interaction.Triggers>
-            <ContentControl Content="{Binding InputView}" Margin="3"/>
-          </Border>
+                <i:Interaction.Triggers>
+                  <b:StudioKeyTrigger Key="Enter">
+                    <b:ClosePopupAction TargetName="Popup"/>
+                    <i:InvokeCommandAction Command="{Binding Complete}"/>
+                  </b:StudioKeyTrigger>
+                  <b:StudioKeyTrigger Key="Escape">
+                    <b:ClosePopupAction TargetName="Popup"/>
+                  </b:StudioKeyTrigger>
+                </i:Interaction.Triggers>
+                <Border.Effect>
+                    <DropShadowEffect Opacity="0.3"/>
+                </Border.Effect>
+              
+                <ContentControl Content="{Binding InputView}" Margin="3"/>
+
+            </Border>
         </Popup>
     </Grid>
 </UserControl>

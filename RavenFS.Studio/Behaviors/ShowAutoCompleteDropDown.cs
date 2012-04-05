@@ -12,11 +12,11 @@ using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Behaviors
 {
-    public class FocusElementAction : TargetedTriggerAction<Control>
+    public class ShowAutoCompleteDropDown : TriggerAction<AutoCompleteBox>
     {
         protected override void Invoke(object parameter)
         {
-            Target.Focus();
+            AssociatedObject.IsDropDownOpen = true;
         }
     }
 }

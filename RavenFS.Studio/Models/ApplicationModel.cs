@@ -16,19 +16,16 @@ namespace RavenFS.Studio.Models
 		{
 			Client = new RavenFileSystemClient(DetermineUri());
 		    AsyncOperations = new AsyncOperationsModel();
-            VirtualFolders = new VirtualFoldersManager();
-            ModifiedConfigurations = new Dictionary<string, NameValueCollection>();
+		    State = new ApplicationState();
 		}
+
+	    public ApplicationState State { get; private set; }
 
 	    public AsyncOperationsModel AsyncOperations { get; private set; }
 
-        public VirtualFoldersManager VirtualFolders { get; private set; }
-
-        public IDictionary<string, NameValueCollection> ModifiedConfigurations { get; private set; }
-
 	    public RavenFileSystemClient Client { get; private set; }
 
-        public string LastSearch { get; set; }
+       
 
 		private static string DetermineUri()
 		{
