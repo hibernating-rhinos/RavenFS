@@ -5,12 +5,9 @@
         <Setter Property="Foreground">
             <Setter.Value>
                 <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                    <GradientStop Color="#FFC64266" Offset="0"/>
-                    <GradientStop Color="#FFBE214B" Offset="0.014"/>
-                    <GradientStop Color="#FF75213C" Offset="0.479"/>
-                    <GradientStop Color="#FF57001C" Offset="0.535"/>
-                    <GradientStop Color="#FF300116" Offset="0.986"/>
-                    <GradientStop Color="#FF5F404E" Offset="1"/>
+                    <GradientStop Color="#E9E2E5" Offset="0"/>
+                    <GradientStop Color="#BBB6B8" Offset="0.2"/>
+                    <GradientStop Color="#BBB6B8" Offset="1"/>
                 </LinearGradientBrush>
             </Setter.Value>
         </Setter>
@@ -18,7 +15,7 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Maximum" Value="100" />
         <Setter Property="IsTabStop" Value="False"/>
-        <Setter Property="BorderBrush" Value="#FFC64266" />
+        <Setter Property="BorderBrush" Value="#BBB6B8" />
       <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ProgressBar">

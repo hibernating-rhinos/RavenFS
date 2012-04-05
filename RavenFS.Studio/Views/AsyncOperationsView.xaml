@@ -80,7 +80,7 @@
                 </i:EventTrigger>
             </i:Interaction.Triggers>
             <toolkit:DockPanel VerticalAlignment="Center">
-                <Controls:ActivityIndicator toolkit:DockPanel.Dock="Left" Margin="5,0" 
+                <Controls:ActivityIndicator toolkit:DockPanel.Dock="Left" Margin="10,0" 
                                             IsActive="{Binding Model.PendingOperationsCount.Value, Converter={StaticResource Converter_TrueWhenGreaterThanZero}}" 
                                             IsFault="{Binding Model.IsFault.Value}" 
                                             VerticalAlignment="Center" Width="15" Height="15"/>
@@ -93,7 +93,7 @@
                     </Path.RenderTransform>
                 </Path>
                 <TextBlock Text="{Binding Model.PendingOperationsCount.Value, Converter={StaticResource Converter_PendingOperationsCountToStatusConverter}}"
-                     Margin="5,0,0,0"
+                     Margin="0,0,0,0"
                      VerticalAlignment="Center"/>
             </toolkit:DockPanel>
         </Border>
@@ -125,9 +125,18 @@
                                 <ProgressBar Value="{Binding Progress}" 
                                              Visibility="{Binding Progress, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}" 
                                              VerticalAlignment="Center" 
-                                             Height="10" 
+                                             Height="22" 
                                              Maximum="1"
                                              Margin="4,0"/>
+                                <TextBlock Text="{Binding ProgressText}" 
+                                           Margin="12,0" 
+                                           VerticalAlignment="Center" 
+                                           Behaviors:FadeTrimming.IsEnabled="True"
+                                           Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                           Behaviors:FadeTrimming.ToolTipStyle="{StaticResource Style_ToolTip_ConstrainedText}"
+                                           TextWrapping="NoWrap"
+                                           Visibility="{Binding Progress, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}"
+                                           Foreground="Black"/>
                                 <TextBlock x:Name="StatusText" Text="{m:MultiBinding Source1={Binding Status}, Source2={Binding Error}, Converter={StaticResource Converter_AsyncOperationStatus}}" 
                                            Margin="2" 
                                            VerticalAlignment="Center" 

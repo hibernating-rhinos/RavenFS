@@ -16,6 +16,7 @@ namespace RavenFS.Studio.Models
 {
     public class AsyncOperationModel : Model
     {
+        string progressText;
         string description;
         double progress;
         string error;
@@ -44,6 +45,16 @@ namespace RavenFS.Studio.Models
             {
                 progress = value;
                 OnPropertyChanged("Progress");
+            }
+        }
+
+        public string ProgressText
+        {
+            get { return progressText; }
+            set
+            {
+                progressText = value;
+                OnPropertyChanged("ProgressText");
             }
         }
 
@@ -77,12 +88,12 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        public void ProgressChanged(double amountCompleted, double amountToDo)
+        public void ProgressChanged(double amountCompleted, double amountToDo, string progressText = "")
         {
-            ProgressChanged((amountCompleted / amountToDo).Clamp(0, 1));
+            ProgressChanged((amountCompleted / amountToDo).Clamp(0, 1), progressText);
         }
 
-        public void ProgressChanged(double progress)
+        public void ProgressChanged(double progress, string progressText = "")
         {
             if (progress < 0 || progress > 1)
             {
@@ -95,6 +106,7 @@ namespace RavenFS.Studio.Models
             }
 
             Progress = progress;
+            ProgressText = progressText;
         }
 
         public void Started()
@@ -106,6 +118,7 @@ namespace RavenFS.Studio.Models
         {
             Status = AsyncOperationStatus.Completed;
             Progress = 0;
+            ProgressText = "";
         }
 
         public void Faulted(Exception exception)
