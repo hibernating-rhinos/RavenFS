@@ -1,6 +1,8 @@
-﻿using System.Collections.Specialized;
+﻿using System;
+using System.Collections.Specialized;
 using System.IO;
 using RavenFS.Extensions;
+using RavenFS.Rdc;
 using RavenFS.Tests.Tools;
 using RavenFS.Util;
 using Xunit;
@@ -96,15 +98,48 @@ namespace RavenFS.Tests
 
             sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
 
-            var result0 = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Result;
-            var result1 = seedClient.GetMetadataForAsync("test.bin").Result;
-            Assert.Equal(sourceContent1.Length, result0.BytesCopied + result0.BytesTransfered);
-            Assert.Equal("some-value", result1["SomeTest-metadata"]);
+            var synchronizationReport = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Result;
+            var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
+
+            Assert.Equal(sourceContent1.Length, synchronizationReport.BytesCopied + synchronizationReport.BytesTransfered);
+            Assert.Equal("some-value", resultFileMetadata["SomeTest-metadata"]);
+        }
+
+        [Fact]
+        public void Should_modify_etag_after_upload()
+        {
+            var sourceContent1 = new RandomStream(10, 1);
+            var sourceClient = NewClient(1);
+            sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
+            var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+            var etag0 = resultFileMetadata["ETag"];
+            sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
+            resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+            var etag1 = resultFileMetadata["ETag"];
+
+            Assert.False(etag0 == etag1);
+
         }
 
         [Fact(Skip = "Not implemented yet")]
         public void Should_mark_file_as_conflicted()
         {
+            var sourceContent1 = new RandomStream(10, 1);
+            var sourceMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "some-value"}
+                               };
+            var seedClient = NewClient(0);
+            var sourceClient = NewClient(1);
+
+            sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
+            seedClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
+
+            Assert.Throws<InvalidOperationException>(
+                () => seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait());
+
+            var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
+            Assert.True(Convert.ToBoolean(resultFileMetadata[ReplicationConstants.RavenReplicationConflict]));
         }
 
         [Fact(Skip = "Not implemented yet")]
