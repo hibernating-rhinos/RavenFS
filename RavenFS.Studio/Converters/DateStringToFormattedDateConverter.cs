@@ -15,6 +15,8 @@ namespace RavenFS.Studio.Converters
 {
     public class DateStringToFormattedDateConverter : IValueConverter
     {
+        public bool ConvertToUniversalTime { get; set; }
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             DateTime dateTime;
@@ -24,6 +26,11 @@ namespace RavenFS.Studio.Converters
             }
             else
             {
+                if (ConvertToUniversalTime)
+                {
+                    dateTime = dateTime.ToUniversalTime();
+                }
+
                 return dateTime.ToString(culture);
             }
         }

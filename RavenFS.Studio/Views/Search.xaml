@@ -131,10 +131,10 @@
                         </DataTemplate>
                     </sdk:DataGridTemplateColumn.CellTemplate>
                 </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="Last Modified" Width="150" CanUserSort="True" SortMemberPath="LastModified">
+                <sdk:DataGridTemplateColumn Header="Last Modified (UTC)" Width="150" CanUserSort="True" SortMemberPath="LastModified">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Item.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDate}}" 
+                            <TextBlock Text="{Binding Item.Metadata[Last-Modified], Converter={StaticResource Converter_DateStringToFormattedDateUTC}}" 
                                        b:FadeTrimming.IsEnabled="True" 
                                        b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
                                        VerticalAlignment="Center"
