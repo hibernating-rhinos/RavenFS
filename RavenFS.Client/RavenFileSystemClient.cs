@@ -114,7 +114,7 @@ namespace RavenFS.Client
 		public Task<SearchResults> SearchAsync(string query, string[] sortFields = null, int start = 0, int pageSize = 25)
 		{
 			var requestUriBuilder = new StringBuilder(ServerUrl)
-				.Append("/search?query=")
+				.Append("/search/?query=")
 				.Append(Uri.EscapeUriString(query))
 				.Append("&start=")
 				.Append(start)
