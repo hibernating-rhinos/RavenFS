@@ -11,6 +11,7 @@ using RavenFS.Extensions;
 using RavenFS.Infrastructure;
 using RavenFS.Infrastructure.Workarounds;
 using RavenFS.Notifications;
+using RavenFS.Rdc;
 using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
@@ -27,8 +28,9 @@ namespace RavenFS
 		private readonly ISignatureRepository signatureRepository;
 		private readonly SigGenerator sigGenerator;
 	    private readonly NotificationPublisher notificationPublisher;
+	    private readonly HistoryUpdater historyUpdater;
 
-		public TransactionalStorage Storage
+	    public TransactionalStorage Storage
 		{
 			get { return storage; }
 		}
@@ -47,6 +49,7 @@ namespace RavenFS
 			search = new IndexStorage(this.path, new NameValueCollection());
             signatureRepository = new StorageSignatureRepository(storage);
 			sigGenerator = new SigGenerator(signatureRepository);
+            historyUpdater = new HistoryUpdater(storage, new ReplicationHiLo(storage));
             notificationPublisher = new NotificationPublisher();
 			storage.Initialize();
 			search.Initialize();
@@ -90,6 +93,11 @@ namespace RavenFS
 	    public NotificationPublisher Publisher
 	    {
 	        get { return notificationPublisher; }
+	    }
+
+	    public HistoryUpdater HistoryUpdater
+	    {
+	        get { return historyUpdater; }
 	    }
 
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Web;
 using RavenFS.Storage;
@@ -11,7 +12,14 @@ namespace RavenFS.Extensions
     {
         public static string GetConfigurationValue(this StorageActionsAccessor accessor, string key)
         {
-            return accessor.GetConfig(key)["value"];
+            try
+            {
+                return accessor.GetConfig(key)["value"];
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
         }
 
         public static void SetConfigurationValue(this StorageActionsAccessor accessor, string key, string value)

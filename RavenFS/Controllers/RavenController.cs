@@ -66,6 +66,11 @@ namespace RavenFS.Controllers
 			get { return RavenFileSystem.SigGenerator; }
 		}
 
+	    public HistoryUpdater HistoryUpdater
+	    {
+            get { return RavenFileSystem.HistoryUpdater;  }
+	    }
+
 		private NameValueCollection QueryString
 		{
 			get { return queryString ?? (queryString = HttpUtility.ParseQueryString(Request.RequestUri.Query)); }

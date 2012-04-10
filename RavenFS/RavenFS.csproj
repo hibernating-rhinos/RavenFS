@@ -146,6 +146,7 @@
     <Compile Include="Controllers\NotificationsController.cs" />
     <Compile Include="Extensions\ConfigurationExtension.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Infrastructure\HistoryUpdater.cs" />
     <Compile Include="Infrastructure\TempDirectoryTools.cs" />
     <Compile Include="Notifications\ConfigChange.cs" />
     <Compile Include="Notifications\Notification.cs" />
@@ -184,6 +185,7 @@
     <Compile Include="RavenFileSystem.cs" />
     <Compile Include="Infrastructure\CompletedTask.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
+    <Compile Include="Rdc\HistoryItem.cs" />
     <Compile Include="Rdc\IPartialDataAccess.cs" />
     <Compile Include="Rdc\RemotePartialAccess.cs" />
     <Compile Include="Rdc\RemoteRdcManager.cs" />

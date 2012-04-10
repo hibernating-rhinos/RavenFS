@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using Newtonsoft.Json;
 using RavenFS.Extensions;
 using RavenFS.Rdc;
 using RavenFS.Tests.Tools;
@@ -142,9 +144,24 @@ namespace RavenFS.Tests
             Assert.True(Convert.ToBoolean(resultFileMetadata[ReplicationConstants.RavenReplicationConflict]));
         }
 
-        [Fact(Skip = "Not implemented yet")]
+        [Fact]
         public void Shold_change_history_after_upload()
         {
+            var sourceContent1 = new RandomStream(10, 1);
+            var sourceClient = NewClient(1);
+            sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
+            var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[ReplicationConstants.RavenReplicationHistory];
+            var history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
+
+            Assert.Equal(0, history.Count);
+
+            sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
+            historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[ReplicationConstants.RavenReplicationHistory];
+            history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
+
+            Assert.Equal(1, history.Count);
+            Assert.Equal(1, history[0].Version);
+            Assert.NotNull(history[0].ServerId);
         }
 
         [Fact(Skip = "Not implemented yet")]

@@ -8,7 +8,7 @@ using RavenFS.Storage;
 
 namespace RavenFS.Rdc
 {
-    internal class ReplicationHiLo
+    public class ReplicationHiLo
     {
         private long _currentLo = Capacity + 1;
         private readonly object _generatorLock = new object();
@@ -50,7 +50,6 @@ namespace RavenFS.Rdc
                     if (String.IsNullOrEmpty(value) || !long.TryParse(value, out result))
                     {
                         result = 0;
-
                     }
 
                     result++;
