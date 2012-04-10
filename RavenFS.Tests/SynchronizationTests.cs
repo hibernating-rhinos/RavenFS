@@ -143,6 +143,18 @@ namespace RavenFS.Tests
         }
 
         [Fact(Skip = "Not implemented yet")]
+        public void Shold_change_history_after_upload()
+        {
+        }
+
+        [Fact(Skip = "Not implemented yet")]
+        public void Should_change_history_after_metadata_change()
+        {
+        }
+
+
+
+        [Fact(Skip = "Not implemented yet")]
         public void Should_mark_file_to_be_resolved_using_theirs_strategy()
         {
         }
