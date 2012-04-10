@@ -171,9 +171,26 @@ namespace RavenFS.Tests
             Assert.NotNull(history[0].ServerId);
         }
 
-        [Fact(Skip = "Not implemented yet")]
+        [Fact]
         public void Should_change_history_after_metadata_change()
         {
+            var sourceContent1 = new RandomStream(10, 1);
+            var sourceClient = NewClient(1);
+            sourceClient.UploadAsync("test.bin", new NameValueCollection {{"test", "Change me"}}, sourceContent1).Wait();
+            var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[ReplicationConstants.RavenReplicationHistory];
+            var history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
+
+            Assert.Equal(0, history.Count);
+
+            sourceClient.UpdateMetadataAsync("test.bin", new NameValueCollection { { "test", "Changed" } }).Wait();
+            var metadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+            historySerialized = metadata[ReplicationConstants.RavenReplicationHistory];
+            history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
+
+            Assert.Equal(1, history.Count);
+            Assert.Equal(1, history[0].Version);
+            Assert.NotNull(history[0].ServerId);
+            Assert.Equal("Changed", metadata["test"]);
         }
 
 
