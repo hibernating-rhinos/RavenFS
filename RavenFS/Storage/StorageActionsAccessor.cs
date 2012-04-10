@@ -590,5 +590,12 @@ namespace RavenFS.Storage
 				yield return Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["name"]);
 			}
 		}
+
+		internal bool ConfigExists(string name)
+		{
+			Api.JetSetCurrentIndex(session, Config, "by_name");
+			Api.MakeKey(session, Config, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			return Api.TrySeek(session, Config, SeekGrbit.SeekEQ);
+		}
 	}
 }

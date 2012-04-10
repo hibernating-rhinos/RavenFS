@@ -26,6 +26,11 @@ namespace RavenFS.Controllers
                 throw new Exception("Unknown server identifier " + sourceServerUrl);
             }
 
+        	if (FileIsBeingSynced(fileName))
+        	{
+        		return FileIsBeingSyncedErrorMessage(fileName);
+        	}
+
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
             var localFileDataInfo = GetLocalFileDataInfo(fileName);
             var sourceMetadataAsync = sourceRavenFileSystemClient.GetMetadataForAsync(fileName);
@@ -43,6 +48,9 @@ namespace RavenFS.Controllers
             var remoteRdcManager = new RemoteRdcManager(sourceRavenFileSystemClient, SignatureRepository, remoteSignatureCache);
 
             var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
+
+			LockFileByCreatingSyncConfiguration(localFileDataInfo.Name, sourceServerUrl);
+
             return remoteRdcManager.SynchronizeSignaturesAsync(localFileDataInfo)
                 .ContinueWith(
                     task =>
@@ -61,14 +69,16 @@ namespace RavenFS.Controllers
                                 synchronizationTask =>
                                 {
                                     remoteSignatureCache.Dispose();
-                                    return new HttpResponseMessage<SynchronizationReport>(
-                                        synchronizationTask.Result);
+                                	var synchronizationReport = synchronizationTask.Result;
+									UnlockFileByDeletingSyncConfiguration(synchronizationReport.FileName);
+
+                                	return new HttpResponseMessage<SynchronizationReport>(synchronizationReport);
                                 });
                     })
                     .Unwrap();
         }
 
-        private Task<SynchronizationReport> Synchronize(ISignatureRepository remoteSignatureRepository, string sourceServerUrl, string fileName, SignatureManifest sourceSignatureManifest, SignatureManifest seedSignatureManifest, NameValueCollection sourceMetadata)
+    	private Task<SynchronizationReport> Synchronize(ISignatureRepository remoteSignatureRepository, string sourceServerUrl, string fileName, SignatureManifest sourceSignatureManifest, SignatureManifest seedSignatureManifest, NameValueCollection sourceMetadata)
         {
             var seedSignatureInfo = SignatureInfo.Parse(seedSignatureManifest.Signatures.Last().Name);
             var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
@@ -159,5 +169,38 @@ namespace RavenFS.Controllers
                 Name = fileAndPages.Name
             };
         }
+
+		private void LockFileByCreatingSyncConfiguration(string fileName, string sourceServerUrl)
+		{
+			Storage.Batch(accessor =>
+							{
+								var syncOperationDetails = new NameValueCollection
+			              		                           	{
+			              		                           		{ ReplicationConstants.RavenReplicationSource, sourceServerUrl }
+			              		                           	};
+
+								accessor.SetConfig(ReplicationHelper.SyncConfigNameForFile(fileName), syncOperationDetails);
+							});
+		}
+
+    	
+
+    	private void UnlockFileByDeletingSyncConfiguration(string fileName)
+    	{
+			Storage.Batch(accessor => accessor.DeleteConfig(ReplicationHelper.SyncConfigNameForFile(fileName)));
+    	}
+
+		private Task<HttpResponseMessage<SynchronizationReport>> FileIsBeingSyncedErrorMessage(string filename)
+		{
+			var syncReport = new SynchronizationReport()
+			{
+				ErrorMessage = string.Format("File {0} is being synced", filename)
+			};
+
+			return new CompletedTask<HttpResponseMessage<SynchronizationReport>>(new HttpResponseMessage<SynchronizationReport>(syncReport)
+			{
+				StatusCode = HttpStatusCode.ServiceUnavailable
+			});
+		}
     }
 }

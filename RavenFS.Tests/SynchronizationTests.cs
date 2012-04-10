@@ -10,9 +10,16 @@ using Xunit.Extensions;
 
 namespace RavenFS.Tests
 {
-    public class SynchronizationTests : MultiHostTestBase
+	using System.Linq;
+	using System.Threading;
+	using Client;
+
+	public class SynchronizationTests : MultiHostTestBase
     {
-        [Theory]
+		private const int RetriesCount = 300;
+		private readonly NameValueCollection EmptyData = new NameValueCollection();
+
+		[Theory]
         [InlineData(1)]
         [InlineData(5000)]
         public void Synchronize_file_with_different_beginning(int size)
@@ -152,12 +159,117 @@ namespace RavenFS.Tests
         {
         }
 
-        [Fact(Skip = "Not implemented yet")]
-        public void Should_lock_file_during_synchronization()
+        [Fact]
+        public void Should_create_sync_configuration_during_synchronization()
         {
+        	RavenFileSystemClient seedClient;
+        	RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+        	var configName = ReplicationHelper.SyncConfigNameForFile("test.bin");
+
+			seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin");
+
+			Assert.True(WaitForBeginningSynchronization(seedClient, configName));
         }
 
-        private static MemoryStream PrepareSourceStream(int lines)
+		[Fact]
+		public void Should_delete_sync_configuration_after_synchronization()
+		{
+			RavenFileSystemClient seedClient;
+			RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+			seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait();
+
+			var config = seedClient.Config.GetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin")).Result;
+
+			Assert.Null(config);
+		}
+
+    	[Fact]
+		public void Should_refuse_to_update_metadata_while_sync_configuration_exists()
+    	{
+			RavenFileSystemClient seedClient;
+			RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+    		seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), EmptyData).Wait();
+
+    		var innerException = ExecuteAndGetInnerException(() => seedClient.UpdateMetadataAsync("test.bin", new NameValueCollection()).Wait());
+
+			Assert.IsType(typeof(InvalidOperationException), innerException);
+			Assert.Contains("File test.bin is being synced", innerException.Message);
+    	}
+
+		[Fact]
+		public void Should_refuse_to_delete_file_while_sync_configuration_exists()
+		{
+			RavenFileSystemClient seedClient;
+			RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), EmptyData).Wait();
+
+			var innerException = ExecuteAndGetInnerException(() => seedClient.DeleteAsync("test.bin").Wait());
+
+			Assert.IsType(typeof(InvalidOperationException), innerException);
+			Assert.Contains("File test.bin is being synced", innerException.Message);
+		}
+
+		[Fact]
+		public void Should_refuse_to_rename_file_while_sync_configuration_exists()
+		{
+			RavenFileSystemClient seedClient;
+			RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), EmptyData).Wait();
+
+			var innerException = ExecuteAndGetInnerException(() => seedClient.RenameAsync("test.bin", "newname.bin").Wait());
+
+			Assert.IsType(typeof(InvalidOperationException), innerException);
+			Assert.Contains("File test.bin is being synced", innerException.Message);
+		}
+
+		[Fact]
+		public void Should_refuse_to_upload_file_while_sync_configuration_exists()
+		{
+			RavenFileSystemClient seedClient;
+			RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), EmptyData).Wait();
+
+			var innerException = ExecuteAndGetInnerException(() => seedClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
+
+			Assert.IsType(typeof(InvalidOperationException), innerException);
+			Assert.Contains("File test.bin is being synced", innerException.Message);
+		}
+
+		[Fact]
+		public void Should_refuse_to_synchronize_file_while_sync_configuration_exists()
+		{
+			RavenFileSystemClient seedClient;
+			RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), EmptyData).Wait();
+
+			var innerException = ExecuteAndGetInnerException(() => seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait());
+
+			Assert.IsType(typeof(InvalidOperationException), innerException);
+			Assert.Contains("File test.bin is being synced", innerException.Message);
+		}
+
+		private static MemoryStream PrepareSourceStream(int lines)
         {
             var ms = new MemoryStream();
             var writer = new StreamWriter(ms);
@@ -174,5 +286,49 @@ namespace RavenFS.Tests
 
             return ms;
         }
+
+		private void UploadFilesSynchronously(out RavenFileSystemClient sourceClient, out RavenFileSystemClient seedClient, string fileName = "test.bin")
+		{
+			sourceClient = NewClient(1);
+			seedClient = NewClient(0);
+
+			var sourceContent = new RandomlyModifiedStream(new RandomStream(10, 1), 0.01);
+			var seedContent = new RandomlyModifiedStream(new RandomStream(10, 1), 0.01);
+
+			seedClient.UploadAsync(fileName, EmptyData, seedContent).Wait();
+			sourceClient.UploadAsync(fileName, EmptyData, sourceContent).Wait();
+		}
+
+		private static bool WaitForBeginningSynchronization(RavenFileSystemClient client, string configName)
+		{
+			for (int i = 0; i < RetriesCount; i++)
+			{
+				var configNames = client.Config.GetConfigNames().Result;
+				if (configNames.Any(t => t == configName))
+				{
+					return true;
+				}
+
+				Thread.Sleep(50);
+			}
+
+			return false;
+		}
+
+		private static Exception ExecuteAndGetInnerException(Action action)
+		{
+			Exception innerException = null;
+
+			try
+			{
+				action();
+			}
+			catch (AggregateException exception)
+			{
+				innerException = exception.InnerException;
+			}
+
+			return innerException;
+		}
     }
 }
