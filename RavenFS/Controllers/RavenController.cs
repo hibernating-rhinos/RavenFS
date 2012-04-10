@@ -165,5 +165,12 @@ namespace RavenFS.Controllers
 
 			return response;
 		}
+
+		protected bool FileIsBeingSynced(string fileName)
+		{
+			bool result = false;
+			Storage.Batch(accessor => result = accessor.ConfigExists(ReplicationHelper.SyncConfigNameForFile(fileName)));
+			return result;
+		}
 	}
 }

@@ -50,6 +50,12 @@ namespace RavenFS.Controllers
         public HttpResponseMessage Delete(string name)
         {
             name = Uri.UnescapeDataString(name);
+
+			if (FileIsBeingSynced(name))
+			{
+				return FileIsBeingSyncedErrorMessage(name);
+			}
+
             Search.Delete(name);
             Storage.Batch(accessor => accessor.Delete(name));
             Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Delete });
@@ -80,6 +86,12 @@ namespace RavenFS.Controllers
         public HttpResponseMessage Post(string name)
         {
             name = Uri.UnescapeDataString(name);
+
+			if (FileIsBeingSynced(name))
+			{
+				return FileIsBeingSyncedErrorMessage(name);
+			}
+
             var headers = Request.Headers.FilterHeaders();
             headers.UpdateLastModified();
             HistoryUpdater.Update(name, headers);
@@ -100,6 +112,11 @@ namespace RavenFS.Controllers
         [AcceptVerbs("PATCH")]
         public HttpResponseMessage Patch(string name, string rename)
         {
+			if (FileIsBeingSynced(name))
+			{
+				return FileIsBeingSyncedErrorMessage(name);
+			}
+
             try
             {
                 FileAndPages fileAndPages = null;
@@ -123,6 +140,13 @@ namespace RavenFS.Controllers
 
         public Task<HttpResponseMessage> Put(string name)
         {
+			name = Uri.UnescapeDataString(name);
+
+			if (FileIsBeingSynced(name))
+			{
+				return new CompletedTask<HttpResponseMessage>(FileIsBeingSyncedErrorMessage(name)); 
+			}
+
             var headers = Request.Headers.FilterHeaders();
             headers.UpdateLastModified();
             HistoryUpdater.Update(name, headers);
@@ -166,6 +190,14 @@ namespace RavenFS.Controllers
                     return new HttpResponseMessage(HttpStatusCode.Created);
                 });
         }
+
+		private HttpResponseMessage FileIsBeingSyncedErrorMessage(string filename)
+		{
+			return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+			{
+				Content = new StringContent(string.Format("File {0} is being synced", filename))
+			};
+		}
 
         private class ReadFileToDatabase : IDisposable
         {

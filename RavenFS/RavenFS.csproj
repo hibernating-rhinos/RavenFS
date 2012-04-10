@@ -280,6 +280,7 @@
     <Compile Include="Util\NameValueCollectionJsonConverter.cs" />
     <Compile Include="Util\NarrowedStream.cs" />
     <Compile Include="Util\RabinKarpHasher.cs" />
+    <Compile Include="Util\ReplicationHelper.cs" />
     <Compile Include="Util\StorageStream.cs" />
     <Compile Include="Util\StorageStreamAccess.cs" />
   </ItemGroup>
