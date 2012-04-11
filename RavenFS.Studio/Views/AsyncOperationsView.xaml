@@ -25,15 +25,15 @@
             <DoubleAnimation Storyboard.TargetName="ExpandGlyph" Storyboard.TargetProperty="(ContentPresenter.RenderTransform).(RotateTransform.Angle)" To="180" Duration="0:0:0.25"/>
         </Storyboard>
     </UserControl.Resources>
+    <UIElement.Effect>
+        <DropShadowEffect Opacity="0.1" Direction="45" BlurRadius="5"/>
+    </UIElement.Effect>
     <Grid x:Name="LayoutRoot" Height="35" TextOptions.TextHintingMode="Animated">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid.Effect>
-            <DropShadowEffect Opacity="0.1" Direction="45" BlurRadius="5"/>
-        </Grid.Effect>
         <i:Interaction.Triggers>
             <ei:DataTrigger Binding="{Binding Model.IsPaneVisible.Value}" Value="True" Comparison="Equal">
                 <ei:ControlStoryboardAction Storyboard="{StaticResource ShowPanel}" ControlStoryboardOption="Play"/>
@@ -46,7 +46,7 @@
         <Border CornerRadius="2,0,0,0" Grid.Row="1" Background="{StaticResource Brush_OperationsPaneHeader}">
             <toolkit:DockPanel Margin="4" LastChildFill="False">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Pending Operations"  VerticalAlignment="Center"/>
+                    <TextBlock Text="Pending Operations" Foreground="{StaticResource Brush_HeaderText}" VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal"
                          VerticalAlignment="Center"
@@ -73,7 +73,7 @@
 
         <Border Grid.Row="0" Height="35" Width="200" HorizontalAlignment="Right" CornerRadius="10,3,0,0"
               ToolTipService.ToolTip="Click to show or hide the list of pending operations"
-              Margin="0,5,0,-5" Background="{StaticResource Brush_OperationsPaneHeader}">
+              Margin="0,5,0,-5" Background="{StaticResource Brush_OperationsPaneHeader}" BorderThickness="0,1,0,0">
           <i:Interaction.Triggers>
                 <i:EventTrigger EventName="MouseLeftButtonUp">
                     <i:InvokeCommandAction Command="{StaticResource ToggleOperationsPaneVisibilityCommand}"/>
@@ -105,7 +105,7 @@
             AutoGenerateColumns="False" 
             Style="{StaticResource Style_DataGrid_NoHeader}"
             BorderThickness="1,0,1,0"
-            BorderBrush="#FF9E717D">
+            BorderBrush="{StaticResource Brush_OperationsPaneBorder}">
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTemplateColumn Width="*">
                     <sdk:DataGridTemplateColumn.CellTemplate>

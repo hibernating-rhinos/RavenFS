@@ -173,7 +173,7 @@
                 </navigation:Frame.UriMapper>
             </navigation:Frame>
 
-            <Views:AsyncOperationsView Margin="15,0" VerticalAlignment="Bottom"/>
+            <Views:AsyncOperationsView Margin="10,0" VerticalAlignment="Bottom"/>
         </Grid>
 
         <!--<RavenControls:NotificationArea Grid.RowSpan="999"

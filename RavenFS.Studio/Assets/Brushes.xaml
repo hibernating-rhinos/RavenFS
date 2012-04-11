@@ -38,10 +38,13 @@
     </ImageBrush>
 
     <LinearGradientBrush x:Key="Brush_OperationsPaneHeader" StartPoint="0,0"  EndPoint="0,1">
-        <GradientStop Color="#E7ACBC" Offset="0"/>
-        <GradientStop Color="#FF9E717D" Offset="0.15"/>
-        <GradientStop Color="#FF9E717D" Offset="1"/>
+        <GradientStop Color="#FFCCC2C5" Offset="0.007"/>
+        <GradientStop Color="#FFBCB7B8" Offset="0.15"/>
+        <GradientStop Color="#FFBCB7B8" Offset="1"/>
+        <GradientStop Color="#FFFFF6F8"/>
     </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="Brush_OperationsPaneBorder" Color="#FFCCC2C5"/>
     
     <Color x:Key="Color_ControlBorder">#FFEAE7E4</Color>
     <SolidColorBrush x:Key="Brush_ControlBorder" Color="{StaticResource Color_ControlBorder}"/>
