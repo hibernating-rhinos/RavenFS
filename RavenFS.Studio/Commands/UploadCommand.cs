@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using RavenFS.Client;
 using RavenFS.Studio.Infrastructure;
+using RavenFS.Studio.Infrastructure.Input;
 using RavenFS.Studio.Models;
 using FileInfo = System.IO.FileInfo;
 
@@ -28,15 +31,7 @@ namespace RavenFS.Studio.Commands
             
             if (files == null)
             {
-                var fileDialog = new OpenFileDialog()
-                                     {
-                                         Multiselect = true
-                                     };
-                var result = fileDialog.ShowDialog();
-                if (result.HasValue && result.Value)
-                {
-                    files = fileDialog.Files.ToList();
-                }
+                files = GetFilesFromFileDialog();
             }
 
             if (files != null)
@@ -47,6 +42,33 @@ namespace RavenFS.Studio.Commands
                 }
             }
 		}
+
+	    private static IList<FileInfo> GetFilesFromFileDialog()
+	    {
+	        var fileDialog = new OpenFileDialog()
+	                             {
+	                                 Multiselect = true
+	                             };
+	        
+            var result = TryShowDialog(fileDialog);
+
+	        var files = result.HasValue && result.Value ? fileDialog.Files.ToList() : null;
+
+	        return files;
+	    }
+
+        private static bool? TryShowDialog(OpenFileDialog fileDialog)
+        {
+            try
+            {
+                return fileDialog.ShowDialog();
+            }
+            catch (InvalidOperationException)
+            {
+                AskUser.AlertUser("Upload", "Oops! It looks like you selected too many files. Please try again.");
+                return false;
+            }
+        }
 
 	    private static void QueueForUpload(FileInfo file, string folder)
 	    {
