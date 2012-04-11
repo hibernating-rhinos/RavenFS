@@ -39,7 +39,13 @@ namespace RavenFS.Studio.Behaviors
                 .FirstOrDefault();
 
             if (row != null)
+            {
                 AssociatedObject.SelectedItem = row.DataContext;
+            }
+            else
+            {
+                AssociatedObject.SelectedItem = null;
+            }
         }
     }
 }

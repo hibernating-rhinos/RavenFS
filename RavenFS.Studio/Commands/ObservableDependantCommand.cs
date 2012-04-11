@@ -22,6 +22,7 @@ namespace RavenFS.Studio.Commands
         {
             this.observable = observable;
             observable.PropertyChanged += HandleObservableValueChanged;
+            CaptureCurrentValue();
         }
 
         protected T CurrentValue
@@ -36,14 +37,19 @@ namespace RavenFS.Studio.Commands
                 (CurrentValue as INotifyPropertyChanged).PropertyChanged -= HandleInnerPropertyChanged;
             }
 
+            CaptureCurrentValue();
+
+            RaiseCanExecuteChanged();
+        }
+
+        private void CaptureCurrentValue()
+        {
             currentValue = observable.Value;
 
             if (CurrentValue != null && CurrentValue is INotifyPropertyChanged)
             {
                 (CurrentValue as INotifyPropertyChanged).PropertyChanged += HandleInnerPropertyChanged;
             }
-
-            RaiseCanExecuteChanged();
         }
 
         private void HandleInnerPropertyChanged(object sender, PropertyChangedEventArgs e)
