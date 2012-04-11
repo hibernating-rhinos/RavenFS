@@ -13,7 +13,7 @@
                  xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
                      xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
                     xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
-            Title="Replication - RavenFS"
+            Title="Configuration - RavenFS"
             Style="{StaticResource Style_Page}"
             Infrastructure:ModelResolver.AttachModel="ConfigurationPageModel" d:DataContext="{d:DesignInstance Models:ConfigurationPageModel}">
     <Grid Margin="{StaticResource Margin_ContentPage}">
@@ -137,6 +137,7 @@
                 </i:Interaction.Triggers>
                 <i:Interaction.Behaviors>
                     <b:PreventEditingReadOnlyRows IsReadOnlyBinding="{Binding IsReadOnly}"/>
+                    <b:SelectRowOnRightClickBehavior/>
                 </i:Interaction.Behaviors>
                 <sdk:DataGrid.Columns>
                     <sdk:DataGridTemplateColumn Header="Key" Width="Auto" IsReadOnly="False">

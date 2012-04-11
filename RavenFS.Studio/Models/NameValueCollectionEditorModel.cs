@@ -45,7 +45,15 @@ namespace RavenFS.Studio.Models
             AddEmptyItem();
         }
 
-        public ICommand DeleteMetadataItemCommand { get { return deleteCommand ?? (deleteCommand = new ActionCommand(HandleDelete)); } }
+        public ICommand DeleteMetadataItemCommand
+        {
+            get
+            {
+                return deleteCommand ?? (deleteCommand = new ActionCommand(
+                                                             HandleDelete,
+                                                             o => o is EditableKeyValue));
+            }
+        }
 
         public EditableKeyValueCollection EditableValues { get; private set; }
 
