@@ -173,7 +173,7 @@
         <Setter Property="FontWeight" Value="Bold"/>
     </Style>
 
-    <Style TargetType="Button">
+    <Style x:Key="Style_Button_Default" TargetType="Button">
         <Setter Property="Background" Value="#FF1F3B53"/>
         <Setter Property="Foreground" Value="#FF000000"/>
         <Setter Property="Padding" Value="5"/>
@@ -240,6 +240,8 @@
             </Setter.Value>
         </Setter>
     </Style>
+    
+    <Style TargetType="Button" BasedOn="{StaticResource Style_Button_Default}"/>
 
     <Style x:Key="Style_Button_MouseOverChrome" TargetType="ButtonBase">
         <Setter Property="Background">
