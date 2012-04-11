@@ -23,9 +23,9 @@
                  UriSource="document-new.png" />
     <BitmapImage x:Key="Image_Remove_Tiny"
                  UriSource="Remove.png" />
-    <BitmapImage x:Key="Image_Save_Small"
+    <BitmapImage x:Key="Image_Save_Tiny"
                  UriSource="Save.png" />
-    <BitmapImage x:Key="Image_Undo_Small"
+    <BitmapImage x:Key="Image_Undo_Tiny"
                  UriSource="Undo.png" />
     <BitmapImage x:Key="Image_Query_Small"
                  UriSource="Query.png" />
@@ -37,7 +37,7 @@
                  UriSource="Edit.png" />
     <BitmapImage x:Key="Image_Reformat_Small"
                  UriSource="HtmlBalanceBracesHS.png" />
-    <BitmapImage x:Key="Image_Delete_Small"
+    <BitmapImage x:Key="Image_Delete_Tiny"
                  UriSource="DeleteHS.png" />
     <BitmapImage x:Key="Image_Refresh_Small"
                  UriSource="RefreshSmall.png" />

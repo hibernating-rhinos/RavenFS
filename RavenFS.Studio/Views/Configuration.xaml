@@ -46,18 +46,31 @@
                 Style="{StaticResource Style_Border_Toolbar}">
             <toolkit:DockPanel Margin="0,6" LastChildFill="False">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="Add Configuration"
+                    <Button ToolTipService.ToolTip="Add Configuration"
                             VerticalAlignment="Center"
-                            Command="{Binding AddNewConfiguration}" Margin="5,0,0,0"/>
-                    <Button Content="Save Configuration"
+                            Command="{Binding AddNewConfiguration}" Margin="5,0,0,0"
+                            Style="{StaticResource Style_Button_MouseOverChrome}">
+                        <Image Source="{StaticResource Image_Add_Tiny}" Stretch="None"/>
+                    </Button>
+                    <Button ToolTipService.ToolTip="Delete Configuration"
                             VerticalAlignment="Center"
-                            Command="{Binding SaveConfiguration}" Margin="5,0,0,0"/>
-                    <Button Content="Delete Configuration"
+                            Command="{Binding DeleteConfiguration}" Margin="5,0,0,0"
+                            Style="{StaticResource Style_Button_MouseOverChrome}">
+                        <Image Source="{StaticResource Image_Delete_Tiny}" Stretch="None"/>
+                    </Button>
+                    <Button ToolTipService.ToolTip="Save Configuration"
                             VerticalAlignment="Center"
-                            Command="{Binding DeleteConfiguration}" Margin="5,0,0,0"/>
-                    <Button Content="Discard Changes"
+                            Command="{Binding SaveConfiguration}" Margin="5,0,0,0"
+                            Style="{StaticResource Style_Button_MouseOverChrome}">
+                        <Image Source="{StaticResource Image_Save_Tiny}" Stretch="None"/>
+                    </Button>
+
+                  <Button ToolTipService.ToolTip="Discard Changes"
                             VerticalAlignment="Center"
-                            Command="{Binding DiscardChanges}" Margin="5,0,0,0"/>
+                            Command="{Binding DiscardChanges}" Margin="5,0,0,0"
+                            Style="{StaticResource Style_Button_MouseOverChrome}">
+                        <Image Source="{StaticResource Image_Undo_Tiny}" Stretch="None"/>
+                  </Button>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal"
                          VerticalAlignment="Center"
