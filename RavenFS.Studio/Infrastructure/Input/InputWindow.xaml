@@ -6,7 +6,9 @@
                       Title="{Binding Path=Title}"
                       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                      xmlns:Input="clr-namespace:RavenFS.Studio.Infrastructure.Input" mc:Ignorable="d"
+                      xmlns:Input="clr-namespace:RavenFS.Studio.Infrastructure.Input"
+                      xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+                      xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors" mc:Ignorable="d"
                       d:DataContext="{d:DesignInstance Input:InputModel}">
     <Grid Margin="2"
           KeyDown="LayoutRoot_OnKeyDown">
@@ -22,10 +24,17 @@
 
         <TextBlock Text="{Binding Path=Message}" VerticalAlignment="Center" Margin="0,0,5,0"/>
         <TextBox Text="{Binding Path=Answer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                 Grid.Column="1" VerticalAlignment="Center" 
-                 MinWidth="200" />
+                 Grid.Column="1" VerticalAlignment="Center">
+          <TextBox.MinWidth>200</TextBox.MinWidth>
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="Loaded">
+                    <Behaviors:SelectAllAction/>
+                    <Behaviors:FocusElementAction/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </TextBox>
 
-        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+      <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="OKButton"
                     Content="OK"
                     Click="OKButton_Click"
