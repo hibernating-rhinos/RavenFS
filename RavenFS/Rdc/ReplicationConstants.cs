@@ -12,6 +12,7 @@ namespace RavenFS.Rdc
         public const string RavenReplicationHistory = "Raven-Replication-History";
         public const string RavenReplicationVersionHiLo = "Raven/Replication/VersionHilo";
         public const string RavenReplicationConflict = "Raven-Replication-Conflict";
+        public const string RavenReplicationConflictResolution = "Raven-Replication-Conflict-Resolution";
         public const string RavenReplicationSourcesBasePath = "Raven/Replication/Sources";
         public const string RavenReplicationDestinations = "Raven/Replication/Destinations";
         public const string RavenReplicationDestinationsBasePath = "Raven/Replication/Destinations/";

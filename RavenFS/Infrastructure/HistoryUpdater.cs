@@ -53,7 +53,7 @@ namespace RavenFS.Infrastructure
             }
         }
 
-        private static List<HistoryItem> DeserializeHistory(NameValueCollection nameValueCollection)
+        public static List<HistoryItem> DeserializeHistory(NameValueCollection nameValueCollection)
         {
             var serializedHistory = nameValueCollection[ReplicationConstants.RavenReplicationHistory];
             return new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(serializedHistory)));

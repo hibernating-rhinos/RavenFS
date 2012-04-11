@@ -46,12 +46,7 @@ namespace RavenFS.Rdc
             _storage.Batch(
                 accessor =>
                 {
-                    var value = accessor.GetConfigurationValue(ReplicationConstants.RavenReplicationVersionHiLo);
-                    if (String.IsNullOrEmpty(value) || !long.TryParse(value, out result))
-                    {
-                        result = 0;
-                    }
-
+                    accessor.TryGetConfigurationValue(ReplicationConstants.RavenReplicationVersionHiLo, ref result);
                     result++;
                     accessor.SetConfigurationValue(ReplicationConstants.RavenReplicationVersionHiLo, result.ToString());
                 });

@@ -309,9 +309,9 @@ namespace RavenFS.Client
 			}
 		}
 
-		public Task<SynchronizationReport> StartSynchronizationAsync(string serverIdentifier, string fileName)
+		public Task<SynchronizationReport> StartSynchronizationAsync(string sourceServerUrl, string fileName)
 		{
-            var requestUriString = String.Format("{0}/synchronization?fileName={1}&sourceServerUrl={2}", ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(serverIdentifier));
+            var requestUriString = String.Format("{0}/synchronization?fileName={1}&sourceServerUrl={2}", ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(sourceServerUrl));
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
@@ -324,7 +324,18 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-		public Task<string[]> GetFoldersAsync(string from = null, int start = 0,int pageSize = 25)
+        public Task ResolveConflictAsync(string sourceServerUrl, string fileName, string strategy)
+        {
+            var requestUriString = String.Format("{0}/synchronization?fileName={1}&strategy={2}&sourceServerUrl={3}", 
+                ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(strategy), Uri.EscapeDataString(sourceServerUrl));
+            var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+            request.Method = "PATCH";
+            return request.GetResponseAsync()
+				.ContinueWith(task => task.Result.Close())
+				.TryThrowBetteError();
+        }
+
+	    public Task<string[]> GetFoldersAsync(string from = null, int start = 0,int pageSize = 25)
 		{
 			var path = @from ?? "";
 			if (path.StartsWith("/"))

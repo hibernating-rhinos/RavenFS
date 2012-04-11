@@ -46,6 +46,15 @@ namespace RavenFS.Tests.RDC
             sourceContent.Position = 0;
             sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
+            try
+            {
+                seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.txt").Wait();
+            } 
+            catch
+            {
+                // pass
+            }
+            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", "GetTheirs").Wait();
             var result = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.txt").Result;
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
@@ -53,6 +62,7 @@ namespace RavenFS.Tests.RDC
             using (var resultFileContent = new MemoryStream())
             {
                 var metadata = seedClient.DownloadAsync("test.txt", resultFileContent).Result;
+                // TODO: Problem with metadata copying
                 Assert.Equal("some-value", metadata["SomeTest-metadata"]);
                 resultFileContent.Position = 0;
                 resultMD5 = resultFileContent.GetMD5Hash();
@@ -126,8 +136,8 @@ namespace RavenFS.Tests.RDC
 
         }
 
-        [Fact(Skip = "Not implemented yet")]
-        public void Should_mark_file_as_conflicted()
+        [Fact]
+        public void Should_mark_file_as_conflicted_when_two_differnet_versions()
         {
             var sourceContent1 = new RandomStream(10, 1);
             var sourceMetadata = new NameValueCollection
@@ -188,8 +198,6 @@ namespace RavenFS.Tests.RDC
             Assert.NotNull(history[0].ServerId);
             Assert.Equal("Changed", metadata["test"]);
         }
-
-
 
         [Fact(Skip = "Not implemented yet")]
         public void Should_mark_file_to_be_resolved_using_theirs_strategy()
