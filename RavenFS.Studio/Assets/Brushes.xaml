@@ -49,6 +49,9 @@
     <Color x:Key="Color_ControlBorder">#FFEAE7E4</Color>
     <SolidColorBrush x:Key="Brush_ControlBorder" Color="{StaticResource Color_ControlBorder}"/>
 
+    <Color x:Key="Color_TextBoxBorder">#C6BEBE</Color>
+    <SolidColorBrush x:Key="Brush_TextBoxBorder" Color="{StaticResource Color_TextBoxBorder}"/>
+    
     <Color x:Key="Color_HeaderText">#FFA2183E</Color>
     <SolidColorBrush x:Key="Brush_HeaderText" Color="{StaticResource Color_HeaderText}"/>
     
