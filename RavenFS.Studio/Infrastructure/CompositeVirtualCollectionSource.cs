@@ -26,7 +26,14 @@ namespace RavenFS.Studio.Infrastructure
             this.source2 = source2;
 
             source1.CollectionChanged += HandleChildCollectionChanged;
+            source1.DataFetchError += HandleDataFetchError;
             source2.CollectionChanged += HandleChildCollectionChanged;
+            source2.DataFetchError += HandleDataFetchError;
+        }
+
+        private void HandleDataFetchError(object sender, DataFetchErrorEventArgs e)
+        {
+            OnDataFetchError(e);
         }
 
         private void HandleChildCollectionChanged(object sender, VirtualCollectionChangedEventArgs e)

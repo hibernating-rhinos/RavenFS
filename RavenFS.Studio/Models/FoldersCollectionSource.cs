@@ -176,13 +176,21 @@ namespace RavenFS.Studio.Models
             }
 
             ApplicationModel.Current.Client.GetFoldersAsync(currentFolder, start: 0, pageSize: MaximumNumberOfFolders)
-                .ContinueWith(t =>
-                                  {
-                                      var folders = t.Result.Select(n => new DirectoryModel() {FullPath = n}).ToArray();
-                                      PruneVirtualFolders(folders);
-                                      SetFolders(folders);
-                                      OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.ShowStaleData));
-                                  }, synchronizationContextScheduler);
+                .ContinueWith(
+                    t =>
+                        {
+                            if (!t.IsFaulted)
+                            {
+                                var folders = t.Result.Select(n => new DirectoryModel() {FullPath = n}).ToArray();
+                                PruneVirtualFolders(folders);
+                                SetFolders(folders);
+                                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.ShowStaleData));
+                            }
+                            else
+                            {
+                                OnDataFetchError(new DataFetchErrorEventArgs(t.Exception));
+                            }
+                        }, synchronizationContextScheduler);
         }
 
         private void PruneVirtualFolders(DirectoryModel[] folders)

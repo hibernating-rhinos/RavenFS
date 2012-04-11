@@ -126,8 +126,16 @@ namespace RavenFS.Studio.Models
         private void BeginGetCount()
         {
             ApplicationModel.Current.Client.GetFilesAsync(currentFolder, fileNameSearchPattern:searchPattern, pageSize: 1)
-                .ContinueWith(t => 
-                    UpdateCount(t.Result.FileCount, forceCollectionRefresh: true), 
+                .ContinueWith(t => {
+                    if (!t.IsFaulted)
+                    {
+                        UpdateCount(t.Result.FileCount, forceCollectionRefresh: true);
+                    }
+                    else
+                    {
+                        OnDataFetchError(new DataFetchErrorEventArgs(t.Exception));
+                    }
+                }, 
                 TaskContinuationOptions.ExecuteSynchronously);
         }
 

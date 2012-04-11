@@ -8,6 +8,7 @@ namespace RavenFS.Studio.Infrastructure
     public abstract class VirtualCollectionSource<T> : IVirtualCollectionSource<T>
     {
         public event EventHandler<VirtualCollectionChangedEventArgs> CollectionChanged;
+        public event EventHandler<DataFetchErrorEventArgs> DataFetchError;
 
         public abstract int Count { get; }
 
@@ -16,6 +17,12 @@ namespace RavenFS.Studio.Infrastructure
         protected void OnCollectionChanged(VirtualCollectionChangedEventArgs e)
         {
             var handler = CollectionChanged;
+            if (handler != null) handler(this, e);
+        }
+
+        protected void OnDataFetchError(DataFetchErrorEventArgs e)
+        {
+            var handler = DataFetchError;
             if (handler != null) handler(this, e);
         }
     }

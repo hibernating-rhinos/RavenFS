@@ -121,7 +121,16 @@ namespace RavenFS.Studio.Models
             {
                 ApplicationModel.Current.Client.SearchAsync(searchPattern, null, pageSize: 1)
                     .ContinueWith(t =>
-                                  UpdateCount(t.Result.FileCount, forceCollectionRefresh: true),
+                                      {
+                                          if (!t.IsFaulted)
+                                          {
+                                              UpdateCount(t.Result.FileCount, forceCollectionRefresh: true);
+                                          }
+                                          else
+                                          {
+                                              OnDataFetchError(new DataFetchErrorEventArgs(t.Exception));
+                                          }
+                                      },
                                   TaskContinuationOptions.ExecuteSynchronously);
             }
         }

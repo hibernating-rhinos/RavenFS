@@ -12,7 +12,8 @@
                      xmlns:Views="clr-namespace:RavenFS.Studio.Views"
                      xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
                      xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
-                     xmlns:Delay="clr-namespace:Delay" mc:Ignorable="d"
+                     xmlns:Delay="clr-namespace:Delay" xmlns:Controls="clr-namespace:RavenFS.Studio.Controls"
+                     mc:Ignorable="d"
                      d:DesignWidth="640"
                      d:DesignHeight="480"
                      Title="Home"
@@ -280,6 +281,9 @@
                 </sdk:DataGridTemplateColumn>
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
+
+        <Controls:DataFetchErrorNotifier Grid.Row="4" ErrorSource="{Binding Files}" VerticalAlignment="Bottom"/>
+        
         <Border Grid.Row="5" Style="{StaticResource Style_Border_Footer}">
             <TextBlock Margin="3">
                 <Run Text="{Binding Files.Count}"/>

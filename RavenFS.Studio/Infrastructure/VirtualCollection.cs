@@ -17,12 +17,12 @@ namespace RavenFS.Studio.Infrastructure
     /// <typeparam name="T"></typeparam>
     /// <remarks>The trick to ensuring that the silverlight datagrid doesn't attempt to enumerate all
     /// items from its DataSource in one shot is to implement both IList and ICollectionView.</remarks>
-    public class VirtualCollection<T> : IList<VirtualItem<T>>, IList, ICollectionView, INotifyPropertyChanged where T : class
+    public class VirtualCollection<T> : IList<VirtualItem<T>>, IList, ICollectionView, INotifyPropertyChanged, INotifyOnDataFetchErrors where T : class
     {
         private readonly IVirtualCollectionSource<T> _source;
         private readonly int _pageSize;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
-
+        public event EventHandler<DataFetchErrorEventArgs> DataFetchError;
         public event PropertyChangedEventHandler PropertyChanged;
 
         private uint _state; // used to ensure that data-requests are not stale
@@ -45,12 +45,18 @@ namespace RavenFS.Studio.Infrastructure
 
             _source = source;
             _source.CollectionChanged += HandleSourceCollectionChanged;
+            _source.DataFetchError += HandleSourceDataFetchError;
             _pageSize = pageSize;
             _virtualItems = new SparseList<VirtualItem<T>>(DetermineSparseListPageSize(pageSize));
             _currentItem = -1;
             _synchronizationContextScheduler = TaskScheduler.FromCurrentSynchronizationContext();
 
             (_sortDescriptions as INotifyCollectionChanged).CollectionChanged += HandleSortDescriptionsChanged;
+        }
+
+        private void HandleSourceDataFetchError(object sender, DataFetchErrorEventArgs e)
+        {
+            OnDataFetchError(e);
         }
 
         private void HandleSortDescriptionsChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -110,7 +116,17 @@ namespace RavenFS.Studio.Infrastructure
             var stateWhenRequestInitiated = _state;
 
             _source.GetPageAsync(page*_pageSize, _pageSize, _sortDescriptions).ContinueWith(
-                t => UpdatePage(page, t.Result, stateWhenRequestInitiated),
+                t =>
+                    {
+                        if (!t.IsFaulted)
+                        {
+                            UpdatePage(page, t.Result, stateWhenRequestInitiated);
+                        }
+                        else
+                        {
+                            OnDataFetchError(new DataFetchErrorEventArgs(t.Exception));
+                        }
+                    },
                 _synchronizationContextScheduler);
         }
 
@@ -138,6 +154,11 @@ namespace RavenFS.Studio.Infrastructure
                 var virtualItem = _virtualItems[index] ?? (_virtualItems[index] = new VirtualItem<T>(this, index));
                 virtualItem.Item = results[i];
             }
+        }
+
+        void INotifyOnDataFetchErrors.Retry()
+        {
+            Refresh();
         }
 
         public void RealizeItemRequested(int index)
@@ -467,6 +488,12 @@ namespace RavenFS.Studio.Infrastructure
         protected void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null) handler(this, e);
+        }
+
+        protected void OnDataFetchError(DataFetchErrorEventArgs e)
+        {
+            EventHandler<DataFetchErrorEventArgs> handler = DataFetchError;
             if (handler != null) handler(this, e);
         }
 

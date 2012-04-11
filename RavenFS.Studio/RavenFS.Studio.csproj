@@ -146,6 +146,9 @@
     <Compile Include="Commands\EditFilePropertiesCommand.cs" />
     <Compile Include="Commands\VirtualItemCommand.cs" />
     <Compile Include="Controls\ActivityIndicator.cs" />
+    <Compile Include="Controls\DataFetchErrorNotifier.xaml.cs">
+      <DependentUpon>DataFetchErrorNotifier.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Converters\AsyncOperationStatusConverter.cs" />
     <Compile Include="Commands\CopyExceptionToClipboardCommand.cs" />
     <Compile Include="Converters\NullConverter.cs" />
@@ -207,6 +210,8 @@
     <Compile Include="Impl\WatermarkedTextBox\WatermarkedTextBox.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
     <Compile Include="Infrastructure\CompositeVirtualCollectionSource.cs" />
+    <Compile Include="Infrastructure\DataFetchErrorEventArgs.cs" />
+    <Compile Include="Infrastructure\INotifyOnDataFetchErrors.cs" />
     <Compile Include="Infrastructure\IObservable.cs" />
     <Compile Include="Infrastructure\DialogModel.cs" />
     <Compile Include="Infrastructure\DialogView.cs" />
@@ -305,6 +310,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Assets\WatermarkedTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\DataFetchErrorNotifier.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
