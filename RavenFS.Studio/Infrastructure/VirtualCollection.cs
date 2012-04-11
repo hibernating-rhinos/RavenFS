@@ -107,10 +107,10 @@ namespace RavenFS.Studio.Infrastructure
 
             _requestedPages.Add(page);
 
-            var stateAsOfNow = _state;
+            var stateWhenRequestInitiated = _state;
 
             _source.GetPageAsync(page*_pageSize, _pageSize, _sortDescriptions).ContinueWith(
-                t => UpdatePage(page, t.Result, stateAsOfNow),
+                t => UpdatePage(page, t.Result, stateWhenRequestInitiated),
                 _synchronizationContextScheduler);
         }
 

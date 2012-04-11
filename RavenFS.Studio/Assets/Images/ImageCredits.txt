@@ -39,4 +39,5 @@ Close.png
 The following icons cme from SEM Labs (http://semlabs.co.uk ) via iconarchive.com (http://www.iconarchive.com/show/web-blog-icons-by-semlabs.html)
 
 Upload.png
+Download.png
 SearchTiny.png

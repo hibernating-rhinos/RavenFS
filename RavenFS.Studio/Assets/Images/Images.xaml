@@ -66,6 +66,9 @@
 
     <BitmapImage x:Key="Image_Upload_Small"
                  UriSource="Upload.png" />
+    
+    <BitmapImage x:Key="Image_Download_Tiny"
+                 UriSource="Download.png" />
     <BitmapImage x:Key="Image_Close"
                  UriSource="Close.png"/>
     <BitmapImage x:Key="Image_Clear_Tiny"

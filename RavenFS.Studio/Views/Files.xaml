@@ -12,7 +12,7 @@
                      xmlns:Views="clr-namespace:RavenFS.Studio.Views"
                      xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
                      xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
-                     mc:Ignorable="d"
+                     xmlns:Delay="clr-namespace:Delay" mc:Ignorable="d"
                      d:DesignWidth="640"
                      d:DesignHeight="480"
                      Title="Home"
@@ -67,24 +67,41 @@
                             </StackPanel>
                         </Button.Content>
                     </Button>
-                    <Button Content="Add Folder"
-                            VerticalAlignment="Center"
-                            Command="{Binding AddFolder}" Margin="5,0,0,0"/>
-                    <Button Content="Download"
-                            VerticalAlignment="Center"
-                            Command="{Binding Download}" Margin="5,0,0,0"/>
-                    <Button Content="Delete"
-                            VerticalAlignment="Center"
-                            Command="{Binding Delete}" Margin="5,0,0,0"/>
-                    <Button Content="Rename"
-                            VerticalAlignment="Center"
-                            Command="{Binding RenameFile}" Margin="5,0,0,0"/>
-                    <Button Content="Move"
-                            VerticalAlignment="Center"
-                            Command="{Binding MoveFile}" Margin="5,0,0,0"/>
-                    <Button Content="Edit Properties"
-                            VerticalAlignment="Center"
-                            Command="{Binding EditProperties}" Margin="5,0,0,0"/>
+                    <Button VerticalAlignment="Center"
+                            Command="{Binding AddFolder}" Margin="5,0,0,0">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="{StaticResource Image_Add_Tiny}" Stretch="None" Margin="0,0,2,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Add Folder" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                    <Delay:MenuButton Content="Actions" Margin="5,0,0,0" VerticalAlignment="Center">
+                        <Delay:MenuButton.ButtonMenuItemsSource>
+                            <toolkit:MenuItem Header="Download"
+                                    Command="{Binding Download}">
+                                <toolkit:MenuItem.Icon>
+                                    <Image Source="{StaticResource Image_Download_Tiny}"/>
+                                </toolkit:MenuItem.Icon>
+                            </toolkit:MenuItem>
+                          <toolkit:MenuItem Header="Delete"
+                                    Command="{Binding Delete}">
+                                <toolkit:MenuItem.Icon>
+                                    <Image Source="{StaticResource Image_Delete_Tiny}"/>
+                                </toolkit:MenuItem.Icon>
+                            </toolkit:MenuItem>
+                          <toolkit:MenuItem Header="Rename"
+                                    Command="{Binding RenameFile}"/>
+                            <toolkit:MenuItem Header="Move"
+                                    Command="{Binding MoveFile}"/>
+                            <toolkit:MenuItem Header="Edit Properties"
+                                    Command="{Binding EditProperties}">
+                                <toolkit:MenuItem.Icon>
+                                    <Image Source="{StaticResource Image_Edit_Small}"/>
+                                </toolkit:MenuItem.Icon>
+                            </toolkit:MenuItem>
+                        </Delay:MenuButton.ButtonMenuItemsSource>
+                    </Delay:MenuButton>
                     <Button VerticalAlignment="Stretch"
                             Command="{Binding ShowSearch}" 
                             Margin="5,0,0,-7" 
@@ -198,16 +215,27 @@
             <toolkit:ContextMenuService.ContextMenu>
                 <toolkit:ContextMenu>
                     <toolkit:MenuItem Header="Download"
-                            Command="{Binding Download}"/>
-                    <toolkit:Separator/>
+                                    Command="{Binding Download}">
+                        <toolkit:MenuItem.Icon>
+                            <Image Source="{StaticResource Image_Download_Tiny}"/>
+                        </toolkit:MenuItem.Icon>
+                    </toolkit:MenuItem>
                     <toolkit:MenuItem Header="Delete"
-                            Command="{Binding Delete}"/>
+                                    Command="{Binding Delete}">
+                        <toolkit:MenuItem.Icon>
+                            <Image Source="{StaticResource Image_Delete_Tiny}"/>
+                        </toolkit:MenuItem.Icon>
+                    </toolkit:MenuItem>
                     <toolkit:MenuItem Header="Rename"
-                            Command="{Binding RenameFile}"/>
-                  <toolkit:MenuItem Header="Edit Properties"
-                                    Command="{Binding EditProperties}"/>
-                  <toolkit:MenuItem Header="Move"
-                            Command="{Binding MoveFile}"/>
+                                    Command="{Binding RenameFile}"/>
+                    <toolkit:MenuItem Header="Move"
+                                    Command="{Binding MoveFile}"/>
+                    <toolkit:MenuItem Header="Edit Properties"
+                                    Command="{Binding EditProperties}">
+                        <toolkit:MenuItem.Icon>
+                            <Image Source="{StaticResource Image_Edit_Small}"/>
+                        </toolkit:MenuItem.Icon>
+                    </toolkit:MenuItem>
                 </toolkit:ContextMenu>
             </toolkit:ContextMenuService.ContextMenu>
             <sdk:DataGrid.Columns>

@@ -200,6 +200,9 @@
     <Compile Include="Impl\PopupPlacement\PopupOrientationCollection.cs" />
     <Compile Include="Impl\PopupPlacement\PopupPlacement.cs" />
     <Compile Include="Impl\PopupPlacement\PopupVerticalAlignment.cs" />
+    <Compile Include="Impl\SplitButton\GlobalSuppressions.cs" />
+    <Compile Include="Impl\SplitButton\MenuButton.cs" />
+    <Compile Include="Impl\SplitButton\SplitButton.cs" />
     <Compile Include="Impl\WatermarkedTextBox\VisualStateHelper.cs" />
     <Compile Include="Impl\WatermarkedTextBox\WatermarkedTextBox.cs" />
     <Compile Include="Infrastructure\ActionCommand.cs" />
@@ -321,6 +324,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Impl\SplitButton\generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Themes\Generic.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -415,7 +422,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Assets\Images\download.png" />
     <Content Include="Impl\PopupPlacement\Credit.txt" />
+    <Content Include="Impl\SplitButton\Credits.txt" />
     <Content Include="Impl\WatermarkedTextBox\Credits.txt" />
     <Resource Include="Assets\Images\SearchSmall.png" />
     <Resource Include="Assets\Images\SearchTiny.png" />
