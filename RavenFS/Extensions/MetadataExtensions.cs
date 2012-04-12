@@ -42,7 +42,7 @@ namespace RavenFS.Extensions
 					continue;
                 if (key == "ETag" && values.Length > 0)
                 {
-                    context.Headers.ETag = new EntityTagHeaderValue(String.Format("\"{0}\"", values[0]));
+                    context.Headers.ETag = new EntityTagHeaderValue(values[0]);
                 }
                 else
                 {
@@ -153,7 +153,7 @@ namespace RavenFS.Extensions
 			"Warning",
 		};
 
-        public static readonly IList<string> ReadOnlyHeaders = new List<string>() { "Last-Modified", "ETag"}.AsReadOnly();
+        public static readonly IList<string> ReadOnlyHeaders = new List<string> { "Last-Modified", "ETag"}.AsReadOnly();
  
         public static NameValueCollection FilterHeadersForViewing(this NameValueCollection metadata)
         {
@@ -203,7 +203,7 @@ namespace RavenFS.Extensions
         public static NameValueCollection UpdateLastModified(this NameValueCollection self)
         {
             self["Last-Modified"] = DateTime.UtcNow.ToString("d MMM yyyy H:m:s 'GMT'",CultureInfo.InvariantCulture);
-            self["ETag"] = Guid.NewGuid().ToString();
+            self["ETag"] = "\"" + Guid.NewGuid() + "\"";
             return self;
         }
 
