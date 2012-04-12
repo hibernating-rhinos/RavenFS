@@ -231,7 +231,7 @@ namespace RavenFS.Tests
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
             Assert.Equal("000001", result);
-            Assert.Equal("bytes 0-6/3000000", nameValues["Content-Range"]);
+            Assert.Equal("bytes 0-5/3000000", nameValues["Content-Range"]);
 			//Assert.Equal("6", nameValues["Content-Length"]); // no idea why we aren't getting this, probably because we get a range
         }
 
@@ -252,7 +252,7 @@ namespace RavenFS.Tests
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
             Assert.Equal("00050200050", result);
-            Assert.Equal("bytes 3006-3017/3000000", nameValues["Content-Range"]);
+            Assert.Equal("bytes 3006-3016/3000000", nameValues["Content-Range"]);
 			//Assert.Equal("11", nameValues["Content-Length"]); - no idea why we aren't getting this, probably because we get a range
         }
 
@@ -273,7 +273,7 @@ namespace RavenFS.Tests
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
             Assert.Equal("50000", result);
-            Assert.Equal("bytes 2999994-2999999/3000000", nameValues["Content-Range"]);
+            Assert.Equal("bytes 2999994-2999998/3000000", nameValues["Content-Range"]);
 			//Assert.Equal("6", nameValues["Content-Length"]); - no idea why we aren't getting this, probably because we get a range
         }
 
@@ -294,7 +294,7 @@ namespace RavenFS.Tests
             downloadedStream.Position = 0;
             var result = sr.ReadToEnd();
             Assert.Equal("9500000", result);
-			Assert.Equal("bytes 2999993-3000000/3000000", nameValues["Content-Range"]);
+			Assert.Equal("bytes 2999993-2999999/3000000", nameValues["Content-Range"]);
 			//Assert.Equal("7", nameValues["Content-Length"]); - no idea why we aren't getting this, probably because we get a range
         }
 

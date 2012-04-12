@@ -1,9 +1,10 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 
 namespace RavenFS.Rdc
 {
     public interface IPartialDataAccess
     {
-        void CopyTo(Stream target, long from, long length);
+        Task CopyToAsync(Stream target, long from, long length);
     }
 }

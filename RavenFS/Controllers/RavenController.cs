@@ -16,6 +16,8 @@ using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
+	using System.Net;
+
 	public abstract class RavenController : ApiController
 	{
 		protected class PagingInfo
@@ -65,6 +67,11 @@ namespace RavenFS.Controllers
 		{
 			get { return RavenFileSystem.SigGenerator; }
 		}
+
+	    public HistoryUpdater HistoryUpdater
+	    {
+            get { return RavenFileSystem.HistoryUpdater;  }
+	    }
 
 		private NameValueCollection QueryString
 		{
@@ -127,8 +134,18 @@ namespace RavenFS.Controllers
 
 				length = (to - from);
 
-				contentRange = new ContentRangeHeaderValue(from, to, resultContent.Length);
-				resultContent = new LimitedStream(resultContent, from, to);
+                // "to" in Content-Range points on the last byte. In other words the set is: <from..to>  not <from..to)
+                if (from < to)
+                {
+                    contentRange = new ContentRangeHeaderValue(from, to - 1, resultContent.Length);
+                    resultContent = new LimitedStream(resultContent, from, to);
+                }
+                else
+                {
+                    contentRange = new ContentRangeHeaderValue(0);
+                    resultContent = Stream.Null;
+                }
+			    
 			}
 			else
 			{
@@ -151,5 +168,15 @@ namespace RavenFS.Controllers
 			return response;
 		}
 
+		protected void AssertFileIsNotBeingSynced(string fileName)
+		{
+			bool result = false;
+			Storage.Batch(accessor => result = accessor.ConfigExists(ReplicationHelper.SyncConfigNameForFile(fileName)));
+
+			if(result)
+			{
+				throw new HttpResponseException(string.Format("File {0} is being synced", fileName), HttpStatusCode.ServiceUnavailable);
+			}
+		}
 	}
 }

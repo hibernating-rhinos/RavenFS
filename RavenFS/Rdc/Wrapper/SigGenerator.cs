@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Threading;
+using RavenFS.Rdc.Wrapper.Unmanaged;
 
 namespace RavenFS.Rdc.Wrapper
 {
@@ -22,62 +23,53 @@ namespace RavenFS.Rdc.Wrapper
 
         public SigGenerator(ISignatureRepository signatureRepository)
         {
-        	try
-        	{
-        		_rdcLibrary = (IRdcLibrary)new RdcLibrary();
-        	}
-        	catch (InvalidCastException e)
-        	{
-        		throw new InvalidOperationException("This code must run in an MTA thread", e);
-        	}
+            try
+            {
+                _rdcLibrary = (IRdcLibrary)new RdcLibrary();
+            }
+            catch (InvalidCastException e)
+            {
+                throw new InvalidOperationException("This code must run in an MTA thread", e);
+            }
             _signatureRepository = signatureRepository;
         }
 
-        public IList<SignatureInfo> GenerateSignatures(Stream source)
+        public IList<SignatureInfo> GenerateSignatures(Stream source, string fileName)
         {
             _recursionDepth = EvaluatetRecursionDepth(source);
             if (_recursionDepth == 0)
             {
                 return new List<SignatureInfo>();
             }
-
-        	var result = Enumerable.Range(0, _recursionDepth).Select(i => new SignatureInfo()).ToList();
-
             var rdcGenerator = InitializeRdcGenerator();
-
-            var rdcBufferPointers = PrepareRdcBufferPointers();
-
-            var outputPointers = PrepareOutputPointers(rdcBufferPointers);
-
-            var inputBuffer = Process(source, rdcBufferPointers, rdcGenerator, outputPointers, result);
-
-            Marshal.ReleaseComObject(rdcGenerator);
-
-            if (inputBuffer.Data != IntPtr.Zero)
+            try
             {
-                Marshal.FreeCoTaskMem(inputBuffer.Data);
+                return Process(source, rdcGenerator, fileName);
             }
-
-			result.Reverse();
-        	return result;
+            finally
+            {
+                Marshal.ReleaseComObject(rdcGenerator);
+            }
         }
 
-
-
-        private RdcBufferPointer Process(Stream source, RdcBufferPointer[] rdcBufferPointers, IRdcGenerator rdcGenerator, IntPtr[] outputPointers,
-            IList<SignatureInfo> result)
+        private IList<SignatureInfo> Process(Stream source, IRdcGenerator rdcGenerator, string fileName)
         {
+            var result = Enumerable.Range(0, _recursionDepth).Reverse().Select(i => new SignatureInfo(i, fileName)).ToList();
+
+            var eof = false;
+            var eofOutput = false;
+            // prepare streams
+            var sigStreams = result.Select(item => _signatureRepository.CreateContent(item.Name)).ToList();
+
             var inputBuffer = new RdcBufferPointer
             {
             	Size = 0,
             	Used = 0,
             	Data = Marshal.AllocCoTaskMem(InputBufferSize + 16)
             };
-        	var eof = false;
-            var eofOutput = false;
-            // prepare streams
-            var sigStreams = (result.Select(item => _signatureRepository.CreateContent(item.Name))).ToList();
 
+            var rdcBufferPointers = PrepareRdcBufferPointers();
+            var outputPointers = PrepareOutputPointers(rdcBufferPointers);
             try
             {
                 while (!eofOutput)
@@ -127,13 +119,22 @@ namespace RavenFS.Rdc.Wrapper
             }
             finally
             {
+                if (inputBuffer.Data != IntPtr.Zero)
+                {
+                    Marshal.FreeCoTaskMem(inputBuffer.Data);
+                }
+                foreach (var item in outputPointers)
+                {
+                    Marshal.FreeCoTaskMem(item);
+                }
                 foreach (var item in sigStreams)
                 {
-                    item.Close();
                     item.Dispose();
                 }
             }
-            return inputBuffer;
+            result.Reverse();
+            _signatureRepository.Flush(result);
+            return result;
         }
 
         private static RdcBufferPointer GetInputBuffer(Stream source, int inputBufferSize, RdcBufferPointer inputBuffer, ref bool eof)

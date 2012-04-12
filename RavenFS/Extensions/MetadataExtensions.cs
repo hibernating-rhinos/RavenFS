@@ -32,23 +32,7 @@ namespace RavenFS.Extensions
     public static class MetadataExtensions
     {
 #if !CLIENT
-		public static void AddHeaders(HttpContext context, FileAndPages fileAndPages)
-		{
-			foreach (var key in fileAndPages.Metadata.AllKeys)
-			{
-				var values = fileAndPages.Metadata.GetValues(key);
-				if (values == null)
-					continue;
-
-				foreach (var value in values)
-				{
-					context.Response.AddHeader(key, value);
-
-				}
-			}
-		}        
-
-
+		        
 		public static void AddHeaders(HttpResponseMessage context, FileAndPages fileAndPages)
 		{
 			foreach (var key in fileAndPages.Metadata.AllKeys)
@@ -56,11 +40,18 @@ namespace RavenFS.Extensions
 				var values = fileAndPages.Metadata.GetValues(key);
 				if (values == null)
 					continue;
+                if (key == "ETag" && values.Length > 0)
+                {
+                    context.Headers.ETag = new EntityTagHeaderValue(values[0]);
+                }
+                else
+                {
+                    foreach (var value in values)
+                    {
 
-				foreach (var value in values)
-				{
-					context.Content.Headers.Add(key, value);
-				}
+                        context.Content.Headers.Add(key, value);
+                    }
+                }
 			}
 		}    
  
@@ -162,7 +153,7 @@ namespace RavenFS.Extensions
 			"Warning",
 		};
 
-        public static readonly IList<string> ReadOnlyHeaders = new List<string>() { "Last-Modified"}.AsReadOnly();
+        public static readonly IList<string> ReadOnlyHeaders = new List<string> { "Last-Modified", "ETag"}.AsReadOnly();
  
         public static NameValueCollection FilterHeadersForViewing(this NameValueCollection metadata)
         {
@@ -212,6 +203,7 @@ namespace RavenFS.Extensions
         public static NameValueCollection UpdateLastModified(this NameValueCollection self)
         {
             self["Last-Modified"] = DateTime.UtcNow.ToString("d MMM yyyy H:m:s 'GMT'",CultureInfo.InvariantCulture);
+            self["ETag"] = "\"" + Guid.NewGuid() + "\"";
             return self;
         }
 

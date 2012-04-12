@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using RavenFS.Infrastructure;
 using RavenFS.Util;
 using System.Linq;
 
@@ -27,8 +28,7 @@ namespace RavenFS.Extensions
         	return self.ReadAsync(buffer, start, reads)
         		.ContinueWith(task =>
         		{
-        			if (task.Status == TaskStatus.Faulted)
-        				task.Wait(); //throws
+					task.AssertNotFaulted();
         			return reads.Sum();
         		});
         }
