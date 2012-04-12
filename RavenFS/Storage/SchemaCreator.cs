@@ -151,6 +151,14 @@ namespace RavenFS.Storage
 				cp = JET_CP.Unicode
 			}, null, 0, out columnid);
 
+			Api.JetAddColumn(session, tableid, "created_at", new JET_COLUMNDEF
+			{
+				cbMax = 1024,
+				coltyp = JET_coltyp.DateTime,
+				grbit = ColumndefGrbit.ColumnNotNULL,
+				cp = JET_CP.Unicode
+			}, null, 0, out columnid);
+
 			Api.JetAddColumn(session, tableid, "level", new JET_COLUMNDEF
 			{
 				coltyp = JET_coltyp.Long,

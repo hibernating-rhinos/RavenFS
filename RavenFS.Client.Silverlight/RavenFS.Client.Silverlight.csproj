@@ -75,6 +75,12 @@
     <Compile Include="..\RavenFS.Client\ConfigChange.cs">
       <Link>ConfigChange.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\ConflictResolutionStrategy.cs">
+      <Link>ConflictResolutionStrategy.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\ConflictDetected.cs">
+      <Link>ConflictDetected.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\ExceptionExtensions.cs">
       <Link>ExceptionExtensions.cs</Link>
     </Compile>

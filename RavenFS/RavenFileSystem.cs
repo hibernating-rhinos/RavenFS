@@ -11,6 +11,7 @@ using RavenFS.Extensions;
 using RavenFS.Infrastructure;
 using RavenFS.Infrastructure.Workarounds;
 using RavenFS.Notifications;
+using RavenFS.Rdc;
 using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
@@ -24,11 +25,12 @@ namespace RavenFS
 		private readonly string path;
 		private readonly TransactionalStorage storage;
 		private readonly IndexStorage search;
-		private readonly SimpleSignatureRepository signatureRepository;
+		private readonly ISignatureRepository signatureRepository;
 		private readonly SigGenerator sigGenerator;
 	    private readonly NotificationPublisher notificationPublisher;
+	    private readonly HistoryUpdater historyUpdater;
 
-		public TransactionalStorage Storage
+	    public TransactionalStorage Storage
 		{
 			get { return storage; }
 		}
@@ -45,8 +47,9 @@ namespace RavenFS
 			this.path = path.ToFullPath();
 			storage = new TransactionalStorage(this.path, new NameValueCollection());
 			search = new IndexStorage(this.path, new NameValueCollection());
-			signatureRepository = new SimpleSignatureRepository(this.path);
+            signatureRepository = new StorageSignatureRepository(storage);
 			sigGenerator = new SigGenerator(signatureRepository);
+            historyUpdater = new HistoryUpdater(storage, new ReplicationHiLo(storage));
             notificationPublisher = new NotificationPublisher();
 			storage.Initialize();
 			search.Initialize();
@@ -70,13 +73,14 @@ namespace RavenFS
 		{
 			AppDomain.CurrentDomain.ProcessExit -= ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload -= ShouldDispose;
-			
+
+            signatureRepository.Dispose();
 			storage.Dispose();
 			search.Dispose();
 			sigGenerator.Dispose();
 		}
 
-		public SimpleSignatureRepository SignatureRepository
+		public ISignatureRepository SignatureRepository
 		{
 			get { return signatureRepository; }
 		}
@@ -89,6 +93,11 @@ namespace RavenFS
 	    public NotificationPublisher Publisher
 	    {
 	        get { return notificationPublisher; }
+	    }
+
+	    public HistoryUpdater HistoryUpdater
+	    {
+	        get { return historyUpdater; }
 	    }
 
 

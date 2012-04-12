@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using RavenFS.Rdc.Wrapper;
+using RavenFS.Rdc.Wrapper.Unmanaged;
 
 namespace RavenFS.Rdc.Wrapper
 {

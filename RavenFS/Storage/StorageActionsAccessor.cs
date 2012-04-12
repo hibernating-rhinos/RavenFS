@@ -352,13 +352,14 @@ namespace RavenFS.Storage
 			if (!Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
 				return;
 
-			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
-			Api.JetSetIndexRange(session, Usage, SetIndexRangeGrbit.RangeInclusive);
-
 			Api.JetSetCurrentIndex(session, Pages, "by_id");
 
 			do
 			{
+				var rowName = Api.RetrieveColumnAsString(session, Usage, tableColumnsCache.UsageColumns["name"]);
+				if (rowName != filename)
+					break;
+
 				var pageId = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value;
 
 				Api.MakeKey(session, Pages, pageId, MakeKeyGrbit.NewKey);
@@ -428,6 +429,26 @@ namespace RavenFS.Storage
 
 				update.Save();
 			}
+
+			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
+			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Usage, SeekGrbit.SeekGE) == false)
+				return;
+
+			do
+			{
+				var name = Api.RetrieveColumnAsString(session, Usage, tableColumnsCache.UsageColumns["name"]);
+				if (name != filename)
+					return;
+
+				using (var update = new Update(session, Usage, JET_prep.Replace))
+				{
+					Api.SetColumn(session, Usage, tableColumnsCache.UsageColumns["name"], rename, Encoding.Unicode);
+
+					update.Save();
+				}
+			} while (Api.TryMoveNext(session, Usage));
+
 		}
 
 		public NameValueCollection GetConfig(string name)
@@ -482,6 +503,7 @@ namespace RavenFS.Storage
 				{
 					Id = Api.RetrieveColumnAsInt32(session, Signatures, tableColumnsCache.SignaturesColumns["id"]).Value,
 					Level = Api.RetrieveColumnAsInt32(session, Signatures, tableColumnsCache.SignaturesColumns["level"]).Value,
+					CreatedAt = Api.RetrieveColumnAsDateTime(session, Signatures, tableColumnsCache.SignaturesColumns["created_at"]).Value
 				};
 			} while (Api.TryMoveNext(session, Signatures));
 		}
@@ -538,6 +560,7 @@ namespace RavenFS.Storage
 			{
 				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["name"], name, Encoding.Unicode);
 				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["level"], level);
+				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["created_at"], DateTime.UtcNow);
 
 				using(var stream = new ColumnStream(session, Signatures, tableColumnsCache.SignaturesColumns["data"]))
 				using(var buffer = new BufferedStream(stream))
@@ -566,6 +589,13 @@ namespace RavenFS.Storage
 			{
 				yield return Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["name"]);
 			}
+		}
+
+		internal bool ConfigExists(string name)
+		{
+			Api.JetSetCurrentIndex(session, Config, "by_name");
+			Api.MakeKey(session, Config, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			return Api.TrySeek(session, Config, SeekGrbit.SeekEQ);
 		}
 	}
 }

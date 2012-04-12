@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using RavenFS.Client;
 
 namespace RavenFS.Rdc
@@ -17,9 +18,9 @@ namespace RavenFS.Rdc
             _fileName = fileName;
         }
 
-        public void CopyTo(Stream target, long from, long length)
+        public Task CopyToAsync(Stream target, long from, long length)
         {
-            _ravenFileSystemClient.DownloadAsync(_fileName, target, from, from + length - 1).Wait();
+            return _ravenFileSystemClient.DownloadAsync(_fileName, target, from, from + length);
         }
     }
 }

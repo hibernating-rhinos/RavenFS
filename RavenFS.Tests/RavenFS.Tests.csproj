@@ -67,6 +67,7 @@
   <ItemGroup>
     <Compile Include="BigFileHandling.cs" />
     <Compile Include="Bugs\CaseSensitiveFileDeletion.cs" />
+    <Compile Include="Bugs\FileRenaming.cs" />
     <Compile Include="Bugs\Queries.cs" />
     <Compile Include="Bugs\UpdatingMetadata.cs" />
     <Compile Include="Bugs\UploadDownload.cs" />
@@ -77,14 +78,17 @@
     <Compile Include="Folders.cs" />
     <Compile Include="MtaFactAttribute.cs" />
     <Compile Include="Notifications.cs" />
+    <Compile Include="RDC\ConflictNotificationTests.cs" />
     <Compile Include="RDC\IO\RandomlyModifiedStream.cs" />
     <Compile Include="RDC\IO\RandomStream.cs" />
     <Compile Include="RDC\IO\TestDataGenerators.cs" />
     <Compile Include="RDC\IO\TestUtils.cs" />
+    <Compile Include="RDC\LockFileTests.cs" />
     <Compile Include="RDC\NeedListGeneratorTest.cs" />
     <Compile Include="RDC\SigGeneratorTest.cs" />
     <Compile Include="Search.cs" />
     <Compile Include="Signatures.cs" />
+    <Compile Include="StorageSignatureRepositoryTests.cs" />
     <Compile Include="StorageTest.cs" />
     <Compile Include="Tools\HttpWebRequestExtensions.cs" />
     <Compile Include="Tools\IisDeploymentUtil.cs" />
@@ -95,7 +99,7 @@
     <Compile Include="RemoteFilesHandlerTests.cs" />
     <Compile Include="PagesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SynchronizationTests.cs" />
+    <Compile Include="RDC\SynchronizationTests.cs" />
     <Compile Include="Tools\TimeMeasure.cs" />
     <Compile Include="WebApiTest.cs" />
   </ItemGroup>
