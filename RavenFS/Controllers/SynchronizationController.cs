@@ -30,10 +30,7 @@ namespace RavenFS.Controllers
                 throw new HttpResponseException("Unknown server identifier " + sourceServerUrl, HttpStatusCode.ServiceUnavailable);
             }
 
-            if (FileIsBeingSynced(fileName))
-            {
-                throw new HttpResponseException(string.Format("File {0} is being synced", fileName), HttpStatusCode.ServiceUnavailable);
-            }
+			AssertFileIsNotBeingSynced(fileName);
 
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
 

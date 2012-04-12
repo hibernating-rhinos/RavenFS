@@ -16,6 +16,8 @@ using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
+	using System.Net;
+
 	public abstract class RavenController : ApiController
 	{
 		protected class PagingInfo
@@ -166,11 +168,15 @@ namespace RavenFS.Controllers
 			return response;
 		}
 
-		protected bool FileIsBeingSynced(string fileName)
+		protected void AssertFileIsNotBeingSynced(string fileName)
 		{
 			bool result = false;
 			Storage.Batch(accessor => result = accessor.ConfigExists(ReplicationHelper.SyncConfigNameForFile(fileName)));
-			return result;
+
+			if(result)
+			{
+				throw new HttpResponseException(string.Format("File {0} is being synced", fileName), HttpStatusCode.ServiceUnavailable);
+			}
 		}
 	}
 }
