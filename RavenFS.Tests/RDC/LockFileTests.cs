@@ -17,7 +17,7 @@ namespace RavenFS.Tests.RDC
         private const int RetriesCount = 300;
         private readonly NameValueCollection EmptyData = new NameValueCollection();
 
-        [Fact]
+        [Fact(Skip = "This test is actually relying on a race condition to run, if the sync finished before the Wait starts, it will fail")]
         public void Should_create_sync_configuration_during_synchronization()
         {
             RavenFileSystemClient seedClient;
