@@ -16,7 +16,12 @@ namespace RavenFS.Studio.Infrastructure.Input
             answer = "";
         }
 
-		public string Title
+        public void SetDefaultAnswer(string answer)
+        {
+            this.answer = answer;
+        }
+
+	    public string Title
 		{
 			get { return title; }
 			set

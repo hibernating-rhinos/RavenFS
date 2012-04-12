@@ -39,9 +39,11 @@ namespace RavenFS.Studio.Infrastructure.Input
 			{
 				Title = title,
 				Message = question,
-                Answer = defaultAnswer,
                 ValidationCallback = validator,
 			};
+
+            dataContext.SetDefaultAnswer(defaultAnswer);
+
 			var inputWindow = new InputWindow
 			{
 				DataContext = dataContext
