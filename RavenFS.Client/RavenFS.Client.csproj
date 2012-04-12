@@ -88,6 +88,7 @@
     </Compile>
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="ConfigChange.cs" />
+    <Compile Include="ConflictDetected.cs" />
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="FileChange.cs" />
     <Compile Include="FileInfo.cs" />

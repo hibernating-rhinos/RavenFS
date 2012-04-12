@@ -6,6 +6,7 @@
 
 using System;
 using System.Web;
+using System.Net.Http;
 
 namespace RavenFS.Extensions
 {
@@ -24,6 +25,11 @@ namespace RavenFS.Extensions
 					localPath = "/";
 			}
 			return localPath;
+		}
+
+		public static string GetServerUrl(this HttpRequestMessage requestMessage)
+		{
+			return requestMessage.RequestUri.OriginalString.Replace(requestMessage.RequestUri.PathAndQuery, string.Empty);
 		}
 	}
 }

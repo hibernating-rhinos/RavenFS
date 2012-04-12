@@ -18,7 +18,9 @@ using RavenFS.Infrastructure;
 
 namespace RavenFS.Controllers
 {
-    public class SynchronizationController : RavenController
+	using ConflictDetected = Notifications.ConflictDetected;
+
+	public class SynchronizationController : RavenController
     {
         public Task<HttpResponseMessage<SynchronizationReport>> Get(string fileName, string sourceServerUrl)
         {
@@ -75,6 +77,13 @@ namespace RavenFS.Controllers
                                         true.ToString();
                                     accessor.UpdateFileMetadata(fileName, localMetadata);
                                 });
+                        	
+                        	Publisher.Publish(new ConflictDetected
+                        	                  	{
+                        	                  		FileName = fileName,
+                        	                  		ServerUrl = Request.GetServerUrl()
+							                  	});
+
                             throw new HttpResponseException(string.Format("File {0} is conflicted", fileName), HttpStatusCode.Conflict);
                         }
 

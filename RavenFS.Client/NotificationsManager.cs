@@ -37,6 +37,11 @@ namespace RavenFS.Client
             return Notifications().OfType<ConfigChange>();
         } 
 
+		public IObservable<ConflictDetected> ConflictDetections()
+		{
+			return Notifications().OfType<ConflictDetected>();
+		}
+
         public IObservable<FileChange> FolderChanges(string folder)
         {
             if (!folder.StartsWith("/"))
