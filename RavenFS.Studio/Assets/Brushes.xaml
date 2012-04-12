@@ -65,6 +65,8 @@
         <GradientStop Color="#C5F7F7F7" Offset="0.049"/>
         <GradientStop Color="#C1E8E8E8" Offset="0.74"/>
     </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="Brush_TextBoxFocusBorder" Color="#F2F2F2"/>
     
     <SolidColorBrush x:Key="Brush_ToolbarBackground" Color="#EEEEEE"/>
 

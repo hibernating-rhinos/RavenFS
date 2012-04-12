@@ -89,7 +89,7 @@
                             </Grid>
                         </Border>
                         <Border x:Name="DisabledVisualElement" Background="#A5F7F7F7" BorderBrush="#A5F7F7F7" BorderThickness="{TemplateBinding BorderThickness}" Opacity="0" IsHitTestVisible="False"/>
-                        <Rectangle x:Name="FocusVisualElement" RadiusX="0" RadiusY="0" Margin="2" Stroke="#D5D5D5" StrokeThickness="1" Opacity="0" IsHitTestVisible="false" />
+                        <Rectangle x:Name="FocusVisualElement" RadiusX="0" RadiusY="0" Margin="2" Stroke="{StaticResource Brush_TextBoxFocusBorder}" StrokeThickness="1" Opacity="0" IsHitTestVisible="false" />
                         <Border x:Name="ValidationErrorElement" BorderThickness="1" CornerRadius="1" BorderBrush="#FFDB000C" Visibility="Collapsed">
                             <ToolTipService.ToolTip>
                                 <ToolTip x:Name="validationTooltip" Template="{StaticResource ValidationToolTipTemplate}" Placement="Right" 
