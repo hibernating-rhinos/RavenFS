@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Web;
 using Newtonsoft.Json;
 using RavenFS.Rdc;
 using RavenFS.Storage;
@@ -13,13 +12,13 @@ namespace RavenFS.Infrastructure
 {
     public class HistoryUpdater
     {
-        private readonly TransactionalStorage _storage;
-        private readonly ReplicationHiLo _replicationHiLo;
+        private readonly TransactionalStorage storage;
+        private readonly ReplicationHiLo replicationHiLo;
 
         public HistoryUpdater(TransactionalStorage storage, ReplicationHiLo replicationHiLo)
         {
-            _storage = storage;
-            _replicationHiLo = replicationHiLo;
+            this.storage = storage;
+            this.replicationHiLo = replicationHiLo;
         }
 
         public void Update(string fileName, NameValueCollection nameValueCollection)
@@ -35,8 +34,8 @@ namespace RavenFS.Infrastructure
                 history.Add(new HistoryItem {ServerId = serverId, Version = currentVersion});
             }
             nameValueCollection[ReplicationConstants.RavenReplicationHistory] = SerializeHistory(history);
-            nameValueCollection[ReplicationConstants.RavenReplicationVersion] = _replicationHiLo.NextId().ToString();
-            nameValueCollection[ReplicationConstants.RavenReplicationSource] = _storage.Id.ToString();
+            nameValueCollection[ReplicationConstants.RavenReplicationVersion] = replicationHiLo.NextId().ToString(CultureInfo.InvariantCulture);
+            nameValueCollection[ReplicationConstants.RavenReplicationSource] = storage.Id.ToString();
         }
 
         private NameValueCollection GetMetadata(string fileName)
@@ -44,7 +43,7 @@ namespace RavenFS.Infrastructure
             try
             {
                 FileAndPages fileAndPages = null;
-                _storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0, 0));
+                storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0, 0));
                 return fileAndPages.Metadata;
             } 
             catch(FileNotFoundException)
