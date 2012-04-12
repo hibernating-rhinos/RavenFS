@@ -22,10 +22,9 @@ namespace RavenFS.Controllers
     {
         public Task<HttpResponseMessage<SynchronizationReport>> Get(string fileName, string sourceServerUrl)
         {
-            //return new CompletedTask<HttpResponseMessage<SynchronizationReport>>(new HttpResponseMessage<SynchronizationReport>(HttpStatusCode.Conflict));
             if (String.IsNullOrEmpty(sourceServerUrl))
             {
-                throw new HttpResponseException("Unknown server identifier " + sourceServerUrl, HttpStatusCode.ServiceUnavailable);
+                throw new HttpResponseException("Unknown server identifier " + sourceServerUrl, HttpStatusCode.BadRequest);
             }
 
             if (FileIsBeingSynced(fileName))
@@ -37,7 +36,6 @@ namespace RavenFS.Controllers
 
 
             LockFileByCreatingSyncConfiguration(fileName, sourceServerUrl);
-            // TODO: Not sure if unlocking is run if FatalError method has been called. (CompletedTask)
 
             return sourceRavenFileSystemClient.GetMetadataForAsync(fileName)
                 .ContinueWith(
@@ -46,14 +44,14 @@ namespace RavenFS.Controllers
                         var remoteMetadata = getMetadataForAsyncTask.Result;
                         if (remoteMetadata.AllKeys.Contains(ReplicationConstants.RavenReplicationConflict))
                         {
-                            throw new HttpResponseException(string.Format("File {0} on THEIR side is conflicted", fileName), HttpStatusCode.ServiceUnavailable);
+                            throw new HttpResponseException(string.Format("File {0} on THEIR side is conflicted", fileName), HttpStatusCode.BadRequest);
                         }
 
                         var localFileDataInfo = GetLocalFileDataInfo(fileName);
 
                         if (localFileDataInfo == null)
                         {
-                            // if file doesn't exist locally - download it at all
+                            // if file doesn't exist locally - download all of it
                             return Download(sourceRavenFileSystemClient, fileName, remoteMetadata)
                                 .ContinueWith(
                                     synchronizationTask =>
