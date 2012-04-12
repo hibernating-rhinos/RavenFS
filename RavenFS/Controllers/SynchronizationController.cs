@@ -142,15 +142,16 @@ namespace RavenFS.Controllers
                 return false;
             }
             var conflictResolution = new TypeHidingJsonSerializer().Parse<ConflictResolution>(conflictResolutionString);
-            return conflictResolution.Strategy == ConflictResolutionStrategy.GetTheirs
+            return conflictResolution.Strategy == ConflictResolutionStrategy.Theirs
                 && conflictResolution.TheirServerId == conflict.Theirs.ServerId;
         }
 
         [AcceptVerbs("PATCH")]
         public HttpResponseMessage Patch(string fileName, string strategy, string sourceServerUrl)
         {
-            var selectedStrategy = ConflictResolutionStrategy.GetTheirs;
-            Enum.TryParse<ConflictResolutionStrategy>(strategy, true, out selectedStrategy);
+            ConflictResolutionStrategy selectedStrategy;
+            if (Enum.TryParse(strategy, true, out selectedStrategy) == false)
+                selectedStrategy = ConflictResolutionStrategy.Theirs;
             InnerResolveConflict(fileName, sourceServerUrl, selectedStrategy);
 
             return new HttpResponseMessage(HttpStatusCode.NoContent);
@@ -158,36 +159,33 @@ namespace RavenFS.Controllers
 
         private void InnerResolveConflict(string fileName, string sourceServerUrl, ConflictResolutionStrategy strategy)
         {
-            if (strategy == ConflictResolutionStrategy.GetOurs)
+            switch (strategy)
             {
-                throw new NotImplementedException("Not implemented yet");
-                // TODO Set on remote GetTheirs strategy and run synchronization with our url
-            }
-            else if (strategy == ConflictResolutionStrategy.GetTheirs)
-            {
-                Storage.Batch(
-                    accessor =>
-                    {
-                        var localMetadata = accessor.GetFile(fileName, 0, 0).Metadata;
-                        var conflictConfigName = ReplicationHelper.ConflictConfigNameForFile(fileName);
-                        var conflictItem = accessor.GetConfigurationValue<ConflictItem>(conflictConfigName);
+                case ConflictResolutionStrategy.Ours:
+                    throw new NotImplementedException("Not implemented yet");
+                case ConflictResolutionStrategy.Theirs:
+                    Storage.Batch(
+                        accessor =>
+                            {
+                                var localMetadata = accessor.GetFile(fileName, 0, 0).Metadata;
+                                var conflictConfigName = ReplicationHelper.ConflictConfigNameForFile(fileName);
+                                var conflictItem = accessor.GetConfigurationValue<ConflictItem>(conflictConfigName);
 
-                        var conflictResolution =
-                            new ConflictResolution
-                                {
-                                    Strategy = ConflictResolutionStrategy.GetTheirs,
-                                    TheirServerUrl = sourceServerUrl,
-                                    TheirServerId = conflictItem.Theirs.ServerId,
-                                    Version = conflictItem.Theirs.Version,
-                                };
-                        localMetadata[ReplicationConstants.RavenReplicationConflictResolution] =
-                            new TypeHidingJsonSerializer().Stringify(conflictResolution);
-                        accessor.UpdateFileMetadata(fileName, localMetadata);
-                    });
-            }
-            else
-            {
-                throw new NotSupportedException(String.Format("Strategy {0} is not supported", strategy));
+                                var conflictResolution =
+                                    new ConflictResolution
+                                        {
+                                            Strategy = ConflictResolutionStrategy.Theirs,
+                                            TheirServerUrl = sourceServerUrl,
+                                            TheirServerId = conflictItem.Theirs.ServerId,
+                                            Version = conflictItem.Theirs.Version,
+                                        };
+                                localMetadata[ReplicationConstants.RavenReplicationConflictResolution] =
+                                    new TypeHidingJsonSerializer().Stringify(conflictResolution);
+                                accessor.UpdateFileMetadata(fileName, localMetadata);
+                            });
+                    break;
+                default:
+                    throw new NotSupportedException(String.Format("Strategy {0} is not supported", strategy));
             }
         }
 

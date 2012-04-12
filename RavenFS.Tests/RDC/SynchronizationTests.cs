@@ -209,7 +209,7 @@ namespace RavenFS.Tests.RDC
             {
                 // pass
             }
-            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, fileName, "GetTheirs").Wait();
+            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs).Wait();
             return seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, fileName).Result;
         }
 
