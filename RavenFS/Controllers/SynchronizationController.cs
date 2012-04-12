@@ -104,12 +104,13 @@ namespace RavenFS.Controllers
                             .ContinueWith(
                                 synchronizationTask =>
                                 {
+                                    remoteSignatureCache.Dispose();
+
                                     if (isConflictResolved)
                                     {
-                                        RemoveConflictArtifacts(localMetadata, fileName);
+                                        RemoveConflictArtifacts(fileName);
                                     }
 
-                                    remoteSignatureCache.Dispose();
                                     var synchronizationReport = synchronizationTask.Result;
 
                                     return
@@ -125,12 +126,16 @@ namespace RavenFS.Controllers
                     });
         }
 
-        private void RemoveConflictArtifacts(NameValueCollection localMetadata, string fileName)
+        private void RemoveConflictArtifacts(string fileName)
         {
             Storage.Batch(
                 accessor =>
                 {
                     accessor.DeleteConfig(ReplicationHelper.ConflictConfigNameForFile(fileName));
+                    var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
+                    metadata.Remove(ReplicationConstants.RavenReplicationConflict);
+                    metadata.Remove(ReplicationConstants.RavenReplicationConflictResolution);
+                    accessor.UpdateFileMetadata(fileName, metadata);
                 });
         }
 
@@ -147,48 +152,56 @@ namespace RavenFS.Controllers
         }
 
         [AcceptVerbs("PATCH")]
-        public HttpResponseMessage Patch(string fileName, string strategy, string sourceServerUrl)
+        public Task<HttpResponseMessage> Patch(string fileName, string strategy, string sourceServerUrl)
         {
             var selectedStrategy = ConflictResolutionStrategy.GetTheirs;
-            Enum.TryParse<ConflictResolutionStrategy>(strategy, true, out selectedStrategy);
-            InnerResolveConflict(fileName, sourceServerUrl, selectedStrategy);
+            Enum.TryParse(strategy, true, out selectedStrategy);
 
-            return new HttpResponseMessage(HttpStatusCode.NoContent);
+            if (selectedStrategy == ConflictResolutionStrategy.GetOurs)
+            {
+                return StrategyAsGetOurs(fileName, sourceServerUrl)
+                    .ContinueWith( 
+                        task =>
+                        {
+                            task.Wait();
+                            return new HttpResponseMessage();
+                        });
+            }
+            StrategyAsTheirs(fileName, sourceServerUrl);
+            var result = new Task<HttpResponseMessage>(() => new HttpResponseMessage());
+            result.Start();
+            return result;
         }
 
-        private void InnerResolveConflict(string fileName, string sourceServerUrl, ConflictResolutionStrategy strategy)
+        private Task StrategyAsGetOurs(string fileName, string sourceServerUrl)
         {
-            if (strategy == ConflictResolutionStrategy.GetOurs)
-            {
-                throw new NotImplementedException("Not implemented yet");
-                // TODO Set on remote GetTheirs strategy and run synchronization with our url
-            }
-            else if (strategy == ConflictResolutionStrategy.GetTheirs)
-            {
-                Storage.Batch(
-                    accessor =>
-                    {
-                        var localMetadata = accessor.GetFile(fileName, 0, 0).Metadata;
-                        var conflictConfigName = ReplicationHelper.ConflictConfigNameForFile(fileName);
-                        var conflictItem = accessor.GetConfigurationValue<ConflictItem>(conflictConfigName);
+            var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
+            RemoveConflictArtifacts(fileName);
+            return sourceRavenFileSystemClient.ResolveConflictAsync(sourceRavenFileSystemClient.ServerUrl, fileName, ConflictResolutionStrategy.GetTheirs.ToString());
+        }
 
-                        var conflictResolution =
-                            new ConflictResolution
-                                {
-                                    Strategy = ConflictResolutionStrategy.GetTheirs,
-                                    TheirServerUrl = sourceServerUrl,
-                                    TheirServerId = conflictItem.Theirs.ServerId,
-                                    Version = conflictItem.Theirs.Version,
-                                };
-                        localMetadata[ReplicationConstants.RavenReplicationConflictResolution] =
-                            new TypeHidingJsonSerializer().Stringify(conflictResolution);
-                        accessor.UpdateFileMetadata(fileName, localMetadata);
-                    });
-            }
-            else
-            {
-                throw new NotSupportedException(String.Format("Strategy {0} is not supported", strategy));
-            }
+        private void StrategyAsTheirs(string fileName, string sourceServerUrl)
+        {
+
+            Storage.Batch(
+                accessor =>
+                {
+                    var localMetadata = accessor.GetFile(fileName, 0, 0).Metadata;
+                    var conflictConfigName = ReplicationHelper.ConflictConfigNameForFile(fileName);
+                    var conflictItem = accessor.GetConfigurationValue<ConflictItem>(conflictConfigName);
+
+                    var conflictResolution =
+                        new ConflictResolution
+                            {
+                                Strategy = ConflictResolutionStrategy.GetTheirs,
+                                TheirServerUrl = sourceServerUrl,
+                                TheirServerId = conflictItem.Theirs.ServerId,
+                                Version = conflictItem.Theirs.Version,
+                            };
+                    localMetadata[ReplicationConstants.RavenReplicationConflictResolution] =
+                        new TypeHidingJsonSerializer().Stringify(conflictResolution);
+                    accessor.UpdateFileMetadata(fileName, localMetadata);
+                });
         }
 
         private NameValueCollection GetLocalMetadata(string fileName)
@@ -236,6 +249,7 @@ namespace RavenFS.Controllers
             var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
             var needListGenerator = new NeedListGenerator(SignatureRepository, remoteSignatureRepository);
             var tempFileName = fileName + ".result";
+            // TODO: Remove file .result if found
             var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search,
                                                                   tempFileName,
                                                                   sourceMetadata.FilterHeaders());
@@ -279,6 +293,7 @@ namespace RavenFS.Controllers
         private Task<SynchronizationReport> Download(RavenFileSystemClient sourceRavenFileSystemClient, string fileName, NameValueCollection sourceMetadata)
         {
             var tempFileName = fileName + ".result";
+            // TODO: Remove file .result if found
             var storageStream = StorageStream.CreatingNewAndWritting(Storage, Search, tempFileName,
                                                                      sourceMetadata.FilterHeaders());
             return sourceRavenFileSystemClient.DownloadAsync(fileName, storageStream)

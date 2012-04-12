@@ -189,14 +189,63 @@ namespace RavenFS.Tests.RDC
             Assert.Equal("Changed", metadata["test"]);
         }
 
-        [Fact(Skip = "Not implemented yet")]
-        public void Should_mark_file_to_be_resolved_using_theirs_strategy()
-        {
-        }
 
-        [Fact(Skip = "Not implemented yet")]
-        public void Should_mark_file_to_be_resolved_using_mine_strategy()
+        [Fact]
+        public void Should_mark_file_to_be_resolved_using_ours_strategy()
         {
+            var differenceChunk = new MemoryStream();
+            var sw = new StreamWriter(differenceChunk);
+
+            sw.Write("Coconut is Stupid");
+            sw.Flush();
+
+            var sourceContent = PrepareSourceStream(10);
+            sourceContent.Position = 0;
+            var seedContent = new CombinedStream(differenceChunk, sourceContent);
+            var seedClient = NewClient(0);
+            var sourceClient = NewClient(1);
+            var sourceMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "some-value"}
+                               };
+            var seedMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "should-be-overwritten"}
+                               };
+
+            seedClient.UploadAsync("test.txt", seedMetadata, seedContent).Wait();
+            sourceContent.Position = 0;
+            sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
+
+            try
+            {
+                seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.txt").Wait();
+            }
+            catch
+            {
+                // pass
+            }
+            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", "GetOurs").Wait();
+            var result = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.txt").Result;
+            Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
+
+            // check if conflict resolution has been properly set on the source
+
+            string resultMd5;
+            using (var resultFileContent = new MemoryStream())
+            {
+                var metadata = seedClient.DownloadAsync("test.txt", resultFileContent).Result;
+                Assert.Equal("some-value", metadata["SomeTest-metadata"]);
+                resultFileContent.Position = 0;
+                resultMd5 = resultFileContent.GetMD5Hash();
+                resultFileContent.Position = 0;
+            }
+
+            sourceContent.Position = 0;
+            var sourceMd5 = sourceContent.GetMD5Hash();
+            sourceContent.Position = 0;
+
+            Assert.True(resultMd5 == sourceMd5);
         }
 
         private static SynchronizationReport ResolveConflictAndSynchronize(string fileName, RavenFileSystemClient seedClient, RavenFileSystemClient sourceClient)
