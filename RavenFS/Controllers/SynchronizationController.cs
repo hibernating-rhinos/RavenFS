@@ -69,10 +69,8 @@ namespace RavenFS.Controllers
                             Storage.Batch(
                                 accessor =>
                                 {
-                                    accessor.SetConfigurationValue(
-                                        ReplicationHelper.ConflictConfigNameForFile(fileName), conflict);
-                                    localMetadata[ReplicationConstants.RavenReplicationConflict] =
-                                        true.ToString();
+                                    accessor.SetConfigurationValue(ReplicationHelper.ConflictConfigNameForFile(fileName), conflict);
+                                    localMetadata[ReplicationConstants.RavenReplicationConflict] = "True";
                                     accessor.UpdateFileMetadata(fileName, localMetadata);
                                 });
                             return FatalError(string.Format("File {0} is conflicted", fileName));
@@ -152,8 +150,11 @@ namespace RavenFS.Controllers
         [AcceptVerbs("PATCH")]
         public HttpResponseMessage Patch(string fileName, string strategy, string sourceServerUrl)
         {
-            var selectedStrategy = ConflictResolutionStrategy.GetTheirs;
-            Enum.TryParse<ConflictResolutionStrategy>(strategy, true, out selectedStrategy);
+            ConflictResolutionStrategy selectedStrategy;
+            if(Enum.TryParse(strategy, true, out selectedStrategy) == false)
+            {
+                selectedStrategy = ConflictResolutionStrategy.GetTheirs;
+            }
             InnerResolveConflict(fileName, sourceServerUrl, selectedStrategy);
 
             return new HttpResponseMessage(HttpStatusCode.NoContent);
