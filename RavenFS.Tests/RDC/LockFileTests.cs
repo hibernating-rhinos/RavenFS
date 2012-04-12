@@ -40,8 +40,14 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-            seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait();
-
+            try
+            {
+                seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait();
+            } 
+            catch
+            {
+                //
+            }
             var config = seedClient.Config.GetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin")).Result;
 
             Assert.Null(config);
