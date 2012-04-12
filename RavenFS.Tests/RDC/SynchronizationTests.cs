@@ -49,7 +49,7 @@ namespace RavenFS.Tests.RDC
             try
             {
                 seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.txt").Wait();
-            } 
+            }
             catch
             {
                 // pass
@@ -62,7 +62,6 @@ namespace RavenFS.Tests.RDC
             using (var resultFileContent = new MemoryStream())
             {
                 var metadata = seedClient.DownloadAsync("test.txt", resultFileContent).Result;
-                // TODO: Problem with metadata copying
                 Assert.Equal("some-value", metadata["SomeTest-metadata"]);
                 resultFileContent.Position = 0;
                 resultMD5 = resultFileContent.GetMD5Hash();

@@ -130,10 +130,7 @@ namespace RavenFS.Controllers
             Storage.Batch(
                 accessor =>
                 {
-                    localMetadata.Remove(ReplicationConstants.RavenReplicationConflict);
-                    localMetadata.Remove(ReplicationConstants.RavenReplicationConflictResolution);
                     accessor.DeleteConfig(ReplicationHelper.ConflictConfigNameForFile(fileName));
-                    accessor.UpdateFileMetadata(fileName, localMetadata);
                 });
         }
 
