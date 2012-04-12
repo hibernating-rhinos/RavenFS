@@ -25,9 +25,6 @@
             <DoubleAnimation Storyboard.TargetName="ExpandGlyph" Storyboard.TargetProperty="(ContentPresenter.RenderTransform).(RotateTransform.Angle)" To="180" Duration="0:0:0.25"/>
         </Storyboard>
     </UserControl.Resources>
-    <UIElement.Effect>
-        <DropShadowEffect Opacity="0.05" Direction="45" BlurRadius="3"/>
-    </UIElement.Effect>
     <Grid x:Name="LayoutRoot" Height="35" TextOptions.TextHintingMode="Animated">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -71,9 +68,9 @@
             </toolkit:DockPanel>
         </Border>
 
-        <Border Grid.Row="0" Height="35" Width="200" HorizontalAlignment="Right" CornerRadius="10,3,0,0"
+        <Border Grid.Row="0" Height="38" Width="200" HorizontalAlignment="Right" CornerRadius="10,3,0,0"
               ToolTipService.ToolTip="Click to show or hide the list of pending operations"
-              Margin="0,5,0,-5" Background="{StaticResource Brush_OperationsPaneHeader}" BorderThickness="0,1,0,0">
+              Margin="0,5,0,-8" Background="{StaticResource Brush_OperationsPaneHeader}" BorderThickness="0,1,0,0">
           <i:Interaction.Triggers>
                 <i:EventTrigger EventName="MouseLeftButtonUp">
                     <i:InvokeCommandAction Command="{StaticResource ToggleOperationsPaneVisibilityCommand}"/>
