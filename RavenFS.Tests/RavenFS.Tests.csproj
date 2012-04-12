@@ -78,6 +78,7 @@
     <Compile Include="Folders.cs" />
     <Compile Include="MtaFactAttribute.cs" />
     <Compile Include="Notifications.cs" />
+    <Compile Include="RDC\ConflictNotificationTests.cs" />
     <Compile Include="RDC\IO\RandomlyModifiedStream.cs" />
     <Compile Include="RDC\IO\RandomStream.cs" />
     <Compile Include="RDC\IO\TestDataGenerators.cs" />
