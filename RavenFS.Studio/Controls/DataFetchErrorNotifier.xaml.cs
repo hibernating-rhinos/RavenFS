@@ -9,6 +9,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RavenFS.Studio.Infrastructure;
 using RavenFS.Client;
 
@@ -50,12 +52,27 @@ namespace RavenFS.Studio.Controls
 
                 if (firstException is AggregateException)
                 {
-                    ErrorText = (firstException as AggregateException).ExtractSingleInnerException().Message;
+                    var errorText = (firstException as AggregateException).ExtractSingleInnerException().Message;
+                    errorText = TryExtractMessageFromJSONError(errorText);
+                    ErrorText = errorText;
                 }
                 else
                 {
                     ErrorText = firstException.Message;
                 }
+            }
+        }
+
+        private string TryExtractMessageFromJSONError(string errorText)
+        {
+            try
+            {
+                var jObject = JObject.Parse(errorText);
+                return jObject["Message"] != null ? jObject["Message"].Value<string>() : errorText;
+            }
+            catch (Exception)
+            {
+                return errorText;
             }
         }
 

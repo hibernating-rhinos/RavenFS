@@ -199,7 +199,8 @@
                       IsReadOnly="True" 
                       ItemsSource="{Binding Files}"
                       Margin="0,0,0,0"
-                      SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}">
+                      SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}"
+                      Style="{StaticResource Style_DataGrid_VirtualCollectionErrorNotifier}">
             <i:Interaction.Behaviors>
                 <b:ExecuteCommandOnFileDrop Command="{Binding Upload}"/>
                 <b:DataGridRowDoubleClickCommandBehavior Command="{Binding Navigate}"/>
@@ -281,8 +282,6 @@
                 </sdk:DataGridTemplateColumn>
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
-
-        <Controls:DataFetchErrorNotifier Grid.Row="4" ErrorSource="{Binding Files}" VerticalAlignment="Bottom"/>
         
         <Border Grid.Row="5" Style="{StaticResource Style_Border_Footer}">
             <TextBlock Margin="3">

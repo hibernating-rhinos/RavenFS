@@ -3,7 +3,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:Controls="clr-namespace:RavenFS.Studio.Controls" mc:Ignorable="d"
+             xmlns:Controls="clr-namespace:RavenFS.Studio.Controls"
+             xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors" mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="400"
     FontSize="12">
 
@@ -33,18 +34,20 @@
     			<Grid.ColumnDefinitions>
     				<ColumnDefinition Width="*"/>
     				<ColumnDefinition Width="Auto"/>
+    				<ColumnDefinition Width="Auto"/>
     			</Grid.ColumnDefinitions>
-    			<TextBlock HorizontalAlignment="Left" Margin="8" TextWrapping="Wrap" VerticalAlignment="Top" Foreground="White" TextOptions.TextHintingMode="Animated">
+    			<TextBlock HorizontalAlignment="Left" Margin="8,4" TextWrapping="Wrap" VerticalAlignment="Top" Foreground="White" TextOptions.TextHintingMode="Animated"
+                           Behaviors:FadeTrimming.IsEnabled="True" Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True">
                     <Run Text="An error occurred when fetching the data:"/><Run Text=" "/>
                     <LineBreak/><Run Text=" "/>
                     <Run Text="{Binding ErrorText}"/></TextBlock>
     			<Button Command="{Binding CopyErrorToClipboard}" Style="{StaticResource Style_Button_MouseOverChrome}" 
-    				HorizontalAlignment="Right" 
-    				VerticalAlignment="Bottom"
-    				Margin="4">
+                    ToolTipService.ToolTip="Copy full error details to clipboard"
+    				Margin="4,0"
+                   Grid.Column="1" VerticalAlignment="Center">
     				<Image Source="{StaticResource Image_CopyError_Tiny}" Stretch="None"/>
     			</Button>
-    			<Button Content="Retry" Command="{Binding Retry}" Grid.Column="1" VerticalAlignment="Center" Margin="8"/>
+    			<Button Content="Retry" Command="{Binding Retry}" Grid.Column="2" VerticalAlignment="Center" Margin="8,0" Width="75"/>
     		</Grid>
     	</Border>
     </Grid>

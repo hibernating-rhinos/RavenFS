@@ -94,7 +94,7 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        public void Refresh()
+        public override void Refresh()
         {
             BeginGetFolders();
         }

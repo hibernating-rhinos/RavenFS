@@ -23,6 +23,6 @@ namespace RavenFS.Studio.Infrastructure
 
         Task<IList<T>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions);
 
-
+        void Refresh();
     }
 }

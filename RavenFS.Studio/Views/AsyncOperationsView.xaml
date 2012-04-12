@@ -26,7 +26,7 @@
         </Storyboard>
     </UserControl.Resources>
     <UIElement.Effect>
-        <DropShadowEffect Opacity="0.1" Direction="45" BlurRadius="5"/>
+        <DropShadowEffect Opacity="0.05" Direction="45" BlurRadius="3"/>
     </UIElement.Effect>
     <Grid x:Name="LayoutRoot" Height="35" TextOptions.TextHintingMode="Animated">
         <Grid.RowDefinitions>

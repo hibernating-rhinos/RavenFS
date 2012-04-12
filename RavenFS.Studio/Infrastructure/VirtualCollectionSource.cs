@@ -14,6 +14,11 @@ namespace RavenFS.Studio.Infrastructure
 
         public abstract Task<IList<T>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions);
 
+        public virtual void Refresh()
+        {
+            
+        }
+
         protected void OnCollectionChanged(VirtualCollectionChangedEventArgs e)
         {
             var handler = CollectionChanged;

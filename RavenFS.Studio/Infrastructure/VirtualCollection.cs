@@ -32,9 +32,8 @@ namespace RavenFS.Studio.Infrastructure
         private int _itemCount;
         private readonly TaskScheduler _synchronizationContextScheduler;
         private bool _isRefreshDeferred;
-        private InterimDataMode? _pendingRefreshType;
         private int _currentItem;
-        private SortDescriptionCollection _sortDescriptions = new SortDescriptionCollection();
+        private readonly SortDescriptionCollection _sortDescriptions = new SortDescriptionCollection();
 
         public VirtualCollection(IVirtualCollectionSource<T> source, int pageSize)
         {
@@ -56,7 +55,7 @@ namespace RavenFS.Studio.Infrastructure
 
         private void HandleSourceDataFetchError(object sender, DataFetchErrorEventArgs e)
         {
-            OnDataFetchError(e);
+            Task.Factory.StartNew(() => OnDataFetchError(e), CancellationToken.None, TaskCreationOptions.None, _synchronizationContextScheduler);
         }
 
         private void HandleSortDescriptionsChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -66,7 +65,7 @@ namespace RavenFS.Studio.Infrastructure
 
         private void HandleSourceCollectionChanged(object sender, VirtualCollectionChangedEventArgs e)
         {
-           Task.Factory.StartNew(() => Refresh(e.Mode), CancellationToken.None, TaskCreationOptions.None, _synchronizationContextScheduler);
+           Task.Factory.StartNew(() => UpdateData(e.Mode), CancellationToken.None, TaskCreationOptions.None, _synchronizationContextScheduler);
         }
 
         private int DetermineSparseListPageSize(int fetchPageSize)
@@ -181,20 +180,14 @@ namespace RavenFS.Studio.Infrastructure
 
         public void Refresh()
         {
-            Refresh(InterimDataMode.Clear);
+            if (!_isRefreshDeferred)
+            {
+                _source.Refresh();
+            }
         }
 
-        public void Refresh(InterimDataMode mode)
+        protected void UpdateData(InterimDataMode mode)
         {
-            if (_isRefreshDeferred)
-            {
-                if (!_pendingRefreshType.HasValue || (_pendingRefreshType == InterimDataMode.ShowStaleData && mode == InterimDataMode.Clear))
-                {
-                    _pendingRefreshType = mode;
-                }
-                return;
-            }
-
             _state++;
 
             if (mode == InterimDataMode.ShowStaleData)
@@ -212,18 +205,6 @@ namespace RavenFS.Studio.Infrastructure
             UpdateCount();
 
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-        }
-
-        private void DoDeferredRefresh()
-        {
-            _isRefreshDeferred = false;
-
-            if (_pendingRefreshType.HasValue)
-            {
-                Refresh(_pendingRefreshType.Value);
-            }
-
-            _pendingRefreshType = null;
         }
 
         private void ClearExistingData()
@@ -287,7 +268,7 @@ namespace RavenFS.Studio.Infrastructure
         {
             _isRefreshDeferred = true;
 
-            return Disposable.Create(DoDeferredRefresh);
+            return Disposable.Create(() => { _isRefreshDeferred = false; Refresh(); });
         }
 
         public bool MoveCurrentToFirst()

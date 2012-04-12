@@ -88,7 +88,8 @@
                       IsReadOnly="True" 
                       ItemsSource="{Binding Results}"
                       Margin="0,0,0,0"
-                      SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}">
+                      SelectedItem="{Binding SelectedFile.Value, Mode=TwoWay}"
+                      Style="{StaticResource Style_DataGrid_VirtualCollectionErrorNotifier}">
             <i:Interaction.Behaviors>
                 <b:DataGridRowDoubleClickCommandBehavior Command="{Binding Download}"/>
                 <b:SelectRowOnRightClickBehavior/>

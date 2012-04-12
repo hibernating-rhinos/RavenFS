@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk">
+    xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
+    xmlns:Controls="clr-namespace:RavenFS.Studio.Controls">
 
     <Style x:Key="Style_DataGrid_Default" TargetType="sdk:DataGrid">
         <Setter Property="RowBackground" Value="#FFF8F8F8" />
@@ -203,6 +204,113 @@
     </Style>
 
     <Style TargetType="sdk:DataGrid" BasedOn="{StaticResource Style_DataGrid_Default}"/>
+
+    <Style x:Key="Style_DataGrid_VirtualCollectionErrorNotifier" TargetType="sdk:DataGrid" BasedOn="{StaticResource Style_DataGrid_Default}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="sdk:DataGrid">
+                    <Grid>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal"/>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="DisabledVisualElement" Storyboard.TargetProperty="Opacity" Duration="0" To="1"/>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Border BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
+                            <Grid Name="Root" Background="{TemplateBinding Background}">
+                                <Grid.Resources>
+                                    <!--Start: TopLeftHeaderTemplate-->
+                                    <ControlTemplate x:Key="TopLeftHeaderTemplate" TargetType="sdk:DataGridColumnHeader">
+                                        <Grid Name="Root">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Border BorderThickness="0,0,1,0" BorderBrush="#FFEAE7E4" Grid.RowSpan="2">
+                                                <Rectangle Stretch="Fill" StrokeThickness="1">
+                                                    <Rectangle.Fill>
+                                                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                            <GradientStop Color="#C5F7F7F7" Offset="0.049"/>
+                                                            <GradientStop Color="#C1E8E8E8" Offset="0.74"/>
+                                                        </LinearGradientBrush>
+                                                    </Rectangle.Fill>
+                                                </Rectangle>
+                                            </Border>
+                                            <Rectangle VerticalAlignment="Bottom" Width="Auto" StrokeThickness="1" Height="1" Fill="#FFDBDCDC" Grid.RowSpan="2"/>
+                                        </Grid>
+                                    </ControlTemplate>
+                                    <!--End: TopLeftHeaderTemplate-->
+
+                                    <!--Start: TopRightHeaderTemplate-->
+                                    <ControlTemplate x:Key="TopRightHeaderTemplate" TargetType="sdk:DataGridColumnHeader">
+                                        <Grid Name="RootElement">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Border BorderThickness="1,0,0,0" BorderBrush="#FFEAE7E4" Grid.RowSpan="2">
+                                                <Rectangle Stretch="Fill">
+                                                    <Rectangle.Fill>
+                                                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                                            <GradientStop Color="#C5F7F7F7" Offset="0.049"/>
+                                                            <GradientStop Color="#C1E8E8E8" Offset="0.74"/>
+                                                        </LinearGradientBrush>
+                                                    </Rectangle.Fill>
+                                                </Rectangle>
+                                            </Border>
+                                        </Grid>
+                                    </ControlTemplate>
+                                    <!--End: TopRightHeaderTemplate-->
+                                </Grid.Resources>
+
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition/>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <sdk:DataGridColumnHeader Name="TopLeftCornerHeader" Template="{StaticResource TopLeftHeaderTemplate}" Width="22" />
+                                <sdk:DataGridColumnHeadersPresenter Name="ColumnHeadersPresenter" Grid.Column="1"/>
+                                <sdk:DataGridColumnHeader Name="TopRightCornerHeader" Grid.Column="2" Template="{StaticResource TopRightHeaderTemplate}" />
+                                <Rectangle Name="ColumnHeadersAndRowsSeparator" Grid.ColumnSpan="3" VerticalAlignment="Bottom" Width="Auto" StrokeThickness="1" Height="1" Fill="#FFC9CACA"/>
+
+                                <sdk:DataGridRowsPresenter Name="RowsPresenter" Grid.ColumnSpan="2" Grid.Row="1" />
+
+                                <Controls:DataFetchErrorNotifier ErrorSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=sdk:DataGrid}}" Grid.ColumnSpan="2" Grid.Row="1" VerticalAlignment="Bottom"/>
+                                
+                                <Rectangle Name="BottomRightCorner" Fill="#FFE9EEF4" Grid.Column="2" Grid.Row="2" />
+                                <Rectangle Name="BottomLeftCorner" Fill="#FFE9EEF4" Grid.Row="2" Grid.ColumnSpan="2" />
+                                <ScrollBar Name="VerticalScrollbar" Orientation="Vertical" Grid.Column="2" Grid.Row="1" Width="18" Margin="0,-1,-1,-1"/>
+
+                                <Grid Grid.Column="1" Grid.Row="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <Rectangle Name="FrozenColumnScrollBarSpacer" />
+                                    <ScrollBar Name="HorizontalScrollbar" Grid.Column="1" Orientation="Horizontal" Height="18" Margin="-1,0,-1,-1"/>
+                                </Grid>
+
+                            </Grid>
+                        </Border>
+                        <Border x:Name="DisabledVisualElement" IsHitTestVisible="False" Height="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="Auto" CornerRadius="2" Background="#8CFFFFFF" Opacity="0"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     
     <Style TargetType="sdk:DataGridRow">
         <Setter Property="IsTabStop" Value="False" />

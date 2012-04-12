@@ -19,12 +19,6 @@ namespace RavenFS.Studio.Models
             
         } 
 
-        public void Refresh()
-        {
-            FoldersCollection.Refresh();
-            FilesCollection.Refresh();
-        }
-
         public string CurrentFolder
         {
             get

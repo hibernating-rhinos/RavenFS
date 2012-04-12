@@ -56,6 +56,12 @@ namespace RavenFS.Studio.Infrastructure
             get { return source2; }
         }
 
+        public override void Refresh()
+        {
+            source1.Refresh();
+            source2.Refresh();
+        }
+
         public override Task<IList<T>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
             var source1Count = Source1.Count;
