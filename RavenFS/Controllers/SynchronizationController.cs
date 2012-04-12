@@ -342,16 +342,15 @@ namespace RavenFS.Controllers
 
         private Task<HttpResponseMessage<SynchronizationReport>> FatalError(string message)
         {
-            var syncReport = new SynchronizationReport()
-            {
-                ErrorMessage = message
-            };
-
-            return new CompletedTask<HttpResponseMessage<SynchronizationReport>>(new HttpResponseMessage<SynchronizationReport>(syncReport)
-            {
-                StatusCode = HttpStatusCode.ServiceUnavailable,
-                // TODO: Set reason and remove ErrorMessage from SynchronizationReport
-            });
+            
+            var response = new HttpResponseMessage<SynchronizationReport>(HttpStatusCode.ServiceUnavailable)
+                        {
+                            ReasonPhrase = message
+                        };
+            return
+                new CompletedTask<HttpResponseMessage<SynchronizationReport>>(response);
+             
+                        
         }
     }
 }

@@ -11,6 +11,5 @@ namespace RavenFS.Client
         public long BytesTransfered { get; set; }
         public long BytesCopied { get; set; }
         public long NeedListLength { get; set; }
-		public string ErrorMessage { get; set; }
     }
 }
