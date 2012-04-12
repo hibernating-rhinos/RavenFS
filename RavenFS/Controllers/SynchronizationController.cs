@@ -67,10 +67,8 @@ namespace RavenFS.Controllers
                             Storage.Batch(
                                 accessor =>
                                 {
-                                    accessor.SetConfigurationValue(
-                                        ReplicationHelper.ConflictConfigNameForFile(fileName), conflict);
-                                    localMetadata[ReplicationConstants.RavenReplicationConflict] =
-                                        true.ToString();
+                                    accessor.SetConfigurationValue(ReplicationHelper.ConflictConfigNameForFile(fileName), conflict);
+                                    localMetadata[ReplicationConstants.RavenReplicationConflict] = "True";
                                     accessor.UpdateFileMetadata(fileName, localMetadata);
                                 });
                             throw new HttpResponseException(string.Format("File {0} is conflicted", fileName), HttpStatusCode.Conflict);
@@ -104,7 +102,7 @@ namespace RavenFS.Controllers
                                 {
                                     if (isConflictResolved)
                                     {
-                                        RemoveConflictArtifacts(localMetadata, fileName);
+                                        RemoveConflictArtifacts(fileName);
                                     }
 
                                     remoteSignatureCache.Dispose();
@@ -123,13 +121,9 @@ namespace RavenFS.Controllers
                     });
         }
 
-        private void RemoveConflictArtifacts(NameValueCollection localMetadata, string fileName)
+        private void RemoveConflictArtifacts(string fileName)
         {
-            Storage.Batch(
-                accessor =>
-                {
-                    accessor.DeleteConfig(ReplicationHelper.ConflictConfigNameForFile(fileName));
-                });
+            Storage.Batch(accessor => accessor.DeleteConfig(ReplicationHelper.ConflictConfigNameForFile(fileName)));
         }
 
         private bool IsConflictResolved(NameValueCollection localMetadata, ConflictItem conflict)
@@ -145,17 +139,7 @@ namespace RavenFS.Controllers
         }
 
         [AcceptVerbs("PATCH")]
-        public HttpResponseMessage Patch(string fileName, string strategy, string sourceServerUrl)
-        {
-            ConflictResolutionStrategy selectedStrategy;
-            if (Enum.TryParse(strategy, true, out selectedStrategy) == false)
-                selectedStrategy = ConflictResolutionStrategy.Theirs;
-            InnerResolveConflict(fileName, sourceServerUrl, selectedStrategy);
-
-            return new HttpResponseMessage(HttpStatusCode.NoContent);
-        }
-
-        private void InnerResolveConflict(string fileName, string sourceServerUrl, ConflictResolutionStrategy strategy)
+        public HttpResponseMessage Patch(string fileName, ConflictResolutionStrategy strategy, string sourceServerUrl)
         {
             switch (strategy)
             {
@@ -185,6 +169,8 @@ namespace RavenFS.Controllers
                 default:
                     throw new NotSupportedException(String.Format("Strategy {0} is not supported", strategy));
             }
+
+            return new HttpResponseMessage(HttpStatusCode.NoContent);
         }
 
         private NameValueCollection GetLocalMetadata(string fileName)
@@ -274,7 +260,7 @@ namespace RavenFS.Controllers
 
         private Task<SynchronizationReport> Download(RavenFileSystemClient sourceRavenFileSystemClient, string fileName, NameValueCollection sourceMetadata)
         {
-            var tempFileName = fileName + ".result";
+            var tempFileName = fileName + ".downloading";
             var storageStream = StorageStream.CreatingNewAndWritting(Storage, Search, tempFileName,
                                                                      sourceMetadata.FilterHeaders());
             return sourceRavenFileSystemClient.DownloadAsync(fileName, storageStream)
@@ -282,6 +268,7 @@ namespace RavenFS.Controllers
                     _ =>
                     {
                         storageStream.Dispose();
+                        _.AssertNotFaulted();
                         Storage.Batch(
                             accessor =>
                             {
