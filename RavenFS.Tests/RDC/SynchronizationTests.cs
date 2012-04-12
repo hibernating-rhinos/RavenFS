@@ -54,7 +54,7 @@ namespace RavenFS.Tests.RDC
             {
                 // pass
             }
-            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", "GetTheirs").Wait();
+            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.Theirs).Wait();
             var result = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.txt").Result;
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
