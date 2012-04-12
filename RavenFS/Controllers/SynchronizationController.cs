@@ -22,15 +22,14 @@ namespace RavenFS.Controllers
     {
         public Task<HttpResponseMessage<SynchronizationReport>> Get(string fileName, string sourceServerUrl)
         {
-            //return new CompletedTask<HttpResponseMessage<SynchronizationReport>>(new HttpResponseMessage<SynchronizationReport>(HttpStatusCode.Conflict));
             if (String.IsNullOrEmpty(sourceServerUrl))
             {
-                return FatalError("Unknown server identifier " + sourceServerUrl);
+                return FatalError("Unknown server identifier " + sourceServerUrl, otherSideIsAtFault:true);
             }
 
             if (FileIsBeingSynced(fileName))
             {
-                return FatalError(string.Format("File {0} is being synced", fileName));
+                return FatalError(string.Format("File {0} is being synced", fileName), otherSideIsAtFault: false);
             }
 
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
@@ -46,7 +45,7 @@ namespace RavenFS.Controllers
                         var remoteMetadata = getMetadataForAsyncTask.Result;
                         if (remoteMetadata.AllKeys.Contains(ReplicationConstants.RavenReplicationConflict))
                         {
-                            return FatalError(string.Format("File {0} on THEIR side is conflicted", fileName));
+                            return FatalError(string.Format("File {0} on THEIR side is conflicted", fileName), otherSideIsAtFault: true);
                         }
 
                         var localFileDataInfo = GetLocalFileDataInfo(fileName);
@@ -73,7 +72,7 @@ namespace RavenFS.Controllers
                                     localMetadata[ReplicationConstants.RavenReplicationConflict] = "True";
                                     accessor.UpdateFileMetadata(fileName, localMetadata);
                                 });
-                            return FatalError(string.Format("File {0} is conflicted", fileName));
+                            return FatalError(string.Format("File {0} is conflicted", fileName), otherSideIsAtFault: false);
                         }
 
                         var remoteSignatureCache = new VolatileSignatureRepository(TempDirectoryTools.Create());
@@ -344,18 +343,20 @@ namespace RavenFS.Controllers
             Storage.Batch(accessor => accessor.DeleteConfig(ReplicationHelper.SyncConfigNameForFile(fileName)));
         }
 
-        private Task<HttpResponseMessage<SynchronizationReport>> FatalError(string message)
+        private Task<HttpResponseMessage<SynchronizationReport>> FatalError(string message, bool otherSideIsAtFault)
         {
             var syncReport = new SynchronizationReport()
             {
                 ErrorMessage = message
             };
 
-            return new CompletedTask<HttpResponseMessage<SynchronizationReport>>(new HttpResponseMessage<SynchronizationReport>(syncReport)
-            {
-                StatusCode = HttpStatusCode.ServiceUnavailable,
-                // TODO: Set reason and remove ErrorMessage from SynchronizationReport
-            });
+            return new CompletedTask<HttpResponseMessage<SynchronizationReport>>(
+                    new HttpResponseMessage<SynchronizationReport>(syncReport)
+                        {
+                            StatusCode =
+                                otherSideIsAtFault ? HttpStatusCode.BadRequest : HttpStatusCode.PreconditionFailed,
+                            ReasonPhrase = message,
+                        });
         }
     }
 }
