@@ -12,14 +12,13 @@ namespace RavenFS.Extensions
 {
     public static class ConfigurationExtension
     {
-        // TODO replace my json serializer to this one and move that class to a more common namespace
         public static T GetConfigurationValue<T>(this StorageActionsAccessor accessor, string key)
         {
             var value = accessor.GetConfig(key)["value"];
             return new JsonSerializer().Deserialize<T>(new JsonTextReader(new StringReader(value)));
         }
 
-        public static bool TryGetConfigurationValue<T>(this StorageActionsAccessor accessor, string key, ref T result)
+        public static bool TryGetConfigurationValue<T>(this StorageActionsAccessor accessor, string key, out T result)
         {
             try
             {
@@ -28,6 +27,7 @@ namespace RavenFS.Extensions
             } 
             catch(FileNotFoundException)
             {
+                result = default(T);
                 return false;
             }
         }
