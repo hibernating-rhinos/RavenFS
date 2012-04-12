@@ -30,7 +30,7 @@
     					<GradientStop Color="#FF8D2424" Offset="1"/>
     				</LinearGradientBrush>
     			</Border.Background>
-    		<Grid>
+            <Grid Height="60" VerticalAlignment="Top">
     			<Grid.ColumnDefinitions>
     				<ColumnDefinition Width="*"/>
     				<ColumnDefinition Width="Auto"/>
