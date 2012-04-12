@@ -25,12 +25,12 @@ namespace RavenFS.Controllers
             //return new CompletedTask<HttpResponseMessage<SynchronizationReport>>(new HttpResponseMessage<SynchronizationReport>(HttpStatusCode.Conflict));
             if (String.IsNullOrEmpty(sourceServerUrl))
             {
-                return FatalError("Unknown server identifier " + sourceServerUrl);
+                throw new HttpResponseException("Unknown server identifier " + sourceServerUrl, HttpStatusCode.ServiceUnavailable);
             }
 
             if (FileIsBeingSynced(fileName))
             {
-                return FatalError(string.Format("File {0} is being synced", fileName));
+                throw new HttpResponseException(string.Format("File {0} is being synced", fileName), HttpStatusCode.ServiceUnavailable);
             }
 
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
@@ -46,7 +46,7 @@ namespace RavenFS.Controllers
                         var remoteMetadata = getMetadataForAsyncTask.Result;
                         if (remoteMetadata.AllKeys.Contains(ReplicationConstants.RavenReplicationConflict))
                         {
-                            return FatalError(string.Format("File {0} on THEIR side is conflicted", fileName));
+                            throw new HttpResponseException(string.Format("File {0} on THEIR side is conflicted", fileName), HttpStatusCode.ServiceUnavailable);
                         }
 
                         var localFileDataInfo = GetLocalFileDataInfo(fileName);
@@ -75,7 +75,7 @@ namespace RavenFS.Controllers
                                         true.ToString();
                                     accessor.UpdateFileMetadata(fileName, localMetadata);
                                 });
-                            return FatalError(string.Format("File {0} is conflicted", fileName));
+                            throw new HttpResponseException(string.Format("File {0} is conflicted", fileName), HttpStatusCode.Conflict);
                         }
 
                         var remoteSignatureCache = new VolatileSignatureRepository(TempDirectoryTools.Create());
@@ -338,19 +338,6 @@ namespace RavenFS.Controllers
         private void UnlockFileByDeletingSyncConfiguration(string fileName)
         {
             Storage.Batch(accessor => accessor.DeleteConfig(ReplicationHelper.SyncConfigNameForFile(fileName)));
-        }
-
-        private Task<HttpResponseMessage<SynchronizationReport>> FatalError(string message)
-        {
-            
-            var response = new HttpResponseMessage<SynchronizationReport>(HttpStatusCode.ServiceUnavailable)
-                        {
-                            ReasonPhrase = message
-                        };
-            return
-                new CompletedTask<HttpResponseMessage<SynchronizationReport>>(response);
-             
-                        
         }
     }
 }

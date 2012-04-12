@@ -46,16 +46,7 @@ namespace RavenFS.Tests.RDC
             sourceContent.Position = 0;
             sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-            try
-            {
-                seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.txt").Wait();
-            }
-            catch
-            {
-                // pass
-            }
-            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", "GetTheirs").Wait();
-            var result = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.txt").Result;
+            SynchronizationReport result = ResolveConflictAndSynchronize("test.txt", seedClient, sourceClient);
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
             string resultMD5 = null;
@@ -95,7 +86,7 @@ namespace RavenFS.Tests.RDC
             seedClient.UploadAsync("test.bin", seedMetadata, seedContent).Wait();
             sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-            var result = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Result;
+            SynchronizationReport result = ResolveConflictAndSynchronize("test.bin", seedClient, sourceClient);
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
         }
 
@@ -149,7 +140,7 @@ namespace RavenFS.Tests.RDC
             sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
             seedClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
 
-            Assert.Throws<InvalidOperationException>(
+            Assert.Throws<AggregateException>(
                 () => seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait());
 
             var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
@@ -206,6 +197,20 @@ namespace RavenFS.Tests.RDC
         [Fact(Skip = "Not implemented yet")]
         public void Should_mark_file_to_be_resolved_using_mine_strategy()
         {
+        }
+
+        private static SynchronizationReport ResolveConflictAndSynchronize(string fileName, RavenFileSystemClient seedClient, RavenFileSystemClient sourceClient)
+        {
+            try
+            {
+                seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, fileName).Wait();
+            }
+            catch
+            {
+                // pass
+            }
+            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, fileName, "GetTheirs").Wait();
+            return seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, fileName).Result;
         }
 
         private static MemoryStream PrepareSourceStream(int lines)
