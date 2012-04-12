@@ -65,13 +65,18 @@ namespace RavenFS.Rdc.Wrapper
 
         public void Flush(IEnumerable<SignatureInfo> signatureInfos)
         {
-            var fileNames = from item in signatureInfos
+            var fileNames = (from item in signatureInfos
                             group item by item.FileName
                             into fileNameNamesGroup
-                            select fileNameNamesGroup.Key;
-            if (fileNames.Count() > 1)
+                            select fileNameNamesGroup.Key).ToList();
+            if (fileNames.Count > 1)
             {
                 throw new ArgumentException("All SignatureInfo should belong to the same file", "signatureInfos");
+            }
+
+            if (fileNames.Count == 0)
+            {
+                throw new ArgumentException("Must have at least one signature info", "signatureInfos");
             }
             var fileName = fileNames.First();
                              
@@ -85,13 +90,13 @@ namespace RavenFS.Rdc.Wrapper
                         var item1 = item;
                         accessor.AddSignature(fileName, level,
                                               stream =>
-                                              {
-                                                  using (var cachedSigContent =
-                                                      _cacheRepository.GetContentForReading(item1.Name))
                                                   {
-                                                      cachedSigContent.CopyTo(stream);
-                                                  }
-                                              });
+                                                      using (var cachedSigContent =
+                                                          _cacheRepository.GetContentForReading(item1.Name))
+                                                      {
+                                                          cachedSigContent.CopyTo(stream);
+                                                      }
+                                                  });
                         level++;
                     }
                 });
