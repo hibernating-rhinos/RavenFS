@@ -149,6 +149,7 @@
     <Compile Include="Infrastructure\HistoryUpdater.cs" />
     <Compile Include="Infrastructure\TempDirectoryTools.cs" />
     <Compile Include="Notifications\ConfigChange.cs" />
+    <Compile Include="Notifications\ConflictDetected.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationEndpoint.cs" />
     <Compile Include="Controllers\RavenController.cs" />

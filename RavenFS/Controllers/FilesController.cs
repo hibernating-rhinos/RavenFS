@@ -51,10 +51,7 @@ namespace RavenFS.Controllers
         {
             name = Uri.UnescapeDataString(name);
 
-			if (FileIsBeingSynced(name))
-			{
-				return FileIsBeingSyncedErrorMessage(name);
-			}
+        	AssertFileIsNotBeingSynced(name);
 
             Search.Delete(name);
             Storage.Batch(accessor => accessor.Delete(name));
@@ -87,10 +84,7 @@ namespace RavenFS.Controllers
         {
             name = Uri.UnescapeDataString(name);
 
-			if (FileIsBeingSynced(name))
-			{
-				return FileIsBeingSyncedErrorMessage(name);
-			}
+			AssertFileIsNotBeingSynced(name);
 
             var headers = Request.Headers.FilterHeaders();
             headers.UpdateLastModified();
@@ -112,10 +106,7 @@ namespace RavenFS.Controllers
         [AcceptVerbs("PATCH")]
         public HttpResponseMessage Patch(string name, string rename)
         {
-			if (FileIsBeingSynced(name))
-			{
-				return FileIsBeingSyncedErrorMessage(name);
-			}
+			AssertFileIsNotBeingSynced(name);
 
             try
             {
@@ -142,10 +133,7 @@ namespace RavenFS.Controllers
         {
 			name = Uri.UnescapeDataString(name);
 
-			if (FileIsBeingSynced(name))
-			{
-				return new CompletedTask<HttpResponseMessage>(FileIsBeingSyncedErrorMessage(name)); 
-			}
+			AssertFileIsNotBeingSynced(name);
 
             var headers = Request.Headers.FilterHeaders();
             headers.UpdateLastModified();
@@ -190,14 +178,6 @@ namespace RavenFS.Controllers
                     return new HttpResponseMessage(HttpStatusCode.Created);
                 });
         }
-
-		private HttpResponseMessage FileIsBeingSyncedErrorMessage(string filename)
-		{
-			return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
-			{
-				Content = new StringContent(string.Format("File {0} is being synced", filename))
-			};
-		}
 
         private class ReadFileToDatabase : IDisposable
         {
