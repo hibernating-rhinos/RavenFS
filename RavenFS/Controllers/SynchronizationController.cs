@@ -18,9 +18,9 @@ using RavenFS.Infrastructure;
 
 namespace RavenFS.Controllers
 {
-	using ConflictDetected = Notifications.ConflictDetected;
+    using ConflictDetected = Notifications.ConflictDetected;
 
-	public class SynchronizationController : RavenController
+    public class SynchronizationController : RavenController
     {
         [AcceptVerbs("POST")]
         public Task<HttpResponseMessage<SynchronizationReport>> Proceed(string fileName, string sourceServerUrl)
@@ -31,7 +31,7 @@ namespace RavenFS.Controllers
                 throw new HttpResponseException("Unknown server identifier " + sourceServerUrl, HttpStatusCode.ServiceUnavailable);
             }
 
-			AssertFileIsNotBeingSynced(fileName);
+            AssertFileIsNotBeingSynced(fileName);
 
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
 
@@ -66,13 +66,13 @@ namespace RavenFS.Controllers
                         var isConflictResolved = IsConflictResolved(localMetadata, conflict);
                         if (conflict != null && !isConflictResolved)
                         {
-                            CreateConflictArtifacts(fileName, localMetadata, conflict);
-                        	
-                        	Publisher.Publish(new ConflictDetected
-                        	                  	{
-                        	                  		FileName = fileName,
-                        	                  		ServerUrl = Request.GetServerUrl()
-							                  	});
+                            CreateConflictArtifacts(fileName, conflict);
+
+                            Publisher.Publish(new ConflictDetected
+                                                {
+                                                    FileName = fileName,
+                                                    ServerUrl = Request.GetServerUrl()
+                                                });
 
                             throw new HttpResponseException(string.Format("File {0} is conflicted", fileName), HttpStatusCode.Conflict);
                         }
@@ -141,26 +141,50 @@ namespace RavenFS.Controllers
                             return new HttpResponseMessage();
                         });
             }
-            StrategyAsTheirs(fileName, sourceServerUrl);
+            StrategyAsGetTheirs(fileName, sourceServerUrl);
             var result = new Task<HttpResponseMessage>(() => new HttpResponseMessage());
             result.Start();
             return result;
         }
 
-	    private void CreateConflictArtifacts(string fileName, NameValueCollection localMetadata, ConflictItem conflict)
-	    {
-	        Storage.Batch(
-	            accessor =>
-	                {
-	                    accessor.SetConfigurationValue(
-	                        ReplicationHelper.ConflictConfigNameForFile(fileName), conflict);
-	                    localMetadata[ReplicationConstants.RavenReplicationConflict] =
-	                        true.ToString();
-	                    accessor.UpdateFileMetadata(fileName, localMetadata);
-	                });
-	    }
+        [AcceptVerbs("PATCH")]
+        public HttpResponseMessage ApplyConflict(string filename, long theirVersion, string theirServerId)
+        {
+            var conflict = new ConflictItem
+                               {
+                                   Ours = new HistoryItem
+                                              {
+                                                  ServerId = Storage.Id.ToString(),
+                                                  Version =
+                                                      long.Parse(
+                                                          GetLocalMetadata(filename)[
+                                                              ReplicationConstants.RavenReplicationVersion])
+                                              },
+                                   Theirs = new HistoryItem
+                                                {
+                                                    ServerId = theirServerId,
+                                                    Version = theirVersion
+                                                }
+                               };
+            CreateConflictArtifacts(filename, conflict);
+            return new HttpResponseMessage(HttpStatusCode.NoContent);
+        }
 
-	    private void RemoveConflictArtifacts(string fileName)
+        private void CreateConflictArtifacts(string fileName, ConflictItem conflict)
+        {
+            Storage.Batch(
+                accessor =>
+                {
+                    var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
+                    accessor.SetConfigurationValue(
+                        ReplicationHelper.ConflictConfigNameForFile(fileName), conflict);
+                    metadata[ReplicationConstants.RavenReplicationConflict] =
+                        true.ToString();
+                    accessor.UpdateFileMetadata(fileName, metadata);
+                });
+        }
+
+        private void RemoveConflictArtifacts(string fileName)
         {
             Storage.Batch(
                 accessor =>
@@ -192,9 +216,8 @@ namespace RavenFS.Controllers
             return sourceRavenFileSystemClient.ResolveConflictAsync(sourceRavenFileSystemClient.ServerUrl, fileName, ConflictResolutionStrategy.GetTheirs.ToString());
         }
 
-        private void StrategyAsTheirs(string fileName, string sourceServerUrl)
+        private void StrategyAsGetTheirs(string fileName, string sourceServerUrl)
         {
-
             Storage.Batch(
                 accessor =>
                 {

@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.IO;
 using Newtonsoft.Json;
 using RavenFS.Extensions;
+using RavenFS.Notifications;
 using RavenFS.Rdc;
 using RavenFS.Tests.Tools;
 using RavenFS.Util;
@@ -124,6 +125,24 @@ namespace RavenFS.Tests.RDC
 
             Assert.False(etag0 == etag1);
 
+        }
+
+        [Fact]
+        public void Should_be_possible_to_apply_conflict()
+        {
+            var sourceContent1 = new RandomStream(10, 1);
+            var sourceClient = NewClient(1);
+            sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
+            var guid = Guid.NewGuid().ToString();
+            sourceClient.ApplyConflictAsync("test.bin", 8, guid).Wait();
+            var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+            var conflictItemString = sourceClient.Config.GetConfig(ReplicationHelper.ConflictConfigNameForFile("test.bin")).Result["value"];
+            var conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(conflictItemString);
+
+            Assert.Equal(true.ToString(), resultFileMetadata[ReplicationConstants.RavenReplicationConflict]);
+            Assert.Equal(guid, conflict.Theirs.ServerId);
+            Assert.Equal(8, conflict.Theirs.Version);
+            Assert.Equal(1, conflict.Ours.Version);
         }
 
         [Fact]

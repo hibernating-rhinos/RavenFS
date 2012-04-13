@@ -337,6 +337,17 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
         }
 
+        public Task ApplyConflictAsync(string filename, long theirVersion, string theirServerId)
+        {
+            var requestUriString = String.Format("{0}/synchronization/applyConflict/{1}?theirVersion={2}&theirServerId={3}",
+                ServerUrl, Uri.EscapeDataString(filename), theirVersion, Uri.EscapeDataString(theirServerId));
+            var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+            request.Method = "PATCH";
+            return request.GetResponseAsync()
+                .ContinueWith(task => task.Result.Close())
+                .TryThrowBetteError();
+        }
+
 	    public Task<string[]> GetFoldersAsync(string from = null, int start = 0,int pageSize = 25)
 		{
 			var path = @from ?? "";
