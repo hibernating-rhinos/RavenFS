@@ -157,6 +157,12 @@ namespace RavenFS
 				defaults: new { controller = "rdc", filename = RouteParameter.Optional }
 				);
 
+	        config.Routes.MapHttpRoute(
+                name: "synchronization",
+                routeTemplate: "synchronization/{action}/{filename}",
+                defaults: new { controller = "synchronization" }
+                );
+
 
 			config.Routes.MapHttpRoute(
 				name: "folders",

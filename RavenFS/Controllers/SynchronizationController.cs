@@ -22,7 +22,8 @@ namespace RavenFS.Controllers
 
 	public class SynchronizationController : RavenController
     {
-        public Task<HttpResponseMessage<SynchronizationReport>> Get(string fileName, string sourceServerUrl)
+        [AcceptVerbs("POST")]
+        public Task<HttpResponseMessage<SynchronizationReport>> Proceed(string fileName, string sourceServerUrl)
         {
             //return new CompletedTask<HttpResponseMessage<SynchronizationReport>>(new HttpResponseMessage<SynchronizationReport>(HttpStatusCode.Conflict));
             if (String.IsNullOrEmpty(sourceServerUrl))
@@ -65,15 +66,7 @@ namespace RavenFS.Controllers
                         var isConflictResolved = IsConflictResolved(localMetadata, conflict);
                         if (conflict != null && !isConflictResolved)
                         {
-                            Storage.Batch(
-                                accessor =>
-                                {
-                                    accessor.SetConfigurationValue(
-                                        ReplicationHelper.ConflictConfigNameForFile(fileName), conflict);
-                                    localMetadata[ReplicationConstants.RavenReplicationConflict] =
-                                        true.ToString();
-                                    accessor.UpdateFileMetadata(fileName, localMetadata);
-                                });
+                            CreateConflictArtifacts(fileName, localMetadata, conflict);
                         	
                         	Publisher.Publish(new ConflictDetected
                         	                  	{
@@ -132,7 +125,42 @@ namespace RavenFS.Controllers
                     });
         }
 
-        private void RemoveConflictArtifacts(string fileName)
+        [AcceptVerbs("PATCH")]
+        public Task<HttpResponseMessage> ResolveConflict(string fileName, string strategy, string sourceServerUrl)
+        {
+            var selectedStrategy = ConflictResolutionStrategy.GetTheirs;
+            Enum.TryParse(strategy, true, out selectedStrategy);
+
+            if (selectedStrategy == ConflictResolutionStrategy.GetOurs)
+            {
+                return StrategyAsGetOurs(fileName, sourceServerUrl)
+                    .ContinueWith(
+                        task =>
+                        {
+                            task.Wait();
+                            return new HttpResponseMessage();
+                        });
+            }
+            StrategyAsTheirs(fileName, sourceServerUrl);
+            var result = new Task<HttpResponseMessage>(() => new HttpResponseMessage());
+            result.Start();
+            return result;
+        }
+
+	    private void CreateConflictArtifacts(string fileName, NameValueCollection localMetadata, ConflictItem conflict)
+	    {
+	        Storage.Batch(
+	            accessor =>
+	                {
+	                    accessor.SetConfigurationValue(
+	                        ReplicationHelper.ConflictConfigNameForFile(fileName), conflict);
+	                    localMetadata[ReplicationConstants.RavenReplicationConflict] =
+	                        true.ToString();
+	                    accessor.UpdateFileMetadata(fileName, localMetadata);
+	                });
+	    }
+
+	    private void RemoveConflictArtifacts(string fileName)
         {
             Storage.Batch(
                 accessor =>
@@ -155,28 +183,6 @@ namespace RavenFS.Controllers
             var conflictResolution = new TypeHidingJsonSerializer().Parse<ConflictResolution>(conflictResolutionString);
             return conflictResolution.Strategy == ConflictResolutionStrategy.GetTheirs
                 && conflictResolution.TheirServerId == conflict.Theirs.ServerId;
-        }
-
-        [AcceptVerbs("PATCH")]
-        public Task<HttpResponseMessage> Patch(string fileName, string strategy, string sourceServerUrl)
-        {
-            var selectedStrategy = ConflictResolutionStrategy.GetTheirs;
-            Enum.TryParse(strategy, true, out selectedStrategy);
-
-            if (selectedStrategy == ConflictResolutionStrategy.GetOurs)
-            {
-                return StrategyAsGetOurs(fileName, sourceServerUrl)
-                    .ContinueWith( 
-                        task =>
-                        {
-                            task.Wait();
-                            return new HttpResponseMessage();
-                        });
-            }
-            StrategyAsTheirs(fileName, sourceServerUrl);
-            var result = new Task<HttpResponseMessage>(() => new HttpResponseMessage());
-            result.Start();
-            return result;
         }
 
         private Task StrategyAsGetOurs(string fileName, string sourceServerUrl)

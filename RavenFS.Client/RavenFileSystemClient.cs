@@ -311,8 +311,10 @@ namespace RavenFS.Client
 
 		public Task<SynchronizationReport> StartSynchronizationAsync(string sourceServerUrl, string fileName)
 		{
-            var requestUriString = String.Format("{0}/synchronization?fileName={1}&sourceServerUrl={2}", ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(sourceServerUrl));
+            var requestUriString = String.Format("{0}/synchronization/proceed/{1}?sourceServerUrl={2}", ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(sourceServerUrl));
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+		    request.Method = "POST";
+            request.ContentLength = 0;
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -324,10 +326,10 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-        public Task ResolveConflictAsync(string sourceServerUrl, string fileName, string strategy)
+        public Task ResolveConflictAsync(string sourceServerUrl, string filename, string strategy)
         {
-            var requestUriString = String.Format("{0}/synchronization?fileName={1}&strategy={2}&sourceServerUrl={3}", 
-                ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(strategy), Uri.EscapeDataString(sourceServerUrl));
+            var requestUriString = String.Format("{0}/synchronization/resolveConflict/{1}?strategy={2}&sourceServerUrl={3}", 
+                ServerUrl, Uri.EscapeDataString(filename), Uri.EscapeDataString(strategy), Uri.EscapeDataString(sourceServerUrl));
             var request = (HttpWebRequest)WebRequest.Create(requestUriString);
             request.Method = "PATCH";
             return request.GetResponseAsync()
