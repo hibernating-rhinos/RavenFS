@@ -209,7 +209,7 @@ namespace RavenFS.Tests.RDC
         }
 
 
-        [Fact]
+        [Fact(Skip = "Not implemeneted yet")]
         public void Should_mark_file_to_be_resolved_using_ours_strategy()
         {
             var differenceChunk = new MemoryStream();
