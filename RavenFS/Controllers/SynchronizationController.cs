@@ -186,13 +186,13 @@ namespace RavenFS.Controllers
         {
             Storage.Batch(
                 accessor =>
-                    {
-                        accessor.DeleteConfig(ReplicationHelper.ConflictConfigNameForFile(fileName));
-                        var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
-                        metadata.Remove(ReplicationConstants.RavenReplicationConflict);
-                        metadata.Remove(ReplicationConstants.RavenReplicationConflictResolution);
-                        accessor.UpdateFileMetadata(fileName, metadata);
-                    });
+                {
+                    accessor.DeleteConfig(ReplicationHelper.ConflictConfigNameForFile(fileName));
+                    var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
+                    metadata.Remove(ReplicationConstants.RavenReplicationConflict);
+                    metadata.Remove(ReplicationConstants.RavenReplicationConflictResolution);
+                    accessor.UpdateFileMetadata(fileName, metadata);
+                });
         }
 
         private bool IsConflictResolved(NameValueCollection localMetadata, ConflictItem conflict)
@@ -211,7 +211,20 @@ namespace RavenFS.Controllers
         {
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
             RemoveConflictArtifacts(fileName);
-            return sourceRavenFileSystemClient.ResolveConflictAsync(sourceRavenFileSystemClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs);
+            var localMetadata = GetLocalMetadata(fileName);
+            var version = long.Parse(localMetadata[ReplicationConstants.RavenReplicationVersion]);
+            return
+                sourceRavenFileSystemClient.ApplyConflictAsync(fileName, version, Storage.Id.ToString())
+                    .ContinueWith(
+                        task =>
+                        {
+                            task.Wait(); // throw exception
+                            return
+                                sourceRavenFileSystemClient.ResolveConflictAsync(
+                                    Request.GetServerUrl(), fileName,
+                                    ConflictResolutionStrategy.Theirs);
+                        })
+                    .Unwrap();
         }
 
         private void StrategyAsGetTheirs(string fileName, string sourceServerUrl)
