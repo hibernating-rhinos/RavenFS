@@ -10,32 +10,42 @@ namespace RavenFS.Rdc
 	public static class NeedListParser
 	{
 		public static Task ParseAsync(IPartialDataAccess source, IPartialDataAccess seed, Stream output,
-		                              IList<RdcNeed> needList, int position = 0)
+		                              IList<RdcNeed> needList)
 		{
-			if (position >= needList.Count)
-			{
-				return new CompletedTask();
-			}
-			var item = needList[position];
-			Task task;
+		    var tcs = new TaskCompletionSource<object>();
 
-			switch (item.BlockType)
-			{
-				case RdcNeedType.Source:
-					task = source.CopyToAsync(output, Convert.ToInt64(item.FileOffset), Convert.ToInt64(item.BlockLength));
-					break;
-				case RdcNeedType.Seed:
-					task = seed.CopyToAsync(output, Convert.ToInt64(item.FileOffset), Convert.ToInt64(item.BlockLength));
-					break;
-				default:
-					throw new NotSupportedException();
-			}
+            // TODO: This code is causing a Stack Over Flow Exception, not sure how to fix this, so this is a workaround for now
 
-			return task.ContinueWith(resultTask =>
-			{
-				resultTask.AssertNotFaulted();
-				return ParseAsync(source, seed, output, needList, position + 1);
-			}).Unwrap();
+		    Task.Factory.StartNew(() =>
+		                              {
+		                                  try
+		                                  {
+                                              foreach (var item in needList)
+                                              {
+                                                  switch (item.BlockType)
+                                                  {
+                                                      case RdcNeedType.Source:
+                                                          source.CopyToAsync(output, Convert.ToInt64(item.FileOffset),
+                                                                             Convert.ToInt64(item.BlockLength)).Wait();
+                                                          break;
+                                                      case RdcNeedType.Seed:
+                                                          seed.CopyToAsync(output, Convert.ToInt64(item.FileOffset),
+                                                                           Convert.ToInt64(item.BlockLength)).Wait();
+                                                          break;
+                                                      default:
+                                                          throw new NotSupportedException();
+                                                  }
+                                              }
+
+		                                      tcs.TrySetResult(null);
+		                                  }
+		                                  catch (Exception e)
+		                                  {
+		                                      tcs.TrySetException(e);
+		                                  }
+		                              });
+
+		    return tcs.Task;
 		}
 	}
 }

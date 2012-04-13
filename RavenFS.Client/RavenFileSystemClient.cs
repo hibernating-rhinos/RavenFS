@@ -326,10 +326,10 @@ namespace RavenFS.Client
 				.TryThrowBetteError();
 		}
 
-        public Task ResolveConflictAsync(string sourceServerUrl, string filename, string strategy)
+        public Task ResolveConflictAsync(string sourceServerUrl, string filename, ConflictResolutionStrategy strategy)
         {
             var requestUriString = String.Format("{0}/synchronization/resolveConflict/{1}?strategy={2}&sourceServerUrl={3}", 
-                ServerUrl, Uri.EscapeDataString(filename), Uri.EscapeDataString(strategy), Uri.EscapeDataString(sourceServerUrl));
+                ServerUrl, Uri.EscapeDataString(filename), Uri.EscapeDataString(strategy.ToString()), Uri.EscapeDataString(sourceServerUrl));
             var request = (HttpWebRequest)WebRequest.Create(requestUriString);
             request.Method = "PATCH";
             return request.GetResponseAsync()

@@ -244,7 +244,7 @@ namespace RavenFS.Tests.RDC
             {
                 // pass
             }
-            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", "GetOurs").Wait();
+            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.Ours).Wait();
             var result = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.txt").Result;
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
@@ -277,7 +277,7 @@ namespace RavenFS.Tests.RDC
             {
                 // pass
             }
-            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, fileName, "GetTheirs").Wait();
+            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs).Wait();
             return seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, fileName).Result;
         }
 

@@ -187,7 +187,6 @@
     <Compile Include="Infrastructure\CompletedTask.cs" />
     <Compile Include="Rdc\ConflictItem.cs" />
     <Compile Include="Rdc\ConflictResolution.cs" />
-    <Compile Include="Rdc\ConflictResolutionStrategy.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
     <Compile Include="Rdc\HistoryItem.cs" />
     <Compile Include="Rdc\IPartialDataAccess.cs" />

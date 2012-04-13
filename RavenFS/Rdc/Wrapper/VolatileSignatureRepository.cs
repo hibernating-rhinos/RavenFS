@@ -8,12 +8,12 @@ namespace RavenFS.Rdc.Wrapper
 {
     public class VolatileSignatureRepository : ISignatureRepository
     {
-        private readonly string _baseDirectory;
+        private readonly string baseDirectory;
 
         public VolatileSignatureRepository(string path)
         {
-        	_baseDirectory = path.ToFullPath();
-            Directory.CreateDirectory(_baseDirectory);
+        	baseDirectory = path.ToFullPath();
+            Directory.CreateDirectory(baseDirectory);
         }
 
         public Stream GetContentForReading(string sigName)
@@ -60,17 +60,17 @@ namespace RavenFS.Rdc.Wrapper
 
         private IEnumerable<string> GetSigFileNamesByFileName(string fileName)
         {
-            return Directory.GetFiles(_baseDirectory, fileName + "*.sig");
+            return Directory.GetFiles(baseDirectory, fileName + "*.sig");
         }
 
         private string NameToPath(string name)
         {
-            return Path.GetFullPath(Path.Combine(_baseDirectory, name));
+            return Path.GetFullPath(Path.Combine(baseDirectory, name));
         }
 
         public void Dispose()
         {
-            Directory.Delete(_baseDirectory, true);
+            Directory.Delete(baseDirectory, true);
         }
     }
 }

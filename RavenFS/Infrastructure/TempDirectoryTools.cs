@@ -8,20 +8,15 @@ namespace RavenFS.Infrastructure
 {
     public class TempDirectoryTools
     {
-        public static string Create(string basePath)
+        public static string Create()
         {
             string tempDirectory;
             do
             {
-                tempDirectory = Path.Combine(Path.GetTempPath(), "test-" + Path.GetRandomFileName());
+                tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             } while (Directory.Exists(tempDirectory)); 
             Directory.CreateDirectory(tempDirectory);
             return tempDirectory;
-        }
-
-        public static string Create()
-        {
-            return Create(Path.GetTempPath());
         }
     }
 }

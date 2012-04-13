@@ -25,10 +25,9 @@ namespace RavenFS.Controllers
         [AcceptVerbs("POST")]
         public Task<HttpResponseMessage<SynchronizationReport>> Proceed(string fileName, string sourceServerUrl)
         {
-            //return new CompletedTask<HttpResponseMessage<SynchronizationReport>>(new HttpResponseMessage<SynchronizationReport>(HttpStatusCode.Conflict));
             if (String.IsNullOrEmpty(sourceServerUrl))
             {
-                throw new HttpResponseException("Unknown server identifier " + sourceServerUrl, HttpStatusCode.ServiceUnavailable);
+                throw new HttpResponseException("Unknown server identifier " + sourceServerUrl, HttpStatusCode.BadRequest);
             }
 
             AssertFileIsNotBeingSynced(fileName);
@@ -37,7 +36,6 @@ namespace RavenFS.Controllers
 
 
             LockFileByCreatingSyncConfiguration(fileName, sourceServerUrl);
-            // TODO: Not sure if unlocking is run if FatalError method has been called. (CompletedTask)
 
             return sourceRavenFileSystemClient.GetMetadataForAsync(fileName)
                 .ContinueWith(
@@ -46,14 +44,14 @@ namespace RavenFS.Controllers
                         var remoteMetadata = getMetadataForAsyncTask.Result;
                         if (remoteMetadata.AllKeys.Contains(ReplicationConstants.RavenReplicationConflict))
                         {
-                            throw new HttpResponseException(string.Format("File {0} on THEIR side is conflicted", fileName), HttpStatusCode.ServiceUnavailable);
+                            throw new HttpResponseException(string.Format("File {0} on THEIR side is conflicted", fileName), HttpStatusCode.BadRequest);
                         }
 
                         var localFileDataInfo = GetLocalFileDataInfo(fileName);
 
                         if (localFileDataInfo == null)
                         {
-                            // if file doesn't exist locally - download it at all
+                            // if file doesn't exist locally - download all of it
                             return Download(sourceRavenFileSystemClient, fileName, remoteMetadata)
                                 .ContinueWith(
                                     synchronizationTask =>
@@ -73,6 +71,7 @@ namespace RavenFS.Controllers
                                                     FileName = fileName,
                                                     ServerUrl = Request.GetServerUrl()
                                                 });
+
 
                             throw new HttpResponseException(string.Format("File {0} is conflicted", fileName), HttpStatusCode.Conflict);
                         }
@@ -128,10 +127,10 @@ namespace RavenFS.Controllers
         [AcceptVerbs("PATCH")]
         public Task<HttpResponseMessage> ResolveConflict(string fileName, string strategy, string sourceServerUrl)
         {
-            var selectedStrategy = ConflictResolutionStrategy.GetTheirs;
+            var selectedStrategy = ConflictResolutionStrategy.Theirs;
             Enum.TryParse(strategy, true, out selectedStrategy);
 
-            if (selectedStrategy == ConflictResolutionStrategy.GetOurs)
+            if (selectedStrategy == ConflictResolutionStrategy.Ours)
             {
                 return StrategyAsGetOurs(fileName, sourceServerUrl)
                     .ContinueWith(
@@ -178,8 +177,7 @@ namespace RavenFS.Controllers
                     var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
                     accessor.SetConfigurationValue(
                         ReplicationHelper.ConflictConfigNameForFile(fileName), conflict);
-                    metadata[ReplicationConstants.RavenReplicationConflict] =
-                        true.ToString();
+                    metadata[ReplicationConstants.RavenReplicationConflict] = "True";
                     accessor.UpdateFileMetadata(fileName, metadata);
                 });
         }
@@ -188,13 +186,13 @@ namespace RavenFS.Controllers
         {
             Storage.Batch(
                 accessor =>
-                {
-                    accessor.DeleteConfig(ReplicationHelper.ConflictConfigNameForFile(fileName));
-                    var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
-                    metadata.Remove(ReplicationConstants.RavenReplicationConflict);
-                    metadata.Remove(ReplicationConstants.RavenReplicationConflictResolution);
-                    accessor.UpdateFileMetadata(fileName, metadata);
-                });
+                    {
+                        accessor.DeleteConfig(ReplicationHelper.ConflictConfigNameForFile(fileName));
+                        var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
+                        metadata.Remove(ReplicationConstants.RavenReplicationConflict);
+                        metadata.Remove(ReplicationConstants.RavenReplicationConflictResolution);
+                        accessor.UpdateFileMetadata(fileName, metadata);
+                    });
         }
 
         private bool IsConflictResolved(NameValueCollection localMetadata, ConflictItem conflict)
@@ -205,7 +203,7 @@ namespace RavenFS.Controllers
                 return false;
             }
             var conflictResolution = new TypeHidingJsonSerializer().Parse<ConflictResolution>(conflictResolutionString);
-            return conflictResolution.Strategy == ConflictResolutionStrategy.GetTheirs
+            return conflictResolution.Strategy == ConflictResolutionStrategy.Theirs
                 && conflictResolution.TheirServerId == conflict.Theirs.ServerId;
         }
 
@@ -213,7 +211,7 @@ namespace RavenFS.Controllers
         {
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
             RemoveConflictArtifacts(fileName);
-            return sourceRavenFileSystemClient.ResolveConflictAsync(sourceRavenFileSystemClient.ServerUrl, fileName, ConflictResolutionStrategy.GetTheirs.ToString());
+            return sourceRavenFileSystemClient.ResolveConflictAsync(sourceRavenFileSystemClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs);
         }
 
         private void StrategyAsGetTheirs(string fileName, string sourceServerUrl)
@@ -228,7 +226,7 @@ namespace RavenFS.Controllers
                     var conflictResolution =
                         new ConflictResolution
                             {
-                                Strategy = ConflictResolutionStrategy.GetTheirs,
+                                Strategy = ConflictResolutionStrategy.Theirs,
                                 TheirServerUrl = sourceServerUrl,
                                 TheirServerId = conflictItem.Theirs.ServerId,
                                 Version = conflictItem.Theirs.Version,
@@ -327,8 +325,7 @@ namespace RavenFS.Controllers
 
         private Task<SynchronizationReport> Download(RavenFileSystemClient sourceRavenFileSystemClient, string fileName, NameValueCollection sourceMetadata)
         {
-            var tempFileName = fileName + ".result";
-            // TODO: Remove file .result if found
+            var tempFileName = fileName + ".downloading";
             var storageStream = StorageStream.CreatingNewAndWritting(Storage, Search, tempFileName,
                                                                      sourceMetadata.FilterHeaders());
             return sourceRavenFileSystemClient.DownloadAsync(fileName, storageStream)
@@ -336,6 +333,7 @@ namespace RavenFS.Controllers
                     _ =>
                     {
                         storageStream.Dispose();
+                        _.AssertNotFaulted();
                         Storage.Batch(
                             accessor =>
                             {
