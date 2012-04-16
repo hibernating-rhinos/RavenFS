@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RavenFS.Extensions;
 using RavenFS.Notifications;
@@ -11,8 +10,6 @@ using RavenFS.Tests.Tools;
 using RavenFS.Util;
 using Xunit;
 using Xunit.Extensions;
-using System.Linq;
-using System.Threading;
 using RavenFS.Client;
 
 namespace RavenFS.Tests.RDC
@@ -21,7 +18,7 @@ namespace RavenFS.Tests.RDC
     {
         [Theory]
         [InlineData(1)]
-        //[InlineData(5000)]
+        [InlineData(5000)]
         public void Synchronize_file_with_different_beginning(int size)
         {
             var differenceChunk = new MemoryStream();
@@ -51,21 +48,21 @@ namespace RavenFS.Tests.RDC
             SynchronizationReport result = ResolveConflictAndSynchronize("test.txt", seedClient, sourceClient);
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
-            string resultMD5 = null;
+            string resultMd5 = null;
             using (var resultFileContent = new MemoryStream())
             {
                 var metadata = seedClient.DownloadAsync("test.txt", resultFileContent).Result;
                 Assert.Equal("some-value", metadata["SomeTest-metadata"]);
                 resultFileContent.Position = 0;
-                resultMD5 = resultFileContent.GetMD5Hash();
+                resultMd5 = resultFileContent.GetMD5Hash();
                 resultFileContent.Position = 0;
             }
 
             sourceContent.Position = 0;
-            var sourceMD5 = sourceContent.GetMD5Hash();
+            var sourceMd5 = sourceContent.GetMD5Hash();
             sourceContent.Position = 0;
 
-            Assert.True(resultMD5 == sourceMD5);
+            Assert.True(resultMd5 == sourceMd5);
         }
 
         [Theory]
@@ -237,14 +234,7 @@ namespace RavenFS.Tests.RDC
             sourceContent.Position = 0;
             sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-            try
-            {
-                RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.txt");
-            }
-            catch
-            {
-                // pass
-            }
+            RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.txt");
             seedClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.Ours).Wait();
             var result = RdcTestUtils.SynchronizeAndWaitForStatus(sourceClient, seedClient.ServerUrl, "test.txt");
             Assert.Equal(seedContent.Length, result.BytesCopied + result.BytesTransfered);
