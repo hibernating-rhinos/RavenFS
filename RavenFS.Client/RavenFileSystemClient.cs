@@ -309,22 +309,32 @@ namespace RavenFS.Client
 			}
 		}
 
-		public Task<SynchronizationReport> StartSynchronizationAsync(string sourceServerUrl, string fileName)
+		public Task StartSynchronizationAsync(string sourceServerUrl, string fileName)
 		{
             var requestUriString = String.Format("{0}/synchronization/proceed/{1}?sourceServerUrl={2}", ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(sourceServerUrl));
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 		    request.Method = "POST";
             request.ContentLength = 0;
 			return request.GetResponseAsync()
-				.ContinueWith(task =>
-				{
-					using (var stream = task.Result.GetResponseStream())
-					{
-						return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
-					}
-				})
+                .ContinueWith(task => task.Result.Close())
 				.TryThrowBetteError();
 		}
+
+        public Task<SynchronizationReport> GetSynchronizationStatusAsync(string fileName)
+        {
+            var requestUriString = String.Format("{0}/synchronization/status/{1}", ServerUrl, Uri.EscapeDataString(fileName));
+            var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+            request.ContentLength = 0;
+            return request.GetResponseAsync()
+                .ContinueWith(task =>
+                {
+                    using (var stream = task.Result.GetResponseStream())
+                    {
+                        return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
+                    }
+                })
+                .TryThrowBetteError();
+        }
 
         public Task ResolveConflictAsync(string sourceServerUrl, string filename, ConflictResolutionStrategy strategy)
         {

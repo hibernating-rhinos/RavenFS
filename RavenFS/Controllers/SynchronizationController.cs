@@ -23,13 +23,28 @@ namespace RavenFS.Controllers
     public class SynchronizationController : RavenController
     {
         [AcceptVerbs("POST")]
-        public Task<HttpResponseMessage<SynchronizationReport>> Proceed(string fileName, string sourceServerUrl)
+        public HttpResponseMessage Proceed(string fileName, string sourceServerUrl)
         {
+            // remove previous SyncResult
+            Storage.Batch(
+                accessor =>
+                    {
+                        var name = ReplicationHelper.SyncResultNameForFile(fileName);
+                        accessor.DeleteConfig(name);
+                    });
+
             if (String.IsNullOrEmpty(sourceServerUrl))
             {
                 throw new HttpResponseException("Unknown server identifier " + sourceServerUrl, HttpStatusCode.BadRequest);
             }
 
+            InnerProceed(fileName, sourceServerUrl);
+
+            return new HttpResponseMessage(HttpStatusCode.NoContent);
+        }
+
+        private Task InnerProceed(string fileName, string sourceServerUrl)
+        {
             AssertFileIsNotBeingSynced(fileName);
 
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
@@ -37,14 +52,15 @@ namespace RavenFS.Controllers
 
             LockFileByCreatingSyncConfiguration(fileName, sourceServerUrl);
 
-            return sourceRavenFileSystemClient.GetMetadataForAsync(fileName)
+            var result = sourceRavenFileSystemClient.GetMetadataForAsync(fileName)
                 .ContinueWith(
                     getMetadataForAsyncTask =>
                     {
                         var remoteMetadata = getMetadataForAsyncTask.Result;
                         if (remoteMetadata.AllKeys.Contains(ReplicationConstants.RavenReplicationConflict))
                         {
-                            throw new HttpResponseException(string.Format("File {0} on THEIR side is conflicted", fileName), HttpStatusCode.BadRequest);
+                            throw new SynchronizationException(
+                                string.Format("File {0} on THEIR side is conflicted", fileName));
                         }
 
                         var localFileDataInfo = GetLocalFileDataInfo(fileName);
@@ -52,10 +68,7 @@ namespace RavenFS.Controllers
                         if (localFileDataInfo == null)
                         {
                             // if file doesn't exist locally - download all of it
-                            return Download(sourceRavenFileSystemClient, fileName, remoteMetadata)
-                                .ContinueWith(
-                                    synchronizationTask =>
-                                    new HttpResponseMessage<SynchronizationReport>(synchronizationTask.Result));
+                            return Download(sourceRavenFileSystemClient, fileName, remoteMetadata);
                         }
 
                         var localMetadata = GetLocalMetadata(fileName);
@@ -67,13 +80,13 @@ namespace RavenFS.Controllers
                             CreateConflictArtifacts(fileName, conflict);
 
                             Publisher.Publish(new ConflictDetected
-                                                {
-                                                    FileName = fileName,
-                                                    ServerUrl = Request.GetServerUrl()
-                                                });
+                                                  {
+                                                      FileName = fileName,
+                                                      ServerUrl = Request.GetServerUrl()
+                                                  });
 
 
-                            throw new HttpResponseException(string.Format("File {0} is conflicted", fileName), HttpStatusCode.Conflict);
+                            throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
                         }
 
                         var remoteSignatureCache = new VolatileSignatureRepository(TempDirectoryTools.Create());
@@ -109,10 +122,7 @@ namespace RavenFS.Controllers
                                         RemoveConflictArtifacts(fileName);
                                     }
 
-                                    var synchronizationReport = synchronizationTask.Result;
-
-                                    return
-                                        new HttpResponseMessage<SynchronizationReport>(synchronizationReport);
+                                    return synchronizationTask.Result;
                                 });
                     })
                 .Unwrap()
@@ -121,7 +131,44 @@ namespace RavenFS.Controllers
                     {
                         UnlockFileByDeletingSyncConfiguration(fileName);
                         return task.Result;
+                    })
+                .ContinueWith(
+                    task =>
+                    {
+                        SynchronizationReport report;
+                        if (task.Status == TaskStatus.Faulted)
+                        {
+                            report =
+                                new SynchronizationReport
+                                    {
+                                        Exception = task.Exception.ExtractSingleInnerException()
+                                    };
+                        }
+                        else
+                        {
+                            report = task.Result;
+                        }
+                        Storage.Batch(
+                            accessor => 
+                            {
+                                var name = ReplicationHelper.SyncResultNameForFile(fileName);
+                                accessor.SetConfigurationValue(name, report);
+                            });
                     });
+            return result;
+        }
+
+        [AcceptVerbs("GET")]
+        public HttpResponseMessage<SynchronizationReport> Status(string fileName)
+        {
+            SynchronizationReport preResult = null;
+            Storage.Batch(
+                accessor =>
+                    {
+                        var name = ReplicationHelper.SyncResultNameForFile(fileName);
+                        accessor.TryGetConfigurationValue(name, out preResult);
+                    });
+            return new HttpResponseMessage<SynchronizationReport>(preResult);
         }
 
         [AcceptVerbs("PATCH")]
@@ -382,15 +429,21 @@ namespace RavenFS.Controllers
 
         private void LockFileByCreatingSyncConfiguration(string fileName, string sourceServerUrl)
         {
-            Storage.Batch(accessor =>
-                            {
-                                var syncOperationDetails = new NameValueCollection
-			              		                           	{
-			              		                           		{ ReplicationConstants.RavenReplicationSource, sourceServerUrl }
-			              		                           	};
+            Storage.Batch(
+                accessor =>
+                {
+                    var syncOperationDetails =
+                        new NameValueCollection
+                                {
+                                    {
+                                        ReplicationConstants.RavenReplicationSource,
+                                        sourceServerUrl
+                                        }
+                                };
 
-                                accessor.SetConfig(ReplicationHelper.SyncConfigNameForFile(fileName), syncOperationDetails);
-                            });
+                    accessor.SetConfig(ReplicationHelper.SyncConfigNameForFile(fileName),
+                                       syncOperationDetails);
+                });
         }
 
 
