@@ -10,8 +10,8 @@ namespace RavenFS.Tests.RDC
 
 	public class ConflictNotificationTests : MultiHostTestBase
 	{
-		[Fact]
-		public void NotificationsIsReceivedWhenConflictIsDetected()
+        [Fact]
+		public void NotificationIsReceivedWhenConflictIsDetected()
 		{
 			RavenFileSystemClient seedClient = NewClient(0);
             RavenFileSystemClient sourceClient = NewClient(1);
@@ -38,7 +38,7 @@ namespace RavenFS.Tests.RDC
 
 			try
 			{
-				seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "abc.txt").Wait();
+                seedClient.Synchronization.StartSynchronizationAsync(sourceClient.ServerUrl, "abc.txt").Wait();
 			}
 			catch
 			{

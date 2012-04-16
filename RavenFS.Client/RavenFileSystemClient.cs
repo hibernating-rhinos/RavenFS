@@ -309,32 +309,6 @@ namespace RavenFS.Client
 			}
 		}
 
-		public Task<SynchronizationReport> StartSynchronizationAsync(string sourceServerUrl, string fileName)
-		{
-            var requestUriString = String.Format("{0}/synchronization?fileName={1}&sourceServerUrl={2}", ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(sourceServerUrl));
-			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
-			return request.GetResponseAsync()
-				.ContinueWith(task =>
-				{
-					using (var stream = task.Result.GetResponseStream())
-					{
-						return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
-					}
-				})
-				.TryThrowBetteError();
-		}
-
-        public Task ResolveConflictAsync(string sourceServerUrl, string fileName, ConflictResolutionStrategy strategy)
-        {
-            var requestUriString = String.Format("{0}/synchronization?fileName={1}&strategy={2}&sourceServerUrl={3}", 
-                ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(strategy.ToString()), Uri.EscapeDataString(sourceServerUrl));
-            var request = (HttpWebRequest)WebRequest.Create(requestUriString);
-            request.Method = "PATCH";
-            return request.GetResponseAsync()
-				.ContinueWith(task => task.Result.Close())
-				.TryThrowBetteError();
-        }
-
 	    public Task<string[]> GetFoldersAsync(string from = null, int start = 0,int pageSize = 25)
 		{
 			var path = @from ?? "";
@@ -542,6 +516,55 @@ namespace RavenFS.Client
 					})
 					.TryThrowBetteError();
 			}
+
+            public Task StartSynchronizationAsync(string sourceServerUrl, string fileName)
+            {
+                var requestUriString = String.Format("{0}/synchronization/proceed/{1}?sourceServerUrl={2}", ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(sourceServerUrl));
+                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+                request.Method = "POST";
+                request.ContentLength = 0;
+                return request.GetResponseAsync()
+                    .ContinueWith(task => task.Result.Close())
+                    .TryThrowBetteError();
+            }
+
+            public Task<SynchronizationReport> GetSynchronizationStatusAsync(string fileName)
+            {
+                var requestUriString = String.Format("{0}/synchronization/status/{1}", ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(fileName));
+                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+                request.ContentLength = 0;
+                return request.GetResponseAsync()
+                    .ContinueWith(task =>
+                    {
+                        using (var stream = task.Result.GetResponseStream())
+                        {
+                            return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
+                        }
+                    })
+                    .TryThrowBetteError();
+            }
+
+            public Task ResolveConflictAsync(string sourceServerUrl, string filename, ConflictResolutionStrategy strategy)
+            {
+                var requestUriString = String.Format("{0}/synchronization/resolveConflict/{1}?strategy={2}&sourceServerUrl={3}",
+                    ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), Uri.EscapeDataString(strategy.ToString()), Uri.EscapeDataString(sourceServerUrl));
+                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+                request.Method = "PATCH";
+                return request.GetResponseAsync()
+                    .ContinueWith(task => task.Result.Close())
+                    .TryThrowBetteError();
+            }
+
+            public Task ApplyConflictAsync(string filename, long theirVersion, string theirServerId)
+            {
+                var requestUriString = String.Format("{0}/synchronization/applyConflict/{1}?theirVersion={2}&theirServerId={3}",
+                    ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), theirVersion, Uri.EscapeDataString(theirServerId));
+                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+                request.Method = "PATCH";
+                return request.GetResponseAsync()
+                    .ContinueWith(task => task.Result.Close())
+                    .TryThrowBetteError();
+            }
 		}
 
 		public Task<RdcStats> GetRdcStatsAsync()

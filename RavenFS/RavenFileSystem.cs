@@ -29,6 +29,7 @@ namespace RavenFS
 		private readonly SigGenerator sigGenerator;
 	    private readonly NotificationPublisher notificationPublisher;
 	    private readonly HistoryUpdater historyUpdater;
+		private readonly FileLockManager fileLockManager;
 
 	    public TransactionalStorage Storage
 		{
@@ -51,6 +52,7 @@ namespace RavenFS
 			sigGenerator = new SigGenerator(signatureRepository);
             historyUpdater = new HistoryUpdater(storage, new ReplicationHiLo(storage));
             notificationPublisher = new NotificationPublisher();
+			fileLockManager = new FileLockManager(storage);
 			storage.Initialize();
 			search.Initialize();
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
@@ -100,6 +102,10 @@ namespace RavenFS
 	        get { return historyUpdater; }
 	    }
 
+		public FileLockManager FileLockManager
+		{
+			get { return fileLockManager; }
+		}
 
 	    [MethodImpl(MethodImplOptions.Synchronized)]
 		public void Start(HttpConfiguration config)
@@ -156,6 +162,12 @@ namespace RavenFS
 				routeTemplate: "rdc/{action}/{*filename}",
 				defaults: new { controller = "rdc", filename = RouteParameter.Optional }
 				);
+
+	        config.Routes.MapHttpRoute(
+                name: "synchronization",
+                routeTemplate: "synchronization/{action}/{filename}",
+                defaults: new { controller = "synchronization" }
+                );
 
 
 			config.Routes.MapHttpRoute(

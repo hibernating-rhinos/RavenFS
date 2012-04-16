@@ -40,5 +40,23 @@ namespace RavenFS.Extensions
             var value = sb.ToString();
             accessor.SetConfig(key, new NameValueCollection { { "value", value } });
         }
+
+        public static IEnumerable<string> GetConfigNames(this StorageActionsAccessor accessor)
+        {
+            const int pageSize = 20;
+            var pageNumber = 0;
+            var itemsCount = 0;
+            do
+            {
+                var items = accessor.GetConfigNames(pageNumber, pageSize);
+                itemsCount = items.Count();
+                foreach (var item in items)
+                {
+                    yield return item;
+                }
+                pageNumber++;
+
+            } while (itemsCount >= pageSize);
+        }
     }
 }

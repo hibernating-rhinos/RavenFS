@@ -4,13 +4,12 @@ using System.Collections.Specialized;
 using System.IO;
 using Newtonsoft.Json;
 using RavenFS.Extensions;
+using RavenFS.Notifications;
 using RavenFS.Rdc;
 using RavenFS.Tests.Tools;
 using RavenFS.Util;
 using Xunit;
 using Xunit.Extensions;
-using System.Linq;
-using System.Threading;
 using RavenFS.Client;
 
 namespace RavenFS.Tests.RDC
@@ -49,21 +48,21 @@ namespace RavenFS.Tests.RDC
             SynchronizationReport result = ResolveConflictAndSynchronize("test.txt", seedClient, sourceClient);
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
-            string resultMD5 = null;
+            string resultMd5 = null;
             using (var resultFileContent = new MemoryStream())
             {
                 var metadata = seedClient.DownloadAsync("test.txt", resultFileContent).Result;
                 Assert.Equal("some-value", metadata["SomeTest-metadata"]);
                 resultFileContent.Position = 0;
-                resultMD5 = resultFileContent.GetMD5Hash();
+                resultMd5 = resultFileContent.GetMD5Hash();
                 resultFileContent.Position = 0;
             }
 
             sourceContent.Position = 0;
-            var sourceMD5 = sourceContent.GetMD5Hash();
+            var sourceMd5 = sourceContent.GetMD5Hash();
             sourceContent.Position = 0;
 
-            Assert.True(resultMD5 == sourceMD5);
+            Assert.True(resultMd5 == sourceMd5);
         }
 
         [Theory]
@@ -103,7 +102,7 @@ namespace RavenFS.Tests.RDC
 
             sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
 
-            var synchronizationReport = seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Result;
+            var synchronizationReport = RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
             var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
 
             Assert.Equal(sourceContent1.Length, synchronizationReport.BytesCopied + synchronizationReport.BytesTransfered);
@@ -127,6 +126,24 @@ namespace RavenFS.Tests.RDC
         }
 
         [Fact]
+        public void Should_be_possible_to_apply_conflict()
+        {
+            var sourceContent1 = new RandomStream(10, 1);
+            var sourceClient = NewClient(1);
+            sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
+            var guid = Guid.NewGuid().ToString();
+            sourceClient.Synchronization.ApplyConflictAsync("test.bin", 8, guid).Wait();
+            var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+            var conflictItemString = sourceClient.Config.GetConfig(ReplicationHelper.ConflictConfigNameForFile("test.bin")).Result["value"];
+            var conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(conflictItemString);
+
+            Assert.Equal(true.ToString(), resultFileMetadata[ReplicationConstants.RavenReplicationConflict]);
+            Assert.Equal(guid, conflict.Theirs.ServerId);
+            Assert.Equal(8, conflict.Theirs.Version);
+            Assert.Equal(1, conflict.Ours.Version);
+        }
+
+        [Fact]
         public void Should_mark_file_as_conflicted_when_two_differnet_versions()
         {
             var sourceContent1 = new RandomStream(10, 1);
@@ -140,9 +157,9 @@ namespace RavenFS.Tests.RDC
             sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
             seedClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
 
-            Assert.Throws<AggregateException>(
-                () => seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait());
+            var synchronizationReport = RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
 
+            Assert.NotNull(synchronizationReport.Exception);
             var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
             Assert.True(Convert.ToBoolean(resultFileMetadata[ReplicationConstants.RavenReplicationConflict]));
         }
@@ -172,7 +189,7 @@ namespace RavenFS.Tests.RDC
         {
             var sourceContent1 = new RandomStream(10, 1);
             var sourceClient = NewClient(1);
-            sourceClient.UploadAsync("test.bin", new NameValueCollection {{"test", "Change me"}}, sourceContent1).Wait();
+            sourceClient.UploadAsync("test.bin", new NameValueCollection { { "test", "Change me" } }, sourceContent1).Wait();
             var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[ReplicationConstants.RavenReplicationHistory];
             var history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
@@ -189,28 +206,63 @@ namespace RavenFS.Tests.RDC
             Assert.Equal("Changed", metadata["test"]);
         }
 
-        [Fact(Skip = "Not implemented yet")]
-        public void Should_mark_file_to_be_resolved_using_theirs_strategy()
-        {
-        }
 
-        [Fact(Skip = "Not implemented yet")]
-        public void Should_mark_file_to_be_resolved_using_mine_strategy()
+        [Fact]
+        public void Should_mark_file_to_be_resolved_using_ours_strategy()
         {
+            var differenceChunk = new MemoryStream();
+            var sw = new StreamWriter(differenceChunk);
+
+            sw.Write("Coconut is Stupid");
+            sw.Flush();
+
+            var sourceContent = PrepareSourceStream(10);
+            sourceContent.Position = 0;
+            var seedContent = new CombinedStream(differenceChunk, sourceContent);
+            var seedClient = NewClient(0);
+            var sourceClient = NewClient(1);
+            var sourceMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "some-value"}
+                               };
+            var seedMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "shouldnt-be-overwritten"}
+                               };
+
+            seedClient.UploadAsync("test.txt", seedMetadata, seedContent).Wait();
+            sourceContent.Position = 0;
+            sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
+
+            RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.txt");
+            seedClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.Ours).Wait();
+            var result = RdcTestUtils.SynchronizeAndWaitForStatus(sourceClient, seedClient.ServerUrl, "test.txt");
+            Assert.Equal(seedContent.Length, result.BytesCopied + result.BytesTransfered);
+
+            // check if conflict resolution has been properly set on the source
+
+            string resultMd5;
+            using (var resultFileContent = new MemoryStream())
+            {
+                var metadata = sourceClient.DownloadAsync("test.txt", resultFileContent).Result;
+                Assert.Equal("shouldnt-be-overwritten", metadata["SomeTest-metadata"]);
+                resultFileContent.Position = 0;
+                resultMd5 = resultFileContent.GetMD5Hash();
+                resultFileContent.Position = 0;
+            }
+
+            seedContent.Position = 0;
+            var seedMd5 = seedContent.GetMD5Hash();
+            sourceContent.Position = 0;
+
+            Assert.True(resultMd5 == seedMd5);
         }
 
         private static SynchronizationReport ResolveConflictAndSynchronize(string fileName, RavenFileSystemClient seedClient, RavenFileSystemClient sourceClient)
         {
-            try
-            {
-                seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, fileName).Wait();
-            }
-            catch
-            {
-                // pass
-            }
-            seedClient.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs).Wait();
-            return seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, fileName).Result;
+            RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, fileName);
+            seedClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs).Wait();
+            return RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, fileName);
         }
 
         private static MemoryStream PrepareSourceStream(int lines)
