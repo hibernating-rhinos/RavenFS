@@ -14,7 +14,7 @@ namespace RavenFS.Tests
 {
     public class Notifications : WebApiTest
     {
-        [Fact(Skip = "Doesn't work")]
+        [Fact]
         public void NotificationReceivedWhenFileAdded()
         {
             var client = NewClient();
@@ -30,7 +30,7 @@ namespace RavenFS.Tests
             Assert.Equal(FileChangeAction.Add, fileChange.Action);
         }
 
-        [Fact(Skip = "Doesn't work")]
+        [Fact]
         public void NotificationReceivedWhenFileDeleted()
         {
             var client = NewClient();
@@ -47,7 +47,7 @@ namespace RavenFS.Tests
             Assert.Equal(FileChangeAction.Delete, fileChange.Action);
         }
 
-        [Fact(Skip = "Doesn't work")]
+        [Fact]
         public void NotificationReceivedWhenFileUpdated()
         {
             var client = NewClient();
@@ -64,7 +64,7 @@ namespace RavenFS.Tests
             Assert.Equal(FileChangeAction.Update, fileChange.Action);
         }
 
-        [Fact(Skip = "Doesn't work")]
+        [Fact]
         public void NotificationsReceivedWhenFileRenamed()
         {
             var client = NewClient();
@@ -83,7 +83,7 @@ namespace RavenFS.Tests
             Assert.Equal(FileChangeAction.Renamed, fileChanges[1].Action);
         }
 
-        [Fact(Skip = "Doesn't work")]
+        [Fact]
         public void NotificationsAreOnlyReceivedForFilesInGivenFolder()
         {
             var client = NewClient();
@@ -98,7 +98,7 @@ namespace RavenFS.Tests
             Assert.Equal(0, notifications.Count);
         }
 
-        [Fact(Skip = "Doesn't work")]
+        [Fact]
         public void NotificationsIsReceivedWhenConfigIsUpdated()
         {
             var client = NewClient();
@@ -114,7 +114,7 @@ namespace RavenFS.Tests
             Assert.Equal(ConfigChangeAction.Set, configChange.Action);
         }
 
-        [Fact(Skip = "Doesn't work")]
+        [Fact]
         public void NotificationsIsReceivedWhenConfigIsDeleted()
         {
             var client = NewClient();

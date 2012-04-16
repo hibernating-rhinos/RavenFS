@@ -10,8 +10,8 @@ namespace RavenFS.Tests.RDC
 
 	public class ConflictNotificationTests : MultiHostTestBase
 	{
-        [Fact(Skip = "Doesn't work")]
-		public void NotificationsIsReceivedWhenConflictIsDetected()
+        [Fact]
+		public void NotificationIsReceivedWhenConflictIsDetected()
 		{
 			RavenFileSystemClient seedClient = NewClient(0);
             RavenFileSystemClient sourceClient = NewClient(1);
