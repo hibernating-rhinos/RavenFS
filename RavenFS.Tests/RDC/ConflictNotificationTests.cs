@@ -38,7 +38,7 @@ namespace RavenFS.Tests.RDC
 
 			try
 			{
-				seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "abc.txt").Wait();
+                seedClient.Synchronization.StartSynchronizationAsync(sourceClient.ServerUrl, "abc.txt").Wait();
 			}
 			catch
 			{

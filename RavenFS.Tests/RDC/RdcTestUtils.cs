@@ -11,14 +11,14 @@ namespace RavenFS.Tests.RDC
     {
         public static SynchronizationReport SynchronizeAndWaitForStatus(RavenFileSystemClient client, string sourceUrl, string fileName)
         {
-            client.StartSynchronizationAsync(sourceUrl, fileName).Wait();
+            client.Synchronization.StartSynchronizationAsync(sourceUrl, fileName).Wait();
             var synchronizationReportTask = Task.Factory.StartNew(
                 () =>
                 {
                     SynchronizationReport report;
                     do
                     {
-                        report = client.GetSynchronizationStatusAsync(fileName).Result;
+                        report = client.Synchronization.GetSynchronizationStatusAsync(fileName).Result;
                     } while (report == null);
                     return report;
                 });

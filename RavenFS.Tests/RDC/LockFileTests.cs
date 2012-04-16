@@ -27,7 +27,7 @@ namespace RavenFS.Tests.RDC
 
             var configName = ReplicationHelper.SyncConfigNameForFile("test.bin");
 
-            seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin");
+            seedClient.Synchronization.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin");
 
             Assert.True(WaitForBeginningSynchronization(seedClient, configName));
         }
@@ -120,7 +120,7 @@ namespace RavenFS.Tests.RDC
 
             seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), EmptyData).Wait();
 
-            var innerException = ExecuteAndGetInnerException(() => seedClient.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait());
+            var innerException = ExecuteAndGetInnerException(() => seedClient.Synchronization.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait());
 
             Assert.IsType(typeof(InvalidOperationException), innerException);
             Assert.Contains("File test.bin is being synced", innerException.Message);

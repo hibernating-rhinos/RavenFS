@@ -273,13 +273,13 @@ namespace RavenFS.Controllers
             var localMetadata = GetLocalMetadata(fileName);
             var version = long.Parse(localMetadata[ReplicationConstants.RavenReplicationVersion]);
             return
-                sourceRavenFileSystemClient.ApplyConflictAsync(fileName, version, Storage.Id.ToString())
+                sourceRavenFileSystemClient.Synchronization.ApplyConflictAsync(fileName, version, Storage.Id.ToString())
                     .ContinueWith(
                         task =>
                         {
                             task.Wait(); // throw exception
                             return
-                                sourceRavenFileSystemClient.ResolveConflictAsync(
+                                sourceRavenFileSystemClient.Synchronization.ResolveConflictAsync(
                                     Request.GetServerUrl(), fileName,
                                     ConflictResolutionStrategy.Theirs);
                         })
