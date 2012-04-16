@@ -188,8 +188,10 @@
     <Compile Include="Rdc\ConflictItem.cs" />
     <Compile Include="Rdc\ConflictResolution.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
+    <Compile Include="Rdc\SynchronizationDetails.cs" />
     <Compile Include="Rdc\HistoryItem.cs" />
     <Compile Include="Rdc\IPartialDataAccess.cs" />
+    <Compile Include="Rdc\FileLockManager.cs" />
     <Compile Include="Rdc\RemotePartialAccess.cs" />
     <Compile Include="Rdc\RemoteRdcManager.cs" />
     <Compile Include="Rdc\RemoteSignaturePartialAccess.cs" />

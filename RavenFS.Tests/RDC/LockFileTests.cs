@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using RavenFS.Client;
 using RavenFS.Rdc.Utils.IO;
@@ -12,10 +10,12 @@ using Xunit;
 
 namespace RavenFS.Tests.RDC
 {
-    public class LockFileTests : MultiHostTestBase
+	using Rdc;
+
+	public class LockFileTests : MultiHostTestBase
     {
         private const int RetriesCount = 300;
-        private readonly NameValueCollection EmptyData = new NameValueCollection();
+		private readonly NameValueCollection EmptyData = new NameValueCollection();
 
         [Fact(Skip = "This test is actually relying on a race condition to run, if the sync finished before the Wait starts, it will fail")]
         public void Should_create_sync_configuration_during_synchronization()
@@ -54,7 +54,7 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-            seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), EmptyData).Wait();
+            seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
             var innerException = ExecuteAndGetInnerException(() => seedClient.UpdateMetadataAsync("test.bin", new NameValueCollection()).Wait());
 
@@ -62,7 +62,7 @@ namespace RavenFS.Tests.RDC
             Assert.Contains("File test.bin is being synced", innerException.Message);
         }
 
-        [Fact]
+		[Fact]
         public void Should_refuse_to_delete_file_while_sync_configuration_exists()
         {
             RavenFileSystemClient seedClient;
@@ -70,7 +70,7 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-            seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), EmptyData).Wait();
+			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
             var innerException = ExecuteAndGetInnerException(() => seedClient.DeleteAsync("test.bin").Wait());
 
@@ -86,7 +86,7 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-            seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), EmptyData).Wait();
+			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
             var innerException = ExecuteAndGetInnerException(() => seedClient.RenameAsync("test.bin", "newname.bin").Wait());
 
@@ -102,9 +102,9 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-            seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), EmptyData).Wait();
+			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
-            var innerException = ExecuteAndGetInnerException(() => seedClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
+			var innerException = ExecuteAndGetInnerException(() => seedClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
 
             Assert.IsType(typeof(InvalidOperationException), innerException);
             Assert.Contains("File test.bin is being synced", innerException.Message);
@@ -118,13 +118,72 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-            seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), EmptyData).Wait();
+			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
             var innerException = ExecuteAndGetInnerException(() => seedClient.Synchronization.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait());
 
             Assert.IsType(typeof(InvalidOperationException), innerException);
             Assert.Contains("File test.bin is being synced", innerException.Message);
         }
+
+		[Fact]
+		public void Should_successfully_update_metadata_if_last_synchronization_timeout_exceeded()
+		{
+			RavenFileSystemClient seedClient;
+			RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+			ZeroTimeoutTest(seedClient, () => seedClient.UpdateMetadataAsync("test.bin", new NameValueCollection()).Wait());
+		}
+
+		[Fact]
+		public void Should_successfully_delete_file_if_last_synchronization_timeout_exceeded()
+		{
+			RavenFileSystemClient seedClient;
+			RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+			ZeroTimeoutTest(seedClient, () => seedClient.DeleteAsync("test.bin").Wait());
+		}
+
+		[Fact]
+		public void Should_successfully_rename_file_if_last_synchronization_timeout_exceeded()
+		{
+			RavenFileSystemClient seedClient;
+			RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+			ZeroTimeoutTest(seedClient, () => seedClient.RenameAsync("test.bin", "newname.bin").Wait());
+		}
+
+		[Fact]
+		public void Should_successfully_upload_file_if_last_synchronization_timeout_exceeded()
+		{
+			RavenFileSystemClient seedClient;
+			RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+			ZeroTimeoutTest(seedClient, () => seedClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
+		}
+
+		[Fact]
+		public void Should_successfully_synchronize_if_last_synchronization_timeout_exceeded()
+		{
+			RavenFileSystemClient seedClient;
+			RavenFileSystemClient sourceClient;
+
+			UploadFilesSynchronously(out sourceClient, out seedClient);
+
+			seedClient.Config.SetConfig(ReplicationConstants.RavenReplicationTimeout, new NameValueCollection()
+			                                                                          	{
+			                                                                          		{"value", "\"00:00:00\""}
+			                                                                          	}).Wait();
+			Assert.DoesNotThrow(() => seedClient.Synchronization.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait());
+		}
 
         private void UploadFilesSynchronously(out RavenFileSystemClient sourceClient, out RavenFileSystemClient seedClient, string fileName = "test.bin")
         {
@@ -169,5 +228,25 @@ namespace RavenFS.Tests.RDC
 
             return false;
         }
+
+		private static NameValueCollection SynchronizationConfig(DateTime fileLockedDate)
+		{
+			return new NameValueCollection()
+			                      	{
+			                      		{"value", "{\"ReplicationSource\":\"http://localhost:19081\",\"FileLockedAt\":\"\\/Date(" + fileLockedDate.Ticks + ")\\/\"}"},
+			                      	};
+		}
+
+		private static void ZeroTimeoutTest(RavenFileSystemClient seedClient, Action action)
+		{
+			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.MinValue)).Wait();
+
+			seedClient.Config.SetConfig(ReplicationConstants.RavenReplicationTimeout, new NameValueCollection()
+			                                                                          	{
+			                                                                          		{"value", "\"00:00:00\""}
+			                                                                          	}).Wait();
+
+			Assert.DoesNotThrow(() => action());
+		}
     }
 }

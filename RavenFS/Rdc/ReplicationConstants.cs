@@ -16,6 +16,7 @@ namespace RavenFS.Rdc
         public const string RavenReplicationSourcesBasePath = "Raven/Replication/Sources";
         public const string RavenReplicationDestinations = "Raven/Replication/Destinations";
         public const string RavenReplicationDestinationsBasePath = "Raven/Replication/Destinations/";
+    	public const string RavenReplicationTimeout = "Raven-Replication-Timeout";
 
         public const int ChangeHistoryLength = 50;
     }

@@ -61,8 +61,7 @@ namespace RavenFS.Controllers
 
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
 
-
-            LockFileByCreatingSyncConfiguration(fileName, sourceServerUrl);
+            FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl);
 
             var result = sourceRavenFileSystemClient.GetMetadataForAsync(fileName)
                 .ContinueWith(
@@ -141,7 +140,7 @@ namespace RavenFS.Controllers
                 .ContinueWith(
                     task =>
                     {
-                        UnlockFileByDeletingSyncConfiguration(fileName);
+                        FileLockManager.UnlockByDeletingSyncConfiguration(fileName);
                         return task.Result;
                     })
                 .ContinueWith(
@@ -437,32 +436,6 @@ namespace RavenFS.Controllers
                 Length = fileAndPages.TotalSize ?? 0,
                 Name = fileAndPages.Name
             };
-        }
-
-        private void LockFileByCreatingSyncConfiguration(string fileName, string sourceServerUrl)
-        {
-            Storage.Batch(
-                accessor =>
-                {
-                    var syncOperationDetails =
-                        new NameValueCollection
-                                {
-                                    {
-                                        ReplicationConstants.RavenReplicationSource,
-                                        sourceServerUrl
-                                        }
-                                };
-
-                    accessor.SetConfig(ReplicationHelper.SyncConfigNameForFile(fileName),
-                                       syncOperationDetails);
-                });
-        }
-
-
-
-        private void UnlockFileByDeletingSyncConfiguration(string fileName)
-        {
-            Storage.Batch(accessor => accessor.DeleteConfig(ReplicationHelper.SyncConfigNameForFile(fileName)));
         }
     }
 }

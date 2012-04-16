@@ -17,6 +17,7 @@ using RavenFS.Util;
 namespace RavenFS.Controllers
 {
 	using System.Net;
+	using Rdc;
 
 	public abstract class RavenController : ApiController
 	{
@@ -86,6 +87,11 @@ namespace RavenFS.Controllers
 		protected IndexStorage Search
 		{
 			get { return RavenFileSystem.Search; }
+		}
+
+		protected FileLockManager FileLockManager
+		{
+			get { return RavenFileSystem.FileLockManager; }
 		}
 
 		protected PagingInfo Paging
@@ -170,12 +176,16 @@ namespace RavenFS.Controllers
 
 		protected void AssertFileIsNotBeingSynced(string fileName)
 		{
-			bool result = false;
-			Storage.Batch(accessor => result = accessor.ConfigExists(ReplicationHelper.SyncConfigNameForFile(fileName)));
-
-			if(result)
+			if(FileLockManager.IsFileBeingLocked(fileName))
 			{
-				throw new HttpResponseException(string.Format("File {0} is being synced", fileName), HttpStatusCode.ServiceUnavailable);
+				if(FileLockManager.TimeoutExceeded(fileName))
+				{
+					FileLockManager.UnlockByDeletingSyncConfiguration(fileName);
+				}
+				else
+				{
+					throw new HttpResponseException(string.Format("File {0} is being synced", fileName), HttpStatusCode.PreconditionFailed);
+				}
 			}
 		}
 	}
