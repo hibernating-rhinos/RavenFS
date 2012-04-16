@@ -89,6 +89,7 @@
     <Compile Include="RDC\IO\TestUtils.cs" />
     <Compile Include="RDC\LockFileTests.cs" />
     <Compile Include="RDC\NeedListGeneratorTest.cs" />
+    <Compile Include="RDC\RdcTestUtils.cs" />
     <Compile Include="RDC\SigGeneratorTest.cs" />
     <Compile Include="Search.cs" />
     <Compile Include="Signatures.cs" />

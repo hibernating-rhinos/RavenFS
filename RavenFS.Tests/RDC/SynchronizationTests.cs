@@ -105,7 +105,7 @@ namespace RavenFS.Tests.RDC
 
             sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
 
-            var synchronizationReport = SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
+            var synchronizationReport = RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
             var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
 
             Assert.Equal(sourceContent1.Length, synchronizationReport.BytesCopied + synchronizationReport.BytesTransfered);
@@ -160,7 +160,7 @@ namespace RavenFS.Tests.RDC
             sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
             seedClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
 
-            var synchronizationReport = SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
+            var synchronizationReport = RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
 
             Assert.NotNull(synchronizationReport.Exception);
             var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
@@ -239,14 +239,14 @@ namespace RavenFS.Tests.RDC
 
             try
             {
-                SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.txt");
+                RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.txt");
             }
             catch
             {
                 // pass
             }
             seedClient.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.Ours).Wait();
-            var result = SynchronizeAndWaitForStatus(sourceClient, seedClient.ServerUrl, "test.txt");
+            var result = RdcTestUtils.SynchronizeAndWaitForStatus(sourceClient, seedClient.ServerUrl, "test.txt");
             Assert.Equal(seedContent.Length, result.BytesCopied + result.BytesTransfered);
 
             // check if conflict resolution has been properly set on the source
@@ -270,27 +270,10 @@ namespace RavenFS.Tests.RDC
 
         private static SynchronizationReport ResolveConflictAndSynchronize(string fileName, RavenFileSystemClient seedClient, RavenFileSystemClient sourceClient)
         {
-            SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, fileName);
+            RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, fileName);
             seedClient.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs).Wait();
-            return SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, fileName);
+            return RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, fileName);
         }
-
-        private static SynchronizationReport SynchronizeAndWaitForStatus(RavenFileSystemClient client, string sourceUrl, string fileName)
-        {
-            client.StartSynchronizationAsync(sourceUrl, fileName).Wait();
-            var synchronizationReportTask = Task.Factory.StartNew(
-                () =>
-                {
-                    SynchronizationReport report;
-                    do
-                    {
-                        report = client.GetSynchronizationStatusAsync(fileName).Result;
-                    } while (report == null);
-                    return report;
-                });
-            return synchronizationReportTask.Result;
-        }
-
 
         private static MemoryStream PrepareSourceStream(int lines)
         {
