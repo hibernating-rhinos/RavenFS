@@ -11,6 +11,7 @@ namespace RavenFS.Client
 	///</summary>
 	public static class ExceptionExtensions
 	{
+        // TODO: Fix this name (BetteR)
 		public static Task TryThrowBetteError(this Task self)
 		{
 			return self.ContinueWith(task =>
