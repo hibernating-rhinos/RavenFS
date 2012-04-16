@@ -294,8 +294,7 @@ namespace RavenFS.Controllers
             var seedSignatureInfo = SignatureInfo.Parse(seedSignatureManifest.Signatures.Last().Name);
             var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
             var needListGenerator = new NeedListGenerator(SignatureRepository, remoteSignatureRepository);
-            var tempFileName = fileName + ".result";
-            // TODO: Remove file .result if found
+            var tempFileName = ReplicationHelper.DownloadingFileName(fileName);
             var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search,
                                                                   tempFileName,
                                                                   sourceMetadata.FilterHeaders());
@@ -338,7 +337,7 @@ namespace RavenFS.Controllers
 
         private Task<SynchronizationReport> Download(RavenFileSystemClient sourceRavenFileSystemClient, string fileName, NameValueCollection sourceMetadata)
         {
-            var tempFileName = fileName + ".downloading";
+            var tempFileName = ReplicationHelper.DownloadingFileName(fileName);
             var storageStream = StorageStream.CreatingNewAndWritting(Storage, Search, tempFileName,
                                                                      sourceMetadata.FilterHeaders());
             return sourceRavenFileSystemClient.DownloadAsync(fileName, storageStream)

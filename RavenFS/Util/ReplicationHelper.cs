@@ -11,5 +11,10 @@ namespace RavenFS.Util
         {
             return string.Format("Conflicted-{0}", fileName);
         }
+
+        public static string DownloadingFileName(string fileName)
+        {
+            return fileName + ".downloading";
+        }
 	}
 }
