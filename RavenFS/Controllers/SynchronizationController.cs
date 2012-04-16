@@ -25,13 +25,7 @@ namespace RavenFS.Controllers
         [AcceptVerbs("POST")]
         public HttpResponseMessage Proceed(string fileName, string sourceServerUrl)
         {
-            // remove previous SyncResult
-            Storage.Batch(
-                accessor =>
-                    {
-                        var name = ReplicationHelper.SyncResultNameForFile(fileName);
-                        accessor.DeleteConfig(name);
-                    });
+            StartupProceed(fileName);
 
             if (String.IsNullOrEmpty(sourceServerUrl))
             {
@@ -41,6 +35,24 @@ namespace RavenFS.Controllers
             InnerProceed(fileName, sourceServerUrl);
 
             return new HttpResponseMessage(HttpStatusCode.NoContent);
+        }
+
+        private void StartupProceed(string fileName)
+        {
+            Storage.Batch(
+                accessor =>
+                    {
+                        // remove previous SyncResult
+                        var name = ReplicationHelper.SyncResultNameForFile(fileName);
+                        accessor.DeleteConfig(name);
+
+                        // remove previous .downloading file
+                        if (accessor.ConfigExists(ReplicationHelper.SyncConfigNameForFile(fileName)) == false)
+                        {
+                            Search.Delete(name);
+                            accessor.Delete(ReplicationHelper.DownloadingFileName(fileName));
+                        }
+                    });
         }
 
         private Task InnerProceed(string fileName, string sourceServerUrl)
