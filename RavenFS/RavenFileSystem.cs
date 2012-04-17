@@ -164,11 +164,10 @@ namespace RavenFS
 				);
 
 	        config.Routes.MapHttpRoute(
-                name: "synchronization",
-                routeTemplate: "synchronization/{action}/{filename}",
-                defaults: new { controller = "synchronization" }
+                name: "synchronizationWithFile",
+                routeTemplate: "synchronization/{action}/{*filename}",
+                defaults: new { controller = "synchronization", filename = RouteParameter.Optional }
                 );
-
 
 			config.Routes.MapHttpRoute(
 				name: "folders",

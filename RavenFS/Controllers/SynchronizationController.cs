@@ -182,6 +182,24 @@ namespace RavenFS.Controllers
             return new HttpResponseMessage<SynchronizationReport>(preResult);
         }
 
+        [AcceptVerbs("GET")]
+        public HttpResponseMessage<IEnumerable<SynchronizationReport>> Finished(int page, int pageSize)
+        {
+            IList<SynchronizationReport> configObjects = null;
+            Storage.Batch(
+                accessor =>
+                    {
+                        var configKeys =
+                            from item in accessor.GetConfigNames()
+                            where ReplicationHelper.IsSyncResultName(item)
+                            select item;
+                        configObjects =
+                            (from item in configKeys.Skip(pageSize*page).Take(pageSize)
+                            select accessor.GetConfigurationValue<SynchronizationReport>(item)).ToList();
+                    });
+            return new HttpResponseMessage<IEnumerable<SynchronizationReport>>(configObjects);
+        }
+
         [AcceptVerbs("PATCH")]
         public Task<HttpResponseMessage> ResolveConflict(string fileName, string strategy, string sourceServerUrl)
         {

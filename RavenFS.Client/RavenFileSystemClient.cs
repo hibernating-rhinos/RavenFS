@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
@@ -563,6 +564,23 @@ namespace RavenFS.Client
                 request.Method = "PATCH";
                 return request.GetResponseAsync()
                     .ContinueWith(task => task.Result.Close())
+                    .TryThrowBetteError();
+            }
+
+            public Task<IEnumerable<SynchronizationReport>> GetFinishedAsync(int page = 0, int pageSize = 25)
+            {
+                var requestUriString = String.Format("{0}/synchronization/finished?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
+                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+                request.ContentLength = 0;
+                return request.GetResponseAsync()
+                    .ContinueWith(task =>
+                    {
+                        using (var stream = task.Result.GetResponseStream())
+                        {
+                            var preResult = new JsonSerializer().Deserialize<IEnumerable<SynchronizationReport>>(new JsonTextReader(new StreamReader(stream)));
+                            return preResult;
+                        }
+                    })
                     .TryThrowBetteError();
             }
 		}

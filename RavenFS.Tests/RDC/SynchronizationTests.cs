@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Threading.Tasks;
+using System.Linq;
 using Newtonsoft.Json;
 using RavenFS.Extensions;
 using RavenFS.Notifications;
@@ -256,6 +258,31 @@ namespace RavenFS.Tests.RDC
             sourceContent.Position = 0;
 
             Assert.True(resultMd5 == seedMd5);
+        }
+
+        [Fact(Skip = "Would be hard to implement because it needs to stop for a while during synchronization process")]
+        public void Should_get_all_current_synchronizations()
+        {
+        }
+
+        [Fact]
+        public void Should_get_all_finished_synchronizations()
+        {
+            var seedClient = NewClient(0);
+            var sourceClient = NewClient(1);
+            var files = new [] {"test1.bin", "test2.bin", "test3.bin"};
+
+            foreach (var item in files)
+            {
+                Task.WaitAll(
+                    seedClient.UploadAsync(item, PrepareSourceStream(1)),
+                    sourceClient.UploadAsync(item, PrepareSourceStream(1)));
+
+                RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, item);
+            }
+
+            var result = seedClient.Synchronization.GetFinishedAsync().Result;
+            Assert.Equal(files.Length, result.Count());
         }
 
         private static SynchronizationReport ResolveConflictAndSynchronize(string fileName, RavenFileSystemClient seedClient, RavenFileSystemClient sourceClient)
