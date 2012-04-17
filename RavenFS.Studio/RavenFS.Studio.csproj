@@ -109,6 +109,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Behaviors\AdjustPropertyWithThumbBehavior.cs" />
+    <Compile Include="Behaviors\BindSelectedItemsBehavior.cs" />
     <Compile Include="Behaviors\ChangeDependencyPropertyAction.cs" />
     <Compile Include="Behaviors\OpenPopupAction.cs" />
     <Compile Include="Behaviors\ClosePopupAction.cs" />
@@ -148,6 +149,7 @@
     <Compile Include="Commands\DownloadCommand.cs" />
     <Compile Include="Commands\EditFilePropertiesCommand.cs" />
     <Compile Include="Commands\VirtualItemCommand.cs" />
+    <Compile Include="Commands\VirtualItemSelectionCommand.cs" />
     <Compile Include="Controls\ActivityIndicator.cs" />
     <Compile Include="Controls\DataFetchErrorNotifier.xaml.cs">
       <DependentUpon>DataFetchErrorNotifier.xaml</DependentUpon>
@@ -214,10 +216,12 @@
     <Compile Include="Infrastructure\ActionCommand.cs" />
     <Compile Include="Infrastructure\CompositeVirtualCollectionSource.cs" />
     <Compile Include="Infrastructure\DataFetchErrorEventArgs.cs" />
+    <Compile Include="Infrastructure\ItemSelection.cs" />
     <Compile Include="Infrastructure\INotifyOnDataFetchErrors.cs" />
     <Compile Include="Infrastructure\IObservable.cs" />
     <Compile Include="Infrastructure\DialogModel.cs" />
     <Compile Include="Infrastructure\DialogView.cs" />
+    <Compile Include="Infrastructure\ItemSelection`1.cs" />
     <Compile Include="Infrastructure\IVirtualCollectionSource.cs" />
     <Compile Include="Infrastructure\Navigation.cs" />
     <Compile Include="Infrastructure\PageModel.cs" />

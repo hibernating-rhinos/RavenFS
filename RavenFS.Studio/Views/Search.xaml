@@ -93,6 +93,7 @@
             <i:Interaction.Behaviors>
                 <b:DataGridRowDoubleClickCommandBehavior Command="{Binding Download}"/>
                 <b:SelectRowOnRightClickBehavior/>
+                <b:BindSelectedItemsBehavior Target="{Binding SelectedItems}"/>
             </i:Interaction.Behaviors>
             <i:Interaction.Triggers>
                 <b:StudioKeyTrigger Key="Delete">

@@ -37,15 +37,15 @@ namespace RavenFS.Studio.Models
 	    private ICommand clearSearchCommand;
 	    private ICommand showSearchCommand;
         private FileSystemCollectionSource filesSource;
-        
-	    public ICommand RenameFile { get { return renameFileCommand ?? (renameFileCommand = new RenameFileCommand(SelectedFile)); } }
-        public ICommand MoveFile { get { return moveFileCommand ?? (moveFileCommand = new MoveFileCommand(SelectedFile)); } }
+
+        public ICommand RenameFile { get { return renameFileCommand ?? (renameFileCommand = new RenameFileCommand(SelectedItems)); } }
+        public ICommand MoveFile { get { return moveFileCommand ?? (moveFileCommand = new MoveFileCommand(SelectedItems)); } }
         public ICommand AddFolder { get { return addFolderCommand ?? (addFolderCommand = new AddFolderCommand(CurrentFolder)); } }
         public ICommand Navigate { get { return navigateCommand ?? (navigateCommand = new NavigateToFileSystemModelCommand()); } }
         public ICommand Upload { get { return uploadCommand ?? (uploadCommand = new UploadCommand(CurrentFolder)); } }
-        public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedFile)); } }
-        public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedFile)); } }
-        public ICommand EditProperties { get { return editCommand ?? (editCommand = new EditFilePropertiesCommand(SelectedFile)); } }
+        public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedItems)); } }
+        public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedItems)); } }
+        public ICommand EditProperties { get { return editCommand ?? (editCommand = new EditFilePropertiesCommand(SelectedItems)); } }
 	    
         public ICommand ShowSearch
 	    {
@@ -80,7 +80,8 @@ namespace RavenFS.Studio.Models
         public ObservableCollection<DirectoryModel> BreadcrumbTrail { get; private set; }
         public Observable<string> SearchPattern { get; private set; }
         public Observable<bool> IsSearchVisible { get; private set; }
-
+        public ItemSelection<VirtualItem<FileSystemModel>> SelectedItems { get; private set; }
+ 
 		public FilesPageModel()
 		{
             filesSource = new FileSystemCollectionSource();
@@ -101,7 +102,8 @@ namespace RavenFS.Studio.Models
 
             SearchPattern = new Observable<string>() { Value=""};
 		    SearchPattern.ObserveChanged().Throttle(TimeSpan.FromSeconds(1)).Where(SearchPatternIsValid).Subscribe(value => filesSource.SearchPattern = value);
-            
+            SelectedItems = new ItemSelection<VirtualItem<FileSystemModel>>();
+
             IsSearchVisible = new Observable<bool>();
 
             BreadcrumbTrail = new ObservableCollection<DirectoryModel>();

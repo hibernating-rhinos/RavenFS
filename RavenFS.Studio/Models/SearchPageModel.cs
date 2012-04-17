@@ -27,12 +27,12 @@ namespace RavenFS.Studio.Models
         private ICommand renameFileCommand;
         private ICommand moveFileCommand;
 
-        public ICommand RenameFile { get { return renameFileCommand ?? (renameFileCommand = new RenameFileCommand(SelectedFile)); } }
-        public ICommand MoveFile { get { return moveFileCommand ?? (moveFileCommand = new MoveFileCommand(SelectedFile)); } }
-        public ICommand OpenParentFolder { get { return navigateCommand ?? (navigateCommand = new NavigateToParentFolderCommand(SelectedFile)); } }
-        public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedFile)); } }
-        public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedFile)); } }
-        public ICommand EditProperties { get { return editCommand ?? (editCommand = new EditFilePropertiesCommand(SelectedFile)); } }
+        public ICommand RenameFile { get { return renameFileCommand ?? (renameFileCommand = new RenameFileCommand(SelectedItems)); } }
+        public ICommand MoveFile { get { return moveFileCommand ?? (moveFileCommand = new MoveFileCommand(SelectedItems)); } }
+        public ICommand OpenParentFolder { get { return navigateCommand ?? (navigateCommand = new NavigateToParentFolderCommand(SelectedItems)); } }
+        public ICommand Download { get { return downloadCommand ?? (downloadCommand = new DownloadCommand(SelectedItems)); } }
+        public ICommand Delete { get { return deleteCommand ?? (deleteCommand = new DeleteCommand(SelectedItems)); } }
+        public ICommand EditProperties { get { return editCommand ?? (editCommand = new EditFilePropertiesCommand(SelectedItems)); } }
 
         public SearchPageModel()
         {
@@ -40,6 +40,7 @@ namespace RavenFS.Studio.Models
             Results = new VirtualCollection<FileSystemModel>(resultsSource, 50);
             Query = new Observable<string>();
             SelectedFile = new Observable<VirtualItem<FileSystemModel>>();
+            SelectedItems = new ItemSelection<VirtualItem<FileSystemModel>>();
         }
 
         public ICommand Search { get { return searchCommand ?? (searchCommand = new ActionCommand(HandleSearch)); } }
@@ -57,6 +58,7 @@ namespace RavenFS.Studio.Models
 
         public VirtualCollection<FileSystemModel> Results { get; private set; }
         public Observable<VirtualItem<FileSystemModel>> SelectedFile { get; private set; }
+        public ItemSelection<VirtualItem<FileSystemModel>> SelectedItems { get; private set; }
 
         public IList<SearchClauseBuilderModel> SearchClauseBuilders
         {

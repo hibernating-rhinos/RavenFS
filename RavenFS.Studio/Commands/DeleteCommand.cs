@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using RavenFS.Client;
@@ -8,25 +10,36 @@ using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio.Commands
 {
-    public class DeleteCommand : VirtualItemCommand<FileSystemModel>
+    public class DeleteCommand : VirtualItemSelectionCommand<FileSystemModel>
 	{
-        public DeleteCommand(Observable<VirtualItem<FileSystemModel>> observableFileInfo)
-            : base(observableFileInfo)
+        public DeleteCommand(ItemSelection<VirtualItem<FileSystemModel>> itemSelection)
+            : base(itemSelection)
 		{
 		}
 
-        protected override bool CanExecuteOverride(FileSystemModel item)
+        protected override bool CanExecuteOverride(IList<FileSystemModel> items)
         {
-            return item is FileModel;
+            return items.Any(i => i is FileModel);
         }
 
-        protected override void ExecuteOverride(FileSystemModel parameter)
-		{
-			AskUser.ConfirmationAsync("Delete", string.Format("Are you sure you want to delete file '{0}'?", parameter.Name))
+        protected override void ExecuteOverride(IList<FileSystemModel> items)
+        {
+            var message = items.Count == 1 ? string.Format("Are you sure you want to delete file '{0}'?", items[0].Name)
+                : string.Format("Are you sure you want to delete {0} selected files", items.Count);
+
+            AskUser.ConfirmationAsync("Delete", message)
                 .ContinueWhenTrueInTheUIThread(
-				() => ApplicationModel.Current.AsyncOperations.Do(
-				    () => ApplicationModel.Current.Client.DeleteAsync(parameter.FullPath),
-				    "Deleting " + parameter.Name));	
-		}
+				() =>
+				    {
+				        foreach (var item in items)
+				        {
+				            var capturedItem = item;
+				            ApplicationModel.Current.AsyncOperations.Do(
+				                () => ApplicationModel.Current.Client.DeleteAsync(capturedItem.FullPath),
+				                "Deleting " + capturedItem.Name);
+				        }
+
+				    });
+        }
 	}
 }

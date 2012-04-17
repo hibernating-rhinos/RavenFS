@@ -205,6 +205,7 @@
                 <b:ExecuteCommandOnFileDrop Command="{Binding Upload}"/>
                 <b:DataGridRowDoubleClickCommandBehavior Command="{Binding Navigate}"/>
                 <b:SelectRowOnRightClickBehavior/>
+                <b:BindSelectedItemsBehavior Target="{Binding SelectedItems}"/>
             </i:Interaction.Behaviors>
             <i:Interaction.Triggers>
                 <b:StudioKeyTrigger Key="Delete">
