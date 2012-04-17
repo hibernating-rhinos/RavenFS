@@ -43,14 +43,14 @@ namespace RavenFS.Controllers
                 accessor =>
                     {
                         // remove previous SyncResult
-                        var name = ReplicationHelper.SyncResultNameForFile(fileName);
+                        var name = SynchronizationHelper.SyncResultNameForFile(fileName);
                         accessor.DeleteConfig(name);
 
                         // remove previous .downloading file
-                        if (accessor.ConfigExists(ReplicationHelper.SyncConfigNameForFile(fileName)) == false)
+                        if (accessor.ConfigExists(SynchronizationHelper.SyncNameForFile(fileName)) == false)
                         {
                             Search.Delete(name);
-                            accessor.Delete(ReplicationHelper.DownloadingFileName(fileName));
+                            accessor.Delete(SynchronizationHelper.DownloadingFileName(fileName));
                         }
                     });
         }
@@ -162,7 +162,7 @@ namespace RavenFS.Controllers
                         Storage.Batch(
                             accessor => 
                             {
-                                var name = ReplicationHelper.SyncResultNameForFile(fileName);
+                                var name = SynchronizationHelper.SyncResultNameForFile(fileName);
                                 accessor.SetConfigurationValue(name, report);
                             });
                     });
@@ -176,7 +176,7 @@ namespace RavenFS.Controllers
             Storage.Batch(
                 accessor =>
                     {
-                        var name = ReplicationHelper.SyncResultNameForFile(fileName);
+                        var name = SynchronizationHelper.SyncResultNameForFile(fileName);
                         accessor.TryGetConfigurationValue(name, out preResult);
                     });
             return new HttpResponseMessage<SynchronizationReport>(preResult);
@@ -191,13 +191,31 @@ namespace RavenFS.Controllers
                     {
                         var configKeys =
                             from item in accessor.GetConfigNames()
-                            where ReplicationHelper.IsSyncResultName(item)
+                            where SynchronizationHelper.IsSyncResultName(item)
                             select item;
                         configObjects =
                             (from item in configKeys.Skip(pageSize*page).Take(pageSize)
                             select accessor.GetConfigurationValue<SynchronizationReport>(item)).ToList();
                     });
             return new HttpResponseMessage<IEnumerable<SynchronizationReport>>(configObjects);
+        }
+
+        [AcceptVerbs("GET")]
+        public HttpResponseMessage<IEnumerable<SynchronizationDetails>> Working(int page, int pageSize)
+        {
+            IList<SynchronizationDetails> configObjects = null;
+            Storage.Batch(
+                accessor =>
+                {
+                    var configKeys =
+                        from item in accessor.GetConfigNames()
+                        where SynchronizationHelper.IsSyncName(item)
+                        select item;
+                    configObjects =
+                        (from item in configKeys.Skip(pageSize * page).Take(pageSize)
+                         select accessor.GetConfigurationValue<SynchronizationDetails>(item)).ToList();
+                });
+            return new HttpResponseMessage<IEnumerable<SynchronizationDetails>>(configObjects);
         }
 
         [AcceptVerbs("PATCH")]
@@ -252,7 +270,7 @@ namespace RavenFS.Controllers
                 {
                     var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
                     accessor.SetConfigurationValue(
-                        ReplicationHelper.ConflictConfigNameForFile(fileName), conflict);
+                        SynchronizationHelper.ConflictConfigNameForFile(fileName), conflict);
                     metadata[ReplicationConstants.RavenReplicationConflict] = "True";
                     accessor.UpdateFileMetadata(fileName, metadata);
                 });
@@ -263,7 +281,7 @@ namespace RavenFS.Controllers
             Storage.Batch(
                 accessor =>
                 {
-                    accessor.DeleteConfig(ReplicationHelper.ConflictConfigNameForFile(fileName));
+                    accessor.DeleteConfig(SynchronizationHelper.ConflictConfigNameForFile(fileName));
                     var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
                     metadata.Remove(ReplicationConstants.RavenReplicationConflict);
                     metadata.Remove(ReplicationConstants.RavenReplicationConflictResolution);
@@ -309,7 +327,7 @@ namespace RavenFS.Controllers
                 accessor =>
                 {
                     var localMetadata = accessor.GetFile(fileName, 0, 0).Metadata;
-                    var conflictConfigName = ReplicationHelper.ConflictConfigNameForFile(fileName);
+                    var conflictConfigName = SynchronizationHelper.ConflictConfigNameForFile(fileName);
                     var conflictItem = accessor.GetConfigurationValue<ConflictItem>(conflictConfigName);
 
                     var conflictResolution =
@@ -370,7 +388,7 @@ namespace RavenFS.Controllers
             var seedSignatureInfo = SignatureInfo.Parse(seedSignatureManifest.Signatures.Last().Name);
             var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
             var needListGenerator = new NeedListGenerator(SignatureRepository, remoteSignatureRepository);
-            var tempFileName = ReplicationHelper.DownloadingFileName(fileName);
+            var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
             var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search,
                                                                   tempFileName,
                                                                   sourceMetadata.FilterHeaders());
@@ -413,7 +431,7 @@ namespace RavenFS.Controllers
 
         private Task<SynchronizationReport> Download(RavenFileSystemClient sourceRavenFileSystemClient, string fileName, NameValueCollection sourceMetadata)
         {
-            var tempFileName = ReplicationHelper.DownloadingFileName(fileName);
+            var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
             var storageStream = StorageStream.CreatingNewAndWritting(Storage, Search, tempFileName,
                                                                      sourceMetadata.FilterHeaders());
             return sourceRavenFileSystemClient.DownloadAsync(fileName, storageStream)

@@ -24,5 +24,12 @@ namespace RavenFS.Tests.RDC
                 });
             return synchronizationReportTask.Result;
         }
+
+        public static SynchronizationReport ResolveConflictAndSynchronize(string fileName, RavenFileSystemClient client, RavenFileSystemClient sourceClient)
+        {
+            SynchronizeAndWaitForStatus(client, sourceClient.ServerUrl, fileName);
+            client.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs).Wait();
+            return SynchronizeAndWaitForStatus(client, sourceClient.ServerUrl, fileName);
+        }
     }
 }

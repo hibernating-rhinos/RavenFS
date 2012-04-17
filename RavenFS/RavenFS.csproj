@@ -188,7 +188,6 @@
     <Compile Include="Rdc\ConflictItem.cs" />
     <Compile Include="Rdc\ConflictResolution.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
-    <Compile Include="Rdc\SynchronizationDetails.cs" />
     <Compile Include="Rdc\HistoryItem.cs" />
     <Compile Include="Rdc\IPartialDataAccess.cs" />
     <Compile Include="Rdc\FileLockManager.cs" />
@@ -285,7 +284,7 @@
     <Compile Include="Util\NameValueCollectionJsonConverter.cs" />
     <Compile Include="Util\NarrowedStream.cs" />
     <Compile Include="Util\RabinKarpHasher.cs" />
-    <Compile Include="Util\ReplicationHelper.cs" />
+    <Compile Include="Util\SynchronizationHelper.cs" />
     <Compile Include="Util\StorageStream.cs" />
     <Compile Include="Util\StorageStreamAccess.cs" />
   </ItemGroup>

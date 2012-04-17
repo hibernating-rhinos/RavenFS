@@ -9,7 +9,6 @@ using System.Net.Browser;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using RavenFS.Client;
 using System.Linq;
 
 namespace RavenFS.Client
@@ -578,6 +577,23 @@ namespace RavenFS.Client
                         using (var stream = task.Result.GetResponseStream())
                         {
                             var preResult = new JsonSerializer().Deserialize<IEnumerable<SynchronizationReport>>(new JsonTextReader(new StreamReader(stream)));
+                            return preResult;
+                        }
+                    })
+                    .TryThrowBetteError();
+            }
+
+            public Task<IEnumerable<SynchronizationDetails>> GetWorkingAsync(int page = 0, int pageSize = 25)
+            {
+                var requestUriString = String.Format("{0}/synchronization/working?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
+                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+                request.ContentLength = 0;
+                return request.GetResponseAsync()
+                    .ContinueWith(task =>
+                    {
+                        using (var stream = task.Result.GetResponseStream())
+                        {
+                            var preResult = new JsonSerializer().Deserialize<IEnumerable<SynchronizationDetails>>(new JsonTextReader(new StreamReader(stream)));
                             return preResult;
                         }
                     })

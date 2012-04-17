@@ -1,3 +1,5 @@
+using RavenFS.Client;
+
 namespace RavenFS.Rdc
 {
 	using System;
@@ -37,27 +39,27 @@ namespace RavenFS.Rdc
 				                          		FileLockedAt = DateTime.UtcNow
 				                          	};
 
-				accessor.SetConfigurationValue(ReplicationHelper.SyncConfigNameForFile(fileName),
+				accessor.SetConfigurationValue(SynchronizationHelper.SyncNameForFile(fileName),
 				                                                       syncOperationDetails);
 			});
 		}
 
 		public void UnlockByDeletingSyncConfiguration(string fileName)
 		{
-			storage.Batch(accessor => accessor.DeleteConfig(ReplicationHelper.SyncConfigNameForFile(fileName)));
+			storage.Batch(accessor => accessor.DeleteConfig(SynchronizationHelper.SyncNameForFile(fileName)));
 		}
 
 		public bool IsFileBeingLocked(string fileName)
 		{
 			bool result = false;
-			storage.Batch(accessor => result = accessor.ConfigExists(ReplicationHelper.SyncConfigNameForFile(fileName)));
+			storage.Batch(accessor => result = accessor.ConfigExists(SynchronizationHelper.SyncNameForFile(fileName)));
 			return result;
 		}
 
 		public bool TimeoutExceeded(string fileName)
 		{
 			SynchronizationDetails syncOperationDetails = null;
-			storage.Batch(accessor => accessor.TryGetConfigurationValue(ReplicationHelper.SyncConfigNameForFile(fileName), out syncOperationDetails));
+			storage.Batch(accessor => accessor.TryGetConfigurationValue(SynchronizationHelper.SyncNameForFile(fileName), out syncOperationDetails));
 
 			return DateTime.UtcNow - syncOperationDetails.FileLockedAt > ReplicationTimeout;
 		}
