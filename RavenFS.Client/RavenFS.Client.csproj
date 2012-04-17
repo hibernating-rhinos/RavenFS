@@ -105,6 +105,7 @@
     <Compile Include="Signature.cs" />
     <Compile Include="SignatureManifest.cs" />
     <Compile Include="StringUtils.cs" />
+    <Compile Include="SynchronizationDetails.cs" />
     <Compile Include="SynchronizationException.cs" />
     <Compile Include="SynchronizationReport.cs" />
     <Compile Include="NotificationJSonUtilities.cs" />

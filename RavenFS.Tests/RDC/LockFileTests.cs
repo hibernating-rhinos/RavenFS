@@ -25,7 +25,7 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-            var configName = ReplicationHelper.SyncConfigNameForFile("test.bin");
+            var configName = SynchronizationHelper.SyncNameForFile("test.bin");
 
             seedClient.Synchronization.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin");
 
@@ -41,7 +41,7 @@ namespace RavenFS.Tests.RDC
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
             RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
-            var config = seedClient.Config.GetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin")).Result;
+            var config = seedClient.Config.GetConfig(SynchronizationHelper.SyncNameForFile("test.bin")).Result;
 
             Assert.Null(config);
         }
@@ -54,7 +54,7 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-            seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
+            seedClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
             var innerException = ExecuteAndGetInnerException(() => seedClient.UpdateMetadataAsync("test.bin", new NameValueCollection()).Wait());
 
@@ -70,7 +70,7 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
+			seedClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
             var innerException = ExecuteAndGetInnerException(() => seedClient.DeleteAsync("test.bin").Wait());
 
@@ -86,7 +86,7 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
+			seedClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
             var innerException = ExecuteAndGetInnerException(() => seedClient.RenameAsync("test.bin", "newname.bin").Wait());
 
@@ -102,7 +102,7 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
+			seedClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
 			var innerException = ExecuteAndGetInnerException(() => seedClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
 
@@ -118,7 +118,7 @@ namespace RavenFS.Tests.RDC
 
             UploadFilesSynchronously(out sourceClient, out seedClient);
 
-			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
+			seedClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
             var innerException = ExecuteAndGetInnerException(() => seedClient.Synchronization.StartSynchronizationAsync(sourceClient.ServerUrl, "test.bin").Wait());
 
@@ -239,7 +239,7 @@ namespace RavenFS.Tests.RDC
 
 		private static void ZeroTimeoutTest(RavenFileSystemClient seedClient, Action action)
 		{
-			seedClient.Config.SetConfig(ReplicationHelper.SyncConfigNameForFile("test.bin"), SynchronizationConfig(DateTime.MinValue)).Wait();
+			seedClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.MinValue)).Wait();
 
 			seedClient.Config.SetConfig(ReplicationConstants.RavenReplicationTimeout, new NameValueCollection()
 			                                                                          	{
