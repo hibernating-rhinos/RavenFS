@@ -68,6 +68,16 @@
             </toolkit:DockPanel>
         </Border>
 
+        <Thumb HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="5" Grid.Row="1" Cursor="SizeNS" Style="{StaticResource Style_Thumb_Invisible}">
+            <i:Interaction.Behaviors>
+                <Behaviors:AdjustPropertyWithThumbBehavior Target="{Binding ElementName=LayoutRoot}" VerticalProperty="{z:Static Member=FrameworkElement.HeightProperty}"
+                                                           VerticalMin="90">
+                    <Behaviors:AdjustPropertyWithThumbBehavior.PropagateVerticalValuesTo>
+                        <Behaviors:ValuePropagator Target="{Binding Source={StaticResource ShowPanel}, Path=Children[0]}" Property="{z:Static Member=DoubleAnimation.ToProperty}"/>
+                    </Behaviors:AdjustPropertyWithThumbBehavior.PropagateVerticalValuesTo>
+                </Behaviors:AdjustPropertyWithThumbBehavior>
+            </i:Interaction.Behaviors>
+        </Thumb>
         <Border Grid.Row="0" Height="38" Width="200" HorizontalAlignment="Right" CornerRadius="10,3,0,0"
               ToolTipService.ToolTip="Click to show or hide the list of pending operations"
               Margin="0,5,0,-8" Background="{StaticResource Brush_OperationsPaneHeader}" BorderThickness="0,1,0,0">

@@ -1,0 +1,44 @@
+﻿using System;
+using System.Net;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Ink;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
+
+namespace RavenFS.Studio.Behaviors
+{
+    public class ValuePropagator : DependencyObject
+    {
+        public static readonly DependencyProperty TargetProperty =
+            DependencyProperty.Register("Target", typeof (DependencyObject), typeof (ValuePropagator), new PropertyMetadata(default(DependencyObject)));
+
+        public static readonly DependencyProperty PropertyProperty =
+            DependencyProperty.Register("Property", typeof (DependencyProperty), typeof (ValuePropagator), new PropertyMetadata(default(DependencyProperty)));
+
+        public DependencyProperty Property
+        {
+            get { return (DependencyProperty) GetValue(PropertyProperty); }
+            set { SetValue(PropertyProperty, value); }
+        }
+
+        public DependencyObject Target
+        {
+            get { return (DependencyObject) GetValue(TargetProperty); }
+            set { SetValue(TargetProperty, value); }
+        }
+
+        public void Propagate(object value)
+        {
+            if (Target == null || Property == null)
+            {
+                return;
+            }
+
+            Target.SetValue(Property, value);
+        }
+    }
+}

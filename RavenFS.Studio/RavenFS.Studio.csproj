@@ -108,6 +108,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Behaviors\AdjustPropertyWithThumbBehavior.cs" />
     <Compile Include="Behaviors\ChangeDependencyPropertyAction.cs" />
     <Compile Include="Behaviors\OpenPopupAction.cs" />
     <Compile Include="Behaviors\ClosePopupAction.cs" />
@@ -126,6 +127,8 @@
     <Compile Include="Behaviors\StudioKeyTrigger.cs" />
     <Compile Include="Behaviors\UIMessageEventArgs.cs" />
     <Compile Include="Behaviors\UIMessageTrigger.cs" />
+    <Compile Include="Behaviors\ValuePropagator.cs" />
+    <Compile Include="Behaviors\ValuePropagatorCollection.cs" />
     <Compile Include="Commands\ActionObservableDependantCommand.cs" />
     <Compile Include="Commands\AddFolderCommand.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
