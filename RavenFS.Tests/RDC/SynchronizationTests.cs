@@ -21,7 +21,7 @@ namespace RavenFS.Tests.RDC
     {
         [Theory]
         [InlineData(1)]
-       // [InlineData(5000)]
+        [InlineData(5000)]
         public void Synchronize_file_with_different_beginning(int size)
         {
             var differenceChunk = new MemoryStream();
@@ -140,7 +140,7 @@ namespace RavenFS.Tests.RDC
             var conflictItemString = sourceClient.Config.GetConfig(SynchronizationHelper.ConflictConfigNameForFile("test.bin")).Result["value"];
             var conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(conflictItemString);
 
-            Assert.Equal(true.ToString(), resultFileMetadata[ReplicationConstants.RavenReplicationConflict]);
+            Assert.Equal(true.ToString(), resultFileMetadata[SynchronizationConstants.RavenReplicationConflict]);
             Assert.Equal(guid, conflict.Theirs.ServerId);
             Assert.Equal(8, conflict.Theirs.Version);
             Assert.Equal(1, conflict.Ours.Version);
@@ -164,7 +164,7 @@ namespace RavenFS.Tests.RDC
 
             Assert.NotNull(synchronizationReport.Exception);
             var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
-            Assert.True(Convert.ToBoolean(resultFileMetadata[ReplicationConstants.RavenReplicationConflict]));
+            Assert.True(Convert.ToBoolean(resultFileMetadata[SynchronizationConstants.RavenReplicationConflict]));
         }
 
         [Fact]
@@ -173,13 +173,13 @@ namespace RavenFS.Tests.RDC
             var sourceContent1 = new RandomStream(10, 1);
             var sourceClient = NewClient(1);
             sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
-            var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[ReplicationConstants.RavenReplicationHistory];
+            var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenReplicationHistory];
             var history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
             Assert.Equal(0, history.Count);
 
             sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
-            historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[ReplicationConstants.RavenReplicationHistory];
+            historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenReplicationHistory];
             history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
             Assert.Equal(1, history.Count);
@@ -193,14 +193,14 @@ namespace RavenFS.Tests.RDC
             var sourceContent1 = new RandomStream(10, 1);
             var sourceClient = NewClient(1);
             sourceClient.UploadAsync("test.bin", new NameValueCollection { { "test", "Change me" } }, sourceContent1).Wait();
-            var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[ReplicationConstants.RavenReplicationHistory];
+            var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenReplicationHistory];
             var history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
             Assert.Equal(0, history.Count);
 
             sourceClient.UpdateMetadataAsync("test.bin", new NameValueCollection { { "test", "Changed" } }).Wait();
             var metadata = sourceClient.GetMetadataForAsync("test.bin").Result;
-            historySerialized = metadata[ReplicationConstants.RavenReplicationHistory];
+            historySerialized = metadata[SynchronizationConstants.RavenReplicationHistory];
             history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
             Assert.Equal(1, history.Count);

@@ -23,7 +23,7 @@ namespace RavenFS.Rdc
 			get
 			{
 				bool timeoutConfigExists = false;
-				storage.Batch(accessor => timeoutConfigExists = accessor.TryGetConfigurationValue(ReplicationConstants.RavenReplicationTimeout, out configuredTimeout));
+				storage.Batch(accessor => timeoutConfigExists = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationTimeout, out configuredTimeout));
 
 				return timeoutConfigExists ? configuredTimeout : defaultTimeout;
 			}

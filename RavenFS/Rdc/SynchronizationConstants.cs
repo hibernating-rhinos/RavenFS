@@ -5,7 +5,7 @@ using System.Web;
 
 namespace RavenFS.Rdc
 {
-    public class ReplicationConstants
+    public static class SynchronizationConstants
     {
         public const string RavenReplicationSource = "Raven-Replication-Source";
         public const string RavenReplicationVersion = "Raven-Replication-Version";

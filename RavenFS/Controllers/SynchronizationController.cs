@@ -68,7 +68,7 @@ namespace RavenFS.Controllers
                     getMetadataForAsyncTask =>
                     {
                         var remoteMetadata = getMetadataForAsyncTask.Result;
-                        if (remoteMetadata.AllKeys.Contains(ReplicationConstants.RavenReplicationConflict))
+                        if (remoteMetadata.AllKeys.Contains(SynchronizationConstants.RavenReplicationConflict))
                         {
                             throw new SynchronizationException(
                                 string.Format("File {0} on THEIR side is conflicted", fileName));
@@ -251,7 +251,7 @@ namespace RavenFS.Controllers
                                                   Version =
                                                       long.Parse(
                                                           GetLocalMetadata(filename)[
-                                                              ReplicationConstants.RavenReplicationVersion])
+                                                              SynchronizationConstants.RavenReplicationVersion])
                                               },
                                    Theirs = new HistoryItem
                                                 {
@@ -271,7 +271,7 @@ namespace RavenFS.Controllers
                     var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
                     accessor.SetConfigurationValue(
                         SynchronizationHelper.ConflictConfigNameForFile(fileName), conflict);
-                    metadata[ReplicationConstants.RavenReplicationConflict] = "True";
+                    metadata[SynchronizationConstants.RavenReplicationConflict] = "True";
                     accessor.UpdateFileMetadata(fileName, metadata);
                 });
         }
@@ -283,15 +283,15 @@ namespace RavenFS.Controllers
                 {
                     accessor.DeleteConfig(SynchronizationHelper.ConflictConfigNameForFile(fileName));
                     var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
-                    metadata.Remove(ReplicationConstants.RavenReplicationConflict);
-                    metadata.Remove(ReplicationConstants.RavenReplicationConflictResolution);
+                    metadata.Remove(SynchronizationConstants.RavenReplicationConflict);
+                    metadata.Remove(SynchronizationConstants.RavenReplicationConflictResolution);
                     accessor.UpdateFileMetadata(fileName, metadata);
                 });
         }
 
         private bool IsConflictResolved(NameValueCollection localMetadata, ConflictItem conflict)
         {
-            var conflictResolutionString = localMetadata[ReplicationConstants.RavenReplicationConflictResolution];
+            var conflictResolutionString = localMetadata[SynchronizationConstants.RavenReplicationConflictResolution];
             if (String.IsNullOrEmpty(conflictResolutionString))
             {
                 return false;
@@ -306,7 +306,7 @@ namespace RavenFS.Controllers
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
             RemoveConflictArtifacts(fileName);
             var localMetadata = GetLocalMetadata(fileName);
-            var version = long.Parse(localMetadata[ReplicationConstants.RavenReplicationVersion]);
+            var version = long.Parse(localMetadata[SynchronizationConstants.RavenReplicationVersion]);
             return
                 sourceRavenFileSystemClient.Synchronization.ApplyConflictAsync(fileName, version, Storage.Id.ToString())
                     .ContinueWith(
@@ -338,7 +338,7 @@ namespace RavenFS.Controllers
                                 TheirServerId = conflictItem.Theirs.ServerId,
                                 Version = conflictItem.Theirs.Version,
                             };
-                    localMetadata[ReplicationConstants.RavenReplicationConflictResolution] =
+                    localMetadata[SynchronizationConstants.RavenReplicationConflictResolution] =
                         new TypeHidingJsonSerializer().Stringify(conflictResolution);
                     accessor.UpdateFileMetadata(fileName, localMetadata);
                 });
@@ -365,10 +365,10 @@ namespace RavenFS.Controllers
         private ConflictItem CheckConflict(NameValueCollection localMetadata, NameValueCollection remoteMetadata)
         {
             var remoteHistory = HistoryUpdater.DeserializeHistory(remoteMetadata);
-            var remoteVersion = long.Parse(remoteMetadata[ReplicationConstants.RavenReplicationVersion]);
-            var remoteServerId = remoteMetadata[ReplicationConstants.RavenReplicationSource];
-            var localVersion = long.Parse(localMetadata[ReplicationConstants.RavenReplicationVersion]);
-            var localServerId = localMetadata[ReplicationConstants.RavenReplicationSource];
+            var remoteVersion = long.Parse(remoteMetadata[SynchronizationConstants.RavenReplicationVersion]);
+            var remoteServerId = remoteMetadata[SynchronizationConstants.RavenReplicationSource];
+            var localVersion = long.Parse(localMetadata[SynchronizationConstants.RavenReplicationVersion]);
+            var localServerId = localMetadata[SynchronizationConstants.RavenReplicationSource];
             // if there are the same files or local is direct child there are no conflicts
             if ((remoteServerId == localServerId && remoteVersion == localVersion)
                 || remoteHistory.Any(item => item.ServerId == localServerId && item.Version == localVersion))
