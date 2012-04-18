@@ -220,26 +220,30 @@ namespace RavenFS.Studio.Behaviors
 
                 // if the TextBlock has just become clipped, make its
                 // content show in its tooltip
-                if (!_isClipped && needsClipping)
+                if (needsClipping && GetShowTextInToolTipWhenTrimmed(_textBlock))
                 {
-                    if (GetShowTextInToolTipWhenTrimmed(_textBlock))
+                    var toolTip = ToolTipService.GetToolTip(_textBlock) as ToolTip;
+
+                    if (toolTip == null)
                     {
-                        var toolTip = new ToolTip();
+                        toolTip = new ToolTip();
+                        ToolTipService.SetToolTip(_textBlock, toolTip);
+
                         toolTip.SetBinding(FrameworkElement.StyleProperty,
                                            new Binding()
                                                {
                                                    Path = new PropertyPath(ToolTipStyleProperty), 
                                                    Source = _textBlock
                                                });
-                        toolTip.SetBinding(ContentControl.ContentProperty,
-                                           new Binding()
-                                           {
-                                               Path = new PropertyPath(TextBlock.TextProperty),
-                                               Source = _textBlock
-                                           });
-
-                        ToolTipService.SetToolTip(_textBlock, toolTip);
                     }
+                        
+                    toolTip.SetBinding(ContentControl.ContentProperty,
+                                        new Binding()
+                                        {
+                                            Path = new PropertyPath(TextBlock.TextProperty),
+                                            Source = _textBlock
+                                        });
+                        
                 }
 
                 // here's the real magic: if the TextBlock is clipped
