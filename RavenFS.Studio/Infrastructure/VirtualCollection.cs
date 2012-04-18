@@ -26,7 +26,7 @@ namespace RavenFS.Studio.Infrastructure
         public event EventHandler<EventArgs> FetchSucceeded;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private uint _state; // used to ensure that data-requests are not stale
+        private volatile uint _state; // used to ensure that data-requests are not stale
         private readonly SparseList<VirtualItem<T>> _virtualItems;
         private readonly HashSet<int> _fetchedPages = new HashSet<int>();
         private readonly HashSet<int> _requestedPages = new HashSet<int>();
@@ -34,6 +34,7 @@ namespace RavenFS.Studio.Infrastructure
         private readonly TaskScheduler _synchronizationContextScheduler;
         private bool _isRefreshDeferred;
         private int _currentItem;
+
         private readonly SortDescriptionCollection _sortDescriptions = new SortDescriptionCollection();
 
         public VirtualCollection(IVirtualCollectionSource<T> source, int pageSize)
@@ -66,7 +67,8 @@ namespace RavenFS.Studio.Infrastructure
 
         private void HandleSourceCollectionChanged(object sender, VirtualCollectionChangedEventArgs e)
         {
-           Task.Factory.StartNew(() => UpdateData(e.Mode), CancellationToken.None, TaskCreationOptions.None, _synchronizationContextScheduler);
+            var stateWhenUpdateRequested = _state;
+            Task.Factory.StartNew(() => UpdateData(e.Mode, stateWhenUpdateRequested), CancellationToken.None, TaskCreationOptions.None, _synchronizationContextScheduler);
         }
 
         private int DetermineSparseListPageSize(int fetchPageSize)
@@ -189,8 +191,13 @@ namespace RavenFS.Studio.Infrastructure
             }
         }
 
-        protected void UpdateData(InterimDataMode mode)
+        protected void UpdateData(InterimDataMode mode, uint stateWhenUpdateRequested)
         {
+            if (_state != stateWhenUpdateRequested)
+            {
+                return;
+            }
+
             _state++;
 
             if (mode == InterimDataMode.ShowStaleData)
