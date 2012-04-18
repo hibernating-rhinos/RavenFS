@@ -439,7 +439,7 @@ namespace RavenFS.Client
 
 			public Task SetConfig(string name, NameValueCollection data)
 			{
-				var requestUriString = ravenFileSystemClient.ServerUrl + "/config/" + StringUtils.UrlEncode(name);
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/config?name=" + StringUtils.UrlEncode(name);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 				request.Method = "PUT";
 				return request.GetRequestStreamAsync()
@@ -457,7 +457,7 @@ namespace RavenFS.Client
 
 			public Task DeleteConfig(string name)
 			{
-				var requestUriString = ravenFileSystemClient.ServerUrl + "/config/" + StringUtils.UrlEncode(name);
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/config?name=" + StringUtils.UrlEncode(name);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 				request.Method = "DELETE";
 				return request.GetResponseAsync();
@@ -465,7 +465,7 @@ namespace RavenFS.Client
 
 			public Task<NameValueCollection> GetConfig(string name)
 			{
-				var requestUriString = ravenFileSystemClient.ServerUrl + "/config/" + StringUtils.UrlEncode(name);
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/config?name=" + StringUtils.UrlEncode(name);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 				
 				return request.GetResponseAsync()

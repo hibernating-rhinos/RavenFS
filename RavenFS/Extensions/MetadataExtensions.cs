@@ -26,8 +26,10 @@ using RavenFS.Storage;
 
 namespace RavenFS.Extensions
 {
-    
-    /// <summary>
+	using System.IO;
+	using Newtonsoft.Json;
+
+	/// <summary>
     /// Extensions for handling metadata
     /// </summary>
     public static class MetadataExtensions
@@ -198,6 +200,12 @@ namespace RavenFS.Extensions
             }
         	return metadata;
         }
+
+		public static T Value<T>(this NameValueCollection self, string key)
+        {
+			return new JsonSerializer().Deserialize<T>(new JsonTextReader(new StringReader(self[key])));
+        }
+		
 
         private static string CaptureHeaderName(string header)
         {

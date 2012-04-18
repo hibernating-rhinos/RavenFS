@@ -17,7 +17,9 @@ using RavenFS.Client;
 
 namespace RavenFS.Tests.RDC
 {
-    public class SynchronizationTests : MultiHostTestBase
+	using System.Net;
+
+	public class SynchronizationTests : MultiHostTestBase
     {
         [Theory]
         [InlineData(1)]
@@ -110,6 +112,22 @@ namespace RavenFS.Tests.RDC
 
             Assert.Equal(sourceContent1.Length, synchronizationReport.BytesCopied + synchronizationReport.BytesTransfered);
             Assert.Equal("some-value", resultFileMetadata["SomeTest-metadata"]);
+        }
+
+        [Fact]
+        public void Should_modify_etag_after_upload()
+        {
+            var sourceContent1 = new RandomStream(10, 1);
+            var sourceClient = NewClient(1);
+            sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
+            var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+            var etag0 = resultFileMetadata["ETag"];
+            sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
+            resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+            var etag1 = resultFileMetadata["ETag"];
+
+            Assert.False(etag0 == etag1);
+
         }
 
         [Fact]
@@ -311,6 +329,67 @@ namespace RavenFS.Tests.RDC
             var result = seedClient.Synchronization.GetFinishedAsync().Result;
             Assert.Equal(files.Length, result.Count());
         }
+
+		[Fact]
+		public void When_synchronization_succeed_should_save_synchronization_source_information_config()
+		{
+			var sourceContent1 = new RandomStream(10, 1);
+			var sourceMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "some-value"}
+                               };
+
+			var seedClient = NewClient(0);
+			var sourceClient = NewClient(1);
+
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
+
+			RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
+
+			var key = SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + sourceClient.ServerUrl;
+			var task = seedClient.Config.GetConfig(key);
+			var synchronizationSourceInfoString = task.Result["value"];
+			var synchronizationSourceInfo = new TypeHidingJsonSerializer().Parse<SynchronizationSourceInformation>(synchronizationSourceInfoString);
+
+			Assert.NotNull(synchronizationSourceInfo);
+			Assert.NotEqual(Guid.Empty, synchronizationSourceInfo.LastDocumentEtag);
+			Assert.NotEqual(Guid.Empty, synchronizationSourceInfo.ServerInstanceId);
+		}
+
+		[Fact]
+		public void Sould_return_last_etag_from_source_after_synchronization()
+		{
+			var sourceContent1 = new RandomStream(10, 1);
+			var sourceMetadata = new NameValueCollection
+			                     	{
+			                     		{"SomeTest-metadata", "some-value"}
+			                     	};
+
+			var seedClient = NewClient(0);
+			var sourceClient = NewClient(1);
+
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
+			var sourceFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+
+			RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
+
+			SynchronizationSourceInformation synchronizationSourceInfo = null;
+
+			var requestUriString = seedClient.ServerUrl + "/synchronization/LastEtag?from=" + sourceClient.ServerUrl;
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+
+			request.GetResponseAsync()
+				.ContinueWith(task =>
+				{
+					synchronizationSourceInfo =
+						new JsonSerializer().Deserialize<SynchronizationSourceInformation>(
+							new JsonTextReader(new StreamReader(task.Result.GetResponseStream())));
+				}).Wait();
+
+			Assert.NotNull(synchronizationSourceInfo);
+			Assert.Equal(sourceFileMetadata.Value<Guid>("ETag"), synchronizationSourceInfo.LastDocumentEtag);
+			Assert.NotEqual(Guid.Empty, synchronizationSourceInfo.ServerInstanceId);
+		}
 
         private static MemoryStream PrepareSourceStream(int lines)
         {

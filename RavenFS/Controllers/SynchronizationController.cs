@@ -60,6 +60,7 @@ namespace RavenFS.Controllers
             AssertFileIsNotBeingSynced(fileName);
 
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
+        	NameValueCollection remoteMetadata = null;
 
             FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl);
 
@@ -67,7 +68,7 @@ namespace RavenFS.Controllers
                 .ContinueWith(
                     getMetadataForAsyncTask =>
                     {
-                        var remoteMetadata = getMetadataForAsyncTask.Result;
+                        remoteMetadata = getMetadataForAsyncTask.Result;
                         if (remoteMetadata.AllKeys.Contains(SynchronizationConstants.RavenReplicationConflict))
                         {
                             throw new SynchronizationException(
@@ -164,6 +165,11 @@ namespace RavenFS.Controllers
                             {
                                 var name = SynchronizationHelper.SyncResultNameForFile(fileName);
                                 accessor.SetConfigurationValue(name, report);
+
+								if (task.Status != TaskStatus.Faulted)
+								{
+									SaveSynchronizationSourceInformation(sourceServerUrl, remoteMetadata.Value<Guid>("ETag") , accessor);
+								}
                             });
                     });
             return result;
@@ -262,6 +268,15 @@ namespace RavenFS.Controllers
             CreateConflictArtifacts(filename, conflict);
             return new HttpResponseMessage(HttpStatusCode.NoContent);
         }
+
+    	[AcceptVerbs("GET")]
+    	public HttpResponseMessage<SynchronizationSourceInformation> LastEtag(string from)
+    	{
+    		SynchronizationSourceInformation synchronizationSourceInfo = null;
+			Storage.Batch(accessor => accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + from, out synchronizationSourceInfo));
+
+			return new HttpResponseMessage<SynchronizationSourceInformation>(synchronizationSourceInfo);
+    	}
 
         private void CreateConflictArtifacts(string fileName, ConflictItem conflict)
         {
@@ -477,5 +492,18 @@ namespace RavenFS.Controllers
                 Name = fileAndPages.Name
             };
         }
+
+		private void SaveSynchronizationSourceInformation(string sourceServerUrl, Guid fileEtagFromSourceServer, StorageActionsAccessor accessor)
+		{
+			var synchronizationSourceInfo = new SynchronizationSourceInformation
+												{
+													LastDocumentEtag = fileEtagFromSourceServer,
+													ServerInstanceId = Storage.Id
+												};
+
+			var key = SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + sourceServerUrl;
+
+			accessor.SetConfigurationValue(key, synchronizationSourceInfo);
+		}
     }
 }
