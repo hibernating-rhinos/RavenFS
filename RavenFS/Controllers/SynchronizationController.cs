@@ -55,7 +55,7 @@ namespace RavenFS.Controllers
                     });
         }
 
-        private Task InnerProceed(string fileName, string sourceServerUrl)
+        private void InnerProceed(string fileName, string sourceServerUrl)
         {
             AssertFileIsNotBeingSynced(fileName);
 
@@ -64,7 +64,7 @@ namespace RavenFS.Controllers
 
             FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl);
 
-            var result = sourceRavenFileSystemClient.GetMetadataForAsync(fileName)
+            sourceRavenFileSystemClient.GetMetadataForAsync(fileName)
                 .ContinueWith(
                     getMetadataForAsyncTask =>
                     {
@@ -172,7 +172,6 @@ namespace RavenFS.Controllers
 								}
                             });
                     });
-            return result;
         }
 
         [AcceptVerbs("GET")]
