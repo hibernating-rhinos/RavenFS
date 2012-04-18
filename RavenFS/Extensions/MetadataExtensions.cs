@@ -198,8 +198,6 @@ namespace RavenFS.Extensions
         	return metadata;
         }
 
-
-
         public static NameValueCollection UpdateLastModified(this NameValueCollection self)
         {
             self["Last-Modified"] = DateTime.UtcNow.ToString("d MMM yyyy H:m:s 'GMT'",CultureInfo.InvariantCulture);

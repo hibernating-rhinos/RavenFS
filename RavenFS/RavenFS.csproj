@@ -145,6 +145,7 @@
     <Compile Include="Controllers\FoldersController.cs" />
     <Compile Include="Controllers\NotificationsController.cs" />
     <Compile Include="Extensions\ConfigurationExtension.cs" />
+    <Compile Include="Extensions\GuidExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Infrastructure\HistoryUpdater.cs" />
     <Compile Include="Infrastructure\TempDirectoryTools.cs" />
@@ -188,6 +189,7 @@
     <Compile Include="Rdc\ConflictItem.cs" />
     <Compile Include="Rdc\ConflictResolution.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
+    <Compile Include="Rdc\SequenceActions.cs" />
     <Compile Include="Rdc\HistoryItem.cs" />
     <Compile Include="Rdc\IPartialDataAccess.cs" />
     <Compile Include="Rdc\FileLockManager.cs" />
@@ -200,6 +202,7 @@
     <Compile Include="Rdc\StoragePartialAccess.cs" />
     <Compile Include="Rdc\LocalRdcManager.cs" />
     <Compile Include="Rdc\NeedListParser.cs" />
+    <Compile Include="Rdc\UuidGenerator.cs" />
     <Compile Include="Rdc\Wrapper\ISignatureRepository.cs" />
     <Compile Include="Rdc\Wrapper\NeedListGenerator.cs" />
     <Compile Include="Rdc\Wrapper\RdcException.cs" />
