@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
+using RavenFS.Rdc.Utils.IO;
 using Xunit;
 using Xunit.Extensions;
 
@@ -296,6 +297,22 @@ namespace RavenFS.Tests
             Assert.Equal("9500000", result);
 			Assert.Equal("bytes 2999993-2999999/3000000", nameValues["Content-Range"]);
 			//Assert.Equal("7", nameValues["Content-Length"]); - no idea why we aren't getting this, probably because we get a range
+        }
+
+        [Fact]
+        public void Should_modify_etag_after_upload()
+        {
+            var content = new RandomStream(10, 1);
+            var client = NewClient();
+            client.UploadAsync("test.bin", new NameValueCollection(), content).Wait();
+            var resultFileMetadata = client.GetMetadataForAsync("test.bin").Result;
+            var etag0 = resultFileMetadata["ETag"];
+            client.UploadAsync("test.bin", new NameValueCollection(), content).Wait();
+            resultFileMetadata = client.GetMetadataForAsync("test.bin").Result;
+            var etag1 = resultFileMetadata["ETag"];
+
+            Assert.False(etag0 == etag1);
+
         }
 
         private static MemoryStream PrepareTextSourceStream()

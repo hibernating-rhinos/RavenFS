@@ -113,22 +113,6 @@ namespace RavenFS.Tests.RDC
         }
 
         [Fact]
-        public void Should_modify_etag_after_upload()
-        {
-            var sourceContent1 = new RandomStream(10, 1);
-            var sourceClient = NewClient(1);
-            sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
-            var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
-            var etag0 = resultFileMetadata["ETag"];
-            sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
-            resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
-            var etag1 = resultFileMetadata["ETag"];
-
-            Assert.False(etag0 == etag1);
-
-        }
-
-        [Fact]
         public void Should_be_possible_to_apply_conflict()
         {
             var sourceContent1 = new RandomStream(10, 1);
