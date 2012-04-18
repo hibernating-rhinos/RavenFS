@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Browser;
 using System.Windows.Controls;
@@ -9,21 +11,21 @@ using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio.Commands
 {
-    public class DownloadCommand : VirtualItemCommand<FileSystemModel>
+    public class DownloadCommand : VirtualItemSelectionCommand<FileSystemModel>
 	{
-        public DownloadCommand(Observable<VirtualItem<FileSystemModel>> observableFileInfo)
-            : base(observableFileInfo) 
+        public DownloadCommand(ItemSelection<VirtualItem<FileSystemModel>> itemSelection)
+            : base(itemSelection) 
 		{	
 		}
 
-        protected override bool CanExecuteOverride(FileSystemModel item)
+        protected override bool CanExecuteOverride(IList<FileSystemModel> items)
         {
-            return item is FileModel;
+            return items.Count == 1 && items.First() is FileModel;
         }
 
-        protected override void ExecuteOverride(FileSystemModel item)
+        protected override void ExecuteOverride(IList<FileSystemModel> items)
         {
-            Navigation.Download(item.FullPath);
+            Navigation.Download(items.First().FullPath);
         }
 	}
 }

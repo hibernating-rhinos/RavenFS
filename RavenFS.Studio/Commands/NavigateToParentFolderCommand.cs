@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Windows;
 using System.Windows.Browser;
@@ -14,20 +16,20 @@ using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio.Commands
 {
-    public class NavigateToParentFolderCommand : VirtualItemCommand<FileSystemModel>
+    public class NavigateToParentFolderCommand : VirtualItemSelectionCommand<FileSystemModel>
     {
-        public NavigateToParentFolderCommand(Observable<VirtualItem<FileSystemModel>> observableItem) : base(observableItem)
+        public NavigateToParentFolderCommand(ItemSelection<VirtualItem<FileSystemModel>> itemSelection) : base(itemSelection)
         {
         }
 
-        protected override bool CanExecuteOverride(FileSystemModel item)
+        protected override bool CanExecuteOverride(IList<FileSystemModel> items)
         {
-            return item is FileModel;
+            return items.Count == 1 && items.First() is FileModel;
         }
 
-        protected override void ExecuteOverride(FileSystemModel item)
+        protected override void ExecuteOverride(IList<FileSystemModel> items)
         {
-            Navigation.Folder(item.Folder);
+            Navigation.Folder(items.First().Folder);
         }
     }
 }

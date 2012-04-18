@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -17,22 +19,24 @@ using RavenFS.Studio.Extensions;
 
 namespace RavenFS.Studio.Commands
 {
-    public class RenameFileCommand : VirtualItemCommand<FileSystemModel>
+    public class RenameFileCommand : VirtualItemSelectionCommand<FileSystemModel>
     {
         private const string FileNameRegEx = @"^[\w|\-\.\s]*$";
 
-        public RenameFileCommand(Observable<VirtualItem<FileSystemModel>> observableItem)
-            : base(observableItem)
+        public RenameFileCommand(ItemSelection<VirtualItem<FileSystemModel>> itemSelection)
+            : base(itemSelection)
         {
         }
 
-        protected override bool CanExecuteOverride(FileSystemModel item)
+        protected override bool CanExecuteOverride(IList<FileSystemModel> items)
         {
-            return item is FileModel;
+            return items.Count == 1 && items.First() is FileModel;
         }
 
-        protected override void ExecuteOverride(FileSystemModel item)
+        protected override void ExecuteOverride(IList<FileSystemModel> items)
         {
+            var item = items.First();
+
             var folder = GetFolderName(item.FullPath);
             var fileName = GetFileName(item.FullPath);
 

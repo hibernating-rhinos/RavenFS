@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -16,28 +18,33 @@ using RavenFS.Studio.Views;
 
 namespace RavenFS.Studio.Commands
 {
-    public class MoveFileCommand : VirtualItemCommand<FileSystemModel>
+    public class MoveFileCommand : VirtualItemSelectionCommand<FileSystemModel>
     {
         private const string FolderPathRegEx = @"^(/[\w|\-\.\s]*)+$";
 
-        public MoveFileCommand(Observable<VirtualItem<FileSystemModel>> observableItem)
-            : base(observableItem)
+        public MoveFileCommand(ItemSelection<VirtualItem<FileSystemModel>> itemSelection)
+            : base(itemSelection)
         {
         }
 
-        protected override bool CanExecuteOverride(FileSystemModel item)
+        protected override bool CanExecuteOverride(IList<FileSystemModel> items)
         {
-            return item is FileModel;
+            return items.Any(i => i is FileModel);
         }
 
-        protected override void ExecuteOverride(FileSystemModel item)
+        protected override void ExecuteOverride(IList<FileSystemModel> items)
         {
-            var originalFolderPath = GetFolderName(item.FullPath);
-            var fileName = GetFileName(item.FullPath);
+            var firstItem = items.First();
+
+            var originalFolderPath = GetFolderName(firstItem.FullPath);
+            var firstItemFileName = GetFileName(firstItem.FullPath);
 
             originalFolderPath = "/" + originalFolderPath;
 
-            AskUser.QuestionAsync(string.Format("Move File '{0}'", fileName), "New Folder Path:", ValidateFolderPath, defaultAnswer: originalFolderPath)
+            var title = items.Count == 1 ? string.Format("Move File '{0}'", firstItemFileName)
+                : string.Format("Move {0} Files", items.Count);
+
+            AskUser.QuestionAsync(title, "New Folder Path:", ValidateFolderPath, defaultAnswer: originalFolderPath)
                 .ContinueOnUIThread(t =>
                 {
                     if (!t.IsCanceled)
@@ -48,12 +55,24 @@ namespace RavenFS.Studio.Commands
                             return;
                         }
 
-                        var newFullPath = newPath + (newPath.EndsWith("/") ?  "" : "/") + fileName;
-                        newFullPath = newFullPath.TrimStart('/');
+                        if (!newPath.EndsWith("/"))
+                        {
+                            newPath += "/";
+                        }
 
-                        ApplicationModel.Current.AsyncOperations.Do(
-                            () => ApplicationModel.Current.Client.RenameAsync(item.FullPath, newFullPath), 
-                            string.Format("Moving '{0}' to '{1}'", fileName, newPath));
+                        foreach (var item in items)
+                        {
+                            var originalFullPath = item.FullPath;
+                            var fileName = GetFileName(item.FullPath);
+
+                            var newFullPath = newPath + fileName;
+                            newFullPath = newFullPath.TrimStart('/');
+
+                            ApplicationModel.Current.AsyncOperations.Do(
+                                () => ApplicationModel.Current.Client.RenameAsync(originalFullPath, newFullPath), 
+                                string.Format("Moving '{0}' to '{1}'", fileName, newPath));
+                        }
+
                     }
                 });
         }
