@@ -14,10 +14,12 @@ namespace RavenFS.Infrastructure
     {
         private readonly TransactionalStorage storage;
         private readonly ReplicationHiLo replicationHiLo;
+        private readonly UuidGenerator uuidGenerator;
 
-        public HistoryUpdater(TransactionalStorage storage, ReplicationHiLo replicationHiLo)
+        public HistoryUpdater(TransactionalStorage storage, ReplicationHiLo replicationHiLo, UuidGenerator uuidGenerator)
         {
             this.storage = storage;
+            this.uuidGenerator = uuidGenerator;
             this.replicationHiLo = replicationHiLo;
         }
 
@@ -36,6 +38,13 @@ namespace RavenFS.Infrastructure
             nameValueCollection[SynchronizationConstants.RavenReplicationHistory] = SerializeHistory(history);
             nameValueCollection[SynchronizationConstants.RavenReplicationVersion] = replicationHiLo.NextId().ToString(CultureInfo.InvariantCulture);
             nameValueCollection[SynchronizationConstants.RavenReplicationSource] = storage.Id.ToString();
+        }
+
+
+        public void UpdateLastModified(NameValueCollection nameValueCollection)
+        {
+            nameValueCollection["Last-Modified"] = DateTime.UtcNow.ToString("d MMM yyyy H:m:s 'GMT'", CultureInfo.InvariantCulture);
+            nameValueCollection["ETag"] = "\"" + uuidGenerator.CreateSequentialUuid() + "\"";
         }
 
         private NameValueCollection GetMetadata(string fileName)

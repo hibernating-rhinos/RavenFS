@@ -20,6 +20,7 @@ using RavenFS.Client;
 #else
 using System.Net.Http;
 using System.Net.Http.Headers;
+using RavenFS.Rdc;
 using RavenFS.Storage;
 #endif
 
@@ -196,13 +197,6 @@ namespace RavenFS.Extensions
             	}
             }
         	return metadata;
-        }
-
-        public static NameValueCollection UpdateLastModified(this NameValueCollection self)
-        {
-            self["Last-Modified"] = DateTime.UtcNow.ToString("d MMM yyyy H:m:s 'GMT'",CultureInfo.InvariantCulture);
-            self["ETag"] = "\"" + Guid.NewGuid() + "\"";
-            return self;
         }
 
         private static string CaptureHeaderName(string header)

@@ -87,7 +87,7 @@ namespace RavenFS.Controllers
 			AssertFileIsNotBeingSynced(name);
 
             var headers = Request.Headers.FilterHeaders();
-            headers.UpdateLastModified();
+            HistoryUpdater.UpdateLastModified(headers);
             HistoryUpdater.Update(name, headers);
             try
             {
@@ -136,7 +136,7 @@ namespace RavenFS.Controllers
 			AssertFileIsNotBeingSynced(name);
 
             var headers = Request.Headers.FilterHeaders();
-            headers.UpdateLastModified();
+            HistoryUpdater.UpdateLastModified(headers);
             HistoryUpdater.Update(name, headers);
             name = Uri.UnescapeDataString(name);
             Storage.Batch(accessor =>
@@ -161,7 +161,7 @@ namespace RavenFS.Controllers
                     return readFileToDatabase.Execute()
                         .ContinueWith(readingTask =>
                         {
-                            headers.UpdateLastModified();// update with the final file size
+                            HistoryUpdater.UpdateLastModified(headers);// update with the final file size
                             headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
                             Search.Index(name, headers);
                             Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });

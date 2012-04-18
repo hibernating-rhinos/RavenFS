@@ -50,7 +50,10 @@ namespace RavenFS
 			search = new IndexStorage(this.path, new NameValueCollection());
             signatureRepository = new StorageSignatureRepository(storage);
 			sigGenerator = new SigGenerator(signatureRepository);
-            historyUpdater = new HistoryUpdater(storage, new ReplicationHiLo(storage));
+		    var replicationHiLo = new ReplicationHiLo(storage);
+		    var sequenceActions = new SequenceActions(storage);
+		    var uuidGenerator = new UuidGenerator(sequenceActions);
+            historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
             notificationPublisher = new NotificationPublisher();
 			fileLockManager = new FileLockManager(storage);
 			storage.Initialize();
