@@ -184,12 +184,15 @@ namespace RavenFS.Studio.Models
                                 var folders = t.Result.Select(n => new DirectoryModel() {FullPath = n}).ToArray();
                                 PruneVirtualFolders(folders);
                                 SetFolders(folders);
-                                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.ShowStaleData));
                             }
                             else
                             {
+                                SetFolders(new DirectoryModel[0]);
                                 OnDataFetchError(new DataFetchErrorEventArgs(t.Exception));
                             }
+
+                            OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.ShowStaleData));
+
                         }, synchronizationContextScheduler);
         }
 

@@ -128,6 +128,7 @@ namespace RavenFS.Studio.Models
                                           }
                                           else
                                           {
+                                              UpdateCount(0, forceCollectionRefresh:true);
                                               OnDataFetchError(new DataFetchErrorEventArgs(t.Exception));
                                           }
                                       },
