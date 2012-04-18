@@ -193,6 +193,24 @@ namespace RavenFS.Tests.RDC
             Assert.Equal("Changed", metadata["test"]);
         }
 
+        [Fact]
+        public void Should_create_new_etag_for_replicated_file()
+        {
+            var seedClient = NewClient(0);
+            var sourceClient = NewClient(1);
+            
+            sourceClient.UploadAsync("test.bin", new RandomStream(10)).Wait();
+
+            seedClient.UploadAsync("test.bin", new RandomStream(10)).Wait();
+            var seedEtag = sourceClient.GetMetadataForAsync("test.bin").Result["ETag"];
+
+            RdcTestUtils.ResolveConflictAndSynchronize("test.bin", seedClient, sourceClient);
+
+            var result = seedClient.GetMetadataForAsync("test.bin").Result["ETag"];
+
+            Assert.True(seedEtag != result, "Etag should be updated");
+        }
+
 
         [Fact]
         public void Should_mark_file_to_be_resolved_using_ours_strategy()

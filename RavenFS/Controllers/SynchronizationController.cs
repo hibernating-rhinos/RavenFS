@@ -73,7 +73,7 @@ namespace RavenFS.Controllers
                             throw new SynchronizationException(
                                 string.Format("File {0} on THEIR side is conflicted", fileName));
                         }
-
+                        HistoryUpdater.UpdateLastModified(remoteMetadata);
                         var localFileDataInfo = GetLocalFileDataInfo(fileName);
 
                         if (localFileDataInfo == null)
@@ -389,9 +389,11 @@ namespace RavenFS.Controllers
             var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
             var needListGenerator = new NeedListGenerator(SignatureRepository, remoteSignatureRepository);
             var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
+            var newSourceMetadata = sourceMetadata.FilterHeaders();
+            HistoryUpdater.UpdateLastModified(newSourceMetadata);
             var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search,
                                                                   tempFileName,
-                                                                  sourceMetadata.FilterHeaders());
+                                                                  newSourceMetadata);
 
             var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 
@@ -432,8 +434,10 @@ namespace RavenFS.Controllers
         private Task<SynchronizationReport> Download(RavenFileSystemClient sourceRavenFileSystemClient, string fileName, NameValueCollection sourceMetadata)
         {
             var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
+            var newSourceMetadata = sourceMetadata.FilterHeaders();
+            HistoryUpdater.UpdateLastModified(newSourceMetadata);
             var storageStream = StorageStream.CreatingNewAndWritting(Storage, Search, tempFileName,
-                                                                     sourceMetadata.FilterHeaders());
+                                                                     newSourceMetadata);
             return sourceRavenFileSystemClient.DownloadAsync(fileName, storageStream)
                 .ContinueWith(
                     _ =>
