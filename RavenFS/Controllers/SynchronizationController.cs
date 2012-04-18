@@ -225,25 +225,20 @@ namespace RavenFS.Controllers
         }
 
         [AcceptVerbs("PATCH")]
-        public Task<HttpResponseMessage> ResolveConflict(string fileName, string strategy, string sourceServerUrl)
+		public Task<HttpResponseMessage> ResolveConflict(string fileName, ConflictResolutionStrategy strategy, string sourceServerUrl)
         {
-            var selectedStrategy = ConflictResolutionStrategy.Theirs;
-            Enum.TryParse(strategy, true, out selectedStrategy);
-
-            if (selectedStrategy == ConflictResolutionStrategy.Ours)
+			if (strategy == ConflictResolutionStrategy.Ours)
             {
                 return StrategyAsGetOurs(fileName, sourceServerUrl)
                     .ContinueWith(
                         task =>
                         {
-                            task.Wait();
+                            task.AssertNotFaulted();
                             return new HttpResponseMessage();
                         });
             }
             StrategyAsGetTheirs(fileName, sourceServerUrl);
-            var result = new Task<HttpResponseMessage>(() => new HttpResponseMessage());
-            result.Start();
-            return result;
+            return new CompletedTask<HttpResponseMessage>(new HttpResponseMessage());
         }
 
         [AcceptVerbs("PATCH")]
@@ -327,7 +322,7 @@ namespace RavenFS.Controllers
                     .ContinueWith(
                         task =>
                         {
-                            task.Wait(); // throw exception
+                            task.AssertNotFaulted();
                             return
                                 sourceRavenFileSystemClient.Synchronization.ResolveConflictAsync(
                                     Request.GetServerUrl(), fileName,
