@@ -53,7 +53,7 @@ namespace RavenFS.Tests
 				{"hi", "you"}
 			}).Wait();
 			var names = client.Config.GetConfigNames().Result;
-			Assert.Equal(new[]{"test", "test2"}, names);
+			Assert.Equal(new[]{"Raven/Sequences/Raven/Etag", "test", "test2"}, names);
 		}
 
 		[Fact]

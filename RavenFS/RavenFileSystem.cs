@@ -52,12 +52,12 @@ namespace RavenFS
 			sigGenerator = new SigGenerator(signatureRepository);
 		    var replicationHiLo = new ReplicationHiLo(storage);
 		    var sequenceActions = new SequenceActions(storage);
-		    var uuidGenerator = new UuidGenerator(sequenceActions);
-            historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
             notificationPublisher = new NotificationPublisher();
 			fileLockManager = new FileLockManager(storage);
 			storage.Initialize();
 			search.Initialize();
+            var uuidGenerator = new UuidGenerator(sequenceActions);
+            historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
 
 			AppDomain.CurrentDomain.ProcessExit += ShouldDispose;
