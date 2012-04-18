@@ -55,7 +55,7 @@ namespace RavenFS.Rdc
 			storage.Batch(accessor => accessor.TryGetConfigurationValue(SynchronizationHelper.SyncNameForFile(fileName), out syncOperationDetails));
 
 			if (syncOperationDetails == null)
-				return false;
+				return true;
 
 			return DateTime.UtcNow - syncOperationDetails.FileLockedAt > ReplicationTimeout;
 		}
