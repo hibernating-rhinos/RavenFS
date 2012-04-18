@@ -23,6 +23,7 @@ namespace RavenFS.Studio.Infrastructure
         private readonly int _pageSize;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
         public event EventHandler<DataFetchErrorEventArgs> DataFetchError;
+        public event EventHandler<EventArgs> FetchSucceeded;
         public event PropertyChangedEventHandler PropertyChanged;
 
         private uint _state; // used to ensure that data-requests are not stale
@@ -120,6 +121,7 @@ namespace RavenFS.Studio.Infrastructure
                         if (!t.IsFaulted)
                         {
                             UpdatePage(page, t.Result, stateWhenRequestInitiated);
+                            OnFetchSucceeded(EventArgs.Empty);
                         }
                         else
                         {
@@ -183,6 +185,7 @@ namespace RavenFS.Studio.Infrastructure
             if (!_isRefreshDeferred)
             {
                 _source.Refresh();
+                OnFetchSucceeded(EventArgs.Empty);
             }
         }
 
@@ -477,6 +480,13 @@ namespace RavenFS.Studio.Infrastructure
             EventHandler<DataFetchErrorEventArgs> handler = DataFetchError;
             if (handler != null) handler(this, e);
         }
+
+        protected void OnFetchSucceeded(EventArgs e)
+        {
+            EventHandler<EventArgs> handler = FetchSucceeded;
+            if (handler != null) handler(this, e);
+        }
+
 
         public void Add(VirtualItem<T> item)
         {

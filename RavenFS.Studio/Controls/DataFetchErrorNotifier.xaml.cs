@@ -35,11 +35,27 @@ namespace RavenFS.Studio.Controls
             if (e.OldValue != null)
             {
                 (e.OldValue as INotifyOnDataFetchErrors).DataFetchError -= notifier.HandleError;
+                (e.OldValue as INotifyOnDataFetchErrors).FetchSucceeded -= notifier.HandleFetchSucceeded;
             }
 
             if (e.NewValue != null)
             {
                 (e.NewValue as INotifyOnDataFetchErrors).DataFetchError += notifier.HandleError;
+                (e.NewValue as INotifyOnDataFetchErrors).FetchSucceeded += notifier.HandleFetchSucceeded;
+            }
+        }
+
+        private void HandleFetchSucceeded(object sender, EventArgs e)
+        {
+            ClearError();
+        }
+
+        private void ClearError()
+        {
+            if (firstException != null)
+            {
+                firstException = null;
+                VisualStateManager.GoToState(this, "NoError", true);
             }
         }
 
@@ -47,19 +63,20 @@ namespace RavenFS.Studio.Controls
         {
             if (firstException == null)
             {
-                firstException = e.Error;
                 VisualStateManager.GoToState(this, "Error", true);
+            }
 
-                if (firstException is AggregateException)
-                {
-                    var errorText = (firstException as AggregateException).ExtractSingleInnerException().Message;
-                    errorText = TryExtractMessageFromJSONError(errorText);
-                    ErrorText = errorText;
-                }
-                else
-                {
-                    ErrorText = firstException.Message;
-                }
+            firstException = e.Error;
+
+            if (firstException is AggregateException)
+            {
+                var errorText = (firstException as AggregateException).ExtractSingleInnerException().Message;
+                errorText = TryExtractMessageFromJSONError(errorText);
+                ErrorText = errorText;
+            }
+            else
+            {
+                ErrorText = firstException.Message;
             }
         }
 
@@ -101,12 +118,7 @@ namespace RavenFS.Studio.Controls
 
         private void HandleRetry()
         {
-            if (ErrorSource != null)
-            {
-                ErrorSource.Retry();
-                firstException = null;
-                VisualStateManager.GoToState(this, "NoError", true);
-            }
+            ErrorSource.Retry();
         }
 
         private void HandleCopyToClipboard()
