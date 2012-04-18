@@ -11,8 +11,7 @@ namespace RavenFS.Client
 	///</summary>
 	public static class ExceptionExtensions
 	{
-        // TODO: Fix this name (BetteR)
-		public static Task TryThrowBetteError(this Task self)
+		public static Task TryThrowBetterError(this Task self)
 		{
 			return self.ContinueWith(task =>
 			{
@@ -36,7 +35,7 @@ namespace RavenFS.Client
 			.Unwrap();
 		}
 
-		public static Task<T> TryThrowBetteError<T>(this Task<T> self)
+		public static Task<T> TryThrowBetterError<T>(this Task<T> self)
 		{
 			return self.ContinueWith(task =>
 			{

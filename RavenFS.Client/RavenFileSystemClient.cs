@@ -51,7 +51,7 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<ServerStats>(new JsonTextReader(new StreamReader(stream)));
 					}
 				})
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task DeleteAsync(string filename)
@@ -61,7 +61,7 @@ namespace RavenFS.Client
 			request.Method = "DELETE";
 			return request.GetResponseAsync()
 				.ContinueWith(task => task.Result.Close())
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task RenameAsync(string filename, string rename)
@@ -71,7 +71,7 @@ namespace RavenFS.Client
 			request.Method = "PATCH";
 			return request.GetResponseAsync()
 				.ContinueWith(task => task.Result.Close())
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task<FileInfo[]> BrowseAsync(int start = 0, int pageSize = 25)
@@ -93,7 +93,7 @@ namespace RavenFS.Client
 						}.Deserialize<FileInfo[]>(jsonTextReader);
 					}
 				})
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
         public Task<string[]> GetSearchFieldsAsync(int start = 0, int pageSize = 25)
@@ -108,7 +108,7 @@ namespace RavenFS.Client
                         return new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(stream)));
                     }
                 })
-                .TryThrowBetteError();
+				.TryThrowBetterError();
         }
 
 		public Task<SearchResults> SearchAsync(string query, string[] sortFields = null, int start = 0, int pageSize = 25)
@@ -145,7 +145,7 @@ namespace RavenFS.Client
 						}.Deserialize<SearchResults>(jsonTextReader);
 					}
 				})
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task<NameValueCollection> GetMetadataForAsync(string filename)
@@ -154,7 +154,7 @@ namespace RavenFS.Client
 			request.Method = "HEAD";
 			return request.GetResponseAsync()
 				.ContinueWith(task => new NameValueCollection(task.Result.Headers))
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long? from = null, long? to = null)
@@ -213,7 +213,7 @@ namespace RavenFS.Client
 						});
 				})
 				.Unwrap()
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task UpdateMetadataAsync(string filename, NameValueCollection metadata)
@@ -225,7 +225,7 @@ namespace RavenFS.Client
 			AddHeaders(metadata, request);
 			return request
 				.GetResponseAsync()
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task UploadAsync(string filename, Stream source)
@@ -269,7 +269,7 @@ namespace RavenFS.Client
 				})
 				.Unwrap()
 				.ContinueWith(task => task.Result.Close())
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 
@@ -326,7 +326,7 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(stream)));
 					}
 				})
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int start = 0, int pageSize = 25)
@@ -434,7 +434,7 @@ namespace RavenFS.Client
 							return jsonSerializer.Deserialize<string[]>(new JsonTextReader(new StreamReader(responseStream)));
 						}
 					})
-					.TryThrowBetteError();
+					.TryThrowBetterError();
 			}
 
 			public Task SetConfig(string name, NameValueCollection data)
@@ -514,7 +514,7 @@ namespace RavenFS.Client
 							return new JsonSerializer().Deserialize<SignatureManifest>(new JsonTextReader(new StreamReader(stream)));
 						}
 					})
-					.TryThrowBetteError();
+					.TryThrowBetterError();
 			}
 
             public Task StartSynchronizationAsync(string sourceServerUrl, string fileName)
@@ -525,7 +525,7 @@ namespace RavenFS.Client
                 request.ContentLength = 0;
                 return request.GetResponseAsync()
                     .ContinueWith(task => task.Result.Close())
-                    .TryThrowBetteError();
+					.TryThrowBetterError();
             }
 
             public Task<SynchronizationReport> GetSynchronizationStatusAsync(string fileName)
@@ -541,7 +541,7 @@ namespace RavenFS.Client
                             return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
                         }
                     })
-                    .TryThrowBetteError();
+					.TryThrowBetterError();
             }
 
             public Task ResolveConflictAsync(string sourceServerUrl, string filename, ConflictResolutionStrategy strategy)
@@ -552,7 +552,7 @@ namespace RavenFS.Client
                 request.Method = "PATCH";
                 return request.GetResponseAsync()
                     .ContinueWith(task => task.Result.Close())
-                    .TryThrowBetteError();
+					.TryThrowBetterError();
             }
 
             public Task ApplyConflictAsync(string filename, long theirVersion, string theirServerId)
@@ -563,7 +563,7 @@ namespace RavenFS.Client
                 request.Method = "PATCH";
                 return request.GetResponseAsync()
                     .ContinueWith(task => task.Result.Close())
-                    .TryThrowBetteError();
+					.TryThrowBetterError();
             }
 
             public Task<IEnumerable<SynchronizationReport>> GetFinishedAsync(int page = 0, int pageSize = 25)
@@ -580,7 +580,7 @@ namespace RavenFS.Client
                             return preResult;
                         }
                     })
-                    .TryThrowBetteError();
+					.TryThrowBetterError();
             }
 
             public Task<IEnumerable<SynchronizationDetails>> GetWorkingAsync(int page = 0, int pageSize = 25)
@@ -597,7 +597,7 @@ namespace RavenFS.Client
                             return preResult;
                         }
                     })
-                    .TryThrowBetteError();
+					.TryThrowBetterError();
             }
 		}
 
@@ -613,7 +613,7 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<RdcStats>(new JsonTextReader(new StreamReader(stream)));
 					}
 				})
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 	}
 }
