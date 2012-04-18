@@ -9,7 +9,7 @@ namespace RavenFS.Rdc
 
 	public class FileLockManager
 	{
-		private readonly TimeSpan defaultTimeout = new TimeSpan(0, 0, 10, 0); // TODO: set up default timestamp
+		private readonly TimeSpan defaultTimeout = new TimeSpan(0, 0, 10, 0);
 		private readonly TransactionalStorage storage;
 		private TimeSpan configuredTimeout;
 
@@ -49,17 +49,13 @@ namespace RavenFS.Rdc
 			storage.Batch(accessor => accessor.DeleteConfig(SynchronizationHelper.SyncNameForFile(fileName)));
 		}
 
-		public bool IsFileBeingLocked(string fileName)
-		{
-			bool result = false;
-			storage.Batch(accessor => result = accessor.ConfigExists(SynchronizationHelper.SyncNameForFile(fileName)));
-			return result;
-		}
-
 		public bool TimeoutExceeded(string fileName)
 		{
 			SynchronizationDetails syncOperationDetails = null;
 			storage.Batch(accessor => accessor.TryGetConfigurationValue(SynchronizationHelper.SyncNameForFile(fileName), out syncOperationDetails));
+
+			if (syncOperationDetails == null)
+				return false;
 
 			return DateTime.UtcNow - syncOperationDetails.FileLockedAt > ReplicationTimeout;
 		}

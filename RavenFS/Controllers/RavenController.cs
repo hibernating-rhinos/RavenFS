@@ -176,16 +176,14 @@ namespace RavenFS.Controllers
 
 		protected void AssertFileIsNotBeingSynced(string fileName)
 		{
-			if(FileLockManager.IsFileBeingLocked(fileName))
+			if (FileLockManager.TimeoutExceeded(fileName))
 			{
-				if(FileLockManager.TimeoutExceeded(fileName))
-				{
-					FileLockManager.UnlockByDeletingSyncConfiguration(fileName);
-				}
-				else
-				{
-					throw new HttpResponseException(string.Format("File {0} is being synced", fileName), HttpStatusCode.PreconditionFailed);
-				}
+				FileLockManager.UnlockByDeletingSyncConfiguration(fileName);
+			}
+			else
+			{
+				throw new HttpResponseException(string.Format("File {0} is being synced", fileName),
+				                                HttpStatusCode.PreconditionFailed);
 			}
 		}
 	}
