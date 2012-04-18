@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization;
 
 namespace RavenFS.Client
 {
@@ -9,5 +10,15 @@ namespace RavenFS.Client
         {
             
         }
+
+		public SynchronizationException(string message, Exception inner)
+			: base(message, inner)
+		{
+		}
+		protected SynchronizationException(
+			SerializationInfo info,
+			StreamingContext context) : base(info, context)
+		{
+		}
     }
 }
