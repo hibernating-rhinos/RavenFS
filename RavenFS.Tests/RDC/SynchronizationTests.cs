@@ -22,7 +22,7 @@ namespace RavenFS.Tests.RDC
 	public class SynchronizationTests : MultiHostTestBase
     {
         [Theory]
-        [InlineData(1)]
+       // [InlineData(1)]
         [InlineData(5000)]
         public void Synchronize_file_with_different_beginning(int size)
         {
@@ -51,6 +51,7 @@ namespace RavenFS.Tests.RDC
             sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
             SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize("test.txt", seedClient, sourceClient);
+            Assert.Null(result.Exception);
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
             string resultMd5 = null;

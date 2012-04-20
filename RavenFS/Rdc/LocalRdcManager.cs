@@ -25,7 +25,7 @@ namespace RavenFS.Rdc
 
         public SignatureManifest GetSignatureManifest(DataInfo dataInfo)
         {
-            var lastUpdate = _signatureRepository.GetLastUpdate(dataInfo.Name);
+            var lastUpdate = _signatureRepository.GetLastUpdate();
             IEnumerable<SignatureInfo> signatureInfos = null;
             if (lastUpdate == null || lastUpdate < dataInfo.CreatedAt)
             {
@@ -33,7 +33,7 @@ namespace RavenFS.Rdc
             } 
             else
             {
-                signatureInfos = _signatureRepository.GetByFileName(dataInfo.Name);
+                signatureInfos = _signatureRepository.GetByFileName();
             }
 
             var result = new SignatureManifest
@@ -55,7 +55,7 @@ namespace RavenFS.Rdc
             FileAndPages fileAndPages = null;
             _transactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(filename, 0, 0));
             var input = StorageStream.Reading(_transactionalStorage, fileAndPages.Name);
-            return _sigGenerator.GenerateSignatures(input, filename);
+            return _sigGenerator.GenerateSignatures(input, filename, _signatureRepository);
         }
 
         private static IList<Signature> SignatureInfosToSignatures(IEnumerable<SignatureInfo> signatureInfos)

@@ -15,13 +15,12 @@ namespace RavenFS.Rdc.Wrapper
         private readonly ReaderWriterLockSlim _disposerLock = new ReaderWriterLockSlim();
         private bool _disposed;
 
-        private readonly ISignatureRepository _signatureRepository;
         private readonly IRdcLibrary _rdcLibrary;
         private int _recursionDepth;
         private const uint OutputBufferSize = 1024;
         private const int InputBufferSize = 8 * 1024;
 
-        public SigGenerator(ISignatureRepository signatureRepository)
+        public SigGenerator()
         {
             try
             {
@@ -31,10 +30,9 @@ namespace RavenFS.Rdc.Wrapper
             {
                 throw new InvalidOperationException("This code must run in an MTA thread", e);
             }
-            _signatureRepository = signatureRepository;
         }
 
-        public IList<SignatureInfo> GenerateSignatures(Stream source, string fileName)
+        public IList<SignatureInfo> GenerateSignatures(Stream source, string fileName, ISignatureRepository signatureRepository)
         {
             _recursionDepth = EvaluatetRecursionDepth(source);
             if (_recursionDepth == 0)
@@ -44,7 +42,7 @@ namespace RavenFS.Rdc.Wrapper
             var rdcGenerator = InitializeRdcGenerator();
             try
             {
-                return Process(source, rdcGenerator, fileName);
+                return Process(source, rdcGenerator, fileName, signatureRepository);
             }
             finally
             {
@@ -52,14 +50,14 @@ namespace RavenFS.Rdc.Wrapper
             }
         }
 
-        private IList<SignatureInfo> Process(Stream source, IRdcGenerator rdcGenerator, string fileName)
+        private IList<SignatureInfo> Process(Stream source, IRdcGenerator rdcGenerator, string fileName, ISignatureRepository signatureRepository)
         {
             var result = Enumerable.Range(0, _recursionDepth).Reverse().Select(i => new SignatureInfo(i, fileName)).ToList();
 
             var eof = false;
             var eofOutput = false;
             // prepare streams
-            var sigStreams = result.Select(item => _signatureRepository.CreateContent(item.Name)).ToList();
+            var sigStreams = result.Select(item => signatureRepository.CreateContent(item.Name)).ToList();
 
             var inputBuffer = new RdcBufferPointer
             {
@@ -127,13 +125,9 @@ namespace RavenFS.Rdc.Wrapper
                 {
                     Marshal.FreeCoTaskMem(item);
                 }
-                foreach (var item in sigStreams)
-                {
-                    item.Dispose();
-                }
             }
             result.Reverse();
-            _signatureRepository.Flush(result);
+            signatureRepository.Flush(result);
             return result;
         }
 

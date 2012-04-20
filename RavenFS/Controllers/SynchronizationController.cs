@@ -100,10 +100,10 @@ namespace RavenFS.Controllers
 
                             throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
                         }
-
-                        var remoteSignatureCache = new VolatileSignatureRepository(TempDirectoryTools.Create());
-                        var localRdcManager = new LocalRdcManager(SignatureRepository, Storage, SigGenerator);
-                        var remoteRdcManager = new RemoteRdcManager(sourceRavenFileSystemClient, SignatureRepository,
+                        var signatureRepository = new StorageSignatureRepository(Storage, fileName);
+                        var remoteSignatureCache = new VolatileSignatureRepository(TempDirectoryTools.Create(), fileName);
+                        var localRdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
+                        var remoteRdcManager = new RemoteRdcManager(sourceRavenFileSystemClient, signatureRepository,
                                                                     remoteSignatureCache);
 
                         var seedSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
@@ -396,7 +396,8 @@ namespace RavenFS.Controllers
         {
             var seedSignatureInfo = SignatureInfo.Parse(seedSignatureManifest.Signatures.Last().Name);
             var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
-            var needListGenerator = new NeedListGenerator(SignatureRepository, remoteSignatureRepository);
+            var signatureRepository = new StorageSignatureRepository(Storage, fileName);
+            var needListGenerator = new NeedListGenerator(signatureRepository, remoteSignatureRepository);
             var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
             var newSourceMetadata = sourceMetadata.FilterHeaders();
             HistoryUpdater.UpdateLastModified(newSourceMetadata);

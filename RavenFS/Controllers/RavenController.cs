@@ -59,11 +59,6 @@ namespace RavenFS.Controllers
 			get { return RavenFileSystem.BufferPool; }
 		}
 
-		public ISignatureRepository SignatureRepository
-		{
-			get { return RavenFileSystem.SignatureRepository; }
-		}
-
 		public SigGenerator SigGenerator
 		{
 			get { return RavenFileSystem.SigGenerator; }
