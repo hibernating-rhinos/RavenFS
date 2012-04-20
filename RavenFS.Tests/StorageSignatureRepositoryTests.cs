@@ -51,7 +51,7 @@ namespace RavenFS.Tests
         [Fact]
         public void Should_assign_signature_to_proper_file()
         {
-            var tested = new StorageSignatureRepository(transactionalStorage, "test");
+            var tested = new StorageSignatureRepository(transactionalStorage, "test.bin");
             using(var sigContent = tested.CreateContent("test.bin.0.sig"))
             {
                 sigContent.WriteByte(3);

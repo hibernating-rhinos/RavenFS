@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using NLog;
 using RavenFS.Infrastructure;
 using RavenFS.Rdc.Wrapper;
 
@@ -9,6 +10,8 @@ namespace RavenFS.Rdc
 {
 	public static class NeedListParser
 	{
+        private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		public static Task ParseAsync(IPartialDataAccess source, IPartialDataAccess seed, Stream output,
 		                              IList<RdcNeed> needList)
 		{
@@ -41,6 +44,7 @@ namespace RavenFS.Rdc
 		                                  }
 		                                  catch (Exception e)
 		                                  {
+                                              log.ErrorException("Error during need list parsing", e);
 		                                      tcs.TrySetException(e);
 		                                  }
 		                              });

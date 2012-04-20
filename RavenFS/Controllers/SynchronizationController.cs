@@ -396,16 +396,18 @@ namespace RavenFS.Controllers
         {
             var seedSignatureInfo = SignatureInfo.Parse(seedSignatureManifest.Signatures.Last().Name);
             var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
-            var signatureRepository = new StorageSignatureRepository(Storage, fileName);
-            var needListGenerator = new NeedListGenerator(signatureRepository, remoteSignatureRepository);
             var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
             var newSourceMetadata = sourceMetadata.FilterHeaders();
             HistoryUpdater.UpdateLastModified(newSourceMetadata);
             var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search,
                                                                   tempFileName,
                                                                   newSourceMetadata);
-
-            var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
+            IList<RdcNeed> needList = null;
+            using (var signatureRepository = new StorageSignatureRepository(Storage, fileName))
+            using (var needListGenerator = new NeedListGenerator(signatureRepository, remoteSignatureRepository))
+            {
+                needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
+            }
 
             return NeedListParser.ParseAsync(
                 new RemotePartialAccess(sourceServerUrl, fileName),
@@ -414,7 +416,6 @@ namespace RavenFS.Controllers
                     _ =>
                     {
                         outputFile.Dispose();
-                        needListGenerator.Dispose();
                         _.AssertNotFaulted();
                         Storage.Batch(
                             accessor =>

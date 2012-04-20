@@ -72,7 +72,7 @@ namespace RavenFS.Tests.RDC
         }
 
         [Theory]
-        [InlineData(1024 * 1024 * 80)]
+        [InlineData(1024 * 1024 * 30)]
         public void Big_file_test(long size)
         {
             var sourceContent = new RandomStream(size, 1);

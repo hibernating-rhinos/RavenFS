@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NLog;
 using RavenFS.Infrastructure;
 using RavenFS.Storage;
 
@@ -9,16 +10,18 @@ namespace RavenFS.Rdc.Wrapper
 {
     public class StorageSignatureRepository : ISignatureRepository
     {
+        private static readonly Logger log = LogManager.GetCurrentClassLogger();
         private readonly TransactionalStorage _storage;
-        private VolatileSignatureRepository _cacheRepository;
         private readonly string _fileName;
+        private readonly string _tempDirectory;
+        private IDictionary<string, FileStream> _createdFiles;
 
         public StorageSignatureRepository(TransactionalStorage storage, string fileName)
         {
-            var tempDirectory = TempDirectoryTools.Create();
-            _cacheRepository = new VolatileSignatureRepository(tempDirectory, fileName);
+            _tempDirectory = TempDirectoryTools.Create();
             _storage = storage;
             _fileName = fileName;
+            _createdFiles = new Dictionary<string, FileStream>();
         }
 
         public Stream GetContentForReading(string sigName)
@@ -43,7 +46,11 @@ namespace RavenFS.Rdc.Wrapper
 
         public Stream CreateContent(string sigName)
         {
-            return _cacheRepository.CreateContent(sigName);
+            var sigFileName = NameToPath(sigName);
+            var result = File.Create(sigFileName, 1024 * 128);
+            log.Info("File {0} created", sigFileName);
+            _createdFiles.Add(sigFileName, result);
+            return result;
         }
 
         public SignatureInfo GetByName(string sigName)
@@ -67,43 +74,32 @@ namespace RavenFS.Rdc.Wrapper
 
         public void Flush(IEnumerable<SignatureInfo> signatureInfos)
         {
-            _cacheRepository.Flush(null);
-            var fileNames = (from item in signatureInfos
-                            group item by item.FileName
-                            into fileNameNamesGroup
-                            select fileNameNamesGroup.Key).ToList();
-            if (fileNames.Count > 1)
-            {
-                throw new ArgumentException("All SignatureInfo should belong to the same file", "signatureInfos");
-            }
-
-            if (fileNames.Count == 0)
+            if (_createdFiles.Count == 0)
             {
                 throw new ArgumentException("Must have at least one signature info", "signatureInfos");
             }
-            var fileName = fileNames.First();
-                             
+
+            CloseCreatedStreams();
+
             _storage.Batch(
                 accessor =>
                 {
-                    accessor.ClearSignatures(fileName);
-                    var level = 0;
-                    foreach (var item in signatureInfos)
+                    accessor.ClearSignatures(_fileName);
+                    foreach (var item in _createdFiles)
                     {
                         var item1 = item;
-                        accessor.AddSignature(fileName, level,
+                        var level = SignatureInfo.Parse(item.Key).Level;
+                        accessor.AddSignature(_fileName, level,
                                               stream =>
+                                              {
+                                                  using (var cachedSigContent = File.OpenRead(item1.Key))
                                                   {
-                                                      using (var cachedSigContent =
-                                                          _cacheRepository.GetContentForReading(item1.Name))
-                                                      {
-                                                          cachedSigContent.CopyTo(stream);
-                                                      }
-                                                  });
-                        level++;
+                                                      cachedSigContent.CopyTo(stream);
+                                                  }
+                                              });
                     }
                 });
-            DisposeCacheRepository();
+            _createdFiles = new Dictionary<string, FileStream>();
         }
 
         private static SignatureLevels GetSignatureLevel(string sigName, StorageActionsAccessor accessor)
@@ -139,24 +135,15 @@ namespace RavenFS.Rdc.Wrapper
 
         public DateTime? GetLastUpdate()
         {
-        	SignatureLevels firstOrDefault = null;
-			_storage.Batch(accessor =>
-			{
-				firstOrDefault = accessor.GetSignatures(_fileName).FirstOrDefault();
-			});
-
-			if (firstOrDefault == null)
-				return null;
-        	return firstOrDefault.CreatedAt;
-        }
-
-        private void DisposeCacheRepository()
-        {
-            if (_cacheRepository != null)
+            SignatureLevels firstOrDefault = null;
+            _storage.Batch(accessor =>
             {
-                _cacheRepository.Dispose();
-                _cacheRepository = null;
-            }
+                firstOrDefault = accessor.GetSignatures(_fileName).FirstOrDefault();
+            });
+
+            if (firstOrDefault == null)
+                return null;
+            return firstOrDefault.CreatedAt;
         }
 
         private static SignatureInfo ExtractFileNameAndLevel(string sigName)
@@ -164,9 +151,23 @@ namespace RavenFS.Rdc.Wrapper
             return SignatureInfo.Parse(sigName);
         }
 
+        private string NameToPath(string name)
+        {
+            return Path.GetFullPath(Path.Combine(_tempDirectory, name));
+        }
+
+        private void CloseCreatedStreams()
+        {
+            foreach (var item in _createdFiles)
+            {
+                item.Value.Close();
+            }
+        }
+
         public void Dispose()
         {
-            DisposeCacheRepository();
+            CloseCreatedStreams();
+            Directory.Delete(_tempDirectory, true);
         }
     }
 }

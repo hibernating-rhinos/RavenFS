@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using NLog;
 using RavenFS.Extensions;
+using RavenFS.Infrastructure;
 
 namespace RavenFS.Rdc.Wrapper
 {
@@ -11,38 +12,34 @@ namespace RavenFS.Rdc.Wrapper
     {
         private readonly string _fileName;
         private static readonly Logger log = LogManager.GetCurrentClassLogger();
-        private readonly ISet<FileStream> _tochedStreams;
-
-        private readonly string baseDirectory;
+        private readonly string _tempDirectory;
+        private IDictionary<string, FileStream> _createdFiles;
 
         public VolatileSignatureRepository(string path, string fileName)
         {
-            _tochedStreams = new HashSet<FileStream>();
+            _tempDirectory = TempDirectoryTools.Create();
             _fileName = fileName;
-        	baseDirectory = path.ToFullPath();
-            Directory.CreateDirectory(baseDirectory);
+            _createdFiles = new Dictionary<string, FileStream>();
         }
 
         public Stream GetContentForReading(string sigName)
         {
+            Flush(null);
             return File.OpenRead(NameToPath(sigName));
         }
 
         public Stream CreateContent(string sigName)
         {
-            var sifFileName = NameToPath(sigName);
-            var file = File.Create(sifFileName, 1024 * 128, FileOptions.Asynchronous);
-            log.Info("File {0} created", sifFileName);
-            _tochedStreams.Add(file);
-            return file;
+            var sigFileName = NameToPath(sigName);
+            var result = File.Create(sigFileName, 1024 * 128);
+            log.Info("File {0} created", sigFileName);
+            _createdFiles.Add(sigFileName, result);
+            return result;
         }
 
         public void Flush(IEnumerable<SignatureInfo> signatureInfos)
         {
-            foreach (var item in _tochedStreams)
-            {
-                item.Close();
-            }
+            CloseCreatedStreams();
         }
 
         public IEnumerable<SignatureInfo> GetByFileName()
@@ -75,22 +72,26 @@ namespace RavenFS.Rdc.Wrapper
 
         private IEnumerable<string> GetSigFileNamesByFileName()
         {
-            return Directory.GetFiles(baseDirectory, _fileName + "*.sig");
+            return Directory.GetFiles(_tempDirectory, _fileName + "*.sig");
         }
 
         private string NameToPath(string name)
         {
-            return Path.GetFullPath(Path.Combine(baseDirectory, name));
+            return Path.GetFullPath(Path.Combine(_tempDirectory, name));
+        }
+
+        private void CloseCreatedStreams()
+        {
+            foreach (var item in _createdFiles)
+            {
+                item.Value.Close();
+            }
         }
 
         public void Dispose()
         {
-            foreach (var item in _tochedStreams)
-            {
-                item.Close();
-            }
-            Directory.Delete(baseDirectory, true);
-            log.Info("Direcotry {0} removed", baseDirectory);
+            CloseCreatedStreams();
+            Directory.Delete(_tempDirectory, true);
         }
     }
 }
