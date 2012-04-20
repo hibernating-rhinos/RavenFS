@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NLog;
 using RavenFS.Extensions;
 
 namespace RavenFS.Rdc.Wrapper
 {
     public class VolatileSignatureRepository : ISignatureRepository
     {
+        private static readonly Logger log = LogManager.GetCurrentClassLogger();
+        private IList<Stream> _tochedStreams;
+
         private readonly string baseDirectory;
 
         public VolatileSignatureRepository(string path)
@@ -23,7 +27,9 @@ namespace RavenFS.Rdc.Wrapper
 
         public Stream CreateContent(string sigName)
         {
-            return File.Create(NameToPath(sigName));
+            var file = File.Create(NameToPath(sigName), 1024 * 128, FileOptions.Asynchronous);
+            log.Info("File {0} created", sigName);
+            return file;
         }
 
         public void Flush(IEnumerable<SignatureInfo> signatureInfos)
@@ -42,6 +48,7 @@ namespace RavenFS.Rdc.Wrapper
             foreach (var item in GetSigFileNamesByFileName(fileName))
             {
                 File.Delete(item);
+                log.Info("File {0} removed", item);
             }
         }
 

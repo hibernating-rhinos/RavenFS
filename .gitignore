@@ -20,3 +20,4 @@ RavenFS.Web/Data.ravenfs/*
 RavenFS.Web/Index.ravenfs/*
 RavenFS/~/
 RavenFS/Data
+RavenFS/NLog.config

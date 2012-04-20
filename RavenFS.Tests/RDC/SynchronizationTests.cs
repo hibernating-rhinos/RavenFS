@@ -71,7 +71,7 @@ namespace RavenFS.Tests.RDC
         }
 
         [Theory]
-        [InlineData(1024 * 1024 * 10)]
+        [InlineData(1024 * 1024 * 80)]
         public void Big_file_test(long size)
         {
             var sourceContent = new RandomStream(size, 1);
@@ -91,6 +91,7 @@ namespace RavenFS.Tests.RDC
             sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
             SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize("test.bin", seedClient, sourceClient);
+            Assert.Null(result.Exception);
             Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
         }
 
