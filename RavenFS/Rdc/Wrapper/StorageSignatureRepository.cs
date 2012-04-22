@@ -116,10 +116,11 @@ namespace RavenFS.Rdc.Wrapper
                 accessor =>
                 {
                     result = (from item in accessor.GetSignatures(_fileName)
+                              orderby item.Level
                               select new SignatureInfo(item.Level, _fileName)
                                          {
                                              Length = accessor.GetSignatureSize(item.Id, item.Level)
-                                         }).ToList();
+                                         }). ToList();
                 });
             if (result.Count() < 1)
             {

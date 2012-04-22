@@ -76,7 +76,8 @@ namespace RavenFS.Tests.RDC
         public void Big_file_test(long size)
         {
             var sourceContent = new RandomStream(size, 1);
-            var seedContent = new RandomlyModifiedStream(new RandomStream(size, 1), 0.01);
+            //var seedContent = new RandomlyModifiedStream(new RandomStream(size, 1), 0.01);
+            var seedContent = new RandomStream(size, 1);
             var seedClient = NewClient(0);
             var sourceClient = NewClient(1);
             var sourceMetadata = new NameValueCollection
