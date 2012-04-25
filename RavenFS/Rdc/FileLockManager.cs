@@ -9,7 +9,7 @@ namespace RavenFS.Rdc
 
 	public class FileLockManager
 	{
-		private readonly TimeSpan defaultTimeout = new TimeSpan(0, 0, 10, 0);
+		private readonly TimeSpan defaultTimeout = TimeSpan.FromMinutes(10);
 		private readonly TransactionalStorage storage;
 		private TimeSpan configuredTimeout;
 
@@ -29,13 +29,13 @@ namespace RavenFS.Rdc
 			}
 		}
 
-		public void LockByCreatingSyncConfiguration(string fileName, string sourceServerUrl)
+		public void LockByCreatingSyncConfiguration(string fileName, string destinationServerUrl = null)
 		{
 			storage.Batch(accessor =>
 			{
 				var syncOperationDetails = new SynchronizationDetails
 				                          	{
-				                          		ReplicationSource = sourceServerUrl,
+				                          		DestinationUrl = destinationServerUrl,
 				                          		FileLockedAt = DateTime.UtcNow
 				                          	};
 

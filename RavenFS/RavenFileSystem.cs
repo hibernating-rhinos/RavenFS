@@ -30,6 +30,7 @@ namespace RavenFS
 	    private readonly NotificationPublisher notificationPublisher;
 	    private readonly HistoryUpdater historyUpdater;
 		private readonly FileLockManager fileLockManager;
+		private readonly SynchronizationTask synchronizationTask;
 
 	    public TransactionalStorage Storage
 		{
@@ -59,6 +60,7 @@ namespace RavenFS
             var uuidGenerator = new UuidGenerator(sequenceActions);
             historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
+			synchronizationTask = new SynchronizationTask(storage, BufferPool, fileLockManager, signatureRepository, sigGenerator, notificationPublisher);
 
 			AppDomain.CurrentDomain.ProcessExit += ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload += ShouldDispose;
@@ -108,6 +110,11 @@ namespace RavenFS
 		public FileLockManager FileLockManager
 		{
 			get { return fileLockManager; }
+		}
+
+		public SynchronizationTask SynchronizationTask
+		{
+			get { return synchronizationTask; }
 		}
 
 	    [MethodImpl(MethodImplOptions.Synchronized)]

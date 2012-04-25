@@ -9,27 +9,50 @@ namespace RavenFS.Tests.RDC
 {
     public class RdcTestUtils
     {
-        public static SynchronizationReport SynchronizeAndWaitForStatus(RavenFileSystemClient client, string sourceUrl, string fileName)
+        public static SynchronizationReport SynchronizeAndWaitForStatus(RavenFileSystemClient source, string sourceUrl, string fileName)
         {
-            client.Synchronization.StartSynchronizationAsync(sourceUrl, fileName).Wait();
+			source.Synchronization.SynchronizeDestinationsAsync("test.txt").Wait();
             var synchronizationReportTask = Task.Factory.StartNew(
                 () =>
                 {
                     SynchronizationReport report;
                     do
                     {
-                        report = client.Synchronization.GetSynchronizationStatusAsync(fileName).Result;
+                        report = source.Synchronization.GetSynchronizationStatusAsync(fileName).Result;
                     } while (report == null);
                     return report;
                 });
             return synchronizationReportTask.Result;
         }
 
-        public static SynchronizationReport ResolveConflictAndSynchronize(string fileName, RavenFileSystemClient client, RavenFileSystemClient sourceClient)
+        public static SynchronizationReport ResolveConflictAndSynchronize(string fileName, RavenFileSystemClient sourceClient)
         {
-            SynchronizeAndWaitForStatus(client, sourceClient.ServerUrl, fileName);
-            client.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs).Wait();
-            return SynchronizeAndWaitForStatus(client, sourceClient.ServerUrl, fileName);
+            SynchronizeAndWaitForStatus(sourceClient, sourceClient.ServerUrl, fileName);
+            sourceClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs).Wait();
+            return SynchronizeAndWaitForStatus(sourceClient, sourceClient.ServerUrl, fileName);
         }
+
+		public static SynchronizationReport SynchronizeAndWaitForStatusOld(RavenFileSystemClient client, string sourceUrl, string fileName)
+		{
+			client.Synchronization.StartSynchronizationAsync(sourceUrl, fileName).Wait();
+			var synchronizationReportTask = Task.Factory.StartNew(
+				() =>
+				{
+					SynchronizationReport report;
+					do
+					{
+						report = client.Synchronization.GetSynchronizationStatusAsync(fileName).Result;
+					} while (report == null);
+					return report;
+				});
+			return synchronizationReportTask.Result;
+		}
+
+		public static SynchronizationReport ResolveConflictAndSynchronize(string fileName, RavenFileSystemClient client, RavenFileSystemClient sourceClient)
+		{
+			SynchronizeAndWaitForStatusOld(client, sourceClient.ServerUrl, fileName);
+			client.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs).Wait();
+			return SynchronizeAndWaitForStatusOld(client, sourceClient.ServerUrl, fileName);
+		}
     }
 }

@@ -233,7 +233,7 @@ namespace RavenFS.Tests.RDC
 		{
 			return new NameValueCollection()
 			                      	{
-			                      		{"value", "{\"ReplicationSource\":\"http://localhost:19081\",\"FileLockedAt\":\"\\/Date(" + fileLockedDate.Ticks + ")\\/\"}"},
+			                      		{"value", "{\"DestinationUrl\":\"http://localhost:19081\",\"FileLockedAt\":\"\\/Date(" + fileLockedDate.Ticks + ")\\/\"}"},
 			                      	};
 		}
 
