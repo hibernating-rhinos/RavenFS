@@ -50,7 +50,7 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("POST")]
 		public HttpResponseMessage Start(string fileName, string destinationServerUrl)
 		{
-			RavenFileSystem.SynchronizationTask.StartSyncingTo(fileName, destinationServerUrl);
+			RavenFileSystem.SynchronizationTask.StartSyncingToAsync(fileName, destinationServerUrl);
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
@@ -149,8 +149,15 @@ namespace RavenFS.Controllers
 								})
 				.ContinueWith(task =>
 				{
-					synchronizingFile.Dispose();
-					localFile.Dispose();
+					if(synchronizingFile != null)
+					{
+						synchronizingFile.Dispose();
+					}
+					if(localFile != null)
+					{
+						localFile.Dispose();
+					}
+
 					task.AssertNotFaulted();
 
 					Storage.Batch(

@@ -37,8 +37,6 @@ namespace RavenFS.Rdc.Multipart
 							MimeConstants.LineSeparator);
 			sb.AppendFormat("Content-Type: {0}{1}{2}", ContentType, MimeConstants.LineSeparator, MimeConstants.LineSeparator);
 
-			//sb.Append("some content");
-
 			byte[] buffer = Encoding.ASCII.GetBytes(sb.ToString());
 			stream.Write(buffer, 0, buffer.Length);
 		}

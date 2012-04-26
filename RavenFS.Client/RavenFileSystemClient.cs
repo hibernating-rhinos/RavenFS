@@ -539,6 +539,17 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
 			}
 
+			public Task StartSynchronizationToAsync(string fileName, string destinationServerUrl)
+			{
+				var requestUriString = String.Format("{0}/synchronization/start/{1}?destinationServerUrl={2}", ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(destinationServerUrl));
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				request.Method = "POST";
+				request.ContentLength = 0;
+				return request.GetResponseAsync()
+					.ContinueWith(task => task.Result.Close())
+					.TryThrowBetterError();
+			}
+
             public Task<SynchronizationReport> GetSynchronizationStatusAsync(string fileName)
             {
                 var requestUriString = String.Format("{0}/synchronization/status/{1}", ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(fileName));

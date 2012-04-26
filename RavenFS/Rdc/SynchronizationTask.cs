@@ -39,133 +39,145 @@ namespace RavenFS.Rdc
 		{
 			foreach (var destination in GetSynchronizationDestinations())
 			{
-				StartSyncingTo(fileName, destination);
+				StartSyncingToAsync(fileName, destination);
 			}
 		}
 
-		public void StartSyncingTo(string fileName, string destination)
+		public Task<SynchronizationReport> StartSyncingToAsync(string fileName, string destination)
 		{
 			if (synchronizationQueue.NumberOfActiveSynchronizationTasksFor(destination) > 1)
 			{
-				return;
+				return new Task<SynchronizationReport>(() => new SynchronizationReport());
 			}
 
 			fileLockManager.LockByCreatingSyncConfiguration(fileName, destination);
 
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 
-			destinationRavenFileSystemClient.GetMetadataForAsync(fileName)
+			return destinationRavenFileSystemClient.GetMetadataForAsync(fileName)
 				.ContinueWith(
 					getMetadataForAsyncTask =>
-					{
-						var destinationMetadata = getMetadataForAsyncTask.Result;
-
-						var localMetadata = GetLocalMetadata(fileName);
-
-						if (destinationMetadata == null)
 						{
-							// if file doesn't exist on destination server - upload it there
-							return UploadToDestination(destinationRavenFileSystemClient, fileName, localMetadata);
-						}
+							var destinationMetadata = getMetadataForAsyncTask.Result;
 
-						if (destinationMetadata.AllKeys.Contains(SynchronizationConstants.RavenReplicationConflict))
-						{
-							throw new SynchronizationException(
-								string.Format("File {0} on THEIR side is conflicted", fileName));
-						}
+							var sourceMetadata = GetLocalMetadata(fileName);
 
-						var conflict = CheckConflict(localMetadata, destinationMetadata);
-						var isConflictResolved = IsConflictResolved(localMetadata, conflict);
-						//if (conflict != null && !isConflictResolved)
-						//{
-						//    CreateConflictArtifacts(fileName, conflict);
-
-						//    publisher.Publish(new ConflictDetected
-						//    {
-						//        FileName = fileName,
-						//        ServerUrl = destination
-						//    });
-
-						//    throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
-						//}
-
-						var localFileDataInfo = GetLocalFileDataInfo(fileName);
-
-						var remoteSignatureCache = new VolatileSignatureRepository(TempDirectoryTools.Create());
-						var localRdcManager = new LocalRdcManager(signatureRepository, storage, sigGenerator);
-						var destinationRdcManager = new RemoteRdcManager(destinationRavenFileSystemClient, signatureRepository, remoteSignatureCache);
-
-						var sourceSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
-
-						return destinationRdcManager.SynchronizeSignaturesAsync(localFileDataInfo)
-								.ContinueWith(
-								task =>
-								{
-									var destinationSignatureManifest = task.Result;
-
-									if (destinationSignatureManifest.Signatures.Count > 0)
-									{
-										return SynchronizeTo(remoteSignatureCache, destination,
-														   fileName,
-														   destinationSignatureManifest,
-														   sourceSignatureManifest,
-														   localMetadata);
-									}
-									return UploadToDestination(destinationRavenFileSystemClient, fileName, localMetadata);
-								})
-								.Unwrap()
-								.ContinueWith(
-						synchronizationTask =>
-						{
-							remoteSignatureCache.Dispose();
-
-							if (isConflictResolved)
+							if (destinationMetadata == null)
 							{
-								RemoveConflictArtifacts(fileName);
+								// if file doesn't exist on destination server - upload it there
+								return UploadToDestination(destinationRavenFileSystemClient, fileName, sourceMetadata);
 							}
 
-							return synchronizationTask.Result;
-						});
-					})
-						.Unwrap()
-			.ContinueWith(
-				task =>
-				{
-					fileLockManager.UnlockByDeletingSyncConfiguration(fileName);
-					return task.Result;
-				})
-			.ContinueWith(
-				task =>
-				{
-					SynchronizationReport report;
-					if (task.Status == TaskStatus.Faulted)
-					{
-						report =
-							new SynchronizationReport
+							if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenReplicationConflict))
 							{
-								Exception = task.Exception.ExtractSingleInnerException()
-							};
-					}
-					else
-					{
-						report = task.Result;
-					}
+								throw new SynchronizationException(
+									string.Format("File {0} you want to synchronize is conflicted", fileName));
+							}
 
-					storage.Batch(
-						accessor =>
+							var conflict = CheckConflict(sourceMetadata, destinationMetadata);
+							var destinationConflictResolutionStrategy = GetDestinationConflictResolutionStrategy(destinationMetadata);
+
+							if (conflict != null)
+							{
+								if (destinationConflictResolutionStrategy != null)
+								{
+									if (IsConflictResolvedInFavorOfDestination(destinationConflictResolutionStrategy))
+									{
+										CreateConflictArtifacts(fileName, conflict);
+
+										publisher.Publish(new ConflictDetected
+										                  	{
+										                  		FileName = fileName,
+										                  		ServerUrl = destination
+										                  	});
+
+										throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
+									}
+									else if (!IsConflictResolvedInFavorOfSource(conflict, destinationConflictResolutionStrategy))
+									{
+										// if conflict is resolved in favor of source we can continue 
+										// but we just want to be sure that proper resolution is applied
+										throw new SynchronizationException(
+											string.Format("Invalid conflict resolution strategy on {0}", destination));
+									}
+								}
+								else
+								{
+									destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(fileName, conflict.Ours.Version,
+									                                                                    conflict.Ours.ServerId);
+									throw new SynchronizationException(
+										string.Format("File {0} is conflicted. No resolution provided by {1}.", fileName, destination));
+								}
+							}
+
+							var localFileDataInfo = GetLocalFileDataInfo(fileName);
+
+							var remoteSignatureCache = new VolatileSignatureRepository(TempDirectoryTools.Create());
+							var localRdcManager = new LocalRdcManager(signatureRepository, storage, sigGenerator);
+							var destinationRdcManager = new RemoteRdcManager(destinationRavenFileSystemClient, signatureRepository,
+							                                                 remoteSignatureCache);
+
+							var sourceSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
+
+							return destinationRdcManager.SynchronizeSignaturesAsync(localFileDataInfo)
+								.ContinueWith(
+									task =>
+										{
+											var destinationSignatureManifest = task.Result;
+
+											if (destinationSignatureManifest.Signatures.Count > 0)
+											{
+												return SynchronizeTo(remoteSignatureCache, destination,
+												                     fileName,
+												                     sourceSignatureManifest,
+												                     sourceMetadata);
+											}
+											return UploadToDestination(destinationRavenFileSystemClient, fileName, sourceMetadata);
+										})
+								.Unwrap()
+								.ContinueWith(
+									synchronizationTask =>
+										{
+											remoteSignatureCache.Dispose();
+
+											return synchronizationTask.Result;
+										});
+						})
+				.Unwrap()
+				.ContinueWith(
+					task =>
 						{
-							var name = SynchronizationHelper.SyncResultNameForFile(fileName);
-							accessor.SetConfigurationValue(name, report);
+							fileLockManager.UnlockByDeletingSyncConfiguration(fileName);
+							return task.Result;
+						})
+				.ContinueWith(task =>
+				              	{
+									SynchronizationReport report;
+									if (task.Status == TaskStatus.Faulted)
+									{
+										report =
+											new SynchronizationReport
+											{
+												Exception = task.Exception.ExtractSingleInnerException()
+											};
+									}
+									else
+									{
+										report = task.Result;
+									}
 
-							//if (task.Status != TaskStatus.Faulted)
-							//{
-							//    SaveSynchronizationSourceInformation(sourceServerUrl, remoteMetadata.Value<Guid>("ETag"), accessor);
-							//}
-						});
-				});
+									storage.Batch(
+										accessor =>
+										{
+											var name = SynchronizationHelper.SyncResultNameForFile(fileName);
+											accessor.SetConfigurationValue(name, report);
+										});
+
+				              		return task.Result;
+				              	});
 		}
 
-		private Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, string fileName, SignatureManifest destinationSignatureManifest, SignatureManifest sourceSignatureManifest, NameValueCollection sourceMetadata)
+		private Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, string fileName, SignatureManifest sourceSignatureManifest, NameValueCollection sourceMetadata)
 		{
 			var seedSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
 			var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
@@ -247,16 +259,16 @@ namespace RavenFS.Rdc
 				});
 		}
 
-		private ConflictItem CheckConflict(NameValueCollection localMetadata, NameValueCollection remoteMetadata)
+		private ConflictItem CheckConflict(NameValueCollection sourceMetadata, NameValueCollection destinationMetadata)
 		{
-			var remoteHistory = HistoryUpdater.DeserializeHistory(remoteMetadata);
-			var remoteVersion = long.Parse(remoteMetadata[SynchronizationConstants.RavenReplicationVersion]);
-			var remoteServerId = remoteMetadata[SynchronizationConstants.RavenReplicationSource];
-			var localVersion = long.Parse(localMetadata[SynchronizationConstants.RavenReplicationVersion]);
-			var localServerId = localMetadata[SynchronizationConstants.RavenReplicationSource];
-			// if there are the same files or local is direct child there are no conflicts
+			var localHistory = HistoryUpdater.DeserializeHistory(sourceMetadata);
+			var remoteVersion = long.Parse(destinationMetadata[SynchronizationConstants.RavenReplicationVersion]);
+			var remoteServerId = destinationMetadata[SynchronizationConstants.RavenReplicationSource];
+			var localVersion = long.Parse(sourceMetadata[SynchronizationConstants.RavenReplicationVersion]);
+			var localServerId = sourceMetadata[SynchronizationConstants.RavenReplicationSource];
+			// if there are the same files or destination is direct child there are no conflicts
 			if ((remoteServerId == localServerId && remoteVersion == localVersion)
-				|| remoteHistory.Any(item => item.ServerId == localServerId && item.Version == localVersion))
+				|| localHistory.Any(item => item.ServerId == remoteServerId && item.Version == remoteVersion))
 			{
 				return null;
 			}
@@ -268,16 +280,25 @@ namespace RavenFS.Rdc
 				};
 		}
 
-		private bool IsConflictResolved(NameValueCollection localMetadata, ConflictItem conflict)
+		private ConflictResolution GetDestinationConflictResolutionStrategy(NameValueCollection destinationMetadata)
 		{
-			var conflictResolutionString = localMetadata[SynchronizationConstants.RavenReplicationConflictResolution];
+			var conflictResolutionString = destinationMetadata[SynchronizationConstants.RavenReplicationConflictResolution];
 			if (String.IsNullOrEmpty(conflictResolutionString))
 			{
-				return false;
+				return null;
 			}
-			var conflictResolution = new TypeHidingJsonSerializer().Parse<ConflictResolution>(conflictResolutionString);
-			return conflictResolution.Strategy == ConflictResolutionStrategy.Theirs
-				&& conflictResolution.TheirServerId == conflict.Theirs.ServerId;
+			return new TypeHidingJsonSerializer().Parse<ConflictResolution>(conflictResolutionString);
+		}
+
+		private bool IsConflictResolvedInFavorOfSource(ConflictItem conflict, ConflictResolution destinationConflictResolution)
+		{
+			return destinationConflictResolution.Strategy == ConflictResolutionStrategy.Theirs
+				&& destinationConflictResolution.TheirServerId == conflict.Ours.ServerId;
+		}
+
+		private bool IsConflictResolvedInFavorOfDestination(ConflictResolution destinationConflictResolution)
+		{
+			return destinationConflictResolution.Strategy == ConflictResolutionStrategy.Ours;
 		}
 
 		private NameValueCollection GetLocalMetadata(string fileName)
@@ -320,7 +341,7 @@ namespace RavenFS.Rdc
 
 		private string[] GetSynchronizationDestinations()
 		{
-			NameValueCollection destionationsConfig = new NameValueCollection();
+			var destionationsConfig = new NameValueCollection();
 
 			//storage.Batch(accessor => accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationDestinations, out destinations));
 			storage.Batch(accessor => destionationsConfig = accessor.GetConfig(SynchronizationConstants.RavenReplicationDestinations));
