@@ -1,25 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Collections.Specialized;
-using System.IO;
 using System.Threading.Tasks;
 using System.Web.Http;
 using RavenFS.Client;
+using RavenFS.Extensions;
+using RavenFS.Infrastructure;
 using RavenFS.Notifications;
 using RavenFS.Rdc;
 using RavenFS.Rdc.Wrapper;
 using RavenFS.Storage;
 using RavenFS.Util;
-using RavenFS.Extensions;
-using RavenFS.Infrastructure;
 
 namespace RavenFS.Controllers
 {
 	using System.Web;
-	using Newtonsoft.Json;
 	using Rdc.Multipart;
 	using ConflictDetected = Notifications.ConflictDetected;
 
@@ -49,184 +48,155 @@ namespace RavenFS.Controllers
     	}
 
 		[AcceptVerbs("POST")]
-		public HttpResponseMessage Start(string fileName)
-    	{
-			AssertFileIsNotBeingSynced(fileName);
-
-			FileLockManager.LockByCreatingSyncConfiguration(fileName);
-
-			StartupProceed(fileName);
-			
-			var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
-			//var partiallySynchronizedFile = StorageStream.CreatingNewAndWritting(Storage, Search, tempFileName, new NameValueCollection());
-			//partiallySynchronizedFile.Dispose();
-			Storage.Batch(accessor =>
-			              	{
-								accessor.PutFile(tempFileName, null, new NameValueCollection());
-			              	});
-
-			return new HttpResponseMessage(HttpStatusCode.NoContent);
-    	}
-
-		[AcceptVerbs("POST")]
-		public HttpResponseMessage Done(string fileName)
+		public HttpResponseMessage Start(string fileName, string destinationServerUrl)
 		{
-			var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
-
-			Storage.Batch(
-							accessor =>
-								{
-								accessor.CompleteFileUpload(tempFileName);
-								accessor.Delete(fileName);
-								accessor.RenameFile(tempFileName, fileName);
-							});
-
-			FileLockManager.UnlockByDeletingSyncConfiguration(fileName);
+			RavenFileSystem.SynchronizationTask.StartSyncingTo(fileName, destinationServerUrl);
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
-		//[AcceptVerbs("POST")]
-		//public Task<HttpResponseMessage> SourceChunk(string fileName, long from, long to)
-		//{
-		//    var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
-
-		//    return Request.Content.ReadAsStreamAsync()
-		//        .ContinueWith(readAsStreamTask =>
-		//                        {
-		//                            var partialySynchronizedFile = StorageStream.OpeningAndWritting(Storage, Search, tempFileName, new NameValueCollection());
-									
-		//                            if (partialySynchronizedFile.CanWrite == false)
-		//                                throw new ArgumentException("Stream does not support writing");
-		//                            partialySynchronizedFile.Seek(from, SeekOrigin.Begin);
-		//                            return readAsStreamTask.Result.CopyToAsync(partialySynchronizedFile)
-		//                                .ContinueWith(copyToTask =>
-		//                                                {
-		//                                                    copyToTask.AssertNotFaulted();
-		//                                                    partialySynchronizedFile.Dispose();
-
-		//                                                    copyToTask.AssertNotFaulted();
-		//                                                });
-
-		//                        }).Unwrap()
-		//                            .ContinueWith(task =>
-		//                                            {
-		//                                                task.AssertNotFaulted();
-		//                                                return new HttpResponseMessage(HttpStatusCode.Created);
-		//                                            });
-		//}
-
 		[AcceptVerbs("POST")]
-		public Task<SynchronizationReport> MultipartProceed()
+		public HttpResponseMessage MultipartProceed()
 		{
 			if (!Request.Content.IsMimeMultipartContent())
 			{
 				throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
 			}
 
-			string fileName = null;
-			string tempFileName = null;
+			InnerMultipartProceed(Request);
+
+			return new HttpResponseMessage(HttpStatusCode.NoContent);
+		}
+
+		private void InnerMultipartProceed(HttpRequestMessage request)
+		{
+			string fileName = Request.Headers.GetValues(SyncingMultipartConstants.SyncingFileName).FirstOrDefault();
+			string tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
+
+			AssertFileIsNotBeingSynced(fileName);
+
+			StartupProceed(fileName);
+
+			FileLockManager.LockByCreatingSyncConfiguration(fileName);
 
 			StorageStream localFile = null;
 			StorageStream synchronizingFile = null;
 
-			return Request.Content.ReadAsMultipartAsync()
+			request.Content.ReadAsMultipartAsync()
 				.ContinueWith(multipartReadTask =>
 								{
-									foreach (var part in multipartReadTask.Result)
+									var fileMetadataPart = multipartReadTask.Result.Where(part => !part.IsMimeMultipartContent()).FirstOrDefault();
+									var fileChunksPart = multipartReadTask.Result.Where(part => part.IsMimeMultipartContent()).FirstOrDefault();
+
+									if (fileMetadataPart == null || fileChunksPart == null)
 									{
-										if (!part.IsMimeMultipartContent()) // file name and metadata
-										{
-											fileName = part.Headers.ContentDisposition.FileName;
-											tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
-
-											localFile = StorageStream.Reading(Storage, fileName);
-
-											part.ReadAsStringAsync().ContinueWith(readAsStringAsyncTask =>
-											{
-												var sourceMetadata = HttpUtility.ParseQueryString(readAsStringAsyncTask.Result);
-												var newSourceMetadata = sourceMetadata.FilterHeaders();
-
-												HistoryUpdater.UpdateLastModified(newSourceMetadata);
-
-												synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search,
-																									  tempFileName,
-																									  newSourceMetadata);
-											}).Wait();
-										}
-										else // file chunks
-										{
-											part.ReadAsMultipartAsync()
-												.ContinueWith(bodyReadAsMultipartAsync =>
-												{
-													foreach (var fileChunkPart in bodyReadAsMultipartAsync.Result)
-													{
-														var parameters = fileChunkPart.Headers.ContentDisposition.Parameters.ToDictionary(t => t.Name);
-
-														var needType = parameters[SyncingMultipartConstants.SyncingNeedType].Value;
-														var from = Convert.ToInt64(parameters[SyncingMultipartConstants.SyncingRangeFrom].Value);
-														var to = Convert.ToInt64(parameters[SyncingMultipartConstants.SyncingRangeTo].Value);
-
-														if(needType == "source")
-														{
-															fileChunkPart.CopyToAsync(synchronizingFile).Wait();
-														}
-														else if (needType == "seed")
-														{
-															localFile.CopyToAsync(synchronizingFile, from, to).Wait();
-														}
-													}
-												}).Wait();
-										}
+										throw new HttpResponseException("Invalid multipart request", HttpStatusCode.BadRequest);
 									}
-								}).ContinueWith(_ =>
-								                	{
-								                		synchronizingFile.Dispose();
-														localFile.Dispose();
-														_.AssertNotFaulted();
-														Storage.Batch(
-															accessor =>
-															{
-																accessor.Delete(fileName);
-																accessor.RenameFile(tempFileName, fileName);
-															});
 
-														return new SynchronizationReport
-														{
-															FileName = fileName
-														};
-								                	});
+									localFile = StorageStream.Reading(Storage, fileName);
+
+									fileMetadataPart.ReadAsStringAsync()
+										.ContinueWith(readAsStringAsyncTask =>
+										{
+											var sourceMetadata = HttpUtility.ParseQueryString(readAsStringAsyncTask.Result);
+											var newSourceMetadata = sourceMetadata.FilterHeaders();
+
+											HistoryUpdater.UpdateLastModified(newSourceMetadata);
+
+											synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search,
+																								  tempFileName,
+																								  newSourceMetadata);
+										}).Wait();
+
+
+									long sourceBytes = 0;
+									long seedBytes = 0;
+									long numberOfFileParts = 0;
+
+									fileChunksPart.ReadAsMultipartAsync()
+										.ContinueWith(bodyReadAsMultipartAsync =>
+										{
+											numberOfFileParts = bodyReadAsMultipartAsync.Result.Count();
+
+											foreach (var fileChunkPart in bodyReadAsMultipartAsync.Result)
+											{
+												var parameters = fileChunkPart.Headers.ContentDisposition.Parameters.ToDictionary(t => t.Name);
+
+												var needType = parameters[SyncingMultipartConstants.SyncingNeedType].Value;
+												var from = Convert.ToInt64(parameters[SyncingMultipartConstants.SyncingRangeFrom].Value);
+												var to = Convert.ToInt64(parameters[SyncingMultipartConstants.SyncingRangeTo].Value);
+
+												if (needType == "source")
+												{
+													sourceBytes += (to - from);
+													fileChunkPart.CopyToAsync(synchronizingFile).Wait();
+												}
+												else if (needType == "seed")
+												{
+													seedBytes += (to - from);
+													localFile.CopyToAsync(synchronizingFile, from, to).Wait();
+												}
+											}
+										}).Wait();
+
+									return new SynchronizationReport
+									{
+										FileName = fileName,
+										BytesTransfered = sourceBytes,
+										BytesCopied = seedBytes,
+										NeedListLength = numberOfFileParts
+									};
+								})
+				.ContinueWith(task =>
+				{
+					synchronizingFile.Dispose();
+					localFile.Dispose();
+					task.AssertNotFaulted();
+
+					Storage.Batch(
+						accessor =>
+						{
+							accessor.Delete(fileName);
+							accessor.RenameFile(tempFileName, fileName);
+						});
+
+					return task.Result;
+				})
+				.ContinueWith(
+					task =>
+					{
+						FileLockManager.UnlockByDeletingSyncConfiguration(fileName);
+						return task.Result;
+					})
+				.ContinueWith(
+					task =>
+					{
+						SynchronizationReport report;
+						if (task.Status == TaskStatus.Faulted)
+						{
+							report =
+								new SynchronizationReport
+								{
+									Exception = task.Exception.ExtractSingleInnerException()
+								};
+						}
+						else
+						{
+							report = task.Result;
+						}
+						Storage.Batch(
+							accessor =>
+							{
+								var name = SynchronizationHelper.SyncResultNameForFile(fileName);
+								accessor.SetConfigurationValue(name, report);
+
+								//if (task.Status != TaskStatus.Faulted)
+								//{
+								//    SaveSynchronizationSourceInformation(sourceServerUrl, remoteMetadata.Value<Guid>("ETag"), accessor);
+								//}
+							});
+					});
 		}
-
-		//[AcceptVerbs("POST")]
-		//public Task<HttpResponseMessage> OwnChunk(string fileName, long from, long to)
-		//{
-		//    //TODO StoragePartialAccess
-		//    //new StoragePartialAccess(Storage, fileName).CopyToAsync(partialySynchronizedFile, from, to);
-			
-		//    var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
-
-		//    var localFile = StorageStream.Reading(Storage, fileName);
-		//    //TODO OPen
-		//    var partialySynchronizedFile = StorageStream.OpeningAndWritting(Storage, Search, tempFileName, new NameValueCollection());
-			
-		//    if (partialySynchronizedFile.CanWrite == false)
-		//        throw new ArgumentException("Stream does not support writing");
-
-
-
-		//    return localFile.CopyToAsync(partialySynchronizedFile, from, to)
-		//        .ContinueWith(copyToTask =>
-		//        {
-		//            copyToTask.AssertNotFaulted();
-		//            partialySynchronizedFile.Dispose();
-		//            localFile.Dispose();
-
-		//            copyToTask.AssertNotFaulted();
-
-		//            return new HttpResponseMessage(HttpStatusCode.Created);
-		//        });	
-		//}
 
         private void StartupProceed(string fileName)
         {

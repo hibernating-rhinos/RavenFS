@@ -69,6 +69,8 @@ namespace RavenFS.Rdc.Multipart
 
 			request.ContentType = "multipart/form-data; boundary=" + syncingBoundary;
 
+			request.Headers[SyncingMultipartConstants.SyncingFileName] = fileName;
+
 			return request.GetRequestStreamAsync()
 				.ContinueWith(task =>
 								{

@@ -63,16 +63,16 @@ namespace RavenFS.Tests.RDC
 					SynchronizationReport report;
 					do
 					{
-						report = sourceClient.Synchronization.GetSynchronizationStatusAsync("test.txt").Result;
+						report = seedClient.Synchronization.GetSynchronizationStatusAsync("test.txt").Result;
 					} while (report == null);
 					return report;
 				});
-			var a = synchronizationReportTask.Result;
+			var result = synchronizationReportTask.Result;
 			//SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize("test.txt",  sourceClient);
 
 			//Thread.Sleep(TimeSpan.FromMinutes(15));
 
-			//Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
+			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
 			string resultMd5 = null;
 			string resultSeed = null;
@@ -99,9 +99,6 @@ namespace RavenFS.Tests.RDC
 			//Thread.Sleep(TimeSpan.FromMinutes(15));
 
 			Assert.True(resultMd5 == sourceMd5);
-
-			//Thread.Sleep(TimeSpan.FromMinutes(15));
-
 		}
 
 		[Theory]
