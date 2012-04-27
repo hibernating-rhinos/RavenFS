@@ -75,7 +75,7 @@ namespace RavenFS.Rdc
 							}
 
 							var conflict = CheckConflict(sourceMetadata, destinationMetadata);
-							var destinationConflictResolutionStrategy = GetDestinationConflictResolutionStrategy(destinationMetadata);
+							var destinationConflictResolutionStrategy = GetConflictResolutionStrategy(destinationMetadata);
 
 							if (conflict != null)
 							{
@@ -280,9 +280,9 @@ namespace RavenFS.Rdc
 				};
 		}
 
-		private ConflictResolution GetDestinationConflictResolutionStrategy(NameValueCollection destinationMetadata)
+		private ConflictResolution GetConflictResolutionStrategy(NameValueCollection metadata)
 		{
-			var conflictResolutionString = destinationMetadata[SynchronizationConstants.RavenReplicationConflictResolution];
+			var conflictResolutionString = metadata[SynchronizationConstants.RavenReplicationConflictResolution];
 			if (String.IsNullOrEmpty(conflictResolutionString))
 			{
 				return null;

@@ -8,6 +8,6 @@ namespace RavenFS.Rdc.Multipart
 
 		public static string SyncingRangeTo = "Syncing-range-to";
 
-		public static string SyncingFileName = "Syncing-file-name";
+		public static string SyncingFileName = "Temp-Syncing-file-name";
 	}
 }

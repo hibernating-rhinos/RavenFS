@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Linq;
 using Newtonsoft.Json;
+using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Notifications;
 using RavenFS.Rdc;
@@ -13,12 +11,9 @@ using RavenFS.Tests.Tools;
 using RavenFS.Util;
 using Xunit;
 using Xunit.Extensions;
-using RavenFS.Client;
 
 namespace RavenFS.Tests.RDC
 {
-	using System.Net;
-
 	public class SynchronizationTestsAfterChanges : MultiHostTestBase
 	{
 		[Theory]
@@ -50,13 +45,12 @@ namespace RavenFS.Tests.RDC
 			sourceContent.Position = 0;
 			sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection()
-        	                                                                                     	{
-        	                                                                                     		{ "url", "http://arek-win:19079" }
-        	                                                                                     	}).Wait();
+			//sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection()
+			//                                                                                        {
+			//                                                                                            { "url", "http://arek-win:19079" }
+			//                                                                                        }).Wait();
 
 			SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, seedClient, "test.txt");
-
 
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
@@ -68,13 +62,10 @@ namespace RavenFS.Tests.RDC
 				resultFileContent.Position = 0;
 				resultMd5 = resultFileContent.GetMD5Hash();
 				resultFileContent.Position = 0;
-
-				resultFileContent.Position = 0;
 			}
 
 			sourceContent.Position = 0;
 			var sourceMd5 = sourceContent.GetMD5Hash();
-			sourceContent.Position = 0;
 
 			Assert.True(resultMd5 == sourceMd5);
 		}
@@ -103,25 +94,50 @@ namespace RavenFS.Tests.RDC
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 		}
 
-		//[Fact]
-		//public void Should_download_file_from_source_if_it_doesnt_exist_on_seed()
-		//{
-		//    var sourceContent1 = new RandomStream(10, 1);
-		//    var sourceMetadata = new NameValueCollection
-		//                       {
-		//                           {"SomeTest-metadata", "some-value"}
-		//                       };
-		//    var seedClient = NewClient(0);
-		//    var sourceClient = NewClient(1);
+		[Theory]
+		[InlineData(1024 * 1024 * 10)]
+		public void Big_character_file_test(long size)
+		{
+			var sourceContent = new RandomCharacterStream(size, 1);
+			var seedContent = new RandomlyModifiedStream(new RandomCharacterStream(size, 1), 0.01, 1);
+			var seedClient = NewClient(0);
+			var sourceClient = NewClient(1);
+			var sourceMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "some-value"}
+                               };
+			var seedMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "should-be-overwritten"}
+                               };
 
-		//    sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
+			seedClient.UploadAsync("test.bin", seedMetadata, seedContent).Wait();
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-		//    var synchronizationReport = RdcTestUtils.SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
-		//    var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
+			SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, seedClient, "test.bin");
+			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
+		}
 
-		//    Assert.Equal(sourceContent1.Length, synchronizationReport.BytesCopied + synchronizationReport.BytesTransfered);
-		//    Assert.Equal("some-value", resultFileMetadata["SomeTest-metadata"]);
-		//}
+		[Fact]
+		public void Sources_should_upload_file_to_destination_it_doesnt_exist_there()
+		{
+			var sourceContent = new RandomStream(10, 1);
+			var sourceMetadata = new NameValueCollection
+		                       {
+		                           {"SomeTest-metadata", "some-value"}
+		                       };
+
+			var seedClient = NewClient(0);
+			var sourceClient = NewClient(1);
+
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
+
+			var sourceSynchronizationReport = RdcTestUtils.SynchronizeAndWaitForStatus(sourceClient, seedClient.ServerUrl, "test.bin");
+			var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
+
+			Assert.Equal(sourceContent.Length, sourceSynchronizationReport.BytesCopied + sourceSynchronizationReport.BytesTransfered);
+			Assert.Equal("some-value", resultFileMetadata["SomeTest-metadata"]);
+		}
 
 		[Fact]
 		public void Should_modify_etag_after_upload()

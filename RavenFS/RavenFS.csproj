@@ -192,7 +192,6 @@
     <Compile Include="Rdc\Multipart\IFilePart.cs" />
     <Compile Include="Rdc\Multipart\MimeConstants.cs" />
     <Compile Include="Rdc\Multipart\SeedFilePart.cs" />
-    <Compile Include="Rdc\Multipart\FileInfoPart.cs" />
     <Compile Include="Rdc\Multipart\SourceFilePart.cs" />
     <Compile Include="Rdc\Multipart\IMimePart.cs" />
     <Compile Include="Rdc\Multipart\SynchronizationMultipartRequest.cs" />

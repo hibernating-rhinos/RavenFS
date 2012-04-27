@@ -14,21 +14,19 @@ namespace RavenFS.Rdc.Multipart
 	{
 		private readonly string destinationUrl;
 		private readonly string fileName;
+		private readonly NameValueCollection sourceMetadata;
 		private readonly Stream sourceStream;
-		private readonly FileInfoPart fileInfoPart;
 		private readonly IList<IFilePart> fileParts;
 		private readonly string syncingBoundary;
-		private readonly string filesBoundary;
 
 		public SynchronizationMultipartRequest(string destinationUrl, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList)
 		{
 			this.destinationUrl = destinationUrl;
 			this.fileName = fileName;
+			this.sourceMetadata = sourceMetadata;
 			this.sourceStream = sourceStream;
 			this.syncingBoundary = "syncing";
-			this.filesBoundary = "files";
 
-			this.fileInfoPart = new FileInfoPart(fileName, sourceMetadata, syncingBoundary);
 			this.fileParts = CreateFileParts(needList);
 		}
 
@@ -41,10 +39,10 @@ namespace RavenFS.Rdc.Multipart
 				switch (item.BlockType)
 				{
 					case RdcNeedType.Source:
-						result.Add(new SourceFilePart(sourceStream, Convert.ToInt64(item.FileOffset), Convert.ToInt64(item.BlockLength), filesBoundary));
+						result.Add(new SourceFilePart(sourceStream, Convert.ToInt64(item.FileOffset), Convert.ToInt64(item.BlockLength), syncingBoundary));
 						break;
 					case RdcNeedType.Seed:
-						result.Add(new SeedFilePart(Convert.ToInt64(item.FileOffset), Convert.ToInt64(item.BlockLength), filesBoundary));
+						result.Add(new SeedFilePart(Convert.ToInt64(item.FileOffset), Convert.ToInt64(item.BlockLength), syncingBoundary));
 						break;
 					default:
 						throw new NotSupportedException();
@@ -52,6 +50,20 @@ namespace RavenFS.Rdc.Multipart
 			}
 
 			return result;
+		}
+
+		private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
+		{
+			foreach (var key in metadata.AllKeys)
+			{
+				var values = metadata.GetValues(key);
+				if (values == null)
+					continue;
+				foreach (var value in values)
+				{
+					request.Headers[key] = value;
+				}
+			}
 		}
 
 		public Task PushChangesToDesticationAsync()
@@ -67,6 +79,8 @@ namespace RavenFS.Rdc.Multipart
 			request.AllowWriteStreamBuffering = false;
 			request.KeepAlive = true;
 
+			AddHeaders(sourceMetadata, request);
+
 			request.ContentType = "multipart/form-data; boundary=" + syncingBoundary;
 
 			request.Headers[SyncingMultipartConstants.SyncingFileName] = fileName;
@@ -76,25 +90,13 @@ namespace RavenFS.Rdc.Multipart
 								{
 									var requestStream = task.Result;
 
-									fileInfoPart.CopyTo(requestStream);
-
-									var filesHeader = new StringBuilder();
-									filesHeader.AppendFormat("{0}--{1}{0}", MimeConstants.LineSeparator, syncingBoundary);
-									filesHeader.AppendFormat("Content-Disposition: form-data{0}", MimeConstants.LineSeparator);
-									filesHeader.AppendFormat("Content-Type: multipart/mixed; boundary={0}{1}", filesBoundary,
-															 MimeConstants.LineSeparator);
-
-									byte[] filesHeaderBuffer = Encoding.ASCII.GetBytes(filesHeader.ToString());
-									requestStream.Write(filesHeaderBuffer, 0, filesHeaderBuffer.Length);
-
 									foreach (var filePart in fileParts)
 									{
 										filePart.CopyTo(requestStream);
 									}
 
 									var footer = new StringBuilder();
-									footer.AppendFormat("{0}--{1}--{0}{0}--{2}--{0}{0}", MimeConstants.LineSeparator, filesBoundary,
-														syncingBoundary);
+									footer.AppendFormat("{0}--{1}--{0}{0}", MimeConstants.LineSeparator, syncingBoundary);
 
 									var footerBuffer = Encoding.ASCII.GetBytes(footer.ToString());
 									task.Result.Write(footerBuffer, 0, footerBuffer.Length);

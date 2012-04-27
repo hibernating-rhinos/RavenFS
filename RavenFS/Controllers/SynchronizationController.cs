@@ -82,62 +82,42 @@ namespace RavenFS.Controllers
 			StorageStream localFile = null;
 			StorageStream synchronizingFile = null;
 
+			var headers = Request.Headers.FilterHeaders();
+
 			request.Content.ReadAsMultipartAsync()
 				.ContinueWith(multipartReadTask =>
 								{
-									var fileMetadataPart = multipartReadTask.Result.Where(part => !part.IsMimeMultipartContent()).FirstOrDefault();
-									var fileChunksPart = multipartReadTask.Result.Where(part => part.IsMimeMultipartContent()).FirstOrDefault();
-
-									if (fileMetadataPart == null || fileChunksPart == null)
-									{
-										throw new HttpResponseException("Invalid multipart request", HttpStatusCode.BadRequest);
-									}
-
 									localFile = StorageStream.Reading(Storage, fileName);
 
-									fileMetadataPart.ReadAsStringAsync()
-										.ContinueWith(readAsStringAsyncTask =>
-										{
-											var sourceMetadata = HttpUtility.ParseQueryString(readAsStringAsyncTask.Result);
-											var newSourceMetadata = sourceMetadata.FilterHeaders();
+									HistoryUpdater.UpdateLastModified(headers);
 
-											HistoryUpdater.UpdateLastModified(newSourceMetadata);
-
-											synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search,
+									synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search,
 																								  tempFileName,
-																								  newSourceMetadata);
-										}).Wait();
-
+																								  headers);
 
 									long sourceBytes = 0;
 									long seedBytes = 0;
-									long numberOfFileParts = 0;
+									long numberOfFileParts = multipartReadTask.Result.Count();
 
-									fileChunksPart.ReadAsMultipartAsync()
-										.ContinueWith(bodyReadAsMultipartAsync =>
+									foreach (var fileChunkPart in multipartReadTask.Result)
+									{
+										var parameters = fileChunkPart.Headers.ContentDisposition.Parameters.ToDictionary(t => t.Name);
+
+										var needType = parameters[SyncingMultipartConstants.SyncingNeedType].Value;
+										var from = Convert.ToInt64(parameters[SyncingMultipartConstants.SyncingRangeFrom].Value);
+										var to = Convert.ToInt64(parameters[SyncingMultipartConstants.SyncingRangeTo].Value);
+
+										if (needType == "source")
 										{
-											numberOfFileParts = bodyReadAsMultipartAsync.Result.Count();
-
-											foreach (var fileChunkPart in bodyReadAsMultipartAsync.Result)
-											{
-												var parameters = fileChunkPart.Headers.ContentDisposition.Parameters.ToDictionary(t => t.Name);
-
-												var needType = parameters[SyncingMultipartConstants.SyncingNeedType].Value;
-												var from = Convert.ToInt64(parameters[SyncingMultipartConstants.SyncingRangeFrom].Value);
-												var to = Convert.ToInt64(parameters[SyncingMultipartConstants.SyncingRangeTo].Value);
-
-												if (needType == "source")
-												{
-													sourceBytes += (to - from);
-													fileChunkPart.CopyToAsync(synchronizingFile).Wait();
-												}
-												else if (needType == "seed")
-												{
-													seedBytes += (to - from);
-													localFile.CopyToAsync(synchronizingFile, from, to).Wait();
-												}
-											}
-										}).Wait();
+											sourceBytes += (to - from);
+											fileChunkPart.CopyToAsync(synchronizingFile).Wait();
+										}
+										else if (needType == "seed")
+										{
+											seedBytes += (to - from);
+											localFile.CopyToAsync(synchronizingFile, from, to).Wait();
+										}
+									}
 
 									return new SynchronizationReport
 									{
