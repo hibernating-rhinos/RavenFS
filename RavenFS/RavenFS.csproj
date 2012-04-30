@@ -113,6 +113,9 @@
     <Reference Include="System.Web.Http.Common">
       <HintPath>..\packages\System.Web.Http.Common.4.0.20126.16343\lib\net40\System.Web.Http.Common.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web.Http.SelfHost">
+      <HintPath>..\packages\AspNetWebApi.SelfHost.4.0.20126.16343\lib\net40\System.Web.Http.SelfHost.dll</HintPath>
+    </Reference>
     <Reference Include="System.Web.Http.WebHost">
       <HintPath>..\packages\AspNetWebApi.4.0.20126.16343\lib\net40\System.Web.Http.WebHost.dll</HintPath>
     </Reference>

@@ -34,9 +34,9 @@ namespace RavenFS.Rdc.Multipart
 			var sb = new StringBuilder();
 			sb.AppendFormat("{1}--{0}{1}", Boundary, MimeConstants.LineSeparator);
 			sb.AppendFormat("Content-Disposition: {0}; {1}={2}; {3}={4}; {5}={6}{7}", ContentDisposition,
-							SyncingMultipartConstants.SyncingNeedType, SyncingNeedType,
-							SyncingMultipartConstants.SyncingRangeFrom, SyncingRangeFrom,
-							SyncingMultipartConstants.SyncingRangeTo, SyncingRangeTo,
+							SyncingMultipartConstants.NeedType, SyncingNeedType,
+							SyncingMultipartConstants.RangeFrom, SyncingRangeFrom,
+							SyncingMultipartConstants.RangeTo, SyncingRangeTo,
 							MimeConstants.LineSeparator);
 			sb.AppendFormat("Content-Type: {0}{1}{2}", ContentType, MimeConstants.LineSeparator, MimeConstants.LineSeparator);
 

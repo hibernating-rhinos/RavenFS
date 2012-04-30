@@ -14,6 +14,8 @@ using Xunit.Extensions;
 
 namespace RavenFS.Tests.RDC
 {
+	using System.Threading;
+
 	public class SynchronizationTestsAfterChanges : MultiHostTestBase
 	{
 		[Theory]
@@ -119,7 +121,37 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
-		public void Sources_should_upload_file_to_destination_it_doesnt_exist_there()
+		public void Destination_should_know_what_is_last_file_after_synchronization()
+		{
+			var sourceContent = new RandomStream(10, 1);
+			var sourceMetadata = new NameValueCollection
+		                       {
+		                           {"SomeTest-metadata", "some-value"}
+		                       };
+
+			var seedClient = NewClient(0);
+			var sourceClient = NewClient(1);
+
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
+
+			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", seedClient.ServerUrl).Wait();
+
+			Guid lastEtag;
+
+			do
+			{
+				lastEtag = seedClient.Synchronization.GetLastEtagFromAsync(Uri.EscapeDataString(sourceClient.ServerUrl)).Result;
+				Thread.Sleep(50);
+
+			} while (lastEtag == Guid.Empty);
+
+			var sourceMetadataWithEtag = sourceClient.GetMetadataForAsync("test.bin").Result;
+
+			Assert.Equal(sourceMetadataWithEtag.Value<Guid>("ETag"), lastEtag);
+		}
+
+		[Fact]
+		public void Source_should_upload_file_to_destination_if_doesnt_exist_there()
 		{
 			var sourceContent = new RandomStream(10, 1);
 			var sourceMetadata = new NameValueCollection

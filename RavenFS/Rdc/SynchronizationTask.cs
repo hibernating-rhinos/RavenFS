@@ -1,6 +1,7 @@
 namespace RavenFS.Rdc
 {
 	using System;
+	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Linq;
@@ -18,6 +19,7 @@ namespace RavenFS.Rdc
 	public class SynchronizationTask
 	{
 		private readonly SynchronizationQueue synchronizationQueue = new SynchronizationQueue();
+		private readonly RavenFileSystem localRavenFileSystem;
 		private readonly TransactionalStorage storage;
 		private readonly BufferPool bufferPool;
 		private readonly ISignatureRepository signatureRepository;
@@ -25,14 +27,24 @@ namespace RavenFS.Rdc
 		private readonly FileLockManager fileLockManager;
 		private readonly NotificationPublisher publisher;
 
-		public SynchronizationTask(TransactionalStorage storage, BufferPool bufferPool, FileLockManager fileLockManager, ISignatureRepository signatureRepository, SigGenerator sigGenerator, NotificationPublisher publisher)
+		public SynchronizationTask(RavenFileSystem localRavenFileSystem, TransactionalStorage storage, BufferPool bufferPool, FileLockManager fileLockManager, ISignatureRepository signatureRepository, SigGenerator sigGenerator, NotificationPublisher publisher)
 		{
+			this.localRavenFileSystem = localRavenFileSystem;
 			this.storage = storage;
 			this.sigGenerator = sigGenerator;
 			this.signatureRepository = signatureRepository;
 			this.bufferPool = bufferPool;
 			this.fileLockManager = fileLockManager;
 			this.publisher = publisher;
+		}
+
+		private string UrlEncodedServerUrl()
+		{
+			var result = localRavenFileSystem.ServerUrl;
+			while (result.EndsWith("/"))
+				result = result.Substring(0, result.Length - 1);
+
+			return Uri.EscapeDataString(result);
 		}
 
 		public void SynchronizeDestinations(string fileName)
@@ -58,14 +70,19 @@ namespace RavenFS.Rdc
 				.ContinueWith(
 					getMetadataForAsyncTask =>
 						{
-							var destinationMetadata = getMetadataForAsyncTask.Result;
+							NameValueCollection destinationMetadata = null;
+
+							if (!getMetadataForAsyncTask.IsFaulted)
+							{
+								destinationMetadata = getMetadataForAsyncTask.Result;
+							}
 
 							var sourceMetadata = GetLocalMetadata(fileName);
 
 							if (destinationMetadata == null)
 							{
 								// if file doesn't exist on destination server - upload it there
-								return UploadToDestination(destinationRavenFileSystemClient, fileName, sourceMetadata);
+								return UploadTo(destination, fileName, sourceMetadata);
 							}
 
 							if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenReplicationConflict))
@@ -132,7 +149,7 @@ namespace RavenFS.Rdc
 												                     sourceSignatureManifest,
 												                     sourceMetadata);
 											}
-											return UploadToDestination(destinationRavenFileSystemClient, fileName, sourceMetadata);
+											return UploadTo(destination, fileName, sourceMetadata);
 										})
 								.Unwrap()
 								.ContinueWith(
@@ -187,9 +204,10 @@ namespace RavenFS.Rdc
 
 			var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 
-			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, fileName, sourceMetadata, localFile, needList);
+			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, UrlEncodedServerUrl(), fileName, sourceMetadata,
+			                                                           localFile, needList);
 
-			return multipartRequest.PushChangesToDesticationAsync()
+			return multipartRequest.PushChangesAsync()
 				.ContinueWith(_ =>
 				              	{
 				              		localFile.Dispose();
@@ -214,21 +232,35 @@ namespace RavenFS.Rdc
 				              	});
 		}
 
-		private Task<SynchronizationReport> UploadToDestination(RavenFileSystemClient destinationRavenFileSystemClient, string fileName, NameValueCollection localMetadata)
+		private Task<SynchronizationReport> UploadTo(string destinationServerUrl, string fileName, NameValueCollection localMetadata)
 		{
-			var ravenReadOnlyStream = new RavenReadOnlyStream(storage, bufferPool, fileName);
-			
-			return destinationRavenFileSystemClient.UploadAsync(fileName, localMetadata, ravenReadOnlyStream)
+			var sourceFileStream = StorageStream.Reading(storage, fileName);
+			var fileSize = sourceFileStream.Length;
+
+			var onlySourceNeed = new List<RdcNeed>
+			               	{
+			               		new RdcNeed
+			               			{
+			               				BlockType = RdcNeedType.Source,
+			               				BlockLength = (ulong) fileSize,
+			               				FileOffset = 0
+			               			}
+			               	};
+
+			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, UrlEncodedServerUrl(), fileName, localMetadata,
+			                                                           sourceFileStream, onlySourceNeed);
+
+			return multipartRequest.PushChangesAsync()
 				.ContinueWith(
 					uploadAsyncTask =>
 						{
-							ravenReadOnlyStream.Dispose();
+							sourceFileStream.Dispose();
 							uploadAsyncTask.AssertNotFaulted();
 
 							return new SynchronizationReport
 							{
 								FileName = fileName,
-								BytesCopied = StorageStream.Reading(storage, fileName).Length
+								BytesCopied = fileSize
 							};
 						});
 		}

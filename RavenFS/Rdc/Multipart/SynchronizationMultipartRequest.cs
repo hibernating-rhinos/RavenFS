@@ -13,15 +13,17 @@ namespace RavenFS.Rdc.Multipart
 	public class SynchronizationMultipartRequest
 	{
 		private readonly string destinationUrl;
+		private readonly string sourceUrl;
 		private readonly string fileName;
 		private readonly NameValueCollection sourceMetadata;
 		private readonly Stream sourceStream;
 		private readonly IList<IFilePart> fileParts;
 		private readonly string syncingBoundary;
 
-		public SynchronizationMultipartRequest(string destinationUrl, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList)
+		public SynchronizationMultipartRequest(string destinationUrl, string sourceUrl, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList)
 		{
 			this.destinationUrl = destinationUrl;
+			this.sourceUrl = sourceUrl;
 			this.fileName = fileName;
 			this.sourceMetadata = sourceMetadata;
 			this.sourceStream = sourceStream;
@@ -66,7 +68,7 @@ namespace RavenFS.Rdc.Multipart
 			}
 		}
 
-		public Task PushChangesToDesticationAsync()
+		public Task PushChangesAsync()
 		{
 			if (sourceStream.CanRead == false)
 			{
@@ -83,7 +85,8 @@ namespace RavenFS.Rdc.Multipart
 
 			request.ContentType = "multipart/form-data; boundary=" + syncingBoundary;
 
-			request.Headers[SyncingMultipartConstants.SyncingFileName] = fileName;
+			request.Headers[SyncingMultipartConstants.FileName] = fileName;
+			request.Headers[SyncingMultipartConstants.SourceServerUrl] = sourceUrl;
 
 			return request.GetRequestStreamAsync()
 				.ContinueWith(task =>

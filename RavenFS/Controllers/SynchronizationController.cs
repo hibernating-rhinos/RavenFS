@@ -70,8 +70,10 @@ namespace RavenFS.Controllers
 
 		private void InnerMultipartProceed(HttpRequestMessage request)
 		{
-			string fileName = Request.Headers.GetValues(SyncingMultipartConstants.SyncingFileName).FirstOrDefault();
+			string fileName = Request.Headers.GetValues(SyncingMultipartConstants.FileName).FirstOrDefault();
 			string tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
+
+			string sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
 
 			AssertFileIsNotBeingSynced(fileName);
 
@@ -82,18 +84,21 @@ namespace RavenFS.Controllers
 			StorageStream localFile = null;
 			StorageStream synchronizingFile = null;
 
-			var headers = Request.Headers.FilterHeaders();
+			var metadata = Request.Headers.FilterHeaders();
 
 			request.Content.ReadAsMultipartAsync()
 				.ContinueWith(multipartReadTask =>
 								{
-									localFile = StorageStream.Reading(Storage, fileName);
+									if (GetLocalMetadata(fileName) != null)
+									{
+										localFile = StorageStream.Reading(Storage, fileName);
+									}
 
-									HistoryUpdater.UpdateLastModified(headers);
+									HistoryUpdater.UpdateLastModified(metadata);
 
 									synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search,
 																								  tempFileName,
-																								  headers);
+																								  metadata);
 
 									long sourceBytes = 0;
 									long seedBytes = 0;
@@ -103,9 +108,9 @@ namespace RavenFS.Controllers
 									{
 										var parameters = fileChunkPart.Headers.ContentDisposition.Parameters.ToDictionary(t => t.Name);
 
-										var needType = parameters[SyncingMultipartConstants.SyncingNeedType].Value;
-										var from = Convert.ToInt64(parameters[SyncingMultipartConstants.SyncingRangeFrom].Value);
-										var to = Convert.ToInt64(parameters[SyncingMultipartConstants.SyncingRangeTo].Value);
+										var needType = parameters[SyncingMultipartConstants.NeedType].Value;
+										var from = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeFrom].Value);
+										var to = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeTo].Value);
 
 										if (needType == "source")
 										{
@@ -133,6 +138,7 @@ namespace RavenFS.Controllers
 					{
 						synchronizingFile.Dispose();
 					}
+
 					if(localFile != null)
 					{
 						localFile.Dispose();
@@ -177,10 +183,10 @@ namespace RavenFS.Controllers
 								var name = SynchronizationHelper.SyncResultNameForFile(fileName);
 								accessor.SetConfigurationValue(name, report);
 
-								//if (task.Status != TaskStatus.Faulted)
-								//{
-								//    SaveSynchronizationSourceInformation(sourceServerUrl, remoteMetadata.Value<Guid>("ETag"), accessor);
-								//}
+								if (task.Status != TaskStatus.Faulted)
+								{
+									SaveSynchronizationSourceInformation(sourceServerUrl, metadata.Value<Guid>("ETag"), accessor);
+								}
 							});
 					});
 		}
@@ -314,10 +320,10 @@ namespace RavenFS.Controllers
                                 var name = SynchronizationHelper.SyncResultNameForFile(fileName);
                                 accessor.SetConfigurationValue(name, report);
 
-								if (task.Status != TaskStatus.Faulted)
-								{
-									SaveSynchronizationSourceInformation(sourceServerUrl, remoteMetadata.Value<Guid>("ETag") , accessor);
-								}
+								//if (task.Status != TaskStatus.Faulted)
+								//{
+								//    SaveSynchronizationSourceInformation(sourceServerUrl, remoteMetadata.Value<Guid>("ETag") , accessor);
+								//}
                             });
                     });
         }
@@ -412,12 +418,9 @@ namespace RavenFS.Controllers
         }
 
     	[AcceptVerbs("GET")]
-    	public HttpResponseMessage<SynchronizationSourceInformation> LastEtag(string from)
+    	public HttpResponseMessage<Guid> LastEtag(string from)
     	{
-    		SynchronizationSourceInformation synchronizationSourceInfo = null;
-			Storage.Batch(accessor => accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + from, out synchronizationSourceInfo));
-
-			return new HttpResponseMessage<SynchronizationSourceInformation>(synchronizationSourceInfo);
+    		return new HttpResponseMessage<Guid>(GetLastEtag(Uri.EscapeDataString(from)));
     	}
 
         private void CreateConflictArtifacts(string fileName, ConflictItem conflict)
@@ -635,11 +638,24 @@ namespace RavenFS.Controllers
             };
         }
 
-		private void SaveSynchronizationSourceInformation(string sourceServerUrl, Guid fileEtagFromSourceServer, StorageActionsAccessor accessor)
+		private Guid GetLastEtag(string from)
 		{
+			SynchronizationSourceInformation info = null;
+			Storage.Batch(accessor => accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + from, out info));
+
+			return info != null ? info.LastDocumentEtag : Guid.Empty;
+		}
+
+		private void SaveSynchronizationSourceInformation(string sourceServerUrl, Guid lastSourceEtag, StorageActionsAccessor accessor)
+		{
+			//if(GetLastEtag(sourceServerUrl).ToString() > lastSourceEtag.ToString()))
+			//{
+			//    return;
+			//}
+
 			var synchronizationSourceInfo = new SynchronizationSourceInformation
 												{
-													LastDocumentEtag = fileEtagFromSourceServer,
+													LastDocumentEtag = lastSourceEtag,
 													ServerInstanceId = Storage.Id
 												};
 

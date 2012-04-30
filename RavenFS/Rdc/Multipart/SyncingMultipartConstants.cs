@@ -2,12 +2,14 @@ namespace RavenFS.Rdc.Multipart
 {
 	public static class SyncingMultipartConstants
 	{
-		public static string SyncingNeedType = "Syncing-need-type";
+		public static string NeedType = "Syncing-need-type";
 
-		public static string SyncingRangeFrom = "Syncing-range-from";
+		public static string RangeFrom = "Syncing-range-from";
 
-		public static string SyncingRangeTo = "Syncing-range-to";
+		public static string RangeTo = "Syncing-range-to";
 
-		public static string SyncingFileName = "Temp-Syncing-file-name";
+		public static string FileName = "Temp-Syncing-file-name";
+
+		public static string SourceServerUrl = "Temp-Syncing-source-server-url";
 	}
 }

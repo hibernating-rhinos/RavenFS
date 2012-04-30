@@ -20,6 +20,9 @@ using SignalR.Infrastructure;
 
 namespace RavenFS
 {
+	using System.Web;
+	using System.Web.Http.SelfHost;
+
 	public class RavenFileSystem : IDisposable
 	{
 		private readonly string path;
@@ -31,8 +34,9 @@ namespace RavenFS
 	    private readonly HistoryUpdater historyUpdater;
 		private readonly FileLockManager fileLockManager;
 		private readonly SynchronizationTask synchronizationTask;
+		private Uri baseAddress;
 
-	    public TransactionalStorage Storage
+		public TransactionalStorage Storage
 		{
 			get { return storage; }
 		}
@@ -60,7 +64,7 @@ namespace RavenFS
             var uuidGenerator = new UuidGenerator(sequenceActions);
             historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
-			synchronizationTask = new SynchronizationTask(storage, BufferPool, fileLockManager, signatureRepository, sigGenerator, notificationPublisher);
+			synchronizationTask = new SynchronizationTask(this, storage, BufferPool, fileLockManager, signatureRepository, sigGenerator, notificationPublisher);
 
 			AppDomain.CurrentDomain.ProcessExit += ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload += ShouldDispose;
@@ -117,9 +121,34 @@ namespace RavenFS
 			get { return synchronizationTask; }
 		}
 
+		public string ServerUrl
+		{
+			get
+			{
+				if (HttpContext.Current != null)// running in IIS, let us figure out how
+				{
+					var url = HttpContext.Current.Request.Url;
+					return new UriBuilder(url)
+					{
+						Path = HttpContext.Current.Request.ApplicationPath,
+						Query = ""
+					}.Uri.ToString();
+				}
+
+				return baseAddress.ToString();
+			}
+		}
+
 	    [MethodImpl(MethodImplOptions.Synchronized)]
 		public void Start(HttpConfiguration config)
-		{
+	    {
+	    	var selfHost = config as HttpSelfHostConfiguration;
+
+	    	if (selfHost != null)
+	    	{
+	    		baseAddress = selfHost.BaseAddress;
+	    	}
+
 			config.ServiceResolver.SetResolver(type =>
 			{
 				if(type == typeof(RavenFileSystem))
