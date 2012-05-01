@@ -186,7 +186,9 @@ namespace RavenFS.Controllers
 									SaveSynchronizationSourceInformation(sourceServerUrl, metadata.Value<Guid>("ETag"), accessor);
 								}
 							});
+						return task;
 					})
+					.Unwrap()
 					.ContinueWith(task =>
 					{
 						task.AssertNotFaulted();
