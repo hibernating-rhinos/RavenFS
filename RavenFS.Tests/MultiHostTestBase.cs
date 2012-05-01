@@ -16,7 +16,7 @@ namespace RavenFS.Tests
 
 		private readonly IList<IDisposable> disposables = new List<IDisposable>();
 
-		private const string UrlBase = "http://arek-win:";
+		private const string UrlBase = "http://localhost:";
 
 		protected MultiHostTestBase()
 		{
