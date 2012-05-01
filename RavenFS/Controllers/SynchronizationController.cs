@@ -56,19 +56,17 @@ namespace RavenFS.Controllers
 		}
 
 		[AcceptVerbs("POST")]
-		public HttpResponseMessage MultipartProceed()
+		public Task<HttpResponseMessage> MultipartProceed()
 		{
 			if (!Request.Content.IsMimeMultipartContent())
 			{
 				throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
 			}
 
-			InnerMultipartProceed(Request);
-
-			return new HttpResponseMessage(HttpStatusCode.NoContent);
+			return InnerMultipartProceed(Request);
 		}
 
-		private void InnerMultipartProceed(HttpRequestMessage request)
+		private Task<HttpResponseMessage> InnerMultipartProceed(HttpRequestMessage request)
 		{
 			string fileName = Request.Headers.GetValues(SyncingMultipartConstants.FileName).FirstOrDefault();
 			string tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
@@ -86,7 +84,7 @@ namespace RavenFS.Controllers
 
 			var metadata = Request.Headers.FilterHeaders();
 
-			request.Content.ReadAsMultipartAsync()
+			return request.Content.ReadAsMultipartAsync()
 				.ContinueWith(multipartReadTask =>
 								{
 									if (GetLocalMetadata(fileName) != null)
@@ -188,6 +186,11 @@ namespace RavenFS.Controllers
 									SaveSynchronizationSourceInformation(sourceServerUrl, metadata.Value<Guid>("ETag"), accessor);
 								}
 							});
+					})
+					.ContinueWith(task =>
+					{
+						task.AssertNotFaulted();
+						return new HttpResponseMessage(HttpStatusCode.NoContent);
 					});
 		}
 
