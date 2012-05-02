@@ -76,8 +76,8 @@ namespace RavenFS.Tests.RDC
 		[InlineData(1024 * 1024 * 10)]
 		public void Big_file_test(long size)
 		{
-			var sourceContent = new RandomStream(size, 1);
-			var seedContent = new RandomlyModifiedStream(new RandomStream(size, 1), 0.01, 1);
+			var sourceContent = new RandomStream(size);
+			var seedContent = new RandomlyModifiedStream(new RandomStream(size, 1), 0.01);
 			var seedClient = NewClient(0);
 			var sourceClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
@@ -100,8 +100,8 @@ namespace RavenFS.Tests.RDC
 		[InlineData(1024 * 1024 * 10)]
 		public void Big_character_file_test(long size)
 		{
-			var sourceContent = new RandomCharacterStream(size, 1);
-			var seedContent = new RandomlyModifiedStream(new RandomCharacterStream(size, 1), 0.01, 1);
+			var sourceContent = new RandomCharacterStream(size);
+			var seedContent = new RandomlyModifiedStream(new RandomCharacterStream(size, 1), 0.01);
 			var seedClient = NewClient(0);
 			var sourceClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
