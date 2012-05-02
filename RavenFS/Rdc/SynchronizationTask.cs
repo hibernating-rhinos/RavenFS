@@ -204,32 +204,8 @@ namespace RavenFS.Rdc
 
 			var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 
-			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, UrlEncodedServerUrl(), fileName, sourceMetadata,
-			                                                           localFile, needList);
-
-			return multipartRequest.PushChangesAsync()
-				.ContinueWith(_ =>
-				              	{
-				              		localFile.Dispose();
-									needListGenerator.Dispose();
-				              		_.AssertNotFaulted();
-
-				              		return new SynchronizationReport
-				              		       	{
-				              		       		FileName = fileName,
-				              		       		BytesTransfered = needList.Sum(
-				              		       			item =>
-				              		       			item.BlockType == RdcNeedType.Source
-				              		       				? (long) item.BlockLength
-				              		       				: 0L),
-				              		       		BytesCopied = needList.Sum(
-				              		       			item =>
-				              		       			item.BlockType == RdcNeedType.Seed
-				              		       				? (long) item.BlockLength
-				              		       				: 0L),
-				              		       		NeedListLength = needList.Count
-				              		       	};
-				              	});
+			return PushByUsingMultipartRequest(destinationServerUrl, fileName, sourceMetadata, localFile, needList, localFile,
+			                                   needListGenerator);
 		}
 
 		private Task<SynchronizationReport> UploadTo(string destinationServerUrl, string fileName, NameValueCollection localMetadata)
@@ -247,22 +223,26 @@ namespace RavenFS.Rdc
 			               			}
 			               	};
 
-			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, UrlEncodedServerUrl(), fileName, localMetadata,
-			                                                           sourceFileStream, onlySourceNeed);
+			return PushByUsingMultipartRequest(destinationServerUrl, fileName, localMetadata, sourceFileStream, onlySourceNeed,  sourceFileStream);
+		}
+
+		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, string fileName, NameValueCollection sourceMetadata, Stream sourceFileStream, IList<RdcNeed> needList, params IDisposable[] disposables)
+		{
+			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, UrlEncodedServerUrl(), fileName, sourceMetadata,
+																	   sourceFileStream, needList);
 
 			return multipartRequest.PushChangesAsync()
-				.ContinueWith(
-					uploadAsyncTask =>
-						{
-							sourceFileStream.Dispose();
-							uploadAsyncTask.AssertNotFaulted();
+				.ContinueWith(t =>
+				{
+					foreach (var disposable in disposables)
+					{
+						disposable.Dispose();
+					}
 
-							return new SynchronizationReport
-							{
-								FileName = fileName,
-								BytesCopied = fileSize
-							};
-						});
+					t.AssertNotFaulted();
+
+					return t.Result;
+				});
 		}
 
 		private void CreateConflictArtifacts(string fileName, ConflictItem conflict)

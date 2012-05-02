@@ -48,15 +48,13 @@ namespace RavenFS.Controllers
     	}
 
 		[AcceptVerbs("POST")]
-		public HttpResponseMessage Start(string fileName, string destinationServerUrl)
+		public Task<SynchronizationReport> Start(string fileName, string destinationServerUrl)
 		{
-			RavenFileSystem.SynchronizationTask.StartSyncingToAsync(fileName, destinationServerUrl);
-
-			return new HttpResponseMessage(HttpStatusCode.NoContent);
+			return RavenFileSystem.SynchronizationTask.StartSyncingToAsync(fileName, destinationServerUrl);
 		}
 
 		[AcceptVerbs("POST")]
-		public Task<HttpResponseMessage> MultipartProceed()
+		public Task<HttpResponseMessage<SynchronizationReport>> MultipartProceed()
 		{
 			if (!Request.Content.IsMimeMultipartContent())
 			{
@@ -66,7 +64,7 @@ namespace RavenFS.Controllers
 			return InnerMultipartProceed(Request);
 		}
 
-		private Task<HttpResponseMessage> InnerMultipartProceed(HttpRequestMessage request)
+		private Task<HttpResponseMessage<SynchronizationReport>> InnerMultipartProceed(HttpRequestMessage request)
 		{
 			string fileName = Request.Headers.GetValues(SyncingMultipartConstants.FileName).FirstOrDefault();
 			string tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
@@ -192,7 +190,7 @@ namespace RavenFS.Controllers
 					.ContinueWith(task =>
 					{
 						task.AssertNotFaulted();
-						return new HttpResponseMessage(HttpStatusCode.NoContent);
+						return new HttpResponseMessage<SynchronizationReport>(task.Result);
 					});
 		}
 
@@ -425,7 +423,9 @@ namespace RavenFS.Controllers
     	[AcceptVerbs("GET")]
     	public HttpResponseMessage<Guid> LastEtag(string from)
     	{
-    		return new HttpResponseMessage<Guid>(GetLastEtag(Uri.EscapeDataString(from)));
+    		Guid lastEtag = Guid.Empty;
+			Storage.Batch(accessor => lastEtag = GetLastEtag(Uri.EscapeDataString(from), accessor));
+    		return new HttpResponseMessage<Guid>(lastEtag);
     	}
 
         private void CreateConflictArtifacts(string fileName, ConflictItem conflict)
@@ -643,20 +643,21 @@ namespace RavenFS.Controllers
             };
         }
 
-		private Guid GetLastEtag(string from)
+		private Guid GetLastEtag(string from, StorageActionsAccessor accessor)
 		{
 			SynchronizationSourceInformation info = null;
-			Storage.Batch(accessor => accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + from, out info));
+			accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + from, out info);
 
 			return info != null ? info.LastDocumentEtag : Guid.Empty;
 		}
 
 		private void SaveSynchronizationSourceInformation(string sourceServerUrl, Guid lastSourceEtag, StorageActionsAccessor accessor)
 		{
-			//if(GetLastEtag(sourceServerUrl).ToString() > lastSourceEtag.ToString()))
-			//{
-			//    return;
-			//}
+			var existingLastEtag = GetLastEtag(sourceServerUrl, accessor);
+			if (string.Compare(existingLastEtag.ToString(), lastSourceEtag.ToString()) > 0)
+			{
+			    return;
+			}
 
 			var synchronizationSourceInfo = new SynchronizationSourceInformation
 												{

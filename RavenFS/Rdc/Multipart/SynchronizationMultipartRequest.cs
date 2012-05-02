@@ -8,6 +8,7 @@ namespace RavenFS.Rdc.Multipart
 	using System.Text;
 	using System.Threading.Tasks;
 	using Client;
+	using Newtonsoft.Json;
 	using Wrapper;
 
 	public class SynchronizationMultipartRequest
@@ -68,7 +69,7 @@ namespace RavenFS.Rdc.Multipart
 			}
 		}
 
-		public Task PushChangesAsync()
+		public Task<SynchronizationReport> PushChangesAsync()
 		{
 			if (sourceStream.CanRead == false)
 			{
@@ -114,7 +115,13 @@ namespace RavenFS.Rdc.Multipart
 					return request.GetResponseAsync();
 				})
 				.Unwrap()
-				.ContinueWith(task => task.Result.Close())
+				.ContinueWith(task =>
+				              	{
+									using (var stream = task.Result.GetResponseStream())
+									{
+										return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
+									}
+				              	})
 				.TryThrowBetterError();
 		}
 	}

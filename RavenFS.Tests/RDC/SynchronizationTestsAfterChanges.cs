@@ -47,11 +47,6 @@ namespace RavenFS.Tests.RDC
 			sourceContent.Position = 0;
 			sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-			//sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection()
-			//                                                                                        {
-			//                                                                                            { "url", "http://arek-win:19079" }
-			//                                                                                        }).Wait();
-
 			SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, seedClient, "test.txt");
 
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
@@ -136,18 +131,17 @@ namespace RavenFS.Tests.RDC
 
 			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", seedClient.ServerUrl).Wait();
 
-			Guid lastEtag;
-
-			do
-			{
-				lastEtag = seedClient.Synchronization.GetLastEtagFromAsync(Uri.EscapeDataString(sourceClient.ServerUrl)).Result;
-				Thread.Sleep(50);
-
-			} while (lastEtag == Guid.Empty);
+			Guid lastEtag = seedClient.Synchronization.GetLastEtagFromAsync(Uri.EscapeDataString(sourceClient.ServerUrl)).Result;
 
 			var sourceMetadataWithEtag = sourceClient.GetMetadataForAsync("test.bin").Result;
 
 			Assert.Equal(sourceMetadataWithEtag.Value<Guid>("ETag"), lastEtag);
+		}
+
+		[Fact]
+		public void Destination_should_not_override_last_etag_value_if_greater_exists()
+		{
+			// TODO
 		}
 
 		[Fact]
