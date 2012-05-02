@@ -44,7 +44,7 @@ namespace RavenFS.Rdc.Multipart
 			stream.Write(buffer, 0, buffer.Length);
 
 			var narrowedStream = new NarrowedStream(source, from, from + length - 1);
-			narrowedStream.CopyToAsync(stream).Wait();
+			narrowedStream.CopyTo(stream);
 		}
 
 		public string Boundary { get; set; }
