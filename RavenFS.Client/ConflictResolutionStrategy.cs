@@ -2,7 +2,7 @@
 {
     public enum ConflictResolutionStrategy
     {
-        Theirs,
-        Ours
+        RemoteVersion,
+        CurrentVersion
     }
 }

@@ -385,7 +385,7 @@ namespace RavenFS.Controllers
         [AcceptVerbs("PATCH")]
 		public Task<HttpResponseMessage> ResolveConflict(string fileName, ConflictResolutionStrategy strategy, string sourceServerUrl)
         {
-			if (strategy == ConflictResolutionStrategy.Ours)
+			if (strategy == ConflictResolutionStrategy.CurrentVersion)
             {
                 return StrategyAsGetOurs(fileName, sourceServerUrl)
                     .ContinueWith(
@@ -462,7 +462,7 @@ namespace RavenFS.Controllers
                 return false;
             }
             var conflictResolution = new TypeHidingJsonSerializer().Parse<ConflictResolution>(conflictResolutionString);
-            return conflictResolution.Strategy == ConflictResolutionStrategy.Theirs
+            return conflictResolution.Strategy == ConflictResolutionStrategy.RemoteVersion
                 && conflictResolution.TheirServerId == conflict.Theirs.ServerId;
         }
 
@@ -481,7 +481,7 @@ namespace RavenFS.Controllers
                             return
                                 sourceRavenFileSystemClient.Synchronization.ResolveConflictAsync(
                                     Request.GetServerUrl(), fileName,
-                                    ConflictResolutionStrategy.Theirs);
+                                    ConflictResolutionStrategy.RemoteVersion);
                         })
                     .Unwrap();
         }
@@ -498,7 +498,7 @@ namespace RavenFS.Controllers
                     var conflictResolution =
                         new ConflictResolution
                             {
-                                Strategy = ConflictResolutionStrategy.Theirs,
+                                Strategy = ConflictResolutionStrategy.RemoteVersion,
                                 TheirServerUrl = sourceServerUrl,
                                 TheirServerId = conflictItem.Theirs.ServerId,
                                 Version = conflictItem.Theirs.Version,

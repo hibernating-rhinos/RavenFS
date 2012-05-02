@@ -61,7 +61,7 @@ namespace RavenFS.Tests.RDC
 		public static SynchronizationReport ResolveConflictAndSynchronize(RavenFileSystemClient sourceClient, RavenFileSystemClient destinationClient, string fileName)
         {
 			SynchronizeAndWaitForStatus(sourceClient, destinationClient.ServerUrl, fileName);
-			destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.Theirs).Wait();
+			destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.RemoteVersion).Wait();
 			return SynchronizeAndWaitForStatus(sourceClient, destinationClient.ServerUrl, fileName, destinationClient);
         }
 

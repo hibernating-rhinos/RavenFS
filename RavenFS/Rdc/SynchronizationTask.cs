@@ -324,13 +324,13 @@ namespace RavenFS.Rdc
 
 		private bool IsConflictResolvedInFavorOfSource(ConflictItem conflict, ConflictResolution destinationConflictResolution)
 		{
-			return destinationConflictResolution.Strategy == ConflictResolutionStrategy.Theirs
+			return destinationConflictResolution.Strategy == ConflictResolutionStrategy.RemoteVersion
 				&& destinationConflictResolution.TheirServerId == conflict.Ours.ServerId;
 		}
 
 		private bool IsConflictResolvedInFavorOfDestination(ConflictResolution destinationConflictResolution)
 		{
-			return destinationConflictResolution.Strategy == ConflictResolutionStrategy.Ours;
+			return destinationConflictResolution.Strategy == ConflictResolutionStrategy.CurrentVersion;
 		}
 
 		private NameValueCollection GetLocalMetadata(string fileName)
