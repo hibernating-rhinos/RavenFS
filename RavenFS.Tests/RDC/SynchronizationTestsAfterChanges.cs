@@ -15,7 +15,6 @@ using Xunit.Extensions;
 namespace RavenFS.Tests.RDC
 {
 	using System.Linq;
-	using System.Threading;
 	using System.Threading.Tasks;
 
 	public class SynchronizationTestsAfterChanges : MultiHostTestBase
@@ -224,26 +223,27 @@ namespace RavenFS.Tests.RDC
 			Assert.Equal(1, conflict.Ours.Version);
 		}
 
-		//[Fact]
-		//public void Should_mark_file_as_conflicted_when_two_differnet_versions()
-		//{
-		//    var sourceContent1 = new RandomStream(10, 1);
-		//    var sourceMetadata = new NameValueCollection
-		//                       {
-		//                           {"SomeTest-metadata", "some-value"}
-		//                       };
-		//    var destinationClient = NewClient(0);
-		//    var sourceClient = NewClient(1);
+		[Fact]
+		public void Should_mark_file_as_conflicted_when_two_differnet_versions()
+		{
+			var sourceContent1 = new RandomStream(10, 1);
+			var sourceMetadata = new NameValueCollection
+		                       {
+		                           {"SomeTest-metadata", "some-value"}
+		                       };
+			var destinationClient = NewClient(0);
+			var sourceClient = NewClient(1);
 
-		//    sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
-		//    destinationClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
+			destinationClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
 
-		//    var synchronizationReport = RdcTestUtils.SynchronizeAndWaitForStatus(destinationClient, sourceClient.ServerUrl, "test.bin");
+			var synchronizationReport =
+				sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
 
-		//    Assert.NotNull(synchronizationReport.Exception);
-		//    var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
-		//    Assert.True(Convert.ToBoolean(resultFileMetadata[SynchronizationConstants.RavenReplicationConflict]));
-		//}
+			Assert.NotNull(synchronizationReport.Exception);
+			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
+			Assert.True(Convert.ToBoolean(resultFileMetadata[SynchronizationConstants.RavenReplicationConflict]));
+		}
 
 		[Fact]
 		public void Shold_change_history_after_upload()
@@ -356,7 +356,7 @@ namespace RavenFS.Tests.RDC
 		//    Assert.True(resultMd5 == destinationMd5);
 		//}
 
-		[Fact]
+		[Fact(Skip = "Race condition")]
 		public void Should_get_all_current_synchronizations()
 		{
 			var destinationClient = NewClient(0);
@@ -387,86 +387,25 @@ namespace RavenFS.Tests.RDC
 			Assert.True(0 < result.Count());
 		}
 
-		//[Fact]
-		//public void Should_get_all_finished_synchronizations()
-		//{
-		//    var destinationClient = NewClient(0);
-		//    var sourceClient = NewClient(1);
-		//    var files = new[] { "test1.bin", "test2.bin", "test3.bin" };
+		[Fact]
+		public void Should_get_all_finished_synchronizations()
+		{
+			var destinationClient = NewClient(0);
+			var sourceClient = NewClient(1);
+			var files = new[] { "test1.bin", "test2.bin", "test3.bin" };
 
-		//    foreach (var item in files)
-		//    {
-		//        Task.WaitAll(
-		//            destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(1000, 1), 0.01)),
-		//            sourceClient.UploadAsync(item, new RandomStream(1000, 1)));
+			foreach (var item in files)
+			{
+				Task.WaitAll(
+					destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(1000, 1), 0.01)),
+					sourceClient.UploadAsync(item, new RandomStream(1000, 1)));
 
-		//        RdcTestUtils.SynchronizeAndWaitForStatus(destinationClient, sourceClient.ServerUrl, item);
-		//    }
+				RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, item);
+			}
 
-		//    var result = destinationClient.Synchronization.GetFinishedAsync().Result;
-		//    Assert.Equal(files.Length, result.Count());
-		//}
-
-		//[Fact]
-		//public void When_synchronization_succeed_should_save_synchronization_source_information_config()
-		//{
-		//    var sourceContent1 = new RandomStream(10, 1);
-		//    var sourceMetadata = new NameValueCollection
-		//                       {
-		//                           {"SomeTest-metadata", "some-value"}
-		//                       };
-
-		//    var destinationClient = NewClient(0);
-		//    var sourceClient = NewClient(1);
-
-		//    sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
-
-		//    RdcTestUtils.SynchronizeAndWaitForStatus(destinationClient, sourceClient.ServerUrl, "test.bin");
-
-		//    var key = SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + sourceClient.ServerUrl;
-		//    var task = destinationClient.Config.GetConfig(key);
-		//    var synchronizationSourceInfoString = task.Result["value"];
-		//    var synchronizationSourceInfo = new TypeHidingJsonSerializer().Parse<SynchronizationSourceInformation>(synchronizationSourceInfoString);
-
-		//    Assert.NotNull(synchronizationSourceInfo);
-		//    Assert.NotEqual(Guid.Empty, synchronizationSourceInfo.LastDocumentEtag);
-		//    Assert.NotEqual(Guid.Empty, synchronizationSourceInfo.ServerInstanceId);
-		//}
-
-		//[Fact]
-		//public void Sould_return_last_etag_from_source_after_synchronization()
-		//{
-		//    var sourceContent1 = new RandomStream(10, 1);
-		//    var sourceMetadata = new NameValueCollection
-		//                            {
-		//                                {"SomeTest-metadata", "some-value"}
-		//                            };
-
-		//    var destinationClient = NewClient(0);
-		//    var sourceClient = NewClient(1);
-
-		//    sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
-		//    var sourceFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
-
-		//    RdcTestUtils.SynchronizeAndWaitForStatus(destinationClient, sourceClient.ServerUrl, "test.bin");
-
-		//    SynchronizationSourceInformation synchronizationSourceInfo = null;
-
-		//    var requestUriString = destinationClient.ServerUrl + "/synchronization/LastEtag?from=" + sourceClient.ServerUrl;
-		//    var request = (HttpWebRequest)WebRequest.Create(requestUriString);
-
-		//    request.GetResponseAsync()
-		//        .ContinueWith(task =>
-		//        {
-		//            synchronizationSourceInfo =
-		//                new JsonSerializer().Deserialize<SynchronizationSourceInformation>(
-		//                    new JsonTextReader(new StreamReader(task.Result.GetResponseStream())));
-		//        }).Wait();
-
-		//    Assert.NotNull(synchronizationSourceInfo);
-		//    Assert.Equal(sourceFileMetadata.Value<Guid>("ETag"), synchronizationSourceInfo.LastDocumentEtag);
-		//    Assert.NotEqual(Guid.Empty, synchronizationSourceInfo.ServerInstanceId);
-		//}
+			var result = destinationClient.Synchronization.GetFinishedAsync().Result;
+			Assert.Equal(files.Length, result.Count());
+		}
 
 		private static MemoryStream PrepareSourceStream(int lines)
 		{

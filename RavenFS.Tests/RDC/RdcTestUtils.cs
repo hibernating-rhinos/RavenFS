@@ -1,34 +1,11 @@
-﻿using System.Threading.Tasks;
-using RavenFS.Client;
+﻿using RavenFS.Client;
 
 namespace RavenFS.Tests.RDC
 {
-	using System;
 	using Xunit;
 
 	public class RdcTestUtils
     {
-		public static SynchronizationReport SynchronizeAndWaitForStatus(RavenFileSystemClient sourceClient, string destinationUrl, string fileName, RavenFileSystemClient clientThatWaitsForStatus = null)
-		{
-			if (clientThatWaitsForStatus == null)
-			{
-				clientThatWaitsForStatus = sourceClient;
-			}
-
-			sourceClient.Synchronization.StartSynchronizationToAsync(fileName, destinationUrl).Wait();
-			var synchronizationReportTask = Task.Factory.StartNew(
-				() =>
-				{
-					SynchronizationReport report;
-					do
-					{
-						report = clientThatWaitsForStatus.Synchronization.GetSynchronizationStatusAsync(fileName).Result;
-					} while (report == null);
-					return report;
-				});
-			return synchronizationReportTask.Result;
-		}
-
 		public static SynchronizationReport ResolveConflictAndSynchronize(RavenFileSystemClient sourceClient, RavenFileSystemClient destinationClient, string fileName)
         {
 			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync(fileName, destinationClient.ServerUrl).Result;
