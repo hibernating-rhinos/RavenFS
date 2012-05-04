@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Linq;
 using Newtonsoft.Json;
+using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Notifications;
 using RavenFS.Rdc;
@@ -13,16 +11,16 @@ using RavenFS.Tests.Tools;
 using RavenFS.Util;
 using Xunit;
 using Xunit.Extensions;
-using RavenFS.Client;
 
 namespace RavenFS.Tests.RDC
 {
-	using System.Net;
+	using System.Linq;
+	using System.Threading.Tasks;
 
 	public class SynchronizationTests : MultiHostTestBase
 	{
 		[Theory]
-		//[InlineData(1)]
+		[InlineData(1)]
 		[InlineData(5000)]
 		public void Synchronize_file_with_different_beginning(int size)
 		{
@@ -34,29 +32,30 @@ namespace RavenFS.Tests.RDC
 
 			var sourceContent = PrepareSourceStream(size);
 			sourceContent.Position = 0;
-			var seedContent = new CombinedStream(differenceChunk, sourceContent);
-			var seedClient = NewClient(0);
+			var destinationContent = new CombinedStream(differenceChunk, sourceContent);
+			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
                                {
                                    {"SomeTest-metadata", "some-value"}
                                };
-			var seedMetadata = new NameValueCollection
+			var destinationMetadata = new NameValueCollection
                                {
                                    {"SomeTest-metadata", "should-be-overwritten"}
                                };
 
-			seedClient.UploadAsync("test.txt", seedMetadata, seedContent).Wait();
+			destinationClient.UploadAsync("test.txt", destinationMetadata, destinationContent).Wait();
 			sourceContent.Position = 0;
 			sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-			SynchronizationReport result = ResolveConflictAndSynchronize("test.txt", seedClient, sourceClient);
+			SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
+
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
 			string resultMd5 = null;
 			using (var resultFileContent = new MemoryStream())
 			{
-				var metadata = seedClient.DownloadAsync("test.txt", resultFileContent).Result;
+				var metadata = destinationClient.DownloadAsync("test.txt", resultFileContent).Result;
 				Assert.Equal("some-value", metadata["SomeTest-metadata"]);
 				resultFileContent.Position = 0;
 				resultMd5 = resultFileContent.GetMD5Hash();
@@ -65,7 +64,6 @@ namespace RavenFS.Tests.RDC
 
 			sourceContent.Position = 0;
 			var sourceMd5 = sourceContent.GetMD5Hash();
-			sourceContent.Position = 0;
 
 			Assert.True(resultMd5 == sourceMd5);
 		}
@@ -74,43 +72,121 @@ namespace RavenFS.Tests.RDC
 		[InlineData(1024 * 1024 * 10)]
 		public void Big_file_test(long size)
 		{
-			var sourceContent = new RandomStream(size, 1);
-			var seedContent = new RandomlyModifiedStream(new RandomStream(size, 1), 0.01);
-			var seedClient = NewClient(0);
+			var sourceContent = new RandomStream(size);
+			var destinationContent = new RandomlyModifiedStream(new RandomStream(size, 1), 0.01);
+			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
                                {
                                    {"SomeTest-metadata", "some-value"}
                                };
-			var seedMetadata = new NameValueCollection
+			var destinationMetadata = new NameValueCollection
                                {
                                    {"SomeTest-metadata", "should-be-overwritten"}
                                };
 
-			seedClient.UploadAsync("test.bin", seedMetadata, seedContent).Wait();
+			destinationClient.UploadAsync("test.bin", destinationMetadata, destinationContent).Wait();
 			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-			//SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize("test.bin", seedClient, sourceClient);
-			// Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
+			SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 		}
 
-		[Fact]
-		public void Should_download_file_from_source_if_it_doesnt_exist_on_seed()
+		[Theory]
+		[InlineData(1024 * 1024 * 10)]
+		public void Big_character_file_test(long size)
 		{
-			var sourceContent1 = new RandomStream(10, 1);
+			var sourceContent = new RandomCharacterStream(size);
+			var destinationContent = new RandomlyModifiedStream(new RandomCharacterStream(size, 1), 0.01);
+			var destinationClient = NewClient(0);
+			var sourceClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
                                {
                                    {"SomeTest-metadata", "some-value"}
                                };
-			var seedClient = NewClient(0);
+			var destinationMetadata = new NameValueCollection
+                               {
+                                   {"SomeTest-metadata", "should-be-overwritten"}
+                               };
+
+			destinationClient.UploadAsync("test.bin", destinationMetadata, destinationContent).Wait();
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
+
+			SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
+		}
+
+		[Fact]
+		public void Destination_should_know_what_is_last_file_etag_after_synchronization()
+		{
+			var sourceContent = new RandomStream(10, 1);
+			var sourceMetadata = new NameValueCollection
+		                       {
+		                           {"SomeTest-metadata", "some-value"}
+		                       };
+
+			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
-			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-			var synchronizationReport = SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
-			var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
+			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Wait();
 
-			Assert.Equal(sourceContent1.Length, synchronizationReport.BytesCopied + synchronizationReport.BytesTransfered);
+			Guid lastEtag = destinationClient.Synchronization.GetLastEtagFromAsync(sourceClient.ServerUrl).Result;
+
+			var sourceMetadataWithEtag = sourceClient.GetMetadataForAsync("test.bin").Result;
+
+			Assert.Equal(sourceMetadataWithEtag.Value<Guid>("ETag"), lastEtag);
+		}
+
+		[Fact]
+		public void Destination_should_not_override_last_etag_if_greater_value_exists()
+		{
+			var sourceContent = new RandomStream(10, 1);
+			var sourceMetadata = new NameValueCollection
+		                       {
+		                           {"SomeTest-metadata", "some-value"}
+		                       };
+
+			var destinationClient = NewClient(0);
+			var sourceClient = NewClient(1);
+
+			destinationClient.Config.SetConfig("Raven/Replication/Sources/http%3A%2F%2Flocalhost%3A19081",
+				new NameValueCollection
+			    {
+			        {
+			            "value",
+			            "{\"LastDocumentEtag\":\"00000000-0000-0100-0000-000000000002\",\"ServerInstanceId\":\"00000000-1111-2222-3333-444444444444\"}"
+			        }
+			    });
+
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
+
+			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Wait();
+
+			Guid lastEtag = destinationClient.Synchronization.GetLastEtagFromAsync(sourceClient.ServerUrl).Result;
+
+			Assert.Equal("00000000-0000-0100-0000-000000000002", lastEtag.ToString());
+		}
+
+		[Fact]
+		public void Source_should_upload_file_to_destination_if_doesnt_exist_there()
+		{
+			var sourceContent = new RandomStream(10, 1);
+			var sourceMetadata = new NameValueCollection
+		                       {
+		                           {"SomeTest-metadata", "some-value"}
+		                       };
+
+			var destinationClient = NewClient(0);
+			var sourceClient = NewClient(1);
+
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
+
+			var sourceSynchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
+
+			Assert.Equal(sourceContent.Length, sourceSynchronizationReport.BytesCopied + sourceSynchronizationReport.BytesTransfered);
 			Assert.Equal("some-value", resultFileMetadata["SomeTest-metadata"]);
 		}
 
@@ -127,19 +203,18 @@ namespace RavenFS.Tests.RDC
 			var etag1 = resultFileMetadata["ETag"];
 
 			Assert.False(etag0 == etag1);
-
 		}
 
 		[Fact]
 		public void Should_be_possible_to_apply_conflict()
 		{
-			var sourceContent1 = new RandomStream(10, 1);
-			var sourceClient = NewClient(1);
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
+			var content = new RandomStream(10, 1);
+			var client = NewClient(1);
+			client.UploadAsync("test.bin", new NameValueCollection(), content).Wait();
 			var guid = Guid.NewGuid().ToString();
-			sourceClient.Synchronization.ApplyConflictAsync("test.bin", 8, guid).Wait();
-			var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
-			var conflictItemString = sourceClient.Config.GetConfig(SynchronizationHelper.ConflictConfigNameForFile("test.bin")).Result["value"];
+			client.Synchronization.ApplyConflictAsync("test.bin", 8, guid).Wait();
+			var resultFileMetadata = client.GetMetadataForAsync("test.bin").Result;
+			var conflictItemString = client.Config.GetConfig(SynchronizationHelper.ConflictConfigNameForFile("test.bin")).Result["value"];
 			var conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(conflictItemString);
 
 			Assert.Equal(true.ToString(), resultFileMetadata[SynchronizationConstants.RavenReplicationConflict]);
@@ -153,19 +228,20 @@ namespace RavenFS.Tests.RDC
 		{
 			var sourceContent1 = new RandomStream(10, 1);
 			var sourceMetadata = new NameValueCollection
-                               {
-                                   {"SomeTest-metadata", "some-value"}
-                               };
-			var seedClient = NewClient(0);
+		                       {
+		                           {"SomeTest-metadata", "some-value"}
+		                       };
+			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
 			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
-			seedClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
+			destinationClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
 
-			var synchronizationReport = SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
+			var synchronizationReport =
+				sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
 
 			Assert.NotNull(synchronizationReport.Exception);
-			var resultFileMetadata = seedClient.GetMetadataForAsync("test.bin").Result;
+			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
 			Assert.True(Convert.ToBoolean(resultFileMetadata[SynchronizationConstants.RavenReplicationConflict]));
 		}
 
@@ -214,76 +290,76 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Should_create_new_etag_for_replicated_file()
 		{
-			var seedClient = NewClient(0);
+			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
 			sourceClient.UploadAsync("test.bin", new RandomStream(10)).Wait();
 
-			seedClient.UploadAsync("test.bin", new RandomStream(10)).Wait();
-			var seedEtag = sourceClient.GetMetadataForAsync("test.bin").Result["ETag"];
+			destinationClient.UploadAsync("test.bin", new RandomStream(10)).Wait();
+			var destinationEtag = sourceClient.GetMetadataForAsync("test.bin").Result["ETag"];
 
-			//RdcTestUtils.ResolveConflictAndSynchronize("test.bin", seedClient, sourceClient);
+			RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 
-			var result = seedClient.GetMetadataForAsync("test.bin").Result["ETag"];
+			var result = destinationClient.GetMetadataForAsync("test.bin").Result["ETag"];
 
-			Assert.True(seedEtag != result, "Etag should be updated");
+			Assert.True(destinationEtag != result, "Etag should be updated");
 		}
 
 
-		[Fact]
-		public void Should_mark_file_to_be_resolved_using_ours_strategy()
-		{
-			var differenceChunk = new MemoryStream();
-			var sw = new StreamWriter(differenceChunk);
+		//[Fact]
+		//public void Should_mark_file_to_be_resolved_using_ours_strategy()
+		//{
+		//    var differenceChunk = new MemoryStream();
+		//    var sw = new StreamWriter(differenceChunk);
 
-			sw.Write("Coconut is Stupid");
-			sw.Flush();
+		//    sw.Write("Coconut is Stupid");
+		//    sw.Flush();
 
-			var sourceContent = PrepareSourceStream(10);
-			sourceContent.Position = 0;
-			var seedContent = new CombinedStream(differenceChunk, sourceContent);
-			var seedClient = NewClient(0);
-			var sourceClient = NewClient(1);
-			var sourceMetadata = new NameValueCollection
-                               {
-                                   {"SomeTest-metadata", "some-value"}
-                               };
-			var seedMetadata = new NameValueCollection
-                               {
-                                   {"SomeTest-metadata", "shouldnt-be-overwritten"}
-                               };
+		//    var sourceContent = PrepareSourceStream(10);
+		//    sourceContent.Position = 0;
+		//    var destinationContent = new CombinedStream(differenceChunk, sourceContent);
+		//    var destinationClient = NewClient(0);
+		//    var sourceClient = NewClient(1);
+		//    var sourceMetadata = new NameValueCollection
+		//                       {
+		//                           {"SomeTest-metadata", "some-value"}
+		//                       };
+		//    var destinationMetadata = new NameValueCollection
+		//                       {
+		//                           {"SomeTest-metadata", "shouldnt-be-overwritten"}
+		//                       };
 
-			seedClient.UploadAsync("test.txt", seedMetadata, seedContent).Wait();
-			sourceContent.Position = 0;
-			sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
+		//    destinationClient.UploadAsync("test.txt", destinationMetadata, destinationContent).Wait();
+		//    sourceContent.Position = 0;
+		//    sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-			SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.txt");
-			seedClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.CurrentVersion).Wait();
-			var result = SynchronizeAndWaitForStatus(sourceClient, seedClient.ServerUrl, "test.txt");
-			Assert.Equal(seedContent.Length, result.BytesCopied + result.BytesTransfered);
+		//    RdcTestUtils.SynchronizeAndWaitForStatus(destinationClient, sourceClient.ServerUrl, "test.txt");
+		//    destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.Ours).Wait();
+		//    var result = RdcTestUtils.SynchronizeAndWaitForStatus(sourceClient, destinationClient.ServerUrl, "test.txt");
+		//    Assert.Equal(destinationContent.Length, result.BytesCopied + result.BytesTransfered);
 
-			// check if conflict resolution has been properly set on the source
-			string resultMd5;
-			using (var resultFileContent = new MemoryStream())
-			{
-				var metadata = sourceClient.DownloadAsync("test.txt", resultFileContent).Result;
-				Assert.Equal("shouldnt-be-overwritten", metadata["SomeTest-metadata"]);
-				resultFileContent.Position = 0;
-				resultMd5 = resultFileContent.GetMD5Hash();
-				resultFileContent.Position = 0;
-			}
+		//    // check if conflict resolution has been properly set on the source
+		//    string resultMd5;
+		//    using (var resultFileContent = new MemoryStream())
+		//    {
+		//        var metadata = sourceClient.DownloadAsync("test.txt", resultFileContent).Result;
+		//        Assert.Equal("shouldnt-be-overwritten", metadata["SomeTest-metadata"]);
+		//        resultFileContent.Position = 0;
+		//        resultMd5 = resultFileContent.GetMD5Hash();
+		//        resultFileContent.Position = 0;
+		//    }
 
-			seedContent.Position = 0;
-			var seedMd5 = seedContent.GetMD5Hash();
-			sourceContent.Position = 0;
+		//    destinationContent.Position = 0;
+		//    var destinationMd5 = destinationContent.GetMD5Hash();
+		//    sourceContent.Position = 0;
 
-			Assert.True(resultMd5 == seedMd5);
-		}
+		//    Assert.True(resultMd5 == destinationMd5);
+		//}
 
-		[Fact]
+		[Fact(Skip = "Race condition")]
 		public void Should_get_all_current_synchronizations()
 		{
-			var seedClient = NewClient(0);
+			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 			var files = new[] { "test1.bin", "test2.bin", "test3.bin" };
 
@@ -291,104 +367,44 @@ namespace RavenFS.Tests.RDC
 			foreach (var item in files)
 			{
 				Task.WaitAll(
-					seedClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(300000, 1), 0.01)),
+					destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(300000, 1), 0.01)),
 					sourceClient.UploadAsync(item, new RandomStream(300000, 1)));
 
 				// try to synchronize and resolve conflicts
-				var shouldBeConflict = SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, item);
+				var shouldBeConflict =
+					sourceClient.Synchronization.StartSynchronizationToAsync(item, destinationClient.ServerUrl).Result;
 				Assert.NotNull(shouldBeConflict.Exception);
-				seedClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, item, ConflictResolutionStrategy.RemoteVersion).Wait();
+				destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, item, ConflictResolutionStrategy.RemoteVersion).Wait();
 			}
 
 			// synchronize all
 			foreach (var item in files)
 			{
-				seedClient.Synchronization.StartSynchronizationAsync(sourceClient.ServerUrl, item).Wait();
+				sourceClient.Synchronization.StartSynchronizationToAsync(item, destinationClient.ServerUrl);
 			}
 
-			var result = seedClient.Synchronization.GetWorkingAsync().Result;
+			var result = destinationClient.Synchronization.GetWorkingAsync().Result;
 			Assert.True(0 < result.Count());
 		}
 
 		[Fact]
 		public void Should_get_all_finished_synchronizations()
 		{
-			var seedClient = NewClient(0);
+			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 			var files = new[] { "test1.bin", "test2.bin", "test3.bin" };
 
 			foreach (var item in files)
 			{
 				Task.WaitAll(
-					seedClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(1000, 1), 0.01)),
+					destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(1000, 1), 0.01)),
 					sourceClient.UploadAsync(item, new RandomStream(1000, 1)));
 
-				SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, item);
+				RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, item);
 			}
 
-			var result = seedClient.Synchronization.GetFinishedAsync().Result;
+			var result = destinationClient.Synchronization.GetFinishedAsync().Result;
 			Assert.Equal(files.Length, result.Count());
-		}
-
-		[Fact]
-		public void When_synchronization_succeed_should_save_synchronization_source_information_config()
-		{
-			var sourceContent1 = new RandomStream(10, 1);
-			var sourceMetadata = new NameValueCollection
-                               {
-                                   {"SomeTest-metadata", "some-value"}
-                               };
-
-			var seedClient = NewClient(0);
-			var sourceClient = NewClient(1);
-
-			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
-
-			SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
-
-			var key = SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + sourceClient.ServerUrl;
-			var task = seedClient.Config.GetConfig(key);
-			var synchronizationSourceInfoString = task.Result["value"];
-			var synchronizationSourceInfo = new TypeHidingJsonSerializer().Parse<SynchronizationSourceInformation>(synchronizationSourceInfoString);
-
-			Assert.NotNull(synchronizationSourceInfo);
-			Assert.NotEqual(Guid.Empty, synchronizationSourceInfo.LastDocumentEtag);
-			Assert.NotEqual(Guid.Empty, synchronizationSourceInfo.ServerInstanceId);
-		}
-
-		[Fact]
-		public void Sould_return_last_etag_from_source_after_synchronization()
-		{
-			var sourceContent1 = new RandomStream(10, 1);
-			var sourceMetadata = new NameValueCollection
-                                    {
-                                        {"SomeTest-metadata", "some-value"}
-                                    };
-
-			var seedClient = NewClient(0);
-			var sourceClient = NewClient(1);
-
-			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
-			var sourceFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
-
-			SynchronizeAndWaitForStatus(seedClient, sourceClient.ServerUrl, "test.bin");
-
-			SynchronizationSourceInformation synchronizationSourceInfo = null;
-
-			var requestUriString = seedClient.ServerUrl + "/synchronization/LastEtag?from=" + sourceClient.ServerUrl;
-			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
-
-			request.GetResponseAsync()
-				.ContinueWith(task =>
-				{
-					synchronizationSourceInfo =
-						new JsonSerializer().Deserialize<SynchronizationSourceInformation>(
-							new JsonTextReader(new StreamReader(task.Result.GetResponseStream())));
-				}).Wait();
-
-			Assert.NotNull(synchronizationSourceInfo);
-			Assert.Equal(sourceFileMetadata.Value<Guid>("ETag"), synchronizationSourceInfo.LastDocumentEtag);
-			Assert.NotEqual(Guid.Empty, synchronizationSourceInfo.ServerInstanceId);
 		}
 
 		private static MemoryStream PrepareSourceStream(int lines)
@@ -407,29 +423,6 @@ namespace RavenFS.Tests.RDC
 			writer.Flush();
 
 			return ms;
-		}
-
-		public static SynchronizationReport SynchronizeAndWaitForStatus(RavenFileSystemClient client, string sourceUrl, string fileName)
-		{
-			client.Synchronization.StartSynchronizationAsync(sourceUrl, fileName).Wait();
-			var synchronizationReportTask = Task.Factory.StartNew(
-				() =>
-				{
-					SynchronizationReport report;
-					do
-					{
-						report = client.Synchronization.GetSynchronizationStatusAsync(fileName).Result;
-					} while (report == null);
-					return report;
-				});
-			return synchronizationReportTask.Result;
-		}
-
-		public static SynchronizationReport ResolveConflictAndSynchronize(string fileName, RavenFileSystemClient client, RavenFileSystemClient sourceClient)
-		{
-			SynchronizeAndWaitForStatus(client, sourceClient.ServerUrl, fileName);
-			client.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.RemoteVersion).Wait();
-			return SynchronizeAndWaitForStatus(client, sourceClient.ServerUrl, fileName);
 		}
 	}
 }

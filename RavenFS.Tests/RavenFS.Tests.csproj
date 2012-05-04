@@ -83,7 +83,7 @@
     <Compile Include="MtaFactAttribute.cs" />
     <Compile Include="Notifications.cs" />
     <Compile Include="RDC\ConflictNotificationTests.cs" />
-    <Compile Include="RDC\SynchronizationTestsAfterChanges.cs" />
+    <Compile Include="RDC\SynchronizationTests.cs" />
     <Compile Include="RDC\IO\RandomlyModifiedStream.cs" />
     <Compile Include="RDC\IO\RandomStream.cs" />
     <Compile Include="RDC\IO\TestDataGenerators.cs" />
@@ -106,7 +106,6 @@
     <Compile Include="RemoteFilesHandlerTests.cs" />
     <Compile Include="PagesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RDC\SynchronizationTests.cs" />
     <Compile Include="Tools\TimeMeasure.cs" />
     <Compile Include="WebApiTest.cs" />
   </ItemGroup>

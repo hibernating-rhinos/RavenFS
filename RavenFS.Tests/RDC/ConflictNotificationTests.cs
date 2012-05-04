@@ -13,42 +13,35 @@ namespace RavenFS.Tests.RDC
         [Fact]
 		public void NotificationIsReceivedWhenConflictIsDetected()
 		{
-			RavenFileSystemClient seedClient = NewClient(0);
+			RavenFileSystemClient destinationClient = NewClient(0);
             RavenFileSystemClient sourceClient = NewClient(1);
 
             var sourceContent = new RandomlyModifiedStream(new RandomStream(1, 1), 0.01);
-            var seedContent = new RandomlyModifiedStream(new RandomStream(1, 1), 0.01);
+            var destinationContent = new RandomlyModifiedStream(new RandomStream(1, 1), 0.01);
 
 			var sourceMetadata = new NameValueCollection
                                {
                                    {"SomeTest-metadata", "some-value"}
                                };
 
-            var seedMetadata = new NameValueCollection
+            var destinationMetadata = new NameValueCollection
                                {
                                    {"SomeTest-metadata", "should-be-overwritten"}
                                };
 
-            seedClient.UploadAsync("abc.txt", seedMetadata, seedContent).Wait();
+            destinationClient.UploadAsync("abc.txt", destinationMetadata, destinationContent).Wait();
             sourceClient.UploadAsync("abc.txt", sourceMetadata, sourceContent).Wait();
 
-			seedClient.Notifications.Connect().Wait();
+			destinationClient.Notifications.Connect().Wait();
 
-			var notificationTask = seedClient.Notifications.ConflictDetections().Timeout(TimeSpan.FromSeconds(5)).Take(1).ToTask();
+			var notificationTask = destinationClient.Notifications.ConflictDetections().Timeout(TimeSpan.FromSeconds(5)).Take(1).ToTask();
 
-			try
-			{
-                seedClient.Synchronization.StartSynchronizationAsync(sourceClient.ServerUrl, "abc.txt").Wait();
-			}
-			catch
-			{
-				// pass
-			}
+        	sourceClient.Synchronization.StartSynchronizationToAsync("abc.txt", destinationClient.ServerUrl).Wait();
 			
 			var conflictDetected = notificationTask.Result;
 
 			Assert.Equal("abc.txt", conflictDetected.FileName);
-			Assert.Equal(seedClient.ServerUrl, conflictDetected.ServerUrl);
+			Assert.Equal(destinationClient.ServerUrl, conflictDetected.ServerUrl);
 		}
 	}
 }
