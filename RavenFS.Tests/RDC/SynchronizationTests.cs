@@ -218,9 +218,9 @@ namespace RavenFS.Tests.RDC
 			var conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(conflictItemString);
 
 			Assert.Equal(true.ToString(), resultFileMetadata[SynchronizationConstants.RavenReplicationConflict]);
-			Assert.Equal(guid, conflict.Theirs.ServerId);
-			Assert.Equal(8, conflict.Theirs.Version);
-			Assert.Equal(1, conflict.Ours.Version);
+			Assert.Equal(guid, conflict.Remote.ServerId);
+			Assert.Equal(8, conflict.Remote.Version);
+			Assert.Equal(1, conflict.Current.Version);
 		}
 
 		[Fact]
@@ -305,56 +305,60 @@ namespace RavenFS.Tests.RDC
 			Assert.True(destinationEtag != result, "Etag should be updated");
 		}
 
+		[Fact]
+		public void Should_mark_file_to_be_resolved_using_current_strategy()
+		{
+		    var differenceChunk = new MemoryStream();
+		    var sw = new StreamWriter(differenceChunk);
 
-		//[Fact]
-		//public void Should_mark_file_to_be_resolved_using_ours_strategy()
-		//{
-		//    var differenceChunk = new MemoryStream();
-		//    var sw = new StreamWriter(differenceChunk);
+		    sw.Write("Coconut is Stupid");
+		    sw.Flush();
 
-		//    sw.Write("Coconut is Stupid");
-		//    sw.Flush();
+		    var sourceContent = PrepareSourceStream(10);
+		    sourceContent.Position = 0;
+		    var destinationContent = new CombinedStream(differenceChunk, sourceContent);
+		    var destinationClient = NewClient(0);
+		    var sourceClient = NewClient(1);
+		    var sourceMetadata = new NameValueCollection
+		                       {
+		                           {"SomeTest-metadata", "some-value"}
+		                       };
+		    var destinationMetadata = new NameValueCollection
+		                       {
+		                           {"SomeTest-metadata", "shouldnt-be-overwritten"}
+		                       };
 
-		//    var sourceContent = PrepareSourceStream(10);
-		//    sourceContent.Position = 0;
-		//    var destinationContent = new CombinedStream(differenceChunk, sourceContent);
-		//    var destinationClient = NewClient(0);
-		//    var sourceClient = NewClient(1);
-		//    var sourceMetadata = new NameValueCollection
-		//                       {
-		//                           {"SomeTest-metadata", "some-value"}
-		//                       };
-		//    var destinationMetadata = new NameValueCollection
-		//                       {
-		//                           {"SomeTest-metadata", "shouldnt-be-overwritten"}
-		//                       };
+		    destinationClient.UploadAsync("test.txt", destinationMetadata, destinationContent).Wait();
+		    sourceContent.Position = 0;
+		    sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-		//    destinationClient.UploadAsync("test.txt", destinationMetadata, destinationContent).Wait();
-		//    sourceContent.Position = 0;
-		//    sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
+			try{
+			sourceClient.Synchronization.StartSynchronizationToAsync("test.txt", destinationClient.ServerUrl).Wait();
+			}catch
+			{
+				
+			}
+			destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.CurrentVersion).Wait();
+			var result = destinationClient.Synchronization.StartSynchronizationToAsync("test.txt", sourceClient.ServerUrl).Result;
+		    Assert.Equal(destinationContent.Length, result.BytesCopied + result.BytesTransfered);
 
-		//    RdcTestUtils.SynchronizeAndWaitForStatus(destinationClient, sourceClient.ServerUrl, "test.txt");
-		//    destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.Ours).Wait();
-		//    var result = RdcTestUtils.SynchronizeAndWaitForStatus(sourceClient, destinationClient.ServerUrl, "test.txt");
-		//    Assert.Equal(destinationContent.Length, result.BytesCopied + result.BytesTransfered);
+		    // check if conflict resolution has been properly set on the source
+		    string resultMd5;
+		    using (var resultFileContent = new MemoryStream())
+		    {
+		        var metadata = sourceClient.DownloadAsync("test.txt", resultFileContent).Result;
+		        Assert.Equal("shouldnt-be-overwritten", metadata["SomeTest-metadata"]);
+		        resultFileContent.Position = 0;
+		        resultMd5 = resultFileContent.GetMD5Hash();
+		        resultFileContent.Position = 0;
+		    }
 
-		//    // check if conflict resolution has been properly set on the source
-		//    string resultMd5;
-		//    using (var resultFileContent = new MemoryStream())
-		//    {
-		//        var metadata = sourceClient.DownloadAsync("test.txt", resultFileContent).Result;
-		//        Assert.Equal("shouldnt-be-overwritten", metadata["SomeTest-metadata"]);
-		//        resultFileContent.Position = 0;
-		//        resultMd5 = resultFileContent.GetMD5Hash();
-		//        resultFileContent.Position = 0;
-		//    }
+		    destinationContent.Position = 0;
+		    var destinationMd5 = destinationContent.GetMD5Hash();
+		    sourceContent.Position = 0;
 
-		//    destinationContent.Position = 0;
-		//    var destinationMd5 = destinationContent.GetMD5Hash();
-		//    sourceContent.Position = 0;
-
-		//    Assert.True(resultMd5 == destinationMd5);
-		//}
+		    Assert.True(resultMd5 == destinationMd5);
+		}
 
 		[Fact(Skip = "Race condition")]
 		public void Should_get_all_current_synchronizations()

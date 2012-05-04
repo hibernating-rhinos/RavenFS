@@ -572,10 +572,10 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
             }
 
-            public Task ApplyConflictAsync(string filename, long theirVersion, string theirServerId)
+            public Task ApplyConflictAsync(string filename, long remoteVersion, string remoteServerId)
             {
-                var requestUriString = String.Format("{0}/synchronization/applyConflict/{1}?theirVersion={2}&theirServerId={3}",
-                    ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), theirVersion, Uri.EscapeDataString(theirServerId));
+                var requestUriString = String.Format("{0}/synchronization/applyConflict/{1}?remoteVersion={2}&remoteServerId={3}",
+                    ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), remoteVersion, Uri.EscapeDataString(remoteServerId));
                 var request = (HttpWebRequest)WebRequest.Create(requestUriString);
                 request.Method = "PATCH";
                 return request.GetResponseAsync()

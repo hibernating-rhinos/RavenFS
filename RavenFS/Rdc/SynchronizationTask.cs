@@ -75,41 +75,41 @@ namespace RavenFS.Rdc
 								return SynchronizationExceptionReport(string.Format("File {0} you want to synchronize is conflicted", fileName));
 							}
 
-							var conflict = CheckConflict(sourceMetadata, destinationMetadata);
-							var destinationConflictResolutionStrategy = GetConflictResolutionStrategy(destinationMetadata);
+							//var conflict = CheckConflict(sourceMetadata, destinationMetadata);
+							//var destinationConflictResolutionStrategy = GetConflictResolutionStrategy(destinationMetadata);
 
-							if (conflict != null)
-							{
-								if (destinationConflictResolutionStrategy != null)
-								{
-									if (IsConflictResolvedInFavorOfDestination(destinationConflictResolutionStrategy))
-									{
-										CreateConflictArtifacts(fileName, conflict);
+							//if (conflict != null)
+							//{
+							//    if (destinationConflictResolutionStrategy != null)
+							//    {
+							//        if (IsConflictResolvedInFavorOfDestination(destinationConflictResolutionStrategy))
+							//        {
+							//            CreateConflictArtifacts(fileName, conflict);
 
-										publisher.Publish(new ConflictDetected
-										                  	{
-										                  		FileName = fileName,
-										                  		ServerUrl = destination
-										                  	});
+							//            publisher.Publish(new ConflictDetected
+							//                                {
+							//                                    FileName = fileName,
+							//                                    ServerUrl = destination
+							//                                });
 
-										return SynchronizationExceptionReport(string.Format("File {0} is conflicted", fileName));
-									}
-									else if (!IsConflictResolvedInFavorOfSource(conflict, destinationConflictResolutionStrategy))
-									{
-										// if conflict is resolved in favor of source we can continue 
-										// but we just want to be sure that proper resolution is applied
-										return SynchronizationExceptionReport(
-											string.Format("Invalid conflict resolution strategy on {0}", destination));
-									}
-								}
-								else
-								{
-									destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(fileName, conflict.Ours.Version,
-									                                                                    conflict.Ours.ServerId).Wait();
-									return SynchronizationExceptionReport(
-										string.Format("File {0} is conflicted. No resolution provided by {1}.", fileName, destination));
-								}
-							}
+							//            return SynchronizationExceptionReport(string.Format("File {0} is conflicted", fileName));
+							//        }
+							//        else if (!IsConflictResolvedInFavorOfSource(conflict, destinationConflictResolutionStrategy))
+							//        {
+							//            // if conflict is resolved in favor of source we can continue 
+							//            // but we just want to be sure that proper resolution is applied
+							//            return SynchronizationExceptionReport(
+							//                string.Format("Invalid conflict resolution strategy on {0}", destination));
+							//        }
+							//    }
+							//    else
+							//    {
+							//        destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(fileName, conflict.Current.Version,
+							//                                                                            conflict.Remote.ServerId).Wait();
+							//        return SynchronizationExceptionReport(
+							//            string.Format("File {0} is conflicted. No resolution provided by {1}.", fileName, destination));
+							//    }
+							//}
 
 							var localFileDataInfo = GetLocalFileDataInfo(fileName);
 
@@ -159,6 +159,11 @@ namespace RavenFS.Rdc
 									else
 									{
 										report = task.Result;
+										
+										if(task.Result.Exception == null)
+										{
+											RemoveConflictArtifacts(fileName);
+										}
 									}
 
 									storage.Batch(
@@ -168,7 +173,7 @@ namespace RavenFS.Rdc
 											accessor.SetConfigurationValue(name, report);
 										});
 
-				              		return task.Result;
+				              		return report;
 				              	});
 		}
 
@@ -275,8 +280,8 @@ namespace RavenFS.Rdc
 			return
 				new ConflictItem
 				{
-					Ours = new HistoryItem { ServerId = localServerId, Version = localVersion },
-					Theirs = new HistoryItem { ServerId = remoteServerId, Version = remoteVersion }
+					Current = new HistoryItem { ServerId = localServerId, Version = localVersion },
+					Remote = new HistoryItem { ServerId = remoteServerId, Version = remoteVersion }
 				};
 		}
 
@@ -293,7 +298,7 @@ namespace RavenFS.Rdc
 		private bool IsConflictResolvedInFavorOfSource(ConflictItem conflict, ConflictResolution destinationConflictResolution)
 		{
 			return destinationConflictResolution.Strategy == ConflictResolutionStrategy.RemoteVersion
-				&& destinationConflictResolution.TheirServerId == conflict.Ours.ServerId;
+				&& destinationConflictResolution.RemoteServerId == conflict.Current.ServerId;
 		}
 
 		private bool IsConflictResolvedInFavorOfDestination(ConflictResolution destinationConflictResolution)

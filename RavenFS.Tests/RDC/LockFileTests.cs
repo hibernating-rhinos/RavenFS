@@ -120,12 +120,9 @@ namespace RavenFS.Tests.RDC
 
 			destinationClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
-			var innerException = ExecuteAndGetInnerException(() => RdcTestUtils.ResolveConflictAndSynchronize(sourceClient,
-			                                                                                                  destinationClient,
-			                                                                                                  "test.bin"));
+			var synchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
 
-			Assert.IsType(typeof(InvalidOperationException), innerException);
-			Assert.Contains("File test.bin is being synced", innerException.Message);
+			Assert.Contains("File test.bin is being synced", synchronizationReport.Exception.Message);
 		}
 
 		[Fact]

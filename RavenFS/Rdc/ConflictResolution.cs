@@ -9,8 +9,8 @@ namespace RavenFS.Rdc
     public class ConflictResolution
     {
         public ConflictResolutionStrategy Strategy { get; set; }
-        public string TheirServerUrl { get; set; }
+        public string RemoteServerUrl { get; set; }
         public long Version { get; set; }
-        public string TheirServerId { get; set; }
+        public string RemoteServerId { get; set; }
     }
 }

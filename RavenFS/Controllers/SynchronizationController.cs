@@ -64,21 +64,39 @@ namespace RavenFS.Controllers
 			StorageStream localFile = null;
 			StorageStream synchronizingFile = null;
 
-			var metadata = Request.Headers.FilterHeaders();
+			var remoteMetadata = Request.Headers.FilterHeaders();
 
 			return request.Content.ReadAsMultipartAsync()
 				.ContinueWith(multipartReadTask =>
-								{
-									if (GetLocalMetadata(fileName) != null)
+				              	{
+				              		var localMetadata = GetLocalMetadata(fileName);
+
+									if (localMetadata != null)
 									{
+										var conflict = CheckConflict(localMetadata, remoteMetadata);
+										var isConflictResolved = IsConflictResolved(localMetadata, conflict);
+
+										if (conflict != null && !isConflictResolved)
+										{
+											CreateConflictArtifacts(fileName, conflict);
+
+											Publisher.Publish(new ConflictDetected
+											                  	{
+											                  		FileName = fileName,
+											                  		ServerUrl = Request.GetServerUrl()
+											                  	});
+
+											throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
+										}
+
 										localFile = StorageStream.Reading(Storage, fileName);
 									}
 
-									HistoryUpdater.UpdateLastModified(metadata);
+									HistoryUpdater.UpdateLastModified(remoteMetadata);
 
 									synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search,
 																								  tempFileName,
-																								  metadata);
+																								  remoteMetadata);
 
 									long sourceBytes = 0;
 									long seedBytes = 0;
@@ -165,7 +183,7 @@ namespace RavenFS.Controllers
 
 								if (task.Status != TaskStatus.Faulted)
 								{
-									SaveSynchronizationSourceInformation(sourceServerUrl, metadata.Value<Guid>("ETag"), accessor);
+									SaveSynchronizationSourceInformation(sourceServerUrl, remoteMetadata.Value<Guid>("ETag"), accessor);
 								}
 							});
 						return task;
@@ -250,7 +268,7 @@ namespace RavenFS.Controllers
         {
 			if (strategy == ConflictResolutionStrategy.CurrentVersion)
             {
-                return StrategyAsGetOurs(fileName, sourceServerUrl)
+                return StrategyAsGetCurrent(fileName, sourceServerUrl)
                     .ContinueWith(
                         task =>
                         {
@@ -258,16 +276,16 @@ namespace RavenFS.Controllers
                             return new HttpResponseMessage();
                         });
             }
-            StrategyAsGetTheirs(fileName, sourceServerUrl);
+            StrategyAsGetRemote(fileName, sourceServerUrl);
             return new CompletedTask<HttpResponseMessage>(new HttpResponseMessage());
         }
 
         [AcceptVerbs("PATCH")]
-        public HttpResponseMessage ApplyConflict(string filename, long theirVersion, string theirServerId)
+        public HttpResponseMessage ApplyConflict(string filename, long remoteVersion, string remoteServerId)
         {
             var conflict = new ConflictItem
                                {
-                                   Ours = new HistoryItem
+                                   Current = new HistoryItem
                                               {
                                                   ServerId = Storage.Id.ToString(),
                                                   Version =
@@ -275,10 +293,10 @@ namespace RavenFS.Controllers
                                                           GetLocalMetadata(filename)[
                                                               SynchronizationConstants.RavenReplicationVersion])
                                               },
-                                   Theirs = new HistoryItem
+                                   Remote = new HistoryItem
                                                 {
-                                                    ServerId = theirServerId,
-                                                    Version = theirVersion
+                                                    ServerId = remoteServerId,
+                                                    Version = remoteVersion
                                                 }
                                };
             CreateConflictArtifacts(filename, conflict);
@@ -335,10 +353,10 @@ namespace RavenFS.Controllers
             }
             var conflictResolution = new TypeHidingJsonSerializer().Parse<ConflictResolution>(conflictResolutionString);
             return conflictResolution.Strategy == ConflictResolutionStrategy.RemoteVersion
-                && conflictResolution.TheirServerId == conflict.Theirs.ServerId;
+                && conflictResolution.RemoteServerId == conflict.Remote.ServerId;
         }
 
-        private Task StrategyAsGetOurs(string fileName, string sourceServerUrl)
+        private Task StrategyAsGetCurrent(string fileName, string sourceServerUrl)
         {
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
             RemoveConflictArtifacts(fileName);
@@ -358,7 +376,7 @@ namespace RavenFS.Controllers
                     .Unwrap();
         }
 
-        private void StrategyAsGetTheirs(string fileName, string sourceServerUrl)
+        private void StrategyAsGetRemote(string fileName, string sourceServerUrl)
         {
             Storage.Batch(
                 accessor =>
@@ -371,9 +389,9 @@ namespace RavenFS.Controllers
                         new ConflictResolution
                             {
                                 Strategy = ConflictResolutionStrategy.RemoteVersion,
-                                TheirServerUrl = sourceServerUrl,
-                                TheirServerId = conflictItem.Theirs.ServerId,
-                                Version = conflictItem.Theirs.Version,
+                                RemoteServerUrl = sourceServerUrl,
+                                RemoteServerId = conflictItem.Remote.ServerId,
+                                Version = conflictItem.Remote.Version,
                             };
                     localMetadata[SynchronizationConstants.RavenReplicationConflictResolution] =
                         new TypeHidingJsonSerializer().Stringify(conflictResolution);
@@ -415,8 +433,8 @@ namespace RavenFS.Controllers
             return
                 new ConflictItem
                     {
-                        Ours = new HistoryItem { ServerId = localServerId, Version = localVersion },
-                        Theirs = new HistoryItem { ServerId = remoteServerId, Version = remoteVersion }
+                        Current = new HistoryItem { ServerId = localServerId, Version = localVersion },
+                        Remote = new HistoryItem { ServerId = remoteServerId, Version = remoteVersion }
                     };
         }
 

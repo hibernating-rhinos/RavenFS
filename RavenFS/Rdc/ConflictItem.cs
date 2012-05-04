@@ -7,7 +7,7 @@ namespace RavenFS.Rdc
 {
     public class ConflictItem
     {
-        public HistoryItem Theirs { get; set; }
-        public HistoryItem Ours { get; set; }
+        public HistoryItem Remote { get; set; }
+        public HistoryItem Current { get; set; }
     }
 }
