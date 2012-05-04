@@ -423,6 +423,9 @@ namespace RavenFS.Controllers
     	[AcceptVerbs("GET")]
     	public HttpResponseMessage<Guid> LastEtag(string from)
     	{
+			while (from.EndsWith("/"))
+				from = from.Substring(0, from.Length - 1);
+
     		Guid lastEtag = Guid.Empty;
 			Storage.Batch(accessor => lastEtag = GetLastEtag(Uri.EscapeDataString(from), accessor));
     		return new HttpResponseMessage<Guid>(lastEtag);

@@ -116,7 +116,7 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
-		public void Destination_should_know_what_is_last_file_after_synchronization()
+		public void Destination_should_know_what_is_last_file_etag_after_synchronization()
 		{
 			var sourceContent = new RandomStream(10, 1);
 			var sourceMetadata = new NameValueCollection
@@ -131,7 +131,7 @@ namespace RavenFS.Tests.RDC
 
 			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", seedClient.ServerUrl).Wait();
 
-			Guid lastEtag = seedClient.Synchronization.GetLastEtagFromAsync(Uri.EscapeDataString(sourceClient.ServerUrl)).Result;
+			Guid lastEtag = seedClient.Synchronization.GetLastEtagFromAsync(sourceClient.ServerUrl).Result;
 
 			var sourceMetadataWithEtag = sourceClient.GetMetadataForAsync("test.bin").Result;
 
@@ -139,9 +139,33 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
-		public void Destination_should_not_override_last_etag_value_if_greater_exists()
+		public void Destination_should_not_override_last_etag_if_greater_value_exists()
 		{
-			// TODO
+			var sourceContent = new RandomStream(10, 1);
+			var sourceMetadata = new NameValueCollection
+		                       {
+		                           {"SomeTest-metadata", "some-value"}
+		                       };
+
+			var seedClient = NewClient(0);
+			var sourceClient = NewClient(1);
+
+			seedClient.Config.SetConfig("Raven/Replication/Sources/http%3A%2F%2Flocalhost%3A19081",
+				new NameValueCollection
+			    {
+			        {
+			            "value",
+			            "{\"LastDocumentEtag\":\"00000000-0000-0100-0000-000000000002\",\"ServerInstanceId\":\"00000000-1111-2222-3333-444444444444\"}"
+			        }
+			    });
+
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
+
+			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", seedClient.ServerUrl).Wait();
+
+			Guid lastEtag = seedClient.Synchronization.GetLastEtagFromAsync(sourceClient.ServerUrl).Result;
+
+			Assert.Equal("00000000-0000-0100-0000-000000000002", lastEtag.ToString());
 		}
 
 		[Fact]
