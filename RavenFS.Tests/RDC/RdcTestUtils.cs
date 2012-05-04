@@ -4,6 +4,7 @@ using RavenFS.Client;
 namespace RavenFS.Tests.RDC
 {
 	using System;
+	using Xunit;
 
 	public class RdcTestUtils
     {
@@ -30,14 +31,9 @@ namespace RavenFS.Tests.RDC
 
 		public static SynchronizationReport ResolveConflictAndSynchronize(RavenFileSystemClient sourceClient, RavenFileSystemClient destinationClient, string fileName)
         {
-			try
-			{
-				sourceClient.Synchronization.StartSynchronizationToAsync(fileName, destinationClient.ServerUrl).Wait();
-			}
-			catch (Exception)
-			{
+			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync(fileName, destinationClient.ServerUrl).Result;
 
-			}
+			Assert.NotNull(shouldBeConflict.Exception);
 
 			destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.RemoteVersion).Wait();
 			return sourceClient.Synchronization.StartSynchronizationToAsync(fileName, destinationClient.ServerUrl).Result;

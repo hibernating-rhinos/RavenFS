@@ -75,7 +75,7 @@ namespace RavenFS.Controllers
 
 			StartupProceed(fileName);
 
-			FileLockManager.LockByCreatingSyncConfiguration(fileName);
+			FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl);
 
 			StorageStream localFile = null;
 			StorageStream synchronizingFile = null;
@@ -423,11 +423,8 @@ namespace RavenFS.Controllers
     	[AcceptVerbs("GET")]
     	public HttpResponseMessage<Guid> LastEtag(string from)
     	{
-			while (from.EndsWith("/"))
-				from = from.Substring(0, from.Length - 1);
-
     		Guid lastEtag = Guid.Empty;
-			Storage.Batch(accessor => lastEtag = GetLastEtag(Uri.EscapeDataString(from), accessor));
+			Storage.Batch(accessor => lastEtag = GetLastEtag(StringUtils.RemoveTrailingSlashAndEncode(from), accessor));
     		return new HttpResponseMessage<Guid>(lastEtag);
     	}
 
@@ -656,7 +653,7 @@ namespace RavenFS.Controllers
 
 		private void SaveSynchronizationSourceInformation(string sourceServerUrl, Guid lastSourceEtag, StorageActionsAccessor accessor)
 		{
-			var existingLastEtag = GetLastEtag(sourceServerUrl, accessor);
+			var existingLastEtag = GetLastEtag(StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl), accessor);
 			if (string.Compare(existingLastEtag.ToString(), lastSourceEtag.ToString()) > 0)
 			{
 			    return;
@@ -668,7 +665,7 @@ namespace RavenFS.Controllers
 													ServerInstanceId = Storage.Id
 												};
 
-			var key = SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + sourceServerUrl;
+			var key = SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl);
 
 			accessor.SetConfigurationValue(key, synchronizationSourceInfo);
 		}

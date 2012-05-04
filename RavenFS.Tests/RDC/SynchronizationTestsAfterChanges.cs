@@ -14,12 +14,14 @@ using Xunit.Extensions;
 
 namespace RavenFS.Tests.RDC
 {
+	using System.Linq;
 	using System.Threading;
+	using System.Threading.Tasks;
 
 	public class SynchronizationTestsAfterChanges : MultiHostTestBase
 	{
 		[Theory]
-		//[InlineData(1)]
+		[InlineData(1)]
 		[InlineData(5000)]
 		public void Synchronize_file_with_different_beginning(int size)
 		{
@@ -190,36 +192,6 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
-		public void Destination_should_know_what_syncing_operations_has_been_completed()
-		{
-			var sourceContent = new RandomStream(10, 1);
-			var sourceMetadata = new NameValueCollection
-		                       {
-		                           {"SomeTest-metadata", "some-value"}
-		                       };
-
-			var destinationClient = NewClient(0);
-			var sourceClient = NewClient(1);
-
-			destinationClient.Config.SetConfig("Raven/Replication/Sources/http%3A%2F%2Flocalhost%3A19081",
-				new NameValueCollection
-			    {
-			        {
-			            "value",
-			            "{\"LastDocumentEtag\":\"00000000-0000-0100-0000-000000000002\",\"ServerInstanceId\":\"00000000-1111-2222-3333-444444444444\"}"
-			        }
-			    });
-
-			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
-
-			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Wait();
-
-			Guid lastEtag = destinationClient.Synchronization.GetLastEtagFromAsync(sourceClient.ServerUrl).Result;
-
-			Assert.Equal("00000000-0000-0100-0000-000000000002", lastEtag.ToString());
-		}
-
-		[Fact]
 		public void Should_modify_etag_after_upload()
 		{
 			var sourceContent1 = new RandomStream(10, 1);
@@ -326,7 +298,7 @@ namespace RavenFS.Tests.RDC
 			destinationClient.UploadAsync("test.bin", new RandomStream(10)).Wait();
 			var destinationEtag = sourceClient.GetMetadataForAsync("test.bin").Result["ETag"];
 
-			//RdcTestUtils.ResolveConflictAndSynchronize("test.bin", destinationClient, sourceClient);
+			RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 
 			var result = destinationClient.GetMetadataForAsync("test.bin").Result["ETag"];
 
@@ -384,35 +356,36 @@ namespace RavenFS.Tests.RDC
 		//    Assert.True(resultMd5 == destinationMd5);
 		//}
 
-		//[Fact]
-		//public void Should_get_all_current_synchronizations()
-		//{
-		//    var destinationClient = NewClient(0);
-		//    var sourceClient = NewClient(1);
-		//    var files = new[] { "test1.bin", "test2.bin", "test3.bin" };
+		[Fact]
+		public void Should_get_all_current_synchronizations()
+		{
+			var destinationClient = NewClient(0);
+			var sourceClient = NewClient(1);
+			var files = new[] { "test1.bin", "test2.bin", "test3.bin" };
 
-		//    // prepare for real synchronization
-		//    foreach (var item in files)
-		//    {
-		//        Task.WaitAll(
-		//            destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(300000, 1), 0.01)),
-		//            sourceClient.UploadAsync(item, new RandomStream(300000, 1)));
+			// prepare for real synchronization
+			foreach (var item in files)
+			{
+				Task.WaitAll(
+					destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(300000, 1), 0.01)),
+					sourceClient.UploadAsync(item, new RandomStream(300000, 1)));
 
-		//        // try to synchronize and resolve conflicts
-		//        var shouldBeConflict = RdcTestUtils.SynchronizeAndWaitForStatus(destinationClient, sourceClient.ServerUrl, item);
-		//        Assert.NotNull(shouldBeConflict.Exception);
-		//        destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, item, ConflictResolutionStrategy.Theirs).Wait();
-		//    }
+				// try to synchronize and resolve conflicts
+				var shouldBeConflict =
+					sourceClient.Synchronization.StartSynchronizationToAsync(item, destinationClient.ServerUrl).Result;
+				Assert.NotNull(shouldBeConflict.Exception);
+				destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, item, ConflictResolutionStrategy.RemoteVersion).Wait();
+			}
 
-		//    // synchronize all
-		//    foreach (var item in files)
-		//    {
-		//        destinationClient.Synchronization.StartSynchronizationAsync(sourceClient.ServerUrl, item).Wait();
-		//    }
+			// synchronize all
+			foreach (var item in files)
+			{
+				sourceClient.Synchronization.StartSynchronizationToAsync(item, destinationClient.ServerUrl);
+			}
 
-		//    var result = destinationClient.Synchronization.GetWorkingAsync().Result;
-		//    Assert.True(0 < result.Count());
-		//}
+			var result = destinationClient.Synchronization.GetWorkingAsync().Result;
+			Assert.True(0 < result.Count());
+		}
 
 		//[Fact]
 		//public void Should_get_all_finished_synchronizations()

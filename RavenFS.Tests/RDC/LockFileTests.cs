@@ -233,7 +233,7 @@
 //        {
 //            return new NameValueCollection()
 //                                    {
-//                                        {"value", "{\"DestinationUrl\":\"http://localhost:19081\",\"FileLockedAt\":\"\\/Date(" + fileLockedDate.Ticks + ")\\/\"}"},
+//                                        {"value", "{\"SourceUrl\":\"http://localhost:19081\",\"FileLockedAt\":\"\\/Date(" + fileLockedDate.Ticks + ")\\/\"}"},
 //                                    };
 //        }
 

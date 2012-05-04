@@ -34,15 +34,6 @@ namespace RavenFS.Rdc
 			this.publisher = publisher;
 		}
 
-		private string UrlEncodedServerUrl()
-		{
-			var result = localRavenFileSystem.ServerUrl;
-			while (result.EndsWith("/"))
-				result = result.Substring(0, result.Length - 1);
-
-			return Uri.EscapeDataString(result);
-		}
-
 		public void SynchronizeDestinations(string fileName)
 		{
 			foreach (var destination in GetSynchronizationDestinations())
@@ -81,8 +72,7 @@ namespace RavenFS.Rdc
 
 							if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenReplicationConflict))
 							{
-								throw new SynchronizationException(
-									string.Format("File {0} you want to synchronize is conflicted", fileName));
+								return SynchronizationExceptionReport(string.Format("File {0} you want to synchronize is conflicted", fileName));
 							}
 
 							var conflict = CheckConflict(sourceMetadata, destinationMetadata);
@@ -102,21 +92,21 @@ namespace RavenFS.Rdc
 										                  		ServerUrl = destination
 										                  	});
 
-										throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
+										return SynchronizationExceptionReport(string.Format("File {0} is conflicted", fileName));
 									}
 									else if (!IsConflictResolvedInFavorOfSource(conflict, destinationConflictResolutionStrategy))
 									{
 										// if conflict is resolved in favor of source we can continue 
 										// but we just want to be sure that proper resolution is applied
-										throw new SynchronizationException(
+										return SynchronizationExceptionReport(
 											string.Format("Invalid conflict resolution strategy on {0}", destination));
 									}
 								}
 								else
 								{
 									destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(fileName, conflict.Ours.Version,
-									                                                                    conflict.Ours.ServerId);
-									throw new SynchronizationException(
+									                                                                    conflict.Ours.ServerId).Wait();
+									return SynchronizationExceptionReport(
 										string.Format("File {0} is conflicted. No resolution provided by {1}.", fileName, destination));
 								}
 							}
@@ -182,6 +172,16 @@ namespace RavenFS.Rdc
 				              	});
 		}
 
+		private Task<SynchronizationReport> SynchronizationExceptionReport(string exceptionMessage)
+		{
+			var tcs = new TaskCompletionSource<SynchronizationReport>();
+			tcs.SetResult(new SynchronizationReport()
+			              	{
+			              		Exception = new SynchronizationException(exceptionMessage)
+			              	});
+			return tcs.Task;
+		}
+
 		private Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, string fileName, SignatureManifest sourceSignatureManifest, NameValueCollection sourceMetadata)
 		{
 			var seedSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
@@ -216,7 +216,7 @@ namespace RavenFS.Rdc
 
 		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, string fileName, NameValueCollection sourceMetadata, Stream sourceFileStream, IList<RdcNeed> needList, params IDisposable[] disposables)
 		{
-			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, UrlEncodedServerUrl(), fileName, sourceMetadata,
+			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, localRavenFileSystem.ServerUrl, fileName, sourceMetadata,
 																	   sourceFileStream, needList);
 
 			return multipartRequest.PushChangesAsync()

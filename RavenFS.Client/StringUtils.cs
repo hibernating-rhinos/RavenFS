@@ -21,5 +21,13 @@ namespace RavenFS.Client
             return HttpUtility.UrlEncode(textToEncode);
 #endif
         }
+
+    	public static string RemoveTrailingSlashAndEncode(string url)
+    	{
+			while (url.EndsWith("/"))
+				url = url.Substring(0, url.Length - 1);
+
+    		return UrlEncode(url);
+    	}
     }
 }

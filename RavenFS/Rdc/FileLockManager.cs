@@ -29,13 +29,13 @@ namespace RavenFS.Rdc
 			}
 		}
 
-		public void LockByCreatingSyncConfiguration(string fileName, string destinationServerUrl = null)
+		public void LockByCreatingSyncConfiguration(string fileName, string sourceServerUrl)
 		{
 			storage.Batch(accessor =>
 			{
 				var syncOperationDetails = new SynchronizationDetails
 				                          	{
-				                          		DestinationUrl = destinationServerUrl,
+				                          		SourceUrl = sourceServerUrl,
 				                          		FileLockedAt = DateTime.UtcNow
 				                          	};
 
