@@ -21,20 +21,16 @@ namespace RavenFS.Rdc
 		private readonly SynchronizationQueue synchronizationQueue = new SynchronizationQueue();
 		private readonly RavenFileSystem localRavenFileSystem;
 		private readonly TransactionalStorage storage;
-		private readonly BufferPool bufferPool;
 		private readonly ISignatureRepository signatureRepository;
 		private readonly SigGenerator sigGenerator;
-		private readonly FileLockManager fileLockManager;
 		private readonly NotificationPublisher publisher;
 
-		public SynchronizationTask(RavenFileSystem localRavenFileSystem, TransactionalStorage storage, BufferPool bufferPool, FileLockManager fileLockManager, ISignatureRepository signatureRepository, SigGenerator sigGenerator, NotificationPublisher publisher)
+		public SynchronizationTask(RavenFileSystem localRavenFileSystem, TransactionalStorage storage, ISignatureRepository signatureRepository, SigGenerator sigGenerator, NotificationPublisher publisher)
 		{
 			this.localRavenFileSystem = localRavenFileSystem;
 			this.storage = storage;
 			this.sigGenerator = sigGenerator;
 			this.signatureRepository = signatureRepository;
-			this.bufferPool = bufferPool;
-			this.fileLockManager = fileLockManager;
 			this.publisher = publisher;
 		}
 
@@ -61,8 +57,6 @@ namespace RavenFS.Rdc
 			{
 				return new Task<SynchronizationReport>(() => new SynchronizationReport());
 			}
-
-			fileLockManager.LockByCreatingSyncConfiguration(fileName, destination);
 
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 
@@ -161,12 +155,6 @@ namespace RavenFS.Rdc
 										});
 						})
 				.Unwrap()
-				.ContinueWith(
-					task =>
-						{
-							fileLockManager.UnlockByDeletingSyncConfiguration(fileName);
-							return task.Result;
-						})
 				.ContinueWith(task =>
 				              	{
 									SynchronizationReport report;

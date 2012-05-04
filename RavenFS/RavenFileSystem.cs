@@ -64,7 +64,7 @@ namespace RavenFS
             var uuidGenerator = new UuidGenerator(sequenceActions);
             historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
-			synchronizationTask = new SynchronizationTask(this, storage, BufferPool, fileLockManager, signatureRepository, sigGenerator, notificationPublisher);
+			synchronizationTask = new SynchronizationTask(this, storage, signatureRepository, sigGenerator, notificationPublisher);
 
 			AppDomain.CurrentDomain.ProcessExit += ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload += ShouldDispose;
