@@ -22,6 +22,7 @@ namespace RavenFS
 {
 	using System.Web;
 	using System.Web.Http.SelfHost;
+	using Rdc.Conflictuality;
 
 	public class RavenFileSystem : IDisposable
 	{
@@ -34,6 +35,9 @@ namespace RavenFS
 	    private readonly HistoryUpdater historyUpdater;
 		private readonly FileLockManager fileLockManager;
 		private readonly SynchronizationTask synchronizationTask;
+		private readonly ConflictActifactManager conflictActifactManager;
+		private readonly ConflictDetector conflictDetector;
+		private readonly ConflictResolver conflictResolver;
 		private Uri baseAddress;
 
 		public TransactionalStorage Storage
@@ -64,7 +68,10 @@ namespace RavenFS
             var uuidGenerator = new UuidGenerator(sequenceActions);
             historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
-			synchronizationTask = new SynchronizationTask(this, storage, signatureRepository, sigGenerator, notificationPublisher);
+			conflictActifactManager = new ConflictActifactManager(storage);
+			conflictDetector = new ConflictDetector();
+			conflictResolver = new ConflictResolver();
+			synchronizationTask = new SynchronizationTask(this, storage, signatureRepository, sigGenerator, conflictActifactManager, conflictDetector, conflictResolver);
 
 			AppDomain.CurrentDomain.ProcessExit += ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload += ShouldDispose;
@@ -119,6 +126,21 @@ namespace RavenFS
 		public SynchronizationTask SynchronizationTask
 		{
 			get { return synchronizationTask; }
+		}
+
+		public ConflictActifactManager ConflictActifactManager
+		{
+			get { return conflictActifactManager; }
+		}
+
+		public ConflictDetector ConflictDetector
+		{
+			get { return conflictDetector; }
+		}
+
+		public ConflictResolver ConflictResolver
+		{
+			get { return conflictResolver; }
 		}
 
 		public string ServerUrl

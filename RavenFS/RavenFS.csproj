@@ -189,8 +189,11 @@
     <Compile Include="Notifications\TypeHidingJsonSerializer.cs" />
     <Compile Include="RavenFileSystem.cs" />
     <Compile Include="Infrastructure\CompletedTask.cs" />
-    <Compile Include="Rdc\ConflictItem.cs" />
-    <Compile Include="Rdc\ConflictResolution.cs" />
+    <Compile Include="Rdc\Conflictuality\ConflictActifactManager.cs" />
+    <Compile Include="Rdc\Conflictuality\ConflictDetector.cs" />
+    <Compile Include="Rdc\Conflictuality\ConflictItem.cs" />
+    <Compile Include="Rdc\Conflictuality\ConflictResolution.cs" />
+    <Compile Include="Rdc\Conflictuality\ConflictResolver.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
     <Compile Include="Rdc\Multipart\IFilePart.cs" />
     <Compile Include="Rdc\Multipart\MimeConstants.cs" />

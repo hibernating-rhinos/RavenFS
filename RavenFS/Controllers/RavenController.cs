@@ -18,6 +18,7 @@ namespace RavenFS.Controllers
 {
 	using System.Net;
 	using Rdc;
+	using Rdc.Conflictuality;
 
 	public abstract class RavenController : ApiController
 	{
@@ -92,6 +93,21 @@ namespace RavenFS.Controllers
 		protected FileLockManager FileLockManager
 		{
 			get { return RavenFileSystem.FileLockManager; }
+		}
+
+		protected ConflictActifactManager ConflictActifactManager
+		{
+			get { return RavenFileSystem.ConflictActifactManager; }
+		}
+
+		protected ConflictDetector ConflictDetector
+		{
+			get { return RavenFileSystem.ConflictDetector; }
+		}
+
+		protected ConflictResolver ConflictResolver
+		{
+			get { return RavenFileSystem.ConflictResolver; }
 		}
 
 		protected PagingInfo Paging

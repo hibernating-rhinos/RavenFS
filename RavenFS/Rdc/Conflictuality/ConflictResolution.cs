@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using RavenFS.Client;
-
-namespace RavenFS.Rdc
+﻿namespace RavenFS.Rdc.Conflictuality
 {
-    public class ConflictResolution
+	using RavenFS.Client;
+
+	public class ConflictResolution
     {
         public ConflictResolutionStrategy Strategy { get; set; }
         public string RemoteServerUrl { get; set; }

@@ -16,6 +16,7 @@ namespace RavenFS.Tests.RDC
 {
 	using System.Linq;
 	using System.Threading.Tasks;
+	using Rdc.Conflictuality;
 
 	public class SynchronizationTests : MultiHostTestBase
 	{
@@ -226,7 +227,7 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Should_mark_file_as_conflicted_when_two_differnet_versions()
 		{
-			var sourceContent1 = new RandomStream(10, 1);
+			var sourceContent = new RandomStream(10, 1);
 			var sourceMetadata = new NameValueCollection
 		                       {
 		                           {"SomeTest-metadata", "some-value"}
@@ -234,8 +235,8 @@ namespace RavenFS.Tests.RDC
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
-			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
-			destinationClient.UploadAsync("test.bin", sourceMetadata, sourceContent1).Wait();
+			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
+			destinationClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
 			var synchronizationReport =
 				sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
@@ -243,6 +244,26 @@ namespace RavenFS.Tests.RDC
 			Assert.NotNull(synchronizationReport.Exception);
 			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
 			Assert.True(Convert.ToBoolean(resultFileMetadata[SynchronizationConstants.RavenReplicationConflict]));
+		}
+
+		[Fact]
+		public void Must_not_synchronize_conflicted_file()
+		{
+			var sourceContent = new RandomStream(10, 1);
+			var sourceMetadataWithConflict = new NameValueCollection
+		                       {
+		                           {SynchronizationConstants.RavenReplicationConflict, "true"}
+		                       };
+
+			var destinationClient = NewClient(0);
+			var sourceClient = NewClient(1);
+
+			sourceClient.UploadAsync("test.bin", sourceMetadataWithConflict, sourceContent).Wait();
+		
+			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+
+			Assert.NotNull(shouldBeConflict.Exception);
+			Assert.Equal("File test.bin you want to synchronize is conflicted", shouldBeConflict.Exception.Message);
 		}
 
 		[Fact]
@@ -332,12 +353,12 @@ namespace RavenFS.Tests.RDC
 		    sourceContent.Position = 0;
 		    sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-			try{
-			sourceClient.Synchronization.StartSynchronizationToAsync("test.txt", destinationClient.ServerUrl).Wait();
-			}catch
-			{
-				
-			}
+			
+			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test.txt", destinationClient.ServerUrl).Result;
+
+			Assert.Equal("File test.txt is conflicted.", shouldBeConflict.Exception.Message);
+
+			
 			destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.CurrentVersion).Wait();
 			var result = destinationClient.Synchronization.StartSynchronizationToAsync("test.txt", sourceClient.ServerUrl).Result;
 		    Assert.Equal(destinationContent.Length, result.BytesCopied + result.BytesTransfered);

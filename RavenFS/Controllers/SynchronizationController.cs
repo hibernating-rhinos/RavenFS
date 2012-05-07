@@ -18,6 +18,7 @@ using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
+	using Rdc.Conflictuality;
 	using Rdc.Multipart;
 	using ConflictDetected = Notifications.ConflictDetected;
 
@@ -64,7 +65,9 @@ namespace RavenFS.Controllers
 			StorageStream localFile = null;
 			StorageStream synchronizingFile = null;
 
-			var remoteMetadata = Request.Headers.FilterHeaders();
+			bool isConflictResolved = false;
+
+			var sourceMetadata = Request.Headers.FilterHeaders();
 
 			return request.Content.ReadAsMultipartAsync()
 				.ContinueWith(multipartReadTask =>
@@ -73,12 +76,12 @@ namespace RavenFS.Controllers
 
 									if (localMetadata != null)
 									{
-										var conflict = CheckConflict(localMetadata, remoteMetadata);
-										var isConflictResolved = IsConflictResolved(localMetadata, conflict);
+										var conflict = ConflictDetector.Check(localMetadata, sourceMetadata);
+										isConflictResolved = ConflictResolver.IsResolved(localMetadata, conflict);
 
 										if (conflict != null && !isConflictResolved)
 										{
-											CreateConflictArtifacts(fileName, conflict);
+											ConflictActifactManager.CreateArtifact(fileName, conflict);
 
 											Publisher.Publish(new ConflictDetected
 											                  	{
@@ -92,11 +95,11 @@ namespace RavenFS.Controllers
 										localFile = StorageStream.Reading(Storage, fileName);
 									}
 
-									HistoryUpdater.UpdateLastModified(remoteMetadata);
+									HistoryUpdater.UpdateLastModified(sourceMetadata);
 
 									synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search,
 																								  tempFileName,
-																								  remoteMetadata);
+																								  sourceMetadata);
 
 									long sourceBytes = 0;
 									long seedBytes = 0;
@@ -151,6 +154,11 @@ namespace RavenFS.Controllers
 							accessor.RenameFile(tempFileName, fileName);
 						});
 
+					if (isConflictResolved)
+                    {
+						ConflictActifactManager.RemoveArtifact(fileName);
+                    } 
+
 					return task.Result;
 				})
 				.ContinueWith(
@@ -183,7 +191,7 @@ namespace RavenFS.Controllers
 
 								if (task.Status != TaskStatus.Faulted)
 								{
-									SaveSynchronizationSourceInformation(sourceServerUrl, remoteMetadata.Value<Guid>("ETag"), accessor);
+									SaveSynchronizationSourceInformation(sourceServerUrl, sourceMetadata.Value<Guid>("ETag"), accessor);
 								}
 							});
 						return task;
@@ -299,7 +307,7 @@ namespace RavenFS.Controllers
                                                     Version = remoteVersion
                                                 }
                                };
-            CreateConflictArtifacts(filename, conflict);
+            ConflictActifactManager.CreateArtifact(filename, conflict);
 
 			Publisher.Publish(new ConflictDetected
 			{
@@ -318,48 +326,16 @@ namespace RavenFS.Controllers
     		return new HttpResponseMessage<Guid>(lastEtag);
     	}
 
-        private void CreateConflictArtifacts(string fileName, ConflictItem conflict)
-        {
-            Storage.Batch(
-                accessor =>
-                {
-                    var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
-                    accessor.SetConfigurationValue(
-                        SynchronizationHelper.ConflictConfigNameForFile(fileName), conflict);
-                    metadata[SynchronizationConstants.RavenReplicationConflict] = "True";
-                    accessor.UpdateFileMetadata(fileName, metadata);
-                });
-        }
+        
 
-        private void RemoveConflictArtifacts(string fileName)
-        {
-            Storage.Batch(
-                accessor =>
-                {
-                    accessor.DeleteConfig(SynchronizationHelper.ConflictConfigNameForFile(fileName));
-                    var metadata = accessor.GetFile(fileName, 0, 0).Metadata;
-                    metadata.Remove(SynchronizationConstants.RavenReplicationConflict);
-                    metadata.Remove(SynchronizationConstants.RavenReplicationConflictResolution);
-                    accessor.UpdateFileMetadata(fileName, metadata);
-                });
-        }
+        
 
-        private bool IsConflictResolved(NameValueCollection localMetadata, ConflictItem conflict)
-        {
-            var conflictResolutionString = localMetadata[SynchronizationConstants.RavenReplicationConflictResolution];
-            if (String.IsNullOrEmpty(conflictResolutionString))
-            {
-                return false;
-            }
-            var conflictResolution = new TypeHidingJsonSerializer().Parse<ConflictResolution>(conflictResolutionString);
-            return conflictResolution.Strategy == ConflictResolutionStrategy.RemoteVersion
-                && conflictResolution.RemoteServerId == conflict.Remote.ServerId;
-        }
+        
 
         private Task StrategyAsGetCurrent(string fileName, string sourceServerUrl)
         {
             var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
-            RemoveConflictArtifacts(fileName);
+			ConflictActifactManager.RemoveArtifact(fileName);
             var localMetadata = GetLocalMetadata(fileName);
             var version = long.Parse(localMetadata[SynchronizationConstants.RavenReplicationVersion]);
             return
@@ -416,103 +392,6 @@ namespace RavenFS.Controllers
             }
             return result;
         }
-
-        private ConflictItem CheckConflict(NameValueCollection localMetadata, NameValueCollection remoteMetadata)
-        {
-            var remoteHistory = HistoryUpdater.DeserializeHistory(remoteMetadata);
-            var remoteVersion = long.Parse(remoteMetadata[SynchronizationConstants.RavenReplicationVersion]);
-            var remoteServerId = remoteMetadata[SynchronizationConstants.RavenReplicationSource];
-            var localVersion = long.Parse(localMetadata[SynchronizationConstants.RavenReplicationVersion]);
-            var localServerId = localMetadata[SynchronizationConstants.RavenReplicationSource];
-            // if there are the same files or local is direct child there are no conflicts
-            if ((remoteServerId == localServerId && remoteVersion == localVersion)
-                || remoteHistory.Any(item => item.ServerId == localServerId && item.Version == localVersion))
-            {
-                return null;
-            }
-            return
-                new ConflictItem
-                    {
-                        Current = new HistoryItem { ServerId = localServerId, Version = localVersion },
-                        Remote = new HistoryItem { ServerId = remoteServerId, Version = remoteVersion }
-                    };
-        }
-
-        private Task<SynchronizationReport> Synchronize(ISignatureRepository remoteSignatureRepository, string sourceServerUrl, string fileName, SignatureManifest sourceSignatureManifest, SignatureManifest seedSignatureManifest, NameValueCollection sourceMetadata)
-        {
-            var seedSignatureInfo = SignatureInfo.Parse(seedSignatureManifest.Signatures.Last().Name);
-            var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
-            var needListGenerator = new NeedListGenerator(SignatureRepository, remoteSignatureRepository);
-            var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
-            var newSourceMetadata = sourceMetadata.FilterHeaders();
-            HistoryUpdater.UpdateLastModified(newSourceMetadata);
-            var outputFile = StorageStream.CreatingNewAndWritting(Storage, Search,
-                                                                  tempFileName,
-                                                                  newSourceMetadata);
-
-            var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
-
-            return NeedListParser.ParseAsync(
-                new RemotePartialAccess(sourceServerUrl, fileName),
-                new StoragePartialAccess(Storage, fileName),
-                outputFile, needList).ContinueWith(
-                    _ =>
-                    {
-                        outputFile.Dispose();
-                        needListGenerator.Dispose();
-                        _.AssertNotFaulted();
-                        Storage.Batch(
-                            accessor =>
-                            {
-                                accessor.Delete(fileName);
-                                accessor.RenameFile(tempFileName, fileName);
-                            });
-                        return new SynchronizationReport
-                        {
-                            FileName = fileName,
-                            BytesTransfered = needList.Sum(
-                                item =>
-                                item.BlockType == RdcNeedType.Source
-                                    ? (long)item.BlockLength
-                                    : 0L),
-                            BytesCopied = needList.Sum(
-                                item =>
-                                item.BlockType == RdcNeedType.Seed
-                                    ? (long)item.BlockLength
-                                    : 0L),
-                            NeedListLength = needList.Count
-                        };
-                    });
-
-        }
-
-        private Task<SynchronizationReport> Download(RavenFileSystemClient sourceRavenFileSystemClient, string fileName, NameValueCollection sourceMetadata)
-        {
-            var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
-            var newSourceMetadata = sourceMetadata.FilterHeaders();
-            HistoryUpdater.UpdateLastModified(newSourceMetadata);
-            var storageStream = StorageStream.CreatingNewAndWritting(Storage, Search, tempFileName,
-                                                                     newSourceMetadata);
-            return sourceRavenFileSystemClient.DownloadAsync(fileName, storageStream)
-                .ContinueWith(
-                    _ =>
-                    {
-                        storageStream.Dispose();
-                        _.AssertNotFaulted();
-                        Storage.Batch(
-                            accessor =>
-                            {
-                                accessor.Delete(fileName);
-                                accessor.RenameFile(tempFileName, fileName);
-                            });
-                        return new SynchronizationReport
-                                   {
-                                       FileName = fileName,
-                                       BytesCopied = StorageStream.Reading(Storage, fileName).Length
-                                   };
-                    });
-        }
-
 
         private DataInfo GetLocalFileDataInfo(string fileName)
         {
