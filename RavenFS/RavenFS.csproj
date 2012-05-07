@@ -147,6 +147,7 @@
     <Compile Include="Controllers\FilesController.cs" />
     <Compile Include="Controllers\FoldersController.cs" />
     <Compile Include="Controllers\NotificationsController.cs" />
+    <Compile Include="Extensions\Buffers.cs" />
     <Compile Include="Extensions\ConfigurationExtension.cs" />
     <Compile Include="Extensions\GuidExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />

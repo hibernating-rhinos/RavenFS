@@ -421,7 +421,7 @@ namespace RavenFS.Controllers
 		private void SaveSynchronizationSourceInformation(string sourceServerUrl, Guid lastSourceEtag, StorageActionsAccessor accessor)
 		{
 			var existingLastEtag = GetLastEtag(StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl), accessor);
-			if (string.Compare(existingLastEtag.ToString(), lastSourceEtag.ToString()) > 0)
+			if (Buffers.Compare(existingLastEtag.ToByteArray(), lastSourceEtag.ToByteArray()) > 0)
 			{
 			    return;
 			}
