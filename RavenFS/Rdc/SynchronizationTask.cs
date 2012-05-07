@@ -54,9 +54,12 @@ namespace RavenFS.Rdc
 
 			var sourceMetadata = GetLocalMetadata(fileName);
 
+			if(sourceMetadata == null)
+				return SynchronizationExceptionReport(string.Format("File {0} could not be found", fileName));
+
 			if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenReplicationConflict))
 			{
-				return SynchronizationExceptionReport(string.Format("File {0} you want to synchronize is conflicted", fileName));
+				return SynchronizationExceptionReport(string.Format("File {0} is conflicted", fileName));
 			}
 
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
@@ -258,7 +261,6 @@ namespace RavenFS.Rdc
 		{
 			var destionationsConfig = new NameValueCollection();
 
-			//storage.Batch(accessor => accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationDestinations, out destinations));
 			storage.Batch(accessor => destionationsConfig = accessor.GetConfig(SynchronizationConstants.RavenReplicationDestinations));
 
 			string[] destinations = destionationsConfig["url"].Split(',');
