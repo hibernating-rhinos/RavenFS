@@ -152,22 +152,27 @@ namespace RavenFS.Tests.RDC
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
-			destinationClient.Config.SetConfig("Raven/Replication/Sources/http%3A%2F%2Flocalhost%3A19081",
-				new NameValueCollection
-			    {
-			        {
-			            "value",
-			            "{\"LastDocumentEtag\":\"00000000-0000-0100-0000-000000000002\",\"ServerInstanceId\":\"00000000-1111-2222-3333-444444444444\"}"
-			        }
-			    });
+			sourceClient.UploadAsync("test1.bin", sourceMetadata, sourceContent).Wait();
+			sourceClient.UploadAsync("test2.bin", sourceMetadata, sourceContent).Wait();
 
-			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
+			sourceClient.Synchronization.StartSynchronizationToAsync("test2.bin", destinationClient.ServerUrl).Wait();
+			sourceClient.Synchronization.StartSynchronizationToAsync("test1.bin", destinationClient.ServerUrl).Wait();
 
-			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Wait();
+			var lastSourceETag = sourceClient.GetMetadataForAsync("test2.bin").Result.Value<Guid>("ETag");
+			Guid lastSavedETagOnDest = destinationClient.Synchronization.GetLastEtagFromAsync(sourceClient.ServerUrl).Result;
 
-			Guid lastEtag = destinationClient.Synchronization.GetLastEtagFromAsync(sourceClient.ServerUrl).Result;
+			Assert.Equal(lastSourceETag, lastSavedETagOnDest);
+		}
 
-			Assert.Equal("00000000-0000-0100-0000-000000000002", lastEtag.ToString());
+		[Fact]
+		public void Destination_should_return_empty_guid_as_last_etag_if_no_syncing_was_made()
+		{
+
+			var destinationClient = NewClient(0);
+
+			Guid lastSavedETagOnDest = destinationClient.Synchronization.GetLastEtagFromAsync("http://localhost:1234").Result;
+
+			Assert.Equal(Guid.Empty, lastSavedETagOnDest);
 		}
 
 		[Fact]

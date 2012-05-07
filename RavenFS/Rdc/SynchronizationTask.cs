@@ -11,7 +11,6 @@ namespace RavenFS.Rdc
 	using Extensions;
 	using Infrastructure;
 	using Multipart;
-	using Notifications;
 	using Storage;
 	using Util;
 	using Wrapper;
@@ -87,8 +86,7 @@ namespace RavenFS.Rdc
 							{
 								destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(fileName, conflict.Current.Version,
 																										conflict.Remote.ServerId).Wait();
-								return SynchronizationExceptionReport(
-									string.Format("File {0} is conflicted.", fileName));
+								return SynchronizationExceptionReport(string.Format("File {0} is conflicted.", fileName));
 							}
 
 							var localFileDataInfo = GetLocalFileDataInfo(fileName);

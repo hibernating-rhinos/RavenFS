@@ -27,6 +27,7 @@ using RavenFS.Storage;
 namespace RavenFS.Extensions
 {
 	using System.IO;
+	using System.Linq;
 	using Newtonsoft.Json;
 
 	/// <summary>
@@ -79,6 +80,12 @@ namespace RavenFS.Extensions
 				}
 			}
 			return metadata;
+		}
+
+		public static T Value<T>(this HttpRequestHeaders self, string name)
+		{
+			var value = self.GetValues(name).First();
+			return new JsonSerializer().Deserialize<T>(new JsonTextReader(new StringReader(value)));
 		}
 #endif
 

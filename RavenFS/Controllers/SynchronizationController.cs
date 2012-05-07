@@ -12,7 +12,6 @@ using RavenFS.Extensions;
 using RavenFS.Infrastructure;
 using RavenFS.Notifications;
 using RavenFS.Rdc;
-using RavenFS.Rdc.Wrapper;
 using RavenFS.Storage;
 using RavenFS.Util;
 
@@ -55,6 +54,7 @@ namespace RavenFS.Controllers
 			string tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
 
 			string sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
+			Guid lastEtagFromSource = Request.Headers.Value<Guid>("ETag");
 
 			AssertFileIsNotBeingSynced(fileName);
 
@@ -191,7 +191,7 @@ namespace RavenFS.Controllers
 
 								if (task.Status != TaskStatus.Faulted)
 								{
-									SaveSynchronizationSourceInformation(sourceServerUrl, sourceMetadata.Value<Guid>("ETag"), accessor);
+									SaveSynchronizationSourceInformation(sourceServerUrl, lastEtagFromSource, accessor);
 								}
 							});
 						return task;
