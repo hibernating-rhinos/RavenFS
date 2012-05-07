@@ -583,6 +583,17 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
             }
 
+			public Task ResolveConflictInFavorOfDestAsync(string filename, long remoteVersion, string remoteServerId)
+			{
+				var requestUriString = String.Format("{0}/synchronization/resolveConflictInFavorOfDest/{1}?remoteVersion={2}&remoteServerId={3}",
+					ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), remoteVersion, Uri.EscapeDataString(remoteServerId));
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				request.Method = "PATCH";
+				return request.GetResponseAsync()
+					.ContinueWith(task => task.Result.Close())
+					.TryThrowBetterError();
+			}
+
             public Task<IEnumerable<SynchronizationReport>> GetFinishedAsync(int page = 0, int pageSize = 25)
             {
                 var requestUriString = String.Format("{0}/synchronization/finished?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);

@@ -324,6 +324,14 @@ namespace RavenFS.Controllers
             return new HttpResponseMessage(HttpStatusCode.NoContent);
         }
 
+		[AcceptVerbs("PATCH")]
+		public Task<HttpResponseMessage> ResolveConflictInFavorOfDest(string filename, long remoteVersion, string remoteServerId)
+		{
+			ApplyConflict(filename, remoteVersion, remoteServerId);
+
+			return ResolveConflict(filename, ConflictResolutionStrategy.RemoteVersion, Request.GetServerUrl());
+		}
+
     	[AcceptVerbs("GET")]
     	public HttpResponseMessage<Guid> LastEtag(string from)
     	{
@@ -338,18 +346,8 @@ namespace RavenFS.Controllers
 			ConflictActifactManager.RemoveArtifact(fileName);
             var localMetadata = GetLocalMetadata(fileName);
             var version = long.Parse(localMetadata[SynchronizationConstants.RavenReplicationVersion]);
-            return
-                sourceRavenFileSystemClient.Synchronization.ApplyConflictAsync(fileName, version, Storage.Id.ToString())
-                    .ContinueWith(
-                        task =>
-                        {
-                            task.AssertNotFaulted();
-                            return
-                                sourceRavenFileSystemClient.Synchronization.ResolveConflictAsync(
-                                    Request.GetServerUrl(), fileName,
-                                    ConflictResolutionStrategy.RemoteVersion);
-                        })
-                    .Unwrap();
+        	return sourceRavenFileSystemClient.Synchronization.ResolveConflictInFavorOfDestAsync(fileName, version,
+        	                                                                                     Storage.Id.ToString());
         }
 
         private void StrategyAsGetRemote(string fileName, string sourceServerUrl)

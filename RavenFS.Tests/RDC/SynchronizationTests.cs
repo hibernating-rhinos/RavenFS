@@ -370,7 +370,6 @@ namespace RavenFS.Tests.RDC
 
 			Assert.Equal("File test.txt is conflicted.", shouldBeConflict.Exception.Message);
 
-			
 			destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.CurrentVersion).Wait();
 			var result = destinationClient.Synchronization.StartSynchronizationToAsync("test.txt", sourceClient.ServerUrl).Result;
 		    Assert.Equal(destinationContent.Length, result.BytesCopied + result.BytesTransfered);
