@@ -280,7 +280,7 @@ namespace RavenFS.Tests.RDC
 			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
 
 			Assert.NotNull(shouldBeConflict.Exception);
-			Assert.Equal("File test.bin you want to synchronize is conflicted", shouldBeConflict.Exception.Message);
+			Assert.Equal("File test.bin is conflicted", shouldBeConflict.Exception.Message);
 		}
 
 		[Fact]
