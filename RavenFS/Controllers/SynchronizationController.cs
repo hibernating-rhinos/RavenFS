@@ -291,22 +291,28 @@ namespace RavenFS.Controllers
         [AcceptVerbs("PATCH")]
         public HttpResponseMessage ApplyConflict(string filename, long remoteVersion, string remoteServerId)
         {
-            var conflict = new ConflictItem
-                               {
-                                   Current = new HistoryItem
-                                              {
-                                                  ServerId = Storage.Id.ToString(),
-                                                  Version =
-                                                      long.Parse(
-                                                          GetLocalMetadata(filename)[
-                                                              SynchronizationConstants.RavenReplicationVersion])
-                                              },
-                                   Remote = new HistoryItem
-                                                {
-                                                    ServerId = remoteServerId,
-                                                    Version = remoteVersion
-                                                }
-                               };
+        	var localMetadata = GetLocalMetadata(filename);
+
+        	if (localMetadata == null)
+        	{
+				throw new HttpResponseException(HttpStatusCode.NotFound);
+        	}
+
+        	var conflict = new ConflictItem
+        	               	{
+        	               		Current = new HistoryItem
+        	               		          	{
+        	               		          		ServerId = Storage.Id.ToString(),
+        	               		          		Version =
+        	               		          			long.Parse(localMetadata[SynchronizationConstants.RavenReplicationVersion])
+        	               		          	},
+        	               		Remote = new HistoryItem
+        	               		         	{
+        	               		         		ServerId = remoteServerId,
+        	               		         		Version = remoteVersion
+        	               		         	}
+        	               	};
+
             ConflictActifactManager.CreateArtifact(filename, conflict);
 
 			Publisher.Publish(new ConflictDetected
@@ -325,12 +331,6 @@ namespace RavenFS.Controllers
 			Storage.Batch(accessor => lastEtag = GetLastEtag(StringUtils.RemoveTrailingSlashAndEncode(from), accessor));
     		return new HttpResponseMessage<Guid>(lastEtag);
     	}
-
-        
-
-        
-
-        
 
         private Task StrategyAsGetCurrent(string fileName, string sourceServerUrl)
         {

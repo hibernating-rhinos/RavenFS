@@ -225,6 +225,18 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
+		public void Should_throw_not_found_exception_when_applying_conflict_on_missing_file()
+		{
+			var client = NewClient(1);
+
+			var guid = Guid.NewGuid().ToString();
+			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => client.Synchronization.ApplyConflictAsync("test.bin", 8, guid).Wait());
+
+			Assert.IsType(typeof(InvalidOperationException), innerException);
+			Assert.Contains("404", innerException.Message);
+		}
+
+		[Fact]
 		public void Should_mark_file_as_conflicted_when_two_differnet_versions()
 		{
 			var sourceContent = new RandomStream(10, 1);

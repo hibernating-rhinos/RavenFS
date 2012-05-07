@@ -56,7 +56,7 @@ namespace RavenFS.Tests.RDC
 
 			destinationClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
-			var innerException = ExecuteAndGetInnerException(() => destinationClient.UpdateMetadataAsync("test.bin", new NameValueCollection()).Wait());
+			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.UpdateMetadataAsync("test.bin", new NameValueCollection()).Wait());
 
 			Assert.IsType(typeof(InvalidOperationException), innerException);
 			Assert.Contains("File test.bin is being synced", innerException.Message);
@@ -72,7 +72,7 @@ namespace RavenFS.Tests.RDC
 
 			destinationClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
-			var innerException = ExecuteAndGetInnerException(() => destinationClient.DeleteAsync("test.bin").Wait());
+			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.DeleteAsync("test.bin").Wait());
 
 			Assert.IsType(typeof(InvalidOperationException), innerException);
 			Assert.Contains("File test.bin is being synced", innerException.Message);
@@ -88,7 +88,7 @@ namespace RavenFS.Tests.RDC
 
 			destinationClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
-			var innerException = ExecuteAndGetInnerException(() => destinationClient.RenameAsync("test.bin", "newname.bin").Wait());
+			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.RenameAsync("test.bin", "newname.bin").Wait());
 
 			Assert.IsType(typeof(InvalidOperationException), innerException);
 			Assert.Contains("File test.bin is being synced", innerException.Message);
@@ -104,7 +104,7 @@ namespace RavenFS.Tests.RDC
 
 			destinationClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
-			var innerException = ExecuteAndGetInnerException(() => destinationClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
+			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
 
 			Assert.IsType(typeof(InvalidOperationException), innerException);
 			Assert.Contains("File test.bin is being synced", innerException.Message);
@@ -199,21 +199,7 @@ namespace RavenFS.Tests.RDC
 			sourceClient.UploadAsync(fileName, EmptyData, sourceContent).Wait();
 		}
 
-		private static Exception ExecuteAndGetInnerException(Action action)
-		{
-			Exception innerException = null;
-
-			try
-			{
-				action();
-			}
-			catch (AggregateException exception)
-			{
-				innerException = exception.InnerException;
-			}
-
-			return innerException;
-		}
+		
 
 		private static bool WaitForBeginningSynchronization(RavenFileSystemClient client, string configName)
 		{
