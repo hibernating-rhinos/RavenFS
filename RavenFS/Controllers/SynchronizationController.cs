@@ -103,10 +103,11 @@ namespace RavenFS.Controllers
 
 									long sourceBytes = 0;
 									long seedBytes = 0;
-									long numberOfFileParts = multipartReadTask.Result.Count();
+				              		long numberOfFileParts = 0;
 
 									foreach (var fileChunkPart in multipartReadTask.Result)
 									{
+										numberOfFileParts += 1;
 										var parameters = fileChunkPart.Headers.ContentDisposition.Parameters.ToDictionary(t => t.Name);
 
 										var needType = parameters[SyncingMultipartConstants.NeedType].Value;
