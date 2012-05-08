@@ -45,22 +45,18 @@ namespace RavenFS.Controllers
 				throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
 			}
 
-			return InnerMultipartProceed(Request);
-		}
-
-		private Task<HttpResponseMessage<SynchronizationReport>> InnerMultipartProceed(HttpRequestMessage request)
-		{
 			string fileName = Request.Headers.GetValues(SyncingMultipartConstants.FileName).FirstOrDefault();
 			string tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
 
 			string sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
 			Guid lastEtagFromSource = Request.Headers.Value<Guid>("ETag");
 
-			AssertFileIsNotBeingSynced(fileName);
-
-			StartupProceed(fileName);
-
-			FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl);
+			Storage.Batch(accessor =>
+			              	{
+								AssertFileIsNotBeingSynced(fileName, accessor);
+								StartupProceed(fileName, accessor);
+								FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl, accessor);
+			              	});
 
 			StorageStream localFile = null;
 			StorageStream synchronizingFile = null;
@@ -69,78 +65,78 @@ namespace RavenFS.Controllers
 
 			var sourceMetadata = Request.Headers.FilterHeaders();
 
-			return request.Content.ReadAsMultipartAsync()
+			return Request.Content.ReadAsMultipartAsync()
 				.ContinueWith(multipartReadTask =>
-				              	{
-				              		var localMetadata = GetLocalMetadata(fileName);
+				{
+					var localMetadata = GetLocalMetadata(fileName);
 
-									if (localMetadata != null)
-									{
-										var conflict = ConflictDetector.Check(localMetadata, sourceMetadata);
-										isConflictResolved = ConflictResolver.IsResolved(localMetadata, conflict);
+					if (localMetadata != null)
+					{
+						var conflict = ConflictDetector.Check(localMetadata, sourceMetadata);
+						isConflictResolved = ConflictResolver.IsResolved(localMetadata, conflict);
 
-										if (conflict != null && !isConflictResolved)
-										{
-											ConflictActifactManager.CreateArtifact(fileName, conflict);
+						if (conflict != null && !isConflictResolved)
+						{
+							ConflictActifactManager.CreateArtifact(fileName, conflict);
 
-											Publisher.Publish(new ConflictDetected
-											                  	{
-											                  		FileName = fileName,
-											                  		ServerUrl = Request.GetServerUrl()
-											                  	});
+							Publisher.Publish(new ConflictDetected
+							{
+								FileName = fileName,
+								ServerUrl = Request.GetServerUrl()
+							});
 
-											throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
-										}
+							throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
+						}
 
-										localFile = StorageStream.Reading(Storage, fileName);
-									}
+						localFile = StorageStream.Reading(Storage, fileName);
+					}
 
-									HistoryUpdater.UpdateLastModified(sourceMetadata);
+					HistoryUpdater.UpdateLastModified(sourceMetadata);
 
-									synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search,
-																								  tempFileName,
-																								  sourceMetadata);
+					synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search,
+																				  tempFileName,
+																				  sourceMetadata);
 
-									long sourceBytes = 0;
-									long seedBytes = 0;
-				              		long numberOfFileParts = 0;
+					long sourceBytes = 0;
+					long seedBytes = 0;
+					long numberOfFileParts = 0;
 
-									foreach (var fileChunkPart in multipartReadTask.Result)
-									{
-										numberOfFileParts += 1;
-										var parameters = fileChunkPart.Headers.ContentDisposition.Parameters.ToDictionary(t => t.Name);
+					foreach (var fileChunkPart in multipartReadTask.Result)
+					{
+						numberOfFileParts += 1;
+						var parameters = fileChunkPart.Headers.ContentDisposition.Parameters.ToDictionary(t => t.Name);
 
-										var needType = parameters[SyncingMultipartConstants.NeedType].Value;
-										var from = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeFrom].Value);
-										var to = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeTo].Value);
-										if (needType == "source")
-										{
-											sourceBytes += (to - from);
-											fileChunkPart.CopyToAsync(synchronizingFile).Wait();
-										}
-										else if (needType == "seed")
-										{
-											seedBytes += (to - from);
-											localFile.CopyToAsync(synchronizingFile, from, to).Wait();
-										}
-									}
+						var needType = parameters[SyncingMultipartConstants.NeedType].Value;
+						var from = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeFrom].Value);
+						var to = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeTo].Value);
+						if (needType == "source")
+						{
+							sourceBytes += (to - from);
+							fileChunkPart.CopyToAsync(synchronizingFile).Wait();
+						}
+						else if (needType == "seed")
+						{
+							seedBytes += (to - from);
+							localFile.CopyToAsync(synchronizingFile, from, to).Wait();
+						}
+					}
 
-									return new SynchronizationReport
-									{
-										FileName = fileName,
-										BytesTransfered = sourceBytes,
-										BytesCopied = seedBytes,
-										NeedListLength = numberOfFileParts
-									};
-								})
+					return new SynchronizationReport
+					{
+						FileName = fileName,
+						BytesTransfered = sourceBytes,
+						BytesCopied = seedBytes,
+						NeedListLength = numberOfFileParts
+					};
+				})
 				.ContinueWith(task =>
 				{
-					if(synchronizingFile != null)
+					if (synchronizingFile != null)
 					{
 						synchronizingFile.Dispose();
 					}
 
-					if(localFile != null)
+					if (localFile != null)
 					{
 						localFile.Dispose();
 					}
@@ -155,16 +151,17 @@ namespace RavenFS.Controllers
 						});
 
 					if (isConflictResolved)
-                    {
+					{
 						ConflictActifactManager.RemoveArtifact(fileName);
-                    } 
+					}
 
 					return task.Result;
 				})
 				.ContinueWith(
 					task =>
 					{
-						FileLockManager.UnlockByDeletingSyncConfiguration(fileName);
+						Storage.Batch(accessor => FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor));
+						
 						return task.Result;
 					})
 				.ContinueWith(
@@ -204,22 +201,18 @@ namespace RavenFS.Controllers
 					});
 		}
 
-        private void StartupProceed(string fileName)
+        private void StartupProceed(string fileName, StorageActionsAccessor accessor)
         {
-            Storage.Batch(
-                accessor =>
-                    {
-                        // remove previous SyncResult
-                        var name = SynchronizationHelper.SyncResultNameForFile(fileName);
-                        accessor.DeleteConfig(name);
+            // remove previous SyncResult
+            var name = SynchronizationHelper.SyncResultNameForFile(fileName);
+            accessor.DeleteConfig(name);
 
-                        // remove previous .downloading file
-                        if (accessor.ConfigExists(SynchronizationHelper.SyncNameForFile(fileName)) == false)
-                        {
-                            Search.Delete(name);
-                            accessor.Delete(SynchronizationHelper.DownloadingFileName(fileName));
-                        }
-                    });
+            // remove previous .downloading file
+            if (accessor.ConfigExists(SynchronizationHelper.SyncNameForFile(fileName)) == false)
+            {
+                Search.Delete(name);
+                accessor.Delete(SynchronizationHelper.DownloadingFileName(fileName));
+            }
         }
 
         [AcceptVerbs("GET")]

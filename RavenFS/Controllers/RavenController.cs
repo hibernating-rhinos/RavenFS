@@ -185,11 +185,11 @@ namespace RavenFS.Controllers
 			return response;
 		}
 
-		protected void AssertFileIsNotBeingSynced(string fileName)
+		protected void AssertFileIsNotBeingSynced(string fileName, StorageActionsAccessor accessor)
 		{
-			if (FileLockManager.TimeoutExceeded(fileName))
+			if (FileLockManager.TimeoutExceeded(fileName, accessor))
 			{
-				FileLockManager.UnlockByDeletingSyncConfiguration(fileName);
+				FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 			}
 			else
 			{

@@ -60,7 +60,7 @@ namespace RavenFS
 		    var replicationHiLo = new ReplicationHiLo(storage);
 		    var sequenceActions = new SequenceActions(storage);
             notificationPublisher = new NotificationPublisher();
-			fileLockManager = new FileLockManager(storage);
+			fileLockManager = new FileLockManager();
 			storage.Initialize();
 			search.Initialize();
             var uuidGenerator = new UuidGenerator(sequenceActions);

@@ -10,54 +10,39 @@ namespace RavenFS.Rdc
 	public class FileLockManager
 	{
 		private readonly TimeSpan defaultTimeout = TimeSpan.FromMinutes(10);
-		private readonly TransactionalStorage storage;
 		private TimeSpan configuredTimeout;
 
-		public FileLockManager(TransactionalStorage storage)
+		private TimeSpan ReplicationTimeout(StorageActionsAccessor accessor)
 		{
-			this.storage = storage;
+			bool timeoutConfigExists = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationTimeout, out configuredTimeout);
+
+			return timeoutConfigExists ? configuredTimeout : defaultTimeout;
 		}
 
-		private TimeSpan ReplicationTimeout
+		public void LockByCreatingSyncConfiguration(string fileName, string sourceServerUrl, StorageActionsAccessor accessor)
 		{
-			get
-			{
-				bool timeoutConfigExists = false;
-				storage.Batch(accessor => timeoutConfigExists = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationTimeout, out configuredTimeout));
+			var syncOperationDetails = new SynchronizationDetails
+											{
+												SourceUrl = sourceServerUrl,
+												FileLockedAt = DateTime.UtcNow
+											};
 
-				return timeoutConfigExists ? configuredTimeout : defaultTimeout;
-			}
+			accessor.SetConfigurationValue(SynchronizationHelper.SyncNameForFile(fileName), syncOperationDetails);
 		}
 
-		public void LockByCreatingSyncConfiguration(string fileName, string sourceServerUrl)
+		public void UnlockByDeletingSyncConfiguration(string fileName, StorageActionsAccessor accessor)
 		{
-			storage.Batch(accessor =>
-			{
-				var syncOperationDetails = new SynchronizationDetails
-				                          	{
-				                          		SourceUrl = sourceServerUrl,
-				                          		FileLockedAt = DateTime.UtcNow
-				                          	};
-
-				accessor.SetConfigurationValue(SynchronizationHelper.SyncNameForFile(fileName),
-				                                                       syncOperationDetails);
-			});
+			accessor.DeleteConfig(SynchronizationHelper.SyncNameForFile(fileName));
 		}
 
-		public void UnlockByDeletingSyncConfiguration(string fileName)
+		public bool TimeoutExceeded(string fileName, StorageActionsAccessor accessor)
 		{
-			storage.Batch(accessor => accessor.DeleteConfig(SynchronizationHelper.SyncNameForFile(fileName)));
-		}
-
-		public bool TimeoutExceeded(string fileName)
-		{
-			SynchronizationDetails syncOperationDetails = null;
-			storage.Batch(accessor => accessor.TryGetConfigurationValue(SynchronizationHelper.SyncNameForFile(fileName), out syncOperationDetails));
-
-			if (syncOperationDetails == null)
+			SynchronizationDetails syncOperationDetails;
+			
+			if (!accessor.TryGetConfigurationValue(SynchronizationHelper.SyncNameForFile(fileName), out syncOperationDetails))
 				return true;
 
-			return DateTime.UtcNow - syncOperationDetails.FileLockedAt > ReplicationTimeout;
+			return DateTime.UtcNow - syncOperationDetails.FileLockedAt > ReplicationTimeout(accessor);
 		}
 	}
 }

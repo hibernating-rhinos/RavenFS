@@ -51,7 +51,7 @@ namespace RavenFS.Controllers
         {
             name = Uri.UnescapeDataString(name);
 
-        	AssertFileIsNotBeingSynced(name);
+			Storage.Batch(accessor => AssertFileIsNotBeingSynced(name, accessor));
 
             Search.Delete(name);
             Storage.Batch(accessor => accessor.Delete(name));
@@ -84,7 +84,7 @@ namespace RavenFS.Controllers
         {
             name = Uri.UnescapeDataString(name);
 
-			AssertFileIsNotBeingSynced(name);
+			Storage.Batch(accessor => AssertFileIsNotBeingSynced(name, accessor));
 
             var headers = Request.Headers.FilterHeaders();
             HistoryUpdater.UpdateLastModified(headers);
@@ -106,7 +106,7 @@ namespace RavenFS.Controllers
         [AcceptVerbs("PATCH")]
         public HttpResponseMessage Patch(string name, string rename)
         {
-			AssertFileIsNotBeingSynced(name);
+			Storage.Batch(accessor => AssertFileIsNotBeingSynced(name, accessor));
 
             try
             {
@@ -133,7 +133,7 @@ namespace RavenFS.Controllers
         {
 			name = Uri.UnescapeDataString(name);
 
-			AssertFileIsNotBeingSynced(name);
+			Storage.Batch(accessor => AssertFileIsNotBeingSynced(name, accessor));
 
             var headers = Request.Headers.FilterHeaders();
             HistoryUpdater.UpdateLastModified(headers);
