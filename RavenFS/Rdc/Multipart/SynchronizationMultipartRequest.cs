@@ -102,7 +102,7 @@ namespace RavenFS.Rdc.Multipart
 									var footer = new StringBuilder();
 									footer.AppendFormat("{0}--{1}--{0}{0}", MimeConstants.LineSeparator, syncingBoundary);
 
-									var footerBuffer = Encoding.ASCII.GetBytes(footer.ToString());
+									var footerBuffer = Encoding.UTF8.GetBytes(footer.ToString());
 									task.Result.Write(footerBuffer, 0, footerBuffer.Length);
 
 									return task;
