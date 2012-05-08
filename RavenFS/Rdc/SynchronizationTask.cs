@@ -149,13 +149,6 @@ namespace RavenFS.Rdc
 										}
 									}
 
-									storage.Batch(
-										accessor =>
-										{
-											var name = SynchronizationHelper.SyncResultNameForFile(fileName);
-											accessor.SetConfigurationValue(name, report);
-										});
-
 				              		return report;
 				              	});
 		}
