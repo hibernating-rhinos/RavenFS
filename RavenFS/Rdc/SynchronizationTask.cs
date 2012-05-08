@@ -163,12 +163,10 @@ namespace RavenFS.Rdc
 
 		private Task<SynchronizationReport> SynchronizationExceptionReport(string exceptionMessage)
 		{
-			var tcs = new TaskCompletionSource<SynchronizationReport>();
-			tcs.SetResult(new SynchronizationReport()
-			              	{
-			              		Exception = new SynchronizationException(exceptionMessage)
-			              	});
-			return tcs.Task;
+			return new CompletedTask<SynchronizationReport>(new SynchronizationReport()
+			                                                	{
+			                                                		Exception = new SynchronizationException(exceptionMessage)
+			                                                	});
 		}
 
 		private Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, string fileName, SignatureManifest sourceSignatureManifest, NameValueCollection sourceMetadata)
