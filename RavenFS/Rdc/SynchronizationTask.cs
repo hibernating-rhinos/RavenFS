@@ -68,12 +68,7 @@ namespace RavenFS.Rdc
 				.ContinueWith(
 					getMetadataForAsyncTask =>
 						{
-							NameValueCollection destinationMetadata = null;
-
-							if (!getMetadataForAsyncTask.IsFaulted)
-							{
-								destinationMetadata = getMetadataForAsyncTask.Result;
-							}
+							var destinationMetadata = getMetadataForAsyncTask.Result;
 
 							if (destinationMetadata == null)
 							{

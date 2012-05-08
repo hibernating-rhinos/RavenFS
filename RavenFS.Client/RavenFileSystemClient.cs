@@ -153,8 +153,27 @@ namespace RavenFS.Client
 			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename);
 			request.Method = "HEAD";
 			return request.GetResponseAsync()
-				.ContinueWith(task => new NameValueCollection(task.Result.Headers))
-				.TryThrowBetterError();
+				.ContinueWith(task =>
+				              	{
+				              		try
+				              		{
+				              			var response = task.Result;
+				              			return new NameValueCollection(response.Headers);
+				              		}
+				              		catch (AggregateException e)
+				              		{
+				              			var we = e.ExtractSingleInnerException() as WebException;
+				              			if (we == null)
+				              				throw;
+				              			var httpWebResponse = we.Response as HttpWebResponse;
+				              			if (httpWebResponse == null)
+				              				throw;
+				              			if (httpWebResponse.StatusCode == HttpStatusCode.NotFound)
+				              				return null;
+				              			throw;
+				              		}
+				              	}
+				).TryThrowBetterError();
 		}
 
 		public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long? from = null, long? to = null)
