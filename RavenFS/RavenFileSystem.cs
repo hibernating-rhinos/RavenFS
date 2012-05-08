@@ -29,7 +29,6 @@ namespace RavenFS
 		private readonly string path;
 		private readonly TransactionalStorage storage;
 		private readonly IndexStorage search;
-		private readonly ISignatureRepository signatureRepository;
 		private readonly SigGenerator sigGenerator;
 	    private readonly NotificationPublisher notificationPublisher;
 	    private readonly HistoryUpdater historyUpdater;
@@ -57,8 +56,7 @@ namespace RavenFS
 			this.path = path.ToFullPath();
 			storage = new TransactionalStorage(this.path, new NameValueCollection());
 			search = new IndexStorage(this.path, new NameValueCollection());
-            signatureRepository = new StorageSignatureRepository(storage);
-			sigGenerator = new SigGenerator(signatureRepository);
+			sigGenerator = new SigGenerator();
 		    var replicationHiLo = new ReplicationHiLo(storage);
 		    var sequenceActions = new SequenceActions(storage);
             notificationPublisher = new NotificationPublisher();
@@ -71,7 +69,7 @@ namespace RavenFS
 			conflictActifactManager = new ConflictActifactManager(storage);
 			conflictDetector = new ConflictDetector();
 			conflictResolver = new ConflictResolver();
-			synchronizationTask = new SynchronizationTask(this, storage, signatureRepository, sigGenerator, conflictActifactManager, conflictDetector, conflictResolver);
+			synchronizationTask = new SynchronizationTask(this, storage, sigGenerator, conflictActifactManager, conflictDetector, conflictResolver);
 
 			AppDomain.CurrentDomain.ProcessExit += ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload += ShouldDispose;
@@ -92,15 +90,9 @@ namespace RavenFS
 			AppDomain.CurrentDomain.ProcessExit -= ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload -= ShouldDispose;
 
-            signatureRepository.Dispose();
 			storage.Dispose();
 			search.Dispose();
 			sigGenerator.Dispose();
-		}
-
-		public ISignatureRepository SignatureRepository
-		{
-			get { return signatureRepository; }
 		}
 
 		public SigGenerator SigGenerator

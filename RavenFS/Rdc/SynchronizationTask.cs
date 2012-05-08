@@ -20,13 +20,12 @@ namespace RavenFS.Rdc
 		private readonly SynchronizationQueue synchronizationQueue = new SynchronizationQueue();
 		private readonly RavenFileSystem localRavenFileSystem;
 		private readonly TransactionalStorage storage;
-		private readonly ISignatureRepository signatureRepository;
 		private readonly SigGenerator sigGenerator;
 		private readonly ConflictActifactManager conflictActifactManager;
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
 
-		public SynchronizationTask(RavenFileSystem localRavenFileSystem, TransactionalStorage storage, ISignatureRepository signatureRepository, SigGenerator sigGenerator, ConflictActifactManager conflictActifactManager, ConflictDetector conflictDetector, ConflictResolver conflictResolver)
+		public SynchronizationTask(RavenFileSystem localRavenFileSystem, TransactionalStorage storage, SigGenerator sigGenerator, ConflictActifactManager conflictActifactManager, ConflictDetector conflictDetector, ConflictResolver conflictResolver)
 		{
 			this.localRavenFileSystem = localRavenFileSystem;
 			this.conflictResolver = conflictResolver;
@@ -34,7 +33,6 @@ namespace RavenFS.Rdc
 			this.conflictActifactManager = conflictActifactManager;
 			this.storage = storage;
 			this.sigGenerator = sigGenerator;
-			this.signatureRepository = signatureRepository;
 		}
 
 		public void SynchronizeDestinations(string fileName)
@@ -96,7 +94,8 @@ namespace RavenFS.Rdc
 
 							var localFileDataInfo = GetLocalFileDataInfo(fileName);
 
-							var remoteSignatureCache = new VolatileSignatureRepository(TempDirectoryTools.Create());
+							var signatureRepository = new StorageSignatureRepository(storage, fileName);
+							var remoteSignatureCache = new VolatileSignatureRepository(fileName);
 							var localRdcManager = new LocalRdcManager(signatureRepository, storage, sigGenerator);
 							var destinationRdcManager = new RemoteRdcManager(destinationRavenFileSystemClient, signatureRepository,
 							                                                 remoteSignatureCache);
@@ -122,6 +121,7 @@ namespace RavenFS.Rdc
 								.ContinueWith(
 									synchronizationTask =>
 										{
+											signatureRepository.Dispose();
 											remoteSignatureCache.Dispose();
 
 											return synchronizationTask.Result;
@@ -167,14 +167,17 @@ namespace RavenFS.Rdc
 		{
 			var seedSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
 			var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
-			var needListGenerator = new NeedListGenerator(remoteSignatureRepository, signatureRepository);
-
+			
 			var localFile = StorageStream.Reading(storage, fileName);
 
-			var needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
+			IList<RdcNeed> needList = null;
+			using (var signatureRepository = new StorageSignatureRepository(storage, fileName))
+			using (var needListGenerator = new NeedListGenerator(remoteSignatureRepository, signatureRepository))
+			{
+				needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
+			}
 
-			return PushByUsingMultipartRequest(destinationServerUrl, fileName, sourceMetadata, localFile, needList, localFile,
-			                                   needListGenerator);
+			return PushByUsingMultipartRequest(destinationServerUrl, fileName, sourceMetadata, localFile, needList, localFile);
 		}
 
 		private Task<SynchronizationReport> UploadTo(string destinationServerUrl, string fileName, NameValueCollection localMetadata)

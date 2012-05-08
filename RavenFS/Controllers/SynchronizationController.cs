@@ -112,7 +112,6 @@ namespace RavenFS.Controllers
 										var needType = parameters[SyncingMultipartConstants.NeedType].Value;
 										var from = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeFrom].Value);
 										var to = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeTo].Value);
-
 										if (needType == "source")
 										{
 											sourceBytes += (to - from);

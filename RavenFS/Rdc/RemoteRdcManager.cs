@@ -87,7 +87,7 @@ namespace RavenFS.Rdc
         private IList<LocalRemotePair> PrepareSigPairs(DataInfo dataInfo, SignatureManifest signatureManifest)
         {
             var remoteSignatures = signatureManifest.Signatures;
-            var localSignatures = _localSignatureRepository.GetByFileName(dataInfo.Name).ToList();
+            var localSignatures = _localSignatureRepository.GetByFileName().ToList();
 
             var length = Math.Min(remoteSignatures.Count, localSignatures.Count);
             var remoteSignatureNames = remoteSignatures.Take(length).Select(item => item.Name).ToList();

@@ -11,10 +11,8 @@ using Xunit;
 
 namespace RavenFS.Rdc.Wrapper.Test
 {
-    public class NeedListGeneratorTest : IDisposable
+    public class NeedListGeneratorTest 
     {
-        private ISignatureRepository _signatureRepository;
-
     	private static RandomlyModifiedStream GetSeedStream()
     	{
 			return new RandomlyModifiedStream(GetSourceStream(), 0.01, 1);
@@ -25,15 +23,11 @@ namespace RavenFS.Rdc.Wrapper.Test
     		return new RandomStream(15*1024*1024, 1);
     	}
 
-        public NeedListGeneratorTest()
-        {
-            _signatureRepository = new VolatileSignatureRepository(TempDirectoryTools.Create());
-        }
-
     	[MtaFact]
         public void ctor_and_dispose()
         {
-            using (var tested = new NeedListGenerator(_signatureRepository, _signatureRepository))
+            using (var signatureRepository = CreateSignatureRepositoryFor("test"))
+            using (var tested = new NeedListGenerator(signatureRepository, signatureRepository))
             {
                 Assert.NotNull(tested);
             }
@@ -44,23 +38,27 @@ namespace RavenFS.Rdc.Wrapper.Test
         {
         	IList<SignatureInfo> sourceSignatureInfos;
         	IList<SignatureInfo> seedSignatureInfos;
-            using (var generator = new SigGenerator(_signatureRepository))
-        	{
-        		seedSignatureInfos = generator.GenerateSignatures(GetSeedStream(), "test");
-        	}
-			var sourceStream = GetSourceStream();
-			using (var generator = new SigGenerator(_signatureRepository))
-        	{
-        		sourceSignatureInfos = generator.GenerateSignatures(sourceStream, "test");
-        	}
-			var sourceSize = sourceStream.Length;
-        	using (var tested = new NeedListGenerator(_signatureRepository, _signatureRepository))
-        	{
-        		var result = tested.CreateNeedsList(seedSignatureInfos.Last(), sourceSignatureInfos.Last());
-        		Assert.NotNull(result);
+            using (var sourceSignatureRepository = CreateSignatureRepositoryFor("test"))
+            using (var seedSignatureRepository = CreateSignatureRepositoryFor("test"))
+            {
+                using (var generator = new SigGenerator())
+                {
+                    seedSignatureInfos = generator.GenerateSignatures(GetSeedStream(), "test", seedSignatureRepository);
+                }
+                var sourceStream = GetSourceStream();
+                using (var generator = new SigGenerator())
+                {
+                    sourceSignatureInfos = generator.GenerateSignatures(sourceStream, "test", sourceSignatureRepository);
+                }
+                var sourceSize = sourceStream.Length;
+                using (var tested = new NeedListGenerator(sourceSignatureRepository, seedSignatureRepository))
+                {
+                    var result = tested.CreateNeedsList(seedSignatureInfos.Last(), sourceSignatureInfos.Last());
+                    Assert.NotNull(result);
 
-        		Assert.Equal(0, sourceSize - result.Sum(x => Convert.ToInt32(x.BlockLength)));
-        	}
+                    Assert.Equal(0, sourceSize - result.Sum(x => Convert.ToInt32(x.BlockLength)));
+                }
+            }
         }
 
         [MtaFact]
@@ -79,24 +77,28 @@ namespace RavenFS.Rdc.Wrapper.Test
 
             IList<SignatureInfo> sourceSignatureInfos;
             IList<SignatureInfo> seedSignatureInfos;
-            using (var generator = new SigGenerator(_signatureRepository))
+            using (var sourceSignatureRepository = CreateSignatureRepositoryFor("test2"))
+            using (var seedSignatureRepository = CreateSignatureRepositoryFor("test1"))
             {
-                seedContent.Seek(0, SeekOrigin.Begin);
-                seedSignatureInfos = generator.GenerateSignatures(seedContent, "test1");
-            }
-            using (var generator = new SigGenerator(_signatureRepository))
-            {
-                sourceContent.Seek(0, SeekOrigin.Begin);
-                sourceSignatureInfos = generator.GenerateSignatures(sourceContent, "test2");
-            }
-            var sourceSize = sourceContent.Length;
+                using (var generator = new SigGenerator())
+                {
+                    seedContent.Seek(0, SeekOrigin.Begin);
+                    seedSignatureInfos = generator.GenerateSignatures(seedContent, "test1", seedSignatureRepository);
+                }
+                using (var generator = new SigGenerator())
+                {
+                    sourceContent.Seek(0, SeekOrigin.Begin);
+                    sourceSignatureInfos = generator.GenerateSignatures(sourceContent, "test2", sourceSignatureRepository);
+                }
+                var sourceSize = sourceContent.Length;
 
-            using (var tested = new NeedListGenerator(_signatureRepository, _signatureRepository))
-            {
-                var result = tested.CreateNeedsList(seedSignatureInfos.Last(), sourceSignatureInfos.Last());
-                Assert.NotNull(result);
-                Assert.Equal(2, result.Count);
-                Assert.Equal(0, sourceSize - result.Sum(x => Convert.ToInt32(x.BlockLength)));
+                using (var tested = new NeedListGenerator(seedSignatureRepository, sourceSignatureRepository))
+                {
+                    var result = tested.CreateNeedsList(seedSignatureInfos.Last(), sourceSignatureInfos.Last());
+                    Assert.NotNull(result);
+                    Assert.Equal(2, result.Count);
+                    Assert.Equal(0, sourceSize - result.Sum(x => Convert.ToInt32(x.BlockLength)));
+                }
             }
         }
 
@@ -117,14 +119,10 @@ namespace RavenFS.Rdc.Wrapper.Test
 
             return ms;
         }
-
-        public void Dispose()
+    
+        private static ISignatureRepository CreateSignatureRepositoryFor(string fileName)
         {
-            if (_signatureRepository != null)
-            {
-                _signatureRepository.Dispose();
-                _signatureRepository = null;
-            }
+            return new VolatileSignatureRepository(fileName);
         }
     }
 }

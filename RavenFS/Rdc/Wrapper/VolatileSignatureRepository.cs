@@ -2,52 +2,63 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using RavenFS.Extensions;
+using NLog;
+using RavenFS.Infrastructure;
 
 namespace RavenFS.Rdc.Wrapper
 {
     public class VolatileSignatureRepository : ISignatureRepository
     {
-        private readonly string baseDirectory;
+        private readonly string _fileName;
+        private static readonly Logger log = LogManager.GetCurrentClassLogger();
+        private readonly string _tempDirectory;
+        private IDictionary<string, FileStream> _createdFiles;
 
-        public VolatileSignatureRepository(string path)
+        public VolatileSignatureRepository(string fileName)
         {
-        	baseDirectory = path.ToFullPath();
-            Directory.CreateDirectory(baseDirectory);
+            _tempDirectory = TempDirectoryTools.Create();
+            _fileName = fileName;
+            _createdFiles = new Dictionary<string, FileStream>();
         }
 
         public Stream GetContentForReading(string sigName)
         {
+            Flush(null);
             return File.OpenRead(NameToPath(sigName));
         }
 
         public Stream CreateContent(string sigName)
         {
-            return File.Create(NameToPath(sigName));
+            var sigFileName = NameToPath(sigName);
+            var result = File.Create(sigFileName, 1024 * 128);
+            log.Info("File {0} created", sigFileName);
+            _createdFiles.Add(sigFileName, result);
+            return result;
         }
 
         public void Flush(IEnumerable<SignatureInfo> signatureInfos)
         {
-            // nothing to do
+            CloseCreatedStreams();
         }
 
-        public IEnumerable<SignatureInfo> GetByFileName(string fileName)
+        public IEnumerable<SignatureInfo> GetByFileName()
         {
-            return from item in GetSigFileNamesByFileName(fileName)
+            return from item in GetSigFileNamesByFileName()
                    select SignatureInfo.Parse(item);
         }
 
-        public void Clean(string fileName)
+        public void Clean()
         {
-            foreach (var item in GetSigFileNamesByFileName(fileName))
+            foreach (var item in GetSigFileNamesByFileName())
             {
                 File.Delete(item);
+                log.Info("File {0} removed", item);
             }
         }
 
-        public DateTime? GetLastUpdate(string fileName)
+        public DateTime? GetLastUpdate()
         {
-            var preResult = from item in GetSigFileNamesByFileName(fileName)
+            var preResult = from item in GetSigFileNamesByFileName()
                             let lastWriteTime = new FileInfo(item).LastWriteTime
                             orderby lastWriteTime descending
                             select lastWriteTime;
@@ -58,19 +69,28 @@ namespace RavenFS.Rdc.Wrapper
             return null;
         }
 
-        private IEnumerable<string> GetSigFileNamesByFileName(string fileName)
+        private IEnumerable<string> GetSigFileNamesByFileName()
         {
-            return Directory.GetFiles(baseDirectory, fileName + "*.sig");
+            return Directory.GetFiles(_tempDirectory, _fileName + "*.sig");
         }
 
         private string NameToPath(string name)
         {
-            return Path.GetFullPath(Path.Combine(baseDirectory, name));
+            return Path.GetFullPath(Path.Combine(_tempDirectory, name));
+        }
+
+        private void CloseCreatedStreams()
+        {
+            foreach (var item in _createdFiles)
+            {
+                item.Value.Close();
+            }
         }
 
         public void Dispose()
         {
-            Directory.Delete(baseDirectory, true);
+            CloseCreatedStreams();
+            Directory.Delete(_tempDirectory, true);
         }
     }
 }
