@@ -14,10 +14,14 @@ namespace RavenFS.Controllers
 		public HttpResponseMessage Signatures(string filename)
 		{
 			filename = Uri.UnescapeDataString(filename);
-		    var signatureRepository = new StorageSignatureRepository(Storage, filename);
-			var localRdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
-			var resultContent = localRdcManager.GetSignatureContentForReading(filename);
-       
+			Stream resultContent;
+
+			using(var signatureRepository = new StorageSignatureRepository(Storage, filename))
+		    {
+				var localRdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
+				resultContent = localRdcManager.GetSignatureContentForReading(filename);
+		    }
+
 			return StreamResult(filename, resultContent);
 		}
 
@@ -42,10 +46,15 @@ namespace RavenFS.Controllers
 				return new HttpResponseMessage<SignatureManifest>(HttpStatusCode.NotFound);
 			}
 
-		    var signatureRepository = new StorageSignatureRepository(Storage, filename);
-			var rdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
-			var signatureManifest = rdcManager.GetSignatureManifest(new DataInfo {Name = filename});
-		    signatureManifest.FileLength = fileLength ?? 0;
+			SignatureManifest signatureManifest;
+
+			using (var signatureRepository = new StorageSignatureRepository(Storage, filename))
+			{
+				var rdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
+				signatureManifest = rdcManager.GetSignatureManifest(new DataInfo {Name = filename});
+				signatureManifest.FileLength = fileLength ?? 0;
+			}
+
 			return new HttpResponseMessage<SignatureManifest>(signatureManifest);
 		}
 
