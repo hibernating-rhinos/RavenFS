@@ -14,15 +14,13 @@ namespace RavenFS.Controllers
 		public HttpResponseMessage Signatures(string filename)
 		{
 			filename = Uri.UnescapeDataString(filename);
-			Stream resultContent;
 
 			using(var signatureRepository = new StorageSignatureRepository(Storage, filename))
 		    {
 				var localRdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
-				resultContent = localRdcManager.GetSignatureContentForReading(filename);
+				var resultContent = localRdcManager.GetSignatureContentForReading(filename);
+				return StreamResult(filename, resultContent);
 		    }
-
-			return StreamResult(filename, resultContent);
 		}
 
 		public RdcStats Stats()
@@ -46,16 +44,13 @@ namespace RavenFS.Controllers
 				return new HttpResponseMessage<SignatureManifest>(HttpStatusCode.NotFound);
 			}
 
-			SignatureManifest signatureManifest;
-
 			using (var signatureRepository = new StorageSignatureRepository(Storage, filename))
 			{
 				var rdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
-				signatureManifest = rdcManager.GetSignatureManifest(new DataInfo {Name = filename});
+				var signatureManifest = rdcManager.GetSignatureManifest(new DataInfo {Name = filename});
 				signatureManifest.FileLength = fileLength ?? 0;
+				return new HttpResponseMessage<SignatureManifest>(signatureManifest);
 			}
-
-			return new HttpResponseMessage<SignatureManifest>(signatureManifest);
 		}
 
 	}
