@@ -87,9 +87,17 @@ namespace RavenFS.Rdc
 							// optimization - conflict checking on source side before any changes pushed
 							if (conflict != null && !isConflictResolved)
 							{
-								destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(fileName, conflict.Current.Version,
-																										conflict.Remote.ServerId).Wait();
-								return SynchronizationExceptionReport(string.Format("File {0} is conflicted.", fileName));
+								return destinationRavenFileSystemClient.Synchronization
+									.ApplyConflictAsync(fileName, conflict.Current.Version,conflict.Remote.ServerId)
+									.ContinueWith(task =>
+									{
+										task.AssertNotFaulted();
+										return new SynchronizationReport()
+										{
+											Exception = new SynchronizationException(string.Format("File {0} is conflicted.", fileName))
+										};
+									});
+								
 							}
 
 							var localFileDataInfo = GetLocalFileDataInfo(fileName);
