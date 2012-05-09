@@ -46,6 +46,7 @@ namespace RavenFS.Rdc.Multipart
 															BytesCopied = seedBytes,
 															NeedListLength = numberOfFileParts
 														});
+				return;
 			}
 
 			var currentPart = partsEnumerator.Current;
