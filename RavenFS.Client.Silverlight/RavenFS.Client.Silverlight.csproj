@@ -126,6 +126,9 @@
     <Compile Include="..\RavenFS.Client\SynchronizationDetails.cs">
       <Link>SynchronizationDetails.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\SynchronizationException.cs">
+      <Link>SynchronizationException.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\SynchronizationReport.cs">
       <Link>SynchronizationReport.cs</Link>
     </Compile>

@@ -22,6 +22,19 @@ namespace RavenFS.Client
 				if (webException == null || webException.Response == null)
 					return task;
 
+				var httpWebResponse = webException.Response as HttpWebResponse;
+				if (httpWebResponse != null)
+				{
+					if (httpWebResponse.StatusCode == HttpStatusCode.PreconditionFailed)
+					{
+						using (var stream = webException.Response.GetResponseStream())
+						using (var reader = new StreamReader(stream))
+						{
+							throw new SynchronizationException(reader.ReadToEnd().Trim('\"'));
+						}
+					}
+				}
+
 				using (var stream = webException.Response.GetResponseStream())
 				using (var reader = new StreamReader(stream))
 				{
@@ -45,6 +58,19 @@ namespace RavenFS.Client
 				var webException = task.Exception.ExtractSingleInnerException() as WebException;
 				if (webException == null || webException.Response == null)
 					return task;
+
+				var httpWebResponse = webException.Response as HttpWebResponse;
+				if (httpWebResponse != null)
+				{
+					if (httpWebResponse.StatusCode == HttpStatusCode.PreconditionFailed)
+					{
+						using (var stream = webException.Response.GetResponseStream())
+						using (var reader = new StreamReader(stream))
+						{
+							throw new SynchronizationException(reader.ReadToEnd().Trim('\"'));
+						}
+					}
+				}
 
 				using (var stream = webException.Response.GetResponseStream())
 				using (var reader = new StreamReader(stream))

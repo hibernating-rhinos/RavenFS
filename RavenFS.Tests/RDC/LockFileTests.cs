@@ -58,8 +58,8 @@ namespace RavenFS.Tests.RDC
 
 			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.UpdateMetadataAsync("test.bin", new NameValueCollection()).Wait());
 
-			Assert.IsType(typeof(InvalidOperationException), innerException);
-			Assert.Contains("File test.bin is being synced", innerException.Message);
+			Assert.IsType(typeof(SynchronizationException), innerException);
+			Assert.Equal("File test.bin is being synced", innerException.Message);
 		}
 
 		[Fact]
@@ -74,8 +74,8 @@ namespace RavenFS.Tests.RDC
 
 			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.DeleteAsync("test.bin").Wait());
 
-			Assert.IsType(typeof(InvalidOperationException), innerException);
-			Assert.Contains("File test.bin is being synced", innerException.Message);
+			Assert.IsType(typeof(SynchronizationException), innerException);
+			Assert.Equal("File test.bin is being synced", innerException.Message);
 		}
 
 		[Fact]
@@ -90,8 +90,8 @@ namespace RavenFS.Tests.RDC
 
 			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.RenameAsync("test.bin", "newname.bin").Wait());
 
-			Assert.IsType(typeof(InvalidOperationException), innerException);
-			Assert.Contains("File test.bin is being synced", innerException.Message);
+			Assert.IsType(typeof(SynchronizationException), innerException);
+			Assert.Equal("File test.bin is being synced", innerException.Message);
 		}
 
 		[Fact]
@@ -106,8 +106,8 @@ namespace RavenFS.Tests.RDC
 
 			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
 
-			Assert.IsType(typeof(InvalidOperationException), innerException);
-			Assert.Contains("File test.bin is being synced", innerException.Message);
+			Assert.IsType(typeof(SynchronizationException), innerException);
+			Assert.Equal("File test.bin is being synced", innerException.Message);
 		}
 
 		[Fact]
@@ -122,7 +122,7 @@ namespace RavenFS.Tests.RDC
 
 			var synchronizationReport = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 
-			Assert.Contains("File test.bin is being synced", synchronizationReport.Exception.Message);
+			Assert.Equal("File test.bin is being synced", synchronizationReport.Exception.Message);
 		}
 
 		[Fact]

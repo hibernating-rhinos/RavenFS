@@ -47,9 +47,8 @@ namespace RavenFS.Rdc
 		{
 			if (synchronizationQueue.NumberOfActiveSynchronizationTasksFor(destination) > 1)
 			{
-				return
-					SynchronizationExceptionReport(string.Format("The limit of active synchronizations to {0} server has been achieved.",
-					                                             destination));
+				return SynchronizationExceptionReport(string.Format("The limit of active synchronizations to {0} server has been achieved.",
+																 destination));
 			}
 
 			var sourceMetadata = GetLocalMetadata(fileName);

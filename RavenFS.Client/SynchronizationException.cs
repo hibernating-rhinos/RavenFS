@@ -15,10 +15,13 @@ namespace RavenFS.Client
 			: base(message, inner)
 		{
 		}
+
+#if !SILVERLIGHT
 		protected SynchronizationException(
 			SerializationInfo info,
 			StreamingContext context) : base(info, context)
 		{
 		}
+#endif
     }
 }

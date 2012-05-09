@@ -494,6 +494,7 @@ namespace RavenFS.Client
 						try
 						{
 							webResponse = task.Result;
+							return jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(webResponse.GetResponseStream())));
 						}
 						catch (AggregateException e)
 						{
@@ -507,7 +508,6 @@ namespace RavenFS.Client
 								return null;
 							throw;
 						}
-						return jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(webResponse.GetResponseStream())));
 					});
 			}
 		}
