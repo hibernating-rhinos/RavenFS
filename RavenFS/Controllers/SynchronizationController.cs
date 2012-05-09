@@ -122,6 +122,9 @@ namespace RavenFS.Controllers
 				              			              				{
 				              			              					accessor.Delete(fileName);
 				              			              					accessor.RenameFile(tempFileName, fileName);
+
+																		Search.Delete(tempFileName);
+																		Search.Index(fileName, sourceMetadata);
 				              			              				});
 
 				              			              		if (isConflictResolved)
