@@ -201,6 +201,7 @@
     <Compile Include="Rdc\Multipart\SeedFilePart.cs" />
     <Compile Include="Rdc\Multipart\SourceFilePart.cs" />
     <Compile Include="Rdc\Multipart\IMimePart.cs" />
+    <Compile Include="Rdc\Multipart\SynchronizationMultipartProcessor.cs" />
     <Compile Include="Rdc\Multipart\SynchronizationMultipartRequest.cs" />
     <Compile Include="Rdc\Multipart\SyncingMultipartConstants.cs" />
     <Compile Include="Rdc\SynchronizationTask.cs" />
