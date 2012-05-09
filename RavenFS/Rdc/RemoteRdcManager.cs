@@ -57,7 +57,8 @@ namespace RavenFS.Rdc
 					highestSigContent.Dispose();
 					return task;
 				}).Unwrap()
-				.ContinueWith(task => SynchronizePairAsync(1, sigPairs));
+				.ContinueWith(task => SynchronizePairAsync(1, sigPairs))
+				.Unwrap();
         	
         }
 
