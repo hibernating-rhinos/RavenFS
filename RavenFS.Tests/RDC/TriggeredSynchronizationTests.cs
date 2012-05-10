@@ -15,19 +15,15 @@ namespace RavenFS.Tests.RDC
 		{
 			var sourceContent = new RandomStream(size);
 			var sourceClient = NewClient(1);
-			var sourceMetadata = new NameValueCollection
-                               {
-                                   {"SomeTest-metadata", "some-value"}
-                               };
 
 			var destinationClient = NewClient(0);
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	});
+			                                                                                     	}).Wait();
 
-			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
 
 
 

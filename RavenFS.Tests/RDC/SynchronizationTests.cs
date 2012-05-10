@@ -448,6 +448,22 @@ namespace RavenFS.Tests.RDC
 			Assert.Equal(files.Length, result.Count());
 		}
 
+		[Fact]
+		public void Should_refuse_to_synchronize_if_limit_of_concurrent_synchronizations_exceeded()
+		{
+			var sourceContent = new RandomStream(1);
+			var sourceClient = NewClient(1);
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationLimit,
+			                              new NameValueCollection {{"value", "\"-1\""}}).Wait();
+
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+
+			var synchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", "http://localhost:1234").Result;
+
+			Assert.Equal("The limit of active synchronizations to http://localhost:1234 server has been achieved.", synchronizationReport.Exception.Message);
+		} 
+
 		private static MemoryStream PrepareSourceStream(int lines)
 		{
 			var ms = new MemoryStream();
