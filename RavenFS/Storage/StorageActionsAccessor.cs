@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using Microsoft.Isam.Esent.Interop;
@@ -16,6 +15,9 @@ using RavenFS.Util;
 
 namespace RavenFS.Storage
 {
+	using System.Linq;
+	using Extensions;
+
 	public class StorageActionsAccessor : IDisposable
 	{
 		private readonly TableColumnsCache tableColumnsCache;
@@ -147,7 +149,19 @@ namespace RavenFS.Storage
 					Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize.Value));
 				}
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"], BitConverter.GetBytes(0));
-				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
+
+				if(!metadata.AllKeys.Contains("ETag"))
+				{
+					throw new InvalidOperationException(string.Format("Metadata of file {0} does not contain 'ETag' key" + filename));
+				}
+
+				var innerEsentMetadata = new NameValueCollection(metadata);
+
+				var etag = innerEsentMetadata.Value<Guid>("ETag");
+				innerEsentMetadata.Remove("ETag");
+
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["etag"], etag.TransformToValueForEsentSorting());
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(innerEsentMetadata), Encoding.Unicode);
 
 				update.Save();
 			}
@@ -250,13 +264,12 @@ namespace RavenFS.Storage
 			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
 				return null;
 
-			var metadata = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"], Encoding.Unicode);
 			return new FileHeader
 			{
 				Name = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
 				TotalSize = GetTotalSize(),
 				UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
-				Metadata = HttpUtility.ParseQueryString(metadata)
+				Metadata = RetrieveMetadata()
 			};
 		}
 
@@ -267,12 +280,11 @@ namespace RavenFS.Storage
 			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
 				throw new FileNotFoundException("Could not find file: " + filename);
 
-			var metadata = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"], Encoding.Unicode);
 			var fileInformation = new FileAndPages
 			{
 				TotalSize = GetTotalSize(),
 				UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
-				Metadata = HttpUtility.ParseQueryString(metadata),
+				Metadata = RetrieveMetadata(),
 				Name = filename,
 				Start = start
 			};
@@ -322,16 +334,43 @@ namespace RavenFS.Storage
 
 			do
 			{
-				var metadata = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"], Encoding.Unicode);
 				yield return new FileHeader
 				{
 					Name = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
 					TotalSize = GetTotalSize(),
 					UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
-					Metadata = HttpUtility.ParseQueryString(metadata)
+					Metadata = RetrieveMetadata()
 				};
-
 			} while (++index < size && Api.TryMoveNext(session, Files));
+		}
+
+		private NameValueCollection RetrieveMetadata()
+		{
+			var metadataAsString = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"], Encoding.Unicode);
+			var metadata = HttpUtility.ParseQueryString(metadataAsString);
+			metadata["ETag"] = "\"" + Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["etag"]).TransfromToGuidWithProperSorting() + "\"";
+			return metadata;
+		}
+
+		public IEnumerable<FileHeader> GetFilesAfter(Guid etag, int take)
+		{
+			Api.JetSetCurrentIndex(session, Files, "by_etag");
+			Api.MakeKey(session, Files, etag.TransformToValueForEsentSorting(), MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Files, SeekGrbit.SeekGT) == false)
+				yield break;
+			
+			int index = 0;
+			
+			do
+			{
+				yield return new FileHeader
+				{
+					Name = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
+					TotalSize = GetTotalSize(),
+					UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
+					Metadata = RetrieveMetadata()
+				};
+			} while (++index < take && Api.TryMoveNext(session, Files));
 		}
 
 		public void Delete(string filename)
@@ -386,7 +425,18 @@ namespace RavenFS.Storage
 
 			using (var update = new Update(session, Files, JET_prep.Replace))
 			{
-				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
+				if (!metadata.AllKeys.Contains("ETag"))
+				{
+					throw new InvalidOperationException("Metadata of file {0} does not contain 'ETag' key" + filename);
+				}
+
+				var innerEsentMetadata = new NameValueCollection(metadata);
+
+				var etag = innerEsentMetadata.Value<Guid>("ETag");
+				innerEsentMetadata.Remove("ETag");
+
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["etag"], etag.TransformToValueForEsentSorting());
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(innerEsentMetadata), Encoding.Unicode);
 
 				update.Save();
 			}
