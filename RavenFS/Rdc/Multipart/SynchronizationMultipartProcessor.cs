@@ -67,6 +67,15 @@ namespace RavenFS.Rdc.Multipart
 			}
 			else if (needType == "seed")
 			{
+				if (localFile == null)
+				{
+					internalProcessingTask.SetException(
+						new SynchronizationException(
+							string.Format("Cannot copy a chunk of the file '{0}' on the destination because its stream is uninitialized",
+							              fileName)));
+					return;
+				}
+
 				seedBytes += (to - from);
 				localFile.CopyToAsync(synchronizingFile, from, to)
 					.ContinueWith(t => ContinueProcessingIfNotFaulted(t));
