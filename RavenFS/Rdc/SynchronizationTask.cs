@@ -39,6 +39,16 @@ namespace RavenFS.Rdc
 		{
 			foreach (var destination in GetSynchronizationDestinations())
 			{
+				var destinationClient = new RavenFileSystemClient(destination);
+
+				destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
+					.ContinueWith(lastEtagTask =>
+					              	{
+					              		var lastSynchronizedEtag = lastEtagTask.Result;
+
+					              		//storage.Batch();
+					              	});
+
 				StartSyncingToAsync(fileName, destination);
 			}
 		}
@@ -255,13 +265,13 @@ namespace RavenFS.Rdc
 			};
 		}
 
-		private string[] GetSynchronizationDestinations()
+		private IEnumerable<string> GetSynchronizationDestinations()
 		{
 			var destionationsConfig = new NameValueCollection();
 
 			storage.Batch(accessor => destionationsConfig = accessor.GetConfig(SynchronizationConstants.RavenReplicationDestinations));
 
-			string[] destinations = destionationsConfig["url"].Split(',');
+			string[] destinations = destionationsConfig.GetValues("url");
 
 			return destinations;
 		}

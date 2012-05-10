@@ -303,11 +303,11 @@ namespace RavenFS.Controllers
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage<Guid> LastEtag(string from)
+		public HttpResponseMessage<SourceSynchronizationInformation> LastEtag(string from)
 		{
-			Guid lastEtag = Guid.Empty;
+			SourceSynchronizationInformation lastEtag = null;
 			Storage.Batch(accessor => lastEtag = GetLastEtag(StringUtils.RemoveTrailingSlashAndEncode(from), accessor));
-			return new HttpResponseMessage<Guid>(lastEtag);
+			return new HttpResponseMessage<SourceSynchronizationInformation>(lastEtag);
 		}
 
 		private Task StrategyAsGetCurrent(string fileName, string sourceServerUrl)
@@ -380,26 +380,30 @@ namespace RavenFS.Controllers
 			};
 		}
 
-		private Guid GetLastEtag(string from, StorageActionsAccessor accessor)
+		private SourceSynchronizationInformation GetLastEtag(string from, StorageActionsAccessor accessor)
 		{
-			SynchronizationSourceInformation info = null;
+			SourceSynchronizationInformation info;
 			accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + from, out info);
 
-			return info != null ? info.LastDocumentEtag : Guid.Empty;
+			return info ?? new SourceSynchronizationInformation()
+			               	{
+			               		LastSourceFileEtag = Guid.Empty,
+			               		DestinationServerInstanceId = Storage.Id
+			               	};
 		}
 
 		private void SaveSynchronizationSourceInformation(string sourceServerUrl, Guid lastSourceEtag, StorageActionsAccessor accessor)
 		{
-			var existingLastEtag = GetLastEtag(StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl), accessor);
-			if (Buffers.Compare(existingLastEtag.ToByteArray(), lastSourceEtag.ToByteArray()) > 0)
+			var lastSynchronizationInformation = GetLastEtag(StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl), accessor);
+			if (Buffers.Compare(lastSynchronizationInformation.LastSourceFileEtag.ToByteArray(), lastSourceEtag.ToByteArray()) > 0)
 			{
 				return;
 			}
 
-			var synchronizationSourceInfo = new SynchronizationSourceInformation
+			var synchronizationSourceInfo = new SourceSynchronizationInformation
 			{
-				LastDocumentEtag = lastSourceEtag,
-				ServerInstanceId = Storage.Id
+				LastSourceFileEtag = lastSourceEtag,
+				DestinationServerInstanceId = Storage.Id
 			};
 
 			var key = SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl);

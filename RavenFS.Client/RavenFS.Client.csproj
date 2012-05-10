@@ -107,6 +107,7 @@
     <Compile Include="StringUtils.cs" />
     <Compile Include="SynchronizationDetails.cs" />
     <Compile Include="SynchronizationException.cs" />
+    <Compile Include="SourceSynchronizationInformation.cs" />
     <Compile Include="SynchronizationReport.cs" />
     <Compile Include="NotificationJSonUtilities.cs" />
   </ItemGroup>

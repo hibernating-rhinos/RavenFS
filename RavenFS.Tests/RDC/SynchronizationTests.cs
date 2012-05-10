@@ -133,11 +133,11 @@ namespace RavenFS.Tests.RDC
 
 			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Wait();
 
-			Guid lastEtag = destinationClient.Synchronization.GetLastEtagFromAsync(sourceClient.ServerUrl).Result;
+			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.ServerUrl).Result;
 
 			var sourceMetadataWithEtag = sourceClient.GetMetadataForAsync("test.bin").Result;
 
-			Assert.Equal(sourceMetadataWithEtag.Value<Guid>("ETag"), lastEtag);
+			Assert.Equal(sourceMetadataWithEtag.Value<Guid>("ETag"), lastSynchronization.LastSourceFileEtag);
 		}
 
 		[Fact]
@@ -159,9 +159,9 @@ namespace RavenFS.Tests.RDC
 			sourceClient.Synchronization.StartSynchronizationToAsync("test1.bin", destinationClient.ServerUrl).Wait();
 
 			var lastSourceETag = sourceClient.GetMetadataForAsync("test2.bin").Result.Value<Guid>("ETag");
-			Guid lastSavedETagOnDest = destinationClient.Synchronization.GetLastEtagFromAsync(sourceClient.ServerUrl).Result;
+			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.ServerUrl).Result;
 
-			Assert.Equal(lastSourceETag, lastSavedETagOnDest);
+			Assert.Equal(lastSourceETag, lastSynchronization.LastSourceFileEtag);
 		}
 
 		[Fact]
@@ -170,9 +170,9 @@ namespace RavenFS.Tests.RDC
 
 			var destinationClient = NewClient(0);
 
-			Guid lastSavedETagOnDest = destinationClient.Synchronization.GetLastEtagFromAsync("http://localhost:1234").Result;
+			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync("http://localhost:1234").Result;
 
-			Assert.Equal(Guid.Empty, lastSavedETagOnDest);
+			Assert.Equal(Guid.Empty, lastSynchronization.LastSourceFileEtag);
 		}
 
 		[Fact]

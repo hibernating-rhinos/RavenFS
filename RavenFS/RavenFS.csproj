@@ -213,7 +213,6 @@
     <Compile Include="Rdc\RemotePartialAccess.cs" />
     <Compile Include="Rdc\RemoteRdcManager.cs" />
     <Compile Include="Rdc\RemoteSignaturePartialAccess.cs" />
-    <Compile Include="Rdc\SynchronizationSourceInformation.cs" />
     <Compile Include="Rdc\SynchronizationConstants.cs" />
     <Compile Include="Rdc\ReplicationHiLo.cs" />
     <Compile Include="Rdc\SignaturePartialAccess.cs" />

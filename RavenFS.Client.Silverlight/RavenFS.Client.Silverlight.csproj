@@ -123,6 +123,9 @@
     <Compile Include="..\RavenFS.Client\SignatureManifest.cs">
       <Link>SignatureManifest.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\SourceSynchronizationInformation.cs">
+      <Link>SourceSynchronizationInformation.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\SynchronizationDetails.cs">
       <Link>SynchronizationDetails.cs</Link>
     </Compile>

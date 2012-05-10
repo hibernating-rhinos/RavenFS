@@ -647,9 +647,9 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
             }
 
-			public Task<Guid> GetLastEtagFromAsync(string serverUrl)
+			public Task<SourceSynchronizationInformation> GetLastSynchronizationFromAsync(string serverUrl)
 			{
-				var requestUriString = String.Format("{0}/synchronization/LastEtag?from={1}", ravenFileSystemClient.ServerUrl, serverUrl);
+				var requestUriString = String.Format("{0}/synchronization/LastSynchronization?from={1}", ravenFileSystemClient.ServerUrl, serverUrl);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 				request.ContentLength = 0;
 				return request.GetResponseAsync()
@@ -657,7 +657,7 @@ namespace RavenFS.Client
 					{
 						using (var stream = task.Result.GetResponseStream())
 						{
-							var preResult = new JsonSerializer().Deserialize<Guid>(new JsonTextReader(new StreamReader(stream)));
+							var preResult = new JsonSerializer().Deserialize<SourceSynchronizationInformation>(new JsonTextReader(new StreamReader(stream)));
 							return preResult;
 						}
 					})
