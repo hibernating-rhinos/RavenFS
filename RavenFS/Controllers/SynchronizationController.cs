@@ -24,9 +24,9 @@ namespace RavenFS.Controllers
 	public class SynchronizationController : RavenController
 	{
 		[AcceptVerbs("POST")]
-		public HttpResponseMessage SynchronizeDestinations(string fileName)
+		public HttpResponseMessage ToDestinations()
 		{
-			RavenFileSystem.SynchronizationTask.SynchronizeDestinations(fileName);
+			RavenFileSystem.SynchronizationTask.SynchronizeDestinations();
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
@@ -303,10 +303,10 @@ namespace RavenFS.Controllers
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage<SourceSynchronizationInformation> LastEtag(string from)
+		public HttpResponseMessage<SourceSynchronizationInformation> LastSynchronization(string from)
 		{
 			SourceSynchronizationInformation lastEtag = null;
-			Storage.Batch(accessor => lastEtag = GetLastEtag(StringUtils.RemoveTrailingSlashAndEncode(from), accessor));
+			Storage.Batch(accessor => lastEtag = GetLastSynchronization(StringUtils.RemoveTrailingSlashAndEncode(from), accessor));
 			return new HttpResponseMessage<SourceSynchronizationInformation>(lastEtag);
 		}
 
@@ -361,26 +361,7 @@ namespace RavenFS.Controllers
 			return result;
 		}
 
-		private DataInfo GetLocalFileDataInfo(string fileName)
-		{
-			FileAndPages fileAndPages = null;
-			try
-			{
-				Storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0, 0));
-			}
-			catch (FileNotFoundException)
-			{
-				return null;
-			}
-			return new DataInfo
-			{
-				CreatedAt = Convert.ToDateTime(fileAndPages.Metadata["Last-Modified"]),
-				Length = fileAndPages.TotalSize ?? 0,
-				Name = fileAndPages.Name
-			};
-		}
-
-		private SourceSynchronizationInformation GetLastEtag(string from, StorageActionsAccessor accessor)
+		private SourceSynchronizationInformation GetLastSynchronization(string from, StorageActionsAccessor accessor)
 		{
 			SourceSynchronizationInformation info;
 			accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + from, out info);
@@ -394,7 +375,7 @@ namespace RavenFS.Controllers
 
 		private void SaveSynchronizationSourceInformation(string sourceServerUrl, Guid lastSourceEtag, StorageActionsAccessor accessor)
 		{
-			var lastSynchronizationInformation = GetLastEtag(StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl), accessor);
+			var lastSynchronizationInformation = GetLastSynchronization(StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl), accessor);
 			if (Buffers.Compare(lastSynchronizationInformation.LastSourceFileEtag.ToByteArray(), lastSourceEtag.ToByteArray()) > 0)
 			{
 				return;

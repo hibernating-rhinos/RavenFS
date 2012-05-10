@@ -35,7 +35,7 @@ namespace RavenFS.Rdc
 			this.sigGenerator = sigGenerator;
 		}
 
-		public void SynchronizeDestinations(string fileName)
+		public void SynchronizeDestinations()
 		{
 			foreach (var destination in GetSynchronizationDestinations())
 			{
@@ -47,9 +47,10 @@ namespace RavenFS.Rdc
 					              		var lastSynchronizedEtag = lastEtagTask.Result;
 
 					              		//storage.Batch();
+										//StartSyncingToAsync(fileName, destination);
 					              	});
 
-				StartSyncingToAsync(fileName, destination);
+				
 			}
 		}
 

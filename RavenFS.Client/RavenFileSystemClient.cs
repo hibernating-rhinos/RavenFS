@@ -538,7 +538,7 @@ namespace RavenFS.Client
 
 			public Task SynchronizeDestinationsAsync(string fileName)
 			{
-				var requestUriString = String.Format("{0}/synchronization/SynchronizeDestinations?fileName={1}", ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(fileName));
+				var requestUriString = String.Format("{0}/synchronization/ToDestinations", ravenFileSystemClient.ServerUrl);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 				request.Method = "POST";
 				request.ContentLength = 0;
