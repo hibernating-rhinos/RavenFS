@@ -357,20 +357,26 @@ namespace RavenFS.Storage
 			Api.JetSetCurrentIndex(session, Files, "by_etag");
 			Api.MakeKey(session, Files, etag.TransformToValueForEsentSorting(), MakeKeyGrbit.NewKey);
 			if (Api.TrySeek(session, Files, SeekGrbit.SeekGT) == false)
-				yield break;
-			
+				return Enumerable.Empty<FileHeader>();
+
+			var result = new List<FileHeader>();
 			int index = 0;
 			
 			do
 			{
-				yield return new FileHeader
-				{
-					Name = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
-					TotalSize = GetTotalSize(),
-					UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
-					Metadata = RetrieveMetadata()
-				};
+				result.Add(new FileHeader
+				           	{
+				           		Name =
+				           			Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
+				           		TotalSize = GetTotalSize(),
+				           		UploadedSize =
+				           			BitConverter.ToInt64(
+				           				Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
+				           		Metadata = RetrieveMetadata()
+				           	});
 			} while (++index < take && Api.TryMoveNext(session, Files));
+
+			return result;
 		}
 
 		public void Delete(string filename)

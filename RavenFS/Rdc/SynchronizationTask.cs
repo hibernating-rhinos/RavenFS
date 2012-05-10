@@ -1,6 +1,7 @@
 namespace RavenFS.Rdc
 {
 	using System;
+	using System.Collections;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
@@ -17,6 +18,8 @@ namespace RavenFS.Rdc
 
 	public class SynchronizationTask
 	{
+		private const int DefaultLimitOfConcurrentSynchronizations = 5;
+
 		private readonly SynchronizationQueue synchronizationQueue = new SynchronizationQueue();
 		private readonly RavenFileSystem localRavenFileSystem;
 		private readonly TransactionalStorage storage;
@@ -35,28 +38,63 @@ namespace RavenFS.Rdc
 			this.sigGenerator = sigGenerator;
 		}
 
+		private int LimitOfConcurrentSynchronizations()
+		{
+			bool limit = false;
+			int configuredLimit = 0;
+
+			storage.Batch(
+				accessor => limit = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationLimit, out configuredLimit));
+
+			return limit ? configuredLimit : DefaultLimitOfConcurrentSynchronizations;
+		}
+
 		public void SynchronizeDestinations()
 		{
 			foreach (var destination in GetSynchronizationDestinations())
 			{
+				var activeSynchronizations = synchronizationQueue.NumberOfActiveSynchronizationTasksFor(destination);
+				var synchronizationLimit = LimitOfConcurrentSynchronizations();
+
+				if (activeSynchronizations > synchronizationLimit)
+				{
+					return;
+				}
+
 				var destinationClient = new RavenFileSystemClient(destination);
 
 				destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
 					.ContinueWith(lastEtagTask =>
 					              	{
-					              		var lastSynchronizedEtag = lastEtagTask.Result;
+					              		var filesToSynchronization = GetFilesToSynchronization(lastEtagTask, synchronizationLimit - activeSynchronizations);
 
-					              		//storage.Batch();
-										//StartSyncingToAsync(fileName, destination);
+					              		foreach (var file in filesToSynchronization)
+					              		{
+					              			StartSyncingToAsync(file.Name, destination);
+					              		}
 					              	});
-
-				
 			}
+		}
+
+		private IEnumerable<FileHeader> GetFilesToSynchronization(Task<SourceSynchronizationInformation> lastEtagTask, int take)
+		{
+			var destinationsSynchronizationInformationForSource = lastEtagTask.Result;
+			var destinationId = destinationsSynchronizationInformationForSource.DestinationServerInstanceId.ToString();
+
+			IEnumerable<FileHeader> filesToSynchronization = Enumerable.Empty<FileHeader>();
+
+			storage.Batch(
+				accessor =>
+				filesToSynchronization =
+				accessor.GetFilesAfter(destinationsSynchronizationInformationForSource.LastSourceFileEtag, take)
+					.Where(x => x.Metadata[SynchronizationConstants.RavenReplicationSource] != destinationId));
+
+			return filesToSynchronization;
 		}
 
 		public Task<SynchronizationReport> StartSyncingToAsync(string fileName, string destination)
 		{
-			if (synchronizationQueue.NumberOfActiveSynchronizationTasksFor(destination) > 1)
+			if (synchronizationQueue.NumberOfActiveSynchronizationTasksFor(destination) > LimitOfConcurrentSynchronizations())
 			{
 				return SynchronizationExceptionReport(string.Format("The limit of active synchronizations to {0} server has been achieved.",
 																 destination));
@@ -268,6 +306,14 @@ namespace RavenFS.Rdc
 
 		private IEnumerable<string> GetSynchronizationDestinations()
 		{
+			var destinationsConfigExists = false;
+			storage.Batch(accessor => destinationsConfigExists = accessor.ConfigExists(SynchronizationConstants.RavenReplicationDestinations));
+
+			if (!destinationsConfigExists)
+			{
+				return Enumerable.Empty<string>();
+			}
+
 			var destionationsConfig = new NameValueCollection();
 
 			storage.Batch(accessor => destionationsConfig = accessor.GetConfig(SynchronizationConstants.RavenReplicationDestinations));
