@@ -17,6 +17,7 @@ using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
+	using Newtonsoft.Json;
 	using Rdc.Conflictuality;
 	using Rdc.Multipart;
 	using ConflictDetected = Notifications.ConflictDetected;
@@ -193,6 +194,44 @@ namespace RavenFS.Controllers
 		}
 
 		[AcceptVerbs("GET")]
+		public Task<IEnumerable<SynchronizationConfirmation>> Confirm()
+		{
+			return Request.Content.ReadAsStreamAsync().
+				ContinueWith(t =>
+				             	{
+
+				             		var confirmingFiles =
+				             			new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(t.Result)));
+
+				             		var confirmations = confirmingFiles.Select(file => new SynchronizationConfirmation
+				             		                                                   	{
+				             		                                                   		FileName = file,
+				             		                                                   		Status = CheckSynchronizedFileStatus(file)
+				             		                                                   	}).ToList();
+
+				             		return confirmations.AsEnumerable();
+				             	});
+		}
+
+		private FileStatus CheckSynchronizedFileStatus(string fileName)
+		{
+			SynchronizationReport preResult = null;
+			Storage.Batch(
+				accessor =>
+				{
+					var name = SynchronizationHelper.SyncResultNameForFile(fileName);
+					accessor.TryGetConfigurationValue(name, out preResult);
+				});
+
+			if (preResult == null)
+			{
+				return FileStatus.Unknown;
+			}
+
+			return preResult.Exception != null ? FileStatus.Safe : FileStatus.Broken;
+		}
+
+		[AcceptVerbs("GET")]
 		public HttpResponseMessage<SynchronizationReport> Status(string fileName)
 		{
 			SynchronizationReport preResult = null;
@@ -308,6 +347,12 @@ namespace RavenFS.Controllers
 			SourceSynchronizationInformation lastEtag = null;
 			Storage.Batch(accessor => lastEtag = GetLastSynchronization(StringUtils.RemoveTrailingSlashAndEncode(from), accessor));
 			return new HttpResponseMessage<SourceSynchronizationInformation>(lastEtag);
+		}
+
+		[AcceptVerbs("GET")]
+		public HttpResponseMessage Availability()
+		{
+			return new HttpResponseMessage(HttpStatusCode.OK);
 		}
 
 		private Task StrategyAsGetCurrent(string fileName, string sourceServerUrl)

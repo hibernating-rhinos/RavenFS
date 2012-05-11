@@ -1,5 +1,7 @@
 namespace RavenFS.Util
 {
+	using System;
+
 	public static class SynchronizationHelper
 	{
 	    private const string SyncNamePrefix = "Syncing-";
@@ -8,7 +10,17 @@ namespace RavenFS.Util
             return SyncNamePrefix + fileName;
 		}
 
-        public static bool IsSyncName(string name)
+		public static string CompletedSyncNameFor(string fileName, string destination)
+		{
+			return string.Format("Source-Completed-{0}-{1}", fileName, Uri.EscapeDataString(destination));
+		}
+
+		public static bool IsCompletedSyncNameFor(string name, string destination)
+		{
+			return name.StartsWith("Source-Completed-") && name.EndsWith(Uri.EscapeDataString(destination));
+		}
+
+		public static bool IsSyncName(string name)
         {
             return name.StartsWith(SyncNamePrefix);
         }

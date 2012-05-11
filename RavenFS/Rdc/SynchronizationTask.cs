@@ -63,17 +63,106 @@ namespace RavenFS.Rdc
 
 				var destinationClient = new RavenFileSystemClient(destination);
 
-				destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
-					.ContinueWith(lastEtagTask =>
-					              	{
-										var filesToSynchronization = GetFilesToSynchronization(lastEtagTask, synchronizationLimit - activeSynchronizations);
+				destinationClient.Synchronization.CheckIfAvailableAsync()
+					.ContinueWith(availabilityTask =>
+					{
+					    if (availabilityTask.Result)
+					    {
+					        destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
+					            .ContinueWith(etagTask =>
+					              				{
+					              				    var filesToSynchronization = GetFilesToSynchronization(etagTask, 100);
 
-					              		foreach (var file in filesToSynchronization)
-					              		{
-					              			StartSyncingToAsync(file.Name, destination);
-					              		}
-					              	});
+					              					foreach (var fileHeader in filesToSynchronization)
+					              					{
+														synchronizationQueue.AddPending(destinationClient.ServerUrl, fileHeader.Name);
+					              					}
+
+					              					var filesToConfirm = GetSourceCompletedSynchronizations(destinationClient.ServerUrl);
+
+					              					if (filesToConfirm.Count() > 0)
+					              					{
+
+					              					}
+
+													//destinationClient.Synchronization.ConfirmFilesAsync()
+														//.ContinueWith(confirmTask =>
+														//                {
+														//                    foreach (var confirmation in confirmTask.Result)
+														//                    {
+														//                        if (confirmation.Status == FileStatus.Safe)
+														//                        {
+														//                            RemoveSourceCompletedSynchronization(confirmation.FileName, destinationClient.ServerUrl);
+														//                        }
+														//                        else
+														//                        {
+														//                            synchronizationQueue.AddPending(destinationClient.ServerUrl, confirmation.FileName);
+														//                        }
+														//                    }
+														//                })
+														//.ContinueWith(t =>
+														//                {
+														//                    var pendingFiles = synchronizationQueue.GetPendingFiles(destinationClient.ServerUrl,
+														//                                                                            synchronizationLimit -
+														//                                                                            activeSynchronizations);
+
+														//                    foreach (var file in pendingFiles)
+														//                    {
+														//                        StartSyncingToAsync(file, destinationClient.ServerUrl);
+														//                    }
+														//                });
+
+					              					var pendingFiles = synchronizationQueue.GetPendingFiles(destinationClient.ServerUrl,
+					              					                                                        synchronizationLimit -
+					              					                                                        activeSynchronizations);
+
+													foreach (var file in pendingFiles)
+													{
+														StartSyncingToAsync(file, destinationClient.ServerUrl);
+													}
+					              				});
+					    }
+					});
 			}
+		}
+
+		private IEnumerable<string> GetSourceCompletedSynchronizations(string destination)
+		{
+			IList<SynchronizationDetails> configObjects = null;
+			storage.Batch(
+				accessor =>
+				{
+					var configKeys =
+						from item in accessor.GetConfigNames()
+						where SynchronizationHelper.IsCompletedSyncNameFor(item, destination)
+						select item;
+					configObjects =
+						(from item in configKeys
+						 select accessor.GetConfigurationValue<SynchronizationDetails>(item)).ToList();
+				});
+
+			return configObjects.Select(x => x.SourceUrl);
+		}
+
+		private void CreateSourceCompletedSynchronization(string fileName, string destination)
+		{
+			storage.Batch(accessor =>
+			              	{
+			              		var name = SynchronizationHelper.CompletedSyncNameFor(fileName, destination);
+								accessor.SetConfigurationValue(name, new SynchronizationDetails()
+								                                     	{
+								                                     		SourceUrl = fileName
+								                                     	}); // TO DO
+			              	});
+		}
+
+		private void RemoveSourceCompletedSynchronization(string fileName, string destination)
+		{
+			storage.Batch(accessor =>
+			{
+				var name = SynchronizationHelper.CompletedSyncNameFor(fileName, destination);
+				accessor.DeleteConfig(name);
+			});
 		}
 
 		public Task<SynchronizationReport> StartSyncingToAsync(string fileName, string destination)
@@ -84,7 +173,7 @@ namespace RavenFS.Rdc
 																 destination));
 			}
 
-			synchronizationQueue.Add(destination);
+			synchronizationQueue.SynchronizationStarted(fileName, destination);
 
 			var sourceMetadata = GetLocalMetadata(fileName);
 
@@ -183,10 +272,11 @@ namespace RavenFS.Rdc
 										if(task.Result.Exception == null)
 										{
 											conflictActifactManager.RemoveArtifact(fileName);
+											CreateSourceCompletedSynchronization(fileName, destination);
 										}
 									}
 
-									synchronizationQueue.Remove(destination);
+									synchronizationQueue.SynchronizationFinished(fileName, destination);
 
 				              		return report;
 				              	});
