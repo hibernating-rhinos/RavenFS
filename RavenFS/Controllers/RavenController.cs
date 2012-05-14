@@ -105,6 +105,11 @@ namespace RavenFS.Controllers
 			get { return RavenFileSystem.ConflictResolver; }
 		}
 
+		protected SynchronizationTask SynchronizationTask
+		{
+			get { return RavenFileSystem.SynchronizationTask; }
+		}
+
 		protected PagingInfo Paging
 		{
 			get

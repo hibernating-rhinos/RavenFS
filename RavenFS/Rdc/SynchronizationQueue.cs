@@ -86,7 +86,7 @@ namespace RavenFS.Rdc
 
 			activeSynchronizations.TryGetValue(destination, out activeDestinationTasks);
 			string removingItem;
-			
+			// TODO arek - unused fileName parameter
 			if (activeDestinationTasks != null && activeDestinationTasks.TryTake(out removingItem))
 			{
 				return;

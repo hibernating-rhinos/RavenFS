@@ -165,6 +165,7 @@ namespace RavenFS.Controllers
                             headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
                             Search.Index(name, headers);
                             Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });
+							SynchronizationTask.SynchronizeDestinations();
                             readFileToDatabase.Dispose();
                             return readingTask;
                         })

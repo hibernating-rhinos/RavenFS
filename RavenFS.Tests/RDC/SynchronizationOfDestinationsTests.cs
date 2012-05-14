@@ -13,11 +13,10 @@ namespace RavenFS.Tests.RDC
 
 	public class SynchronizationOfDestinationsTests : MultiHostTestBase
 	{
-		[Theory]
-		[InlineData(1024)]
-		public void Should_synchronize_to_all_destinations(int size)
+		[Fact(Timeout = 60000)]
+		public void Should_synchronize_to_all_destinations_when_file_uploaded()
 		{
-			var sourceContent = RdcTestUtils.PrepareSourceStream(size);
+			var sourceContent = RdcTestUtils.PrepareSourceStream(1024);
 			sourceContent.Position = 0;
 
 			var sourceClient = NewClient(0);
@@ -25,18 +24,34 @@ namespace RavenFS.Tests.RDC
 			var destination1Client = NewClient(1);
 			var destination2Client = NewClient(2);
 
+			var destination1Content = new RandomlyModifiedStream(new RandomStream(1024, 1), 0.01);
+			var destination2Content = new RandomlyModifiedStream(new RandomStream(1024, 1), 0.01);
+
+			destination1Client.UploadAsync("test.bin", new NameValueCollection(), destination1Content).Wait();
+			destination2Client.UploadAsync("test.bin", new NameValueCollection(), destination2Content).Wait();
+
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destination1Client.ServerUrl },
 																										{ "url", destination2Client.ServerUrl }
 			                                                                                     	}).Wait();
 
+
 			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
 
-			sourceClient.Synchronization.SynchronizeDestinationsAsync();
+			RdcTestUtils.Destinations.WaitForConflict(destination1Client, "test.bin");
+			RdcTestUtils.Destinations.WaitForConflict(destination2Client, "test.bin");
 
-			RdcTestUtils.WaitForSynchronizationFinishOnDestination(destination2Client, "test.bin");
-			RdcTestUtils.WaitForSynchronizationFinishOnDestination(destination1Client, "test.bin");
+			destination1Client.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.bin",
+			                                                        ConflictResolutionStrategy.RemoteVersion).Wait();
+			destination2Client.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.bin",
+																	ConflictResolutionStrategy.RemoteVersion).Wait();
+
+			sourceContent.Position = 0;
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+
+			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destination2Client, "test.bin");
+			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destination1Client, "test.bin");
 
 			string destination1Md5 = null;
 			using (var resultFileContent = new MemoryStream())
@@ -60,6 +75,12 @@ namespace RavenFS.Tests.RDC
 			Assert.Equal(sourceMd5, destination1Md5);
 			Assert.Equal(sourceMd5, destination2Md5);
 			Assert.Equal(destination1Md5, destination2Md5);
+		}
+
+		[Fact]
+		public void Should_synchronize_to_all_destinations_when_file_metadata_changed()
+		{
+
 		}
 
 		[Fact]

@@ -27,7 +27,7 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("POST")]
 		public HttpResponseMessage ToDestinations()
 		{
-			RavenFileSystem.SynchronizationTask.SynchronizeDestinations();
+			SynchronizationTask.SynchronizeDestinations();
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
@@ -35,7 +35,7 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("POST")]
 		public Task<SynchronizationReport> Start(string fileName, string destinationServerUrl)
 		{
-			return RavenFileSystem.SynchronizationTask.StartSyncingToAsync(fileName, destinationServerUrl);
+			return SynchronizationTask.StartSyncingToAsync(fileName, destinationServerUrl);
 		}
 
 		[AcceptVerbs("POST")]
