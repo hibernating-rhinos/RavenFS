@@ -21,25 +21,25 @@ namespace RavenFS.Rdc
 
 		public void LockByCreatingSyncConfiguration(string fileName, string sourceServerUrl, StorageActionsAccessor accessor)
 		{
-			var syncOperationDetails = new SynchronizationDetails
+			var syncOperationDetails = new SynchronizationLock
 											{
 												SourceUrl = sourceServerUrl,
 												FileLockedAt = DateTime.UtcNow
 											};
 
-			accessor.SetConfigurationValue(SynchronizationHelper.SyncNameForFile(fileName), syncOperationDetails);
+			accessor.SetConfigurationValue(SynchronizationHelper.SyncLockNameForFile(fileName), syncOperationDetails);
 		}
 
 		public void UnlockByDeletingSyncConfiguration(string fileName, StorageActionsAccessor accessor)
 		{
-			accessor.DeleteConfig(SynchronizationHelper.SyncNameForFile(fileName));
+			accessor.DeleteConfig(SynchronizationHelper.SyncLockNameForFile(fileName));
 		}
 
 		public bool TimeoutExceeded(string fileName, StorageActionsAccessor accessor)
 		{
-			SynchronizationDetails syncOperationDetails;
+			SynchronizationLock syncOperationDetails;
 			
-			if (!accessor.TryGetConfigurationValue(SynchronizationHelper.SyncNameForFile(fileName), out syncOperationDetails))
+			if (!accessor.TryGetConfigurationValue(SynchronizationHelper.SyncLockNameForFile(fileName), out syncOperationDetails))
 				return true;
 
 			return DateTime.UtcNow - syncOperationDetails.FileLockedAt > ReplicationTimeout(accessor);

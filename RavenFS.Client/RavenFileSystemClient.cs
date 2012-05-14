@@ -708,7 +708,14 @@ namespace RavenFS.Client
 				var requestUriString = String.Format("{0}/synchronization/Confirm", ravenFileSystemClient.ServerUrl);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 				request.ContentType = "application/json";
-				request.Method = "GET";
+				request.Method = "POST";
+
+				if (sentFiles.Count() == 0)
+				{
+					var tcs = new TaskCompletionSource<IEnumerable<SynchronizationConfirmation>>();
+					tcs.SetResult(null);
+					return tcs.Task;
+				}
 
 				return request.GetRequestStreamAsync()
 					.ContinueWith(

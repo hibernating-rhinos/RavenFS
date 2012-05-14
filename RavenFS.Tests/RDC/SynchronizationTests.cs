@@ -31,7 +31,7 @@ namespace RavenFS.Tests.RDC
 			sw.Write("Coconut is Stupid");
 			sw.Flush();
 
-			var sourceContent = PrepareSourceStream(size);
+			var sourceContent = RdcTestUtils.PrepareSourceStream(size);
 			sourceContent.Position = 0;
 			var destinationContent = new CombinedStream(differenceChunk, sourceContent);
 			var destinationClient = NewClient(0);
@@ -184,16 +184,16 @@ namespace RavenFS.Tests.RDC
 		                           {"SomeTest-metadata", "some-value"}
 		                       };
 
-			//var destinationClient = NewClient(0);
+			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
 			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-			var sourceSynchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", "http://localhost/").Result;
-			//var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
+			var sourceSynchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
 
 			Assert.Equal(sourceContent.Length, sourceSynchronizationReport.BytesCopied + sourceSynchronizationReport.BytesTransfered);
-			//Assert.Equal("some-value", resultFileMetadata["SomeTest-metadata"]);
+			Assert.Equal("some-value", resultFileMetadata["SomeTest-metadata"]);
 		}
 
 		[Fact]
@@ -352,7 +352,7 @@ namespace RavenFS.Tests.RDC
 		    sw.Write("Coconut is Stupid");
 		    sw.Flush();
 
-		    var sourceContent = PrepareSourceStream(10);
+		    var sourceContent = RdcTestUtils.PrepareSourceStream(10);
 		    sourceContent.Position = 0;
 		    var destinationContent = new CombinedStream(differenceChunk, sourceContent);
 		    var destinationClient = NewClient(0);
@@ -463,23 +463,5 @@ namespace RavenFS.Tests.RDC
 
 			Assert.Equal("The limit of active synchronizations to http://localhost:1234 server has been achieved.", synchronizationReport.Exception.Message);
 		} 
-
-		private static MemoryStream PrepareSourceStream(int lines)
-		{
-			var ms = new MemoryStream();
-			var writer = new StreamWriter(ms);
-
-			for (var i = 1; i <= lines; i++)
-			{
-				for (var j = 0; j < 100; j++)
-				{
-					writer.Write(i.ToString("D4"));
-				}
-				writer.Write("\n");
-			}
-			writer.Flush();
-
-			return ms;
-		}
 	}
 }

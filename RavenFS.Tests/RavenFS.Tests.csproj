@@ -93,7 +93,7 @@
     <Compile Include="RDC\NeedListGeneratorTest.cs" />
     <Compile Include="RDC\RdcTestUtils.cs" />
     <Compile Include="RDC\SigGeneratorTest.cs" />
-    <Compile Include="RDC\TriggeredSynchronizationTests.cs" />
+    <Compile Include="RDC\SynchronizationOfDestinationsTests.cs" />
     <Compile Include="Search.cs" />
     <Compile Include="Signatures.cs" />
     <Compile Include="StorageSignatureRepositoryTests.cs" />

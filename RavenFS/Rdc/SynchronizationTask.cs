@@ -1,7 +1,6 @@
 namespace RavenFS.Rdc
 {
 	using System;
-	using System.Collections;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
@@ -18,9 +17,7 @@ namespace RavenFS.Rdc
 
 	public class SynchronizationTask
 	{
-		private const int DefaultLimitOfConcurrentSynchronizations = 5;
-
-		private readonly SynchronizationQueue synchronizationQueue = new SynchronizationQueue();
+		private readonly SynchronizationQueue synchronizationQueue;
 		private readonly RavenFileSystem localRavenFileSystem;
 		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
@@ -36,29 +33,16 @@ namespace RavenFS.Rdc
 			this.conflictActifactManager = conflictActifactManager;
 			this.storage = storage;
 			this.sigGenerator = sigGenerator;
-		}
-
-		private int LimitOfConcurrentSynchronizations()
-		{
-			bool limit = false;
-			int configuredLimit = 0;
-
-			storage.Batch(
-				accessor => limit = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationLimit, out configuredLimit));
-
-			return limit ? configuredLimit : DefaultLimitOfConcurrentSynchronizations;
+			synchronizationQueue = new SynchronizationQueue(storage);
 		}
 
 		public void SynchronizeDestinations()
 		{
 			foreach (var destination in GetSynchronizationDestinations())
 			{
-				var activeSynchronizations = synchronizationQueue.NumberOfActiveSynchronizationTasksFor(destination);
-				var synchronizationLimit = LimitOfConcurrentSynchronizations();
-
-				if (activeSynchronizations > synchronizationLimit)
+				if (!synchronizationQueue.CanSynchronizeTo(destination))
 				{
-					return;
+					continue;
 				}
 
 				var destinationClient = new RavenFileSystemClient(destination);
@@ -68,65 +52,60 @@ namespace RavenFS.Rdc
 					{
 					    if (availabilityTask.Result)
 					    {
-					        destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
+							destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
 					            .ContinueWith(etagTask =>
-					              				{
-					              				    var filesToSynchronization = GetFilesToSynchronization(etagTask, 100);
+					            {
+					              	var filesToSynchronization = GetFilesToSynchronization(etagTask, 100);
 
-					              					foreach (var fileHeader in filesToSynchronization)
-					              					{
-														synchronizationQueue.AddPending(destinationClient.ServerUrl, fileHeader.Name);
-					              					}
+					              	foreach (var fileHeader in filesToSynchronization)
+					              	{
+										synchronizationQueue.EnqueueSynchronization(destination, fileHeader.Name);
+					              	}
 
-					              					var filesToConfirm = GetSourceCompletedSynchronizations(destinationClient.ServerUrl);
+					              	var filesNeedConfirmation = GetSyncingConfigurations(destination);
 
-					              					if (filesToConfirm.Count() > 0)
-					              					{
-
-					              					}
-
-													//destinationClient.Synchronization.ConfirmFilesAsync()
-														//.ContinueWith(confirmTask =>
-														//                {
-														//                    foreach (var confirmation in confirmTask.Result)
-														//                    {
-														//                        if (confirmation.Status == FileStatus.Safe)
-														//                        {
-														//                            RemoveSourceCompletedSynchronization(confirmation.FileName, destinationClient.ServerUrl);
-														//                        }
-														//                        else
-														//                        {
-														//                            synchronizationQueue.AddPending(destinationClient.ServerUrl, confirmation.FileName);
-														//                        }
-														//                    }
-														//                })
-														//.ContinueWith(t =>
-														//                {
-														//                    var pendingFiles = synchronizationQueue.GetPendingFiles(destinationClient.ServerUrl,
-														//                                                                            synchronizationLimit -
-														//                                                                            activeSynchronizations);
-
-														//                    foreach (var file in pendingFiles)
-														//                    {
-														//                        StartSyncingToAsync(file, destinationClient.ServerUrl);
-														//                    }
-														//                });
-
-					              					var pendingFiles = synchronizationQueue.GetPendingFiles(destinationClient.ServerUrl,
-					              					                                                        synchronizationLimit -
-					              					                                                        activeSynchronizations);
-
-													foreach (var file in pendingFiles)
+									destinationClient.Synchronization.ConfirmFilesAsync(filesNeedConfirmation)
+										.ContinueWith(confirmationTask =>
+										{
+											if (confirmationTask.Result != null)
+											{
+												foreach (var confirmation in confirmationTask.Result)
+												{
+													if (confirmation.Status == FileStatus.Safe)
 													{
-														StartSyncingToAsync(file, destinationClient.ServerUrl);
+														RemoveSyncingConfiguration(confirmation.FileName, destination);
 													}
-					              				});
+													else
+													{
+														synchronizationQueue.EnqueueSynchronization(destination, confirmation.FileName);
+													}
+												}
+											}
+										})
+										.ContinueWith(t =>
+										{
+											var syncingTasksNumber = synchronizationQueue.AvailableSynchronizationRequestsTo(destination);
+
+											for (var i = 0; i < syncingTasksNumber; i++)
+											{
+												string fileName;
+												if(synchronizationQueue.TryDequeuePendingSynchronization(destination, out fileName))
+												{
+													StartSyncingToAsync(fileName, destination);
+												}
+												else
+												{
+													break;
+												}
+											}
+										});
+					            });
 					    }
 					});
 			}
 		}
 
-		private IEnumerable<string> GetSourceCompletedSynchronizations(string destination)
+		private IEnumerable<string> GetSyncingConfigurations(string destination)
 		{
 			IList<SynchronizationDetails> configObjects = null;
 			storage.Batch(
@@ -134,46 +113,45 @@ namespace RavenFS.Rdc
 				{
 					var configKeys =
 						from item in accessor.GetConfigNames()
-						where SynchronizationHelper.IsCompletedSyncNameFor(item, destination)
+						where SynchronizationHelper.IsSyncName(item, destination)
 						select item;
 					configObjects =
 						(from item in configKeys
 						 select accessor.GetConfigurationValue<SynchronizationDetails>(item)).ToList();
 				});
 
-			return configObjects.Select(x => x.SourceUrl);
+			return configObjects.Select(x => x.FileName);
 		}
 
-		private void CreateSourceCompletedSynchronization(string fileName, string destination)
+		private void CreateSyncingConfiguration(string fileName, string destination)
 		{
 			storage.Batch(accessor =>
 			              	{
-			              		var name = SynchronizationHelper.CompletedSyncNameFor(fileName, destination);
+			              		var name = SynchronizationHelper.SyncNameForFile(fileName, destination);
 								accessor.SetConfigurationValue(name, new SynchronizationDetails()
 								                                     	{
-								                                     		SourceUrl = fileName
-								                                     	}); // TO DO
+								                                     		DestinationUrl = destination,
+																			FileName = fileName
+								                                     	});
 			              	});
 		}
 
-		private void RemoveSourceCompletedSynchronization(string fileName, string destination)
+		private void RemoveSyncingConfiguration(string fileName, string destination)
 		{
 			storage.Batch(accessor =>
 			{
-				var name = SynchronizationHelper.CompletedSyncNameFor(fileName, destination);
+				var name = SynchronizationHelper.SyncNameForFile(fileName, destination);
 				accessor.DeleteConfig(name);
 			});
 		}
 
 		public Task<SynchronizationReport> StartSyncingToAsync(string fileName, string destination)
 		{
-			if (synchronizationQueue.NumberOfActiveSynchronizationTasksFor(destination) > LimitOfConcurrentSynchronizations())
+			if (!synchronizationQueue.CanSynchronizeTo(destination))
 			{
 				return SynchronizationExceptionReport(string.Format("The limit of active synchronizations to {0} server has been achieved.",
 																 destination));
 			}
-
-			synchronizationQueue.SynchronizationStarted(fileName, destination);
 
 			var sourceMetadata = GetLocalMetadata(fileName);
 
@@ -184,6 +162,8 @@ namespace RavenFS.Rdc
 			{
 				return SynchronizationExceptionReport(string.Format("File {0} is conflicted", fileName));
 			}
+
+			synchronizationQueue.SynchronizationStarted(fileName, destination);
 
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 
@@ -272,7 +252,7 @@ namespace RavenFS.Rdc
 										if(task.Result.Exception == null)
 										{
 											conflictActifactManager.RemoveArtifact(fileName);
-											CreateSourceCompletedSynchronization(fileName, destination);
+											CreateSyncingConfiguration(fileName, destination);
 										}
 									}
 

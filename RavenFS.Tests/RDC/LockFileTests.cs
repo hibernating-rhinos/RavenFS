@@ -25,7 +25,7 @@ namespace RavenFS.Tests.RDC
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			var configName = SynchronizationHelper.SyncNameForFile("test.bin");
+			var configName = SynchronizationHelper.SyncLockNameForFile("test.bin");
 
 			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl);
 
@@ -41,7 +41,7 @@ namespace RavenFS.Tests.RDC
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
 			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl);
-			var config = destinationClient.Config.GetConfig(SynchronizationHelper.SyncNameForFile("test.bin")).Result;
+			var config = destinationClient.Config.GetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin")).Result;
 
 			Assert.Null(config);
 		}
@@ -54,7 +54,7 @@ namespace RavenFS.Tests.RDC
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			destinationClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
+			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
 			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.UpdateMetadataAsync("test.bin", new NameValueCollection()).Wait());
 
@@ -70,7 +70,7 @@ namespace RavenFS.Tests.RDC
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			destinationClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
+			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
 			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.DeleteAsync("test.bin").Wait());
 
@@ -86,7 +86,7 @@ namespace RavenFS.Tests.RDC
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			destinationClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
+			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
 			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.RenameAsync("test.bin", "newname.bin").Wait());
 
@@ -102,7 +102,7 @@ namespace RavenFS.Tests.RDC
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			destinationClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
+			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
 			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
 
@@ -118,7 +118,7 @@ namespace RavenFS.Tests.RDC
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			destinationClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
+			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
 			var synchronizationReport = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 
@@ -227,7 +227,7 @@ namespace RavenFS.Tests.RDC
 
 		private static void ZeroTimeoutTest(RavenFileSystemClient destinationClient, Action action)
 		{
-			destinationClient.Config.SetConfig(SynchronizationHelper.SyncNameForFile("test.bin"), SynchronizationConfig(DateTime.MinValue)).Wait();
+			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.MinValue)).Wait();
 
 			destinationClient.Config.SetConfig(SynchronizationConstants.RavenReplicationTimeout, new NameValueCollection()
                                                                                         {

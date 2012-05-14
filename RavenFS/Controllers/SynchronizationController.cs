@@ -186,14 +186,14 @@ namespace RavenFS.Controllers
 			accessor.DeleteConfig(name);
 
 			// remove previous .downloading file
-			if (accessor.ConfigExists(SynchronizationHelper.SyncNameForFile(fileName)) == false)
+			if (accessor.ConfigExists(SynchronizationHelper.SyncLockNameForFile(fileName)) == false) // TODO
 			{
 				Search.Delete(name);
 				accessor.Delete(SynchronizationHelper.DownloadingFileName(fileName));
 			}
 		}
 
-		[AcceptVerbs("GET")]
+		[AcceptVerbs("POST")]
 		public Task<IEnumerable<SynchronizationConfirmation>> Confirm()
 		{
 			return Request.Content.ReadAsStreamAsync().
@@ -228,7 +228,7 @@ namespace RavenFS.Controllers
 				return FileStatus.Unknown;
 			}
 
-			return preResult.Exception != null ? FileStatus.Safe : FileStatus.Broken;
+			return preResult.Exception == null ? FileStatus.Safe : FileStatus.Broken;
 		}
 
 		[AcceptVerbs("GET")]
@@ -265,19 +265,20 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("GET")]
 		public HttpResponseMessage<IEnumerable<SynchronizationDetails>> Working(int page, int pageSize)
 		{
-			IList<SynchronizationDetails> configObjects = null;
-			Storage.Batch(
-				accessor =>
-				{
-					var configKeys =
-						from item in accessor.GetConfigNames()
-						where SynchronizationHelper.IsSyncName(item)
-						select item;
-					configObjects =
-						(from item in configKeys.Skip(pageSize * page).Take(pageSize)
-						 select accessor.GetConfigurationValue<SynchronizationDetails>(item)).ToList();
-				});
-			return new HttpResponseMessage<IEnumerable<SynchronizationDetails>>(configObjects);
+			//IList<SynchronizationDetails> configObjects = null;
+			//Storage.Batch(
+			//    accessor =>
+			//    {
+			//        var configKeys =
+			//            from item in accessor.GetConfigNames()
+			//            where SynchronizationHelper.IsSyncName(item)
+			//            select item;
+			//        configObjects =
+			//            (from item in configKeys.Skip(pageSize * page).Take(pageSize)
+			//             select accessor.GetConfigurationValue<SynchronizationDetails>(item)).ToList();
+			//    });
+			// TODO
+			return new HttpResponseMessage<IEnumerable<SynchronizationDetails>>(null);
 		}
 
 		[AcceptVerbs("PATCH")]

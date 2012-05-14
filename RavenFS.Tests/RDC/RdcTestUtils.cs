@@ -3,6 +3,8 @@
 namespace RavenFS.Tests.RDC
 {
 	using System;
+	using System.IO;
+	using System.Threading;
 	using Xunit;
 
 	public class RdcTestUtils
@@ -16,6 +18,18 @@ namespace RavenFS.Tests.RDC
 			destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, fileName, ConflictResolutionStrategy.RemoteVersion).Wait();
 			return sourceClient.Synchronization.StartSynchronizationToAsync(fileName, destinationClient.ServerUrl).Result;
         }
+
+		public static SynchronizationReport WaitForSynchronizationFinishOnDestination(RavenFileSystemClient destinationClient, string fileName)
+		{
+			SynchronizationReport report;
+			do
+			{
+				report = destinationClient.Synchronization.GetSynchronizationStatusAsync(fileName).Result;
+				Thread.Sleep(50);
+			} while (report == null);
+
+			return report;
+		}
 
 		public static Exception ExecuteAndGetInnerException(Action action)
 		{
@@ -31,6 +45,24 @@ namespace RavenFS.Tests.RDC
 			}
 
 			return innerException;
+		}
+
+		public static MemoryStream PrepareSourceStream(int lines)
+		{
+			var ms = new MemoryStream();
+			var writer = new StreamWriter(ms);
+
+			for (var i = 1; i <= lines; i++)
+			{
+				for (var j = 0; j < 100; j++)
+				{
+					writer.Write(i.ToString("D4"));
+				}
+				writer.Write("\n");
+			}
+			writer.Flush();
+
+			return ms;
 		}
     }
 }

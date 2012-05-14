@@ -5,25 +5,21 @@ namespace RavenFS.Util
 	public static class SynchronizationHelper
 	{
 	    private const string SyncNamePrefix = "Syncing-";
-		public static string SyncNameForFile(string fileName)
+		public static string SyncNameForFile(string fileName, string destination)
 		{
-            return SyncNamePrefix + fileName;
+            return SyncNamePrefix + Uri.EscapeUriString(destination) + "-" + fileName;
 		}
 
-		public static string CompletedSyncNameFor(string fileName, string destination)
+		public static bool IsSyncName(string name, string destination)
 		{
-			return string.Format("Source-Completed-{0}-{1}", fileName, Uri.EscapeDataString(destination));
+			return name.StartsWith(SyncNamePrefix + Uri.EscapeUriString(destination));
 		}
 
-		public static bool IsCompletedSyncNameFor(string name, string destination)
+		private const string SyncLockNamePrefix = "SyncingLock-";
+		public static string SyncLockNameForFile(string fileName)
 		{
-			return name.StartsWith("Source-Completed-") && name.EndsWith(Uri.EscapeDataString(destination));
+			return SyncLockNamePrefix + fileName;
 		}
-
-		public static bool IsSyncName(string name)
-        {
-            return name.StartsWith(SyncNamePrefix);
-        }
 
         public static string ConflictConfigNameForFile(string fileName)
         {

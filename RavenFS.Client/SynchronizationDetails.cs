@@ -1,11 +1,9 @@
-using System;
-
 namespace RavenFS.Client
 {
     public class SynchronizationDetails
 	{
-		public string SourceUrl { get; set; }
+		public string FileName { get; set; }
 
-		public DateTime FileLockedAt { get; set; }
+		public string DestinationUrl { get; set; }
 	}
 }

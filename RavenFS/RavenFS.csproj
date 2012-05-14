@@ -204,6 +204,7 @@
     <Compile Include="Rdc\Multipart\SynchronizationMultipartProcessor.cs" />
     <Compile Include="Rdc\Multipart\SynchronizationMultipartRequest.cs" />
     <Compile Include="Rdc\Multipart\SyncingMultipartConstants.cs" />
+    <Compile Include="Rdc\SynchronizationLock.cs" />
     <Compile Include="Rdc\SynchronizationTask.cs" />
     <Compile Include="Rdc\SynchronizationQueue.cs" />
     <Compile Include="Rdc\SequenceActions.cs" />
