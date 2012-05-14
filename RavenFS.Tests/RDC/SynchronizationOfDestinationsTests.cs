@@ -18,23 +18,24 @@ namespace RavenFS.Tests.RDC
 		public void Should_synchronize_to_all_destinations(int size)
 		{
 			var sourceContent = RdcTestUtils.PrepareSourceStream(size);
+			sourceContent.Position = 0;
 
-			var sourceClient = NewClient(1);
+			var sourceClient = NewClient(0);
 
-			var destination1Client = NewClient(0);
-			//var destination2Client = NewClient(2);
+			var destination1Client = NewClient(1);
+			var destination2Client = NewClient(2);
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destination1Client.ServerUrl },
-																										//{ "url", destination2Client.ServerUrl }
+																										{ "url", destination2Client.ServerUrl }
 			                                                                                     	}).Wait();
 
 			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
 
 			sourceClient.Synchronization.SynchronizeDestinationsAsync();
 
-			//RdcTestUtils.WaitForSynchronizationFinishOnDestination(destination2Client, "test.bin");
+			RdcTestUtils.WaitForSynchronizationFinishOnDestination(destination2Client, "test.bin");
 			RdcTestUtils.WaitForSynchronizationFinishOnDestination(destination1Client, "test.bin");
 
 			string destination1Md5 = null;
@@ -45,20 +46,20 @@ namespace RavenFS.Tests.RDC
 				destination1Md5 = resultFileContent.GetMD5Hash();
 			}
 
-			//string destination2Md5 = null;
-			//using (var resultFileContent = new MemoryStream())
-			//{
-			//    destination2Client.DownloadAsync("test.bin", resultFileContent).Wait();
-			//    resultFileContent.Position = 0;
-			//    destination2Md5 = resultFileContent.GetMD5Hash();
-			//}
+			string destination2Md5 = null;
+			using (var resultFileContent = new MemoryStream())
+			{
+				destination2Client.DownloadAsync("test.bin", resultFileContent).Wait();
+				resultFileContent.Position = 0;
+				destination2Md5 = resultFileContent.GetMD5Hash();
+			}
 
 			sourceContent.Position = 0;
 			var sourceMd5 = sourceContent.GetMD5Hash();
 
 			Assert.Equal(sourceMd5, destination1Md5);
-			//Assert.Equal(sourceMd5, destination2Md5);
-			//Assert.Equal(destination1Md5, destination2Md5);
+			Assert.Equal(sourceMd5, destination2Md5);
+			Assert.Equal(destination1Md5, destination2Md5);
 		}
 
 		[Fact]

@@ -19,8 +19,6 @@ namespace RavenFS.Rdc
 		private readonly ConcurrentDictionary<string, ConcurrentBag<string>> activeSynchronizations =
 			new ConcurrentDictionary<string, ConcurrentBag<string>>();
 
-		private int numberOfActiveTasks;
-
 		public SynchronizationQueue(TransactionalStorage storage)
 		{
 			this.storage = storage;
@@ -39,8 +37,7 @@ namespace RavenFS.Rdc
 
 		private int NumberOfActiveSynchronizationTasksFor(string destination)
 		{
-			numberOfActiveTasks = activeSynchronizations.GetOrAdd(destination, new ConcurrentBag<string>()).Count;
-			return Thread.VolatileRead(ref numberOfActiveTasks);
+			return activeSynchronizations.GetOrAdd(destination, new ConcurrentBag<string>()).Count;
 		}
 
 		public bool CanSynchronizeTo(string destination)

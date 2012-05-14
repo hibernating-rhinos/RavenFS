@@ -12,7 +12,7 @@ namespace RavenFS.Tests
 {
 	public abstract class MultiHostTestBase : IDisposable
 	{
-		public static readonly int[] Ports = { 19079, 19081 };
+		public static readonly int[] Ports = { 19079, 19081, 19083 };
 
 		private readonly IList<IDisposable> disposables = new List<IDisposable>();
 

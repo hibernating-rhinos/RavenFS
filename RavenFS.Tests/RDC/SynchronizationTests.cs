@@ -167,7 +167,6 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Destination_should_return_empty_guid_as_last_etag_if_no_syncing_was_made()
 		{
-
 			var destinationClient = NewClient(0);
 
 			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync("http://localhost:1234").Result;

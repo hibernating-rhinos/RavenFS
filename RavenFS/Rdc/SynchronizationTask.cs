@@ -40,7 +40,9 @@ namespace RavenFS.Rdc
 		{
 			foreach (var destination in GetSynchronizationDestinations())
 			{
-				if (!synchronizationQueue.CanSynchronizeTo(destination))
+				string destinationUrl = destination;
+
+				if (!synchronizationQueue.CanSynchronizeTo(destinationUrl))
 				{
 					continue;
 				}
@@ -52,17 +54,17 @@ namespace RavenFS.Rdc
 					{
 					    if (availabilityTask.Result)
 					    {
-							destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
+					    	destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
 					            .ContinueWith(etagTask =>
 					            {
 					              	var filesToSynchronization = GetFilesToSynchronization(etagTask, 100);
 
 					              	foreach (var fileHeader in filesToSynchronization)
 					              	{
-										synchronizationQueue.EnqueueSynchronization(destination, fileHeader.Name);
+										synchronizationQueue.EnqueueSynchronization(destinationUrl, fileHeader.Name);
 					              	}
 
-					              	var filesNeedConfirmation = GetSyncingConfigurations(destination);
+					              	var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
 
 									destinationClient.Synchronization.ConfirmFilesAsync(filesNeedConfirmation)
 										.ContinueWith(confirmationTask =>
@@ -73,25 +75,25 @@ namespace RavenFS.Rdc
 												{
 													if (confirmation.Status == FileStatus.Safe)
 													{
-														RemoveSyncingConfiguration(confirmation.FileName, destination);
+														RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
 													}
 													else
 													{
-														synchronizationQueue.EnqueueSynchronization(destination, confirmation.FileName);
+														synchronizationQueue.EnqueueSynchronization(destinationUrl, confirmation.FileName);
 													}
 												}
 											}
 										})
 										.ContinueWith(t =>
 										{
-											var syncingTasksNumber = synchronizationQueue.AvailableSynchronizationRequestsTo(destination);
+											var syncingTasksNumber = synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl);
 
 											for (var i = 0; i < syncingTasksNumber; i++)
 											{
 												string fileName;
-												if(synchronizationQueue.TryDequeuePendingSynchronization(destination, out fileName))
+												if(synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out fileName))
 												{
-													StartSyncingToAsync(fileName, destination);
+													StartSyncingToAsync(fileName, destinationUrl);
 												}
 												else
 												{
