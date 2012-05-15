@@ -2,6 +2,7 @@ namespace RavenFS.Rdc
 {
 	using System;
 	using System.Collections.Concurrent;
+	using System.Collections.Generic;
 	using System.Linq;
 	using Client;
 	using Extensions;
@@ -21,6 +22,34 @@ namespace RavenFS.Rdc
 		public SynchronizationQueue(TransactionalStorage storage)
 		{
 			this.storage = storage;
+		}
+
+		public IEnumerable<SynchronizationDetails> Pending
+		{
+			get
+			{
+				return from destinationPending in pendingSynchronizations
+				       from pendingFile in destinationPending.Value
+				       select new SynchronizationDetails
+				              	{
+				              		DestinationUrl = destinationPending.Key,
+				              		FileName = pendingFile
+				              	};
+			}
+		}
+
+		public IEnumerable<SynchronizationDetails> Active
+		{
+			get
+			{
+				return from destinationActive in activeSynchronizations
+				       from activeFile in destinationActive.Value
+				       select new SynchronizationDetails()
+				              	{
+				              		DestinationUrl = destinationActive.Key,
+				              		FileName = activeFile.Value
+				              	};
+			}
 		}
 
 		private int LimitOfConcurrentSynchronizations()

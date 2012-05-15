@@ -455,7 +455,7 @@ namespace RavenFS.Tests.RDC
 				sourceClient.Synchronization.StartSynchronizationToAsync(item, destinationClient.ServerUrl);
 			}
 
-			var result = destinationClient.Synchronization.GetWorkingAsync().Result;
+			var result = destinationClient.Synchronization.GetActiveAsync().Result;
 			Assert.True(0 < result.Count());
 		}
 

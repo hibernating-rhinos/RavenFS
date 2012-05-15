@@ -263,22 +263,15 @@ namespace RavenFS.Controllers
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage<IEnumerable<SynchronizationDetails>> Working(int page, int pageSize)
+		public HttpResponseMessage<IEnumerable<SynchronizationDetails>> Active(int page, int pageSize)
 		{
-			//IList<SynchronizationDetails> configObjects = null;
-			//Storage.Batch(
-			//    accessor =>
-			//    {
-			//        var configKeys =
-			//            from item in accessor.GetConfigNames()
-			//            where SynchronizationHelper.IsSyncName(item)
-			//            select item;
-			//        configObjects =
-			//            (from item in configKeys.Skip(pageSize * page).Take(pageSize)
-			//             select accessor.GetConfigurationValue<SynchronizationDetails>(item)).ToList();
-			//    });
-			// TODO
-			return new HttpResponseMessage<IEnumerable<SynchronizationDetails>>(null);
+			return new HttpResponseMessage<IEnumerable<SynchronizationDetails>>(SynchronizationTask.Queue.Active.Skip(pageSize * page).Take(pageSize));
+		}
+
+		[AcceptVerbs("GET")]
+		public HttpResponseMessage<IEnumerable<SynchronizationDetails>> Pending(int page, int pageSize)
+		{
+			return new HttpResponseMessage<IEnumerable<SynchronizationDetails>>(SynchronizationTask.Queue.Pending.Skip(pageSize * page).Take(pageSize));
 		}
 
 		[AcceptVerbs("PATCH")]

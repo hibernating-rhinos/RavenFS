@@ -6,6 +6,7 @@ namespace RavenFS.Tests.RDC
 	using System.IO;
 	using System.Linq;
 	using System.Text;
+	using System.Threading;
 	using Client;
 	using Extensions;
 	using Newtonsoft.Json;
@@ -141,9 +142,59 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
+		public void Source_should_delete_configuration_record_if_destination_confirm_that_file_is_safe()
+		{
+			var sourceClient = NewClient(0);
+			var sourceContent = new RandomStream(10000);
+
+			var destinationClient = NewClient(1);
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destinationClient.ServerUrl }
+			                                                                                     	}).Wait();
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+
+			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destinationClient, "test.bin");
+
+			sourceClient.UploadAsync("test2.bin", new NameValueCollection(), sourceContent).Wait();
+
+			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destinationClient, "test2.bin");
+
+			var shouldBeNull =
+				sourceClient.Config.GetConfig(SynchronizationHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result;
+
+			Assert.Null(shouldBeNull);
+		}
+
+		[Fact(Skip = "Answer needed")]
 		public void File_should_be_in_pending_queue_if_no_synchronization_requests_available()
 		{
+			var sourceContent = new RandomStream(1);
+			var sourceClient = NewClient(0);
 
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationLimit,
+										  new NameValueCollection { { "value", "\"-1\"" } }).Wait();
+
+			var destinationClient = NewClient(1);
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destinationClient.ServerUrl }
+			                                                                                     	}).Wait();
+
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+
+			IEnumerable<SynchronizationDetails> pedingSynchronizations = null;
+			do
+			{
+				pedingSynchronizations = sourceClient.Synchronization.GetPendingAsync().Result;
+				Thread.Sleep(100);
+			} while (pedingSynchronizations.Count() == 0);
+
+			Assert.Equal(1, pedingSynchronizations.Count());
+			Assert.Equal("test.bin", pedingSynchronizations.ToArray()[0].FileName);
+			Assert.Equal(destinationClient.ServerUrl, pedingSynchronizations.ToArray()[0].DestinationUrl);
 		}
 
 		[Fact]

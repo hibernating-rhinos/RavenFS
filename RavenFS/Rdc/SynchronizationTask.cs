@@ -5,6 +5,7 @@ namespace RavenFS.Rdc
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Linq;
+	using System.Reactive.Linq;
 	using System.Threading.Tasks;
 	using Client;
 	using Conflictuality;
@@ -25,6 +26,8 @@ namespace RavenFS.Rdc
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
 
+		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(10));
+
 		public SynchronizationTask(RavenFileSystem localRavenFileSystem, TransactionalStorage storage, SigGenerator sigGenerator, ConflictActifactManager conflictActifactManager, ConflictDetector conflictDetector, ConflictResolver conflictResolver)
 		{
 			this.localRavenFileSystem = localRavenFileSystem;
@@ -34,6 +37,18 @@ namespace RavenFS.Rdc
 			this.storage = storage;
 			this.sigGenerator = sigGenerator;
 			synchronizationQueue = new SynchronizationQueue(storage);
+
+			InitializeTimer();
+		}
+
+		public SynchronizationQueue Queue
+		{
+			get { return synchronizationQueue; }
+		}
+
+		public void InitializeTimer()
+		{
+			timer.Subscribe(tick => SynchronizeDestinations());
 		}
 
 		public void SynchronizeDestinations()
@@ -85,6 +100,8 @@ namespace RavenFS.Rdc
 					            		})
 					            		.ContinueWith(t =>
 					            		{
+											t.AssertNotFaulted();
+
 					            		    for (var i = 0; i < synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl); i++)
 					            		    {
 					            		        string fileName;
