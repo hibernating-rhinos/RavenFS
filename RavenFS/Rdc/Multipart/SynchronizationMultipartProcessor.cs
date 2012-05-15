@@ -77,7 +77,7 @@ namespace RavenFS.Rdc.Multipart
 				}
 
 				seedBytes += (to - from);
-				localFile.CopyToAsync(synchronizingFile, from, to)
+				localFile.CopyToAsync(synchronizingFile, from, to - 1)
 					.ContinueWith(t => ContinueProcessingIfNotFaulted(t));
 			}
 			else

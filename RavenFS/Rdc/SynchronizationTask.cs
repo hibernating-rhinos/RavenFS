@@ -40,7 +40,7 @@ namespace RavenFS.Rdc
 		{
 			foreach (var destination in GetSynchronizationDestinations())
 			{
-				string destinationUrl = destination;
+				var destinationUrl = destination;
 
 				if (!synchronizationQueue.CanSynchronizeTo(destinationUrl))
 				{

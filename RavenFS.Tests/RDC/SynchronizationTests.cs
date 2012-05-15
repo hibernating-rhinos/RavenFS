@@ -70,6 +70,39 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Theory]
+		[InlineData(5000)]
+		public void Should_have_the_same_content(int size)
+		{
+			var sourceContent = RdcTestUtils.PrepareSourceStream(size);
+			sourceContent.Position = 0;
+			var destinationContent = new RandomlyModifiedStream(sourceContent, 0.01);
+			sourceContent.Position = 0;
+			var destinationClient = NewClient(0);
+			var sourceClient = NewClient(1);
+
+			destinationClient.UploadAsync("test.txt", new NameValueCollection(), destinationContent).Wait();
+			sourceContent.Position = 0;
+			sourceClient.UploadAsync("test.txt", new NameValueCollection(), sourceContent).Wait();
+
+			SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
+
+			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
+
+			string resultMd5 = null;
+			using (var resultFileContent = new MemoryStream())
+			{
+				destinationClient.DownloadAsync("test.txt", resultFileContent).Wait();
+				resultFileContent.Position = 0;
+				resultMd5 = resultFileContent.GetMD5Hash();
+			}
+
+			sourceContent.Position = 0;
+			var sourceMd5 = sourceContent.GetMD5Hash();
+
+			Assert.Equal(sourceMd5, resultMd5);
+		}
+
+		[Theory]
 		[InlineData(1024 * 1024 * 10)]
 		public void Big_file_test(long size)
 		{
