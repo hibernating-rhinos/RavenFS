@@ -3,7 +3,6 @@ namespace RavenFS.Rdc
 	using System;
 	using System.Collections.Concurrent;
 	using System.Linq;
-	using System.Threading;
 	using Client;
 	using Extensions;
 	using Storage;
@@ -16,8 +15,8 @@ namespace RavenFS.Rdc
 		private readonly ConcurrentDictionary<string, ConcurrentQueue<string>> pendingSynchronizations =
 			new ConcurrentDictionary<string, ConcurrentQueue<string>>();
 
-		private readonly ConcurrentDictionary<string, ConcurrentBag<string>> activeSynchronizations =
-			new ConcurrentDictionary<string, ConcurrentBag<string>>();
+		private readonly ConcurrentDictionary<string, ConcurrentDictionary<Guid, string>> activeSynchronizations =
+			new ConcurrentDictionary<string, ConcurrentDictionary<Guid, string>>();
 
 		public SynchronizationQueue(TransactionalStorage storage)
 		{
@@ -37,7 +36,7 @@ namespace RavenFS.Rdc
 
 		private int NumberOfActiveSynchronizationTasksFor(string destination)
 		{
-			return activeSynchronizations.GetOrAdd(destination, new ConcurrentBag<string>()).Count;
+			return activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<Guid, string>()).Count;
 		}
 
 		public bool CanSynchronizeTo(string destination)
@@ -73,26 +72,29 @@ namespace RavenFS.Rdc
 			return pendingForDestination.TryDequeue(out fileToSynchronize);
 		}
 
-		public void SynchronizationStarted(string fileName, string destination)
+		public void SynchronizationStarted(string fileName, Guid etag, string destination)
 		{
-			var activeForDestination = activeSynchronizations.GetOrAdd(destination, new ConcurrentBag<string>());
+			var activeForDestination = activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<Guid, string>());
 
-			activeForDestination.Add(fileName);
+			activeForDestination.TryAdd(etag, fileName);
 		}
 
-		public void SynchronizationFinished(string fileName, string destination)
+		public void SynchronizationFinished(string fileName, Guid etag, string destination)
 		{
-			ConcurrentBag<string> activeDestinationTasks;
+			ConcurrentDictionary<Guid, string> activeDestinationTasks;
 
 			activeSynchronizations.TryGetValue(destination, out activeDestinationTasks);
 			string removingItem;
-			// TODO arek - unused fileName parameter
-			if (activeDestinationTasks != null && activeDestinationTasks.TryTake(out removingItem))
+
+			if (activeDestinationTasks != null && activeDestinationTasks.TryRemove(etag, out removingItem))
 			{
-				return;
+				if(removingItem == fileName)
+				{
+					return;
+				}
 			}
 
-			throw new SynchronizationException(string.Format("File {0} wasn't synchronized to server destination server {1}", fileName, destination));
+			throw new SynchronizationException(string.Format("File {0} (ETag: {1}) wasn't synchronized to destination server {2}", fileName, etag, destination));
 		}
 	}
 }

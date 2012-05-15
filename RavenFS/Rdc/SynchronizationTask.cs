@@ -165,7 +165,9 @@ namespace RavenFS.Rdc
 				return SynchronizationExceptionReport(string.Format("File {0} is conflicted", fileName));
 			}
 
-			synchronizationQueue.SynchronizationStarted(fileName, destination);
+			var fileEtag = sourceMetadata.Value<Guid>("ETag");
+
+			synchronizationQueue.SynchronizationStarted(fileName, fileEtag, destination);
 
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 
@@ -258,7 +260,7 @@ namespace RavenFS.Rdc
 										}
 									}
 
-									synchronizationQueue.SynchronizationFinished(fileName, destination);
+									synchronizationQueue.SynchronizationFinished(fileName, fileEtag, destination);
 
 				              		return report;
 				              	});
