@@ -76,7 +76,6 @@ namespace RavenFS.Tests.RDC
 			var sourceContent = RdcTestUtils.PrepareSourceStream(size);
 			sourceContent.Position = 0;
 			var destinationContent = new RandomlyModifiedStream(sourceContent, 0.01);
-			sourceContent.Position = 0;
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 

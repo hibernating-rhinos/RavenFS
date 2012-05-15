@@ -40,7 +40,7 @@ namespace RavenFS.Rdc
 		{
 			foreach (var destination in GetSynchronizationDestinations())
 			{
-				var destinationUrl = destination;
+				string destinationUrl = destination;
 
 				if (!synchronizationQueue.CanSynchronizeTo(destinationUrl))
 				{
@@ -66,7 +66,7 @@ namespace RavenFS.Rdc
 
 					              	var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
 
-					            	ConfirmFilesUploadedFiles(filesNeedConfirmation, destinationClient)
+					            	ConfirmPushedFiles(filesNeedConfirmation, destinationClient)
 					            		.ContinueWith(confirmationTask =>
 					            		{
 											confirmationTask.AssertNotFaulted();
@@ -213,10 +213,9 @@ namespace RavenFS.Rdc
 										if(task.Result.Exception == null)
 										{
 											conflictActifactManager.RemoveArtifact(fileName);
-											CreateSyncingConfiguration(fileName, destination);
 										}
 									}
-
+									CreateSyncingConfiguration(fileName, destination);
 									synchronizationQueue.SynchronizationFinished(fileName, fileEtag, destination);
 
 				              		return report;
@@ -247,7 +246,7 @@ namespace RavenFS.Rdc
 			return filesToSynchronization;
 		}
 
-		private Task<IEnumerable<SynchronizationConfirmation>> ConfirmFilesUploadedFiles(IEnumerable<string> filesNeedConfirmation, RavenFileSystemClient destinationClient)
+		private Task<IEnumerable<SynchronizationConfirmation>> ConfirmPushedFiles(IEnumerable<string> filesNeedConfirmation, RavenFileSystemClient destinationClient)
 		{
 			if (filesNeedConfirmation.Count() == 0)
 			{

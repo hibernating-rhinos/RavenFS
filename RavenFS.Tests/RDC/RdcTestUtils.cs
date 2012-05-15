@@ -77,28 +77,17 @@ namespace RavenFS.Tests.RDC
 				return report;
 			}
 
-			public SynchronizationReport ResolveConflictAndSynchronize(RavenFileSystemClient destinationClient, string sourceServerUrl,
-																			  string fileName)
-			{
-				SynchronizationReport report = WaitForSynchronizationFinishOnDestination(destinationClient, fileName);
-
-				Assert.NotNull(report.Exception);
-
-				destinationClient.Synchronization.ResolveConflictAsync(sourceServerUrl, fileName, ConflictResolutionStrategy.RemoteVersion).Wait();
-
-				return WaitForSynchronizationFinishOnDestination(destinationClient, fileName);
-			}
-
-			public ConflictItem WaitForConflict(RavenFileSystemClient destination1Client, string fileName)
+			public ConflictItem WaitForConflict(RavenFileSystemClient destinationClient, string fileName)
 			{
 				ConflictItem conflict = null;
 				do
 				{
-					var result = destination1Client.Config.GetConfig(SynchronizationHelper.ConflictConfigNameForFile(fileName)).Result;
+					var result = destinationClient.Config.GetConfig(SynchronizationHelper.ConflictConfigNameForFile(fileName)).Result;
 					if (result != null)
 					{
 						conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(result["value"]);
 					}
+					Thread.Sleep(50);
 				} while (conflict == null);
 
 				return conflict;
