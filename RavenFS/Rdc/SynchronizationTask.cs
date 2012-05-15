@@ -66,85 +66,42 @@ namespace RavenFS.Rdc
 
 					              	var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
 
-									destinationClient.Synchronization.ConfirmFilesAsync(filesNeedConfirmation)
-										.ContinueWith(confirmationTask =>
-										{
-											if (confirmationTask.Result != null)
-											{
-												foreach (var confirmation in confirmationTask.Result)
-												{
-													if (confirmation.Status == FileStatus.Safe)
-													{
-														RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
-													}
-													else
-													{
-														synchronizationQueue.EnqueueSynchronization(destinationUrl, confirmation.FileName);
-													}
-												}
-											}
-										})
-										.ContinueWith(t =>
-										{
-											var syncingTasksNumber = synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl);
+					            	ConfirmFilesUploadedFiles(filesNeedConfirmation, destinationClient)
+					            		.ContinueWith(confirmationTask =>
+					            		{
+											confirmationTask.AssertNotFaulted();
 
-											for (var i = 0; i < syncingTasksNumber; i++)
-											{
-												string fileName;
-												if(synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out fileName))
-												{
-													StartSyncingToAsync(fileName, destinationUrl);
-												}
-												else
-												{
-													break;
-												}
-											}
-										});
+					            		    foreach (var confirmation in confirmationTask.Result)
+					            		    {
+					            		        if (confirmation.Status == FileStatus.Safe)
+					            		        {
+					            		            RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
+					            		        }
+					            		        else
+					            		        {
+					            		            synchronizationQueue.EnqueueSynchronization(destinationUrl, confirmation.FileName);
+					            		        }
+					            		    }
+					            		})
+					            		.ContinueWith(t =>
+					            		{
+					            		    for (var i = 0; i < synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl); i++)
+					            		    {
+					            		        string fileName;
+					            		        if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out fileName))
+					            		        {
+					            		            StartSyncingToAsync(fileName, destinationUrl);
+					            		        }
+					            		        else
+					            		        {
+					            		            break;
+					            		        }
+					            		    }
+					            		});
 					            });
 					    }
 					});
 			}
-		}
-
-		private IEnumerable<string> GetSyncingConfigurations(string destination)
-		{
-			IList<SynchronizationDetails> configObjects = null;
-			storage.Batch(
-				accessor =>
-				{
-					var configKeys =
-						from item in accessor.GetConfigNames()
-						where SynchronizationHelper.IsSyncName(item, destination)
-						select item;
-					configObjects =
-						(from item in configKeys
-						 select accessor.GetConfigurationValue<SynchronizationDetails>(item)).ToList();
-				});
-
-			return configObjects.Select(x => x.FileName);
-		}
-
-		private void CreateSyncingConfiguration(string fileName, string destination)
-		{
-			storage.Batch(accessor =>
-			              	{
-			              		var name = SynchronizationHelper.SyncNameForFile(fileName, destination);
-								accessor.SetConfigurationValue(name, new SynchronizationDetails()
-								                                     	{
-								                                     		DestinationUrl = destination,
-																			FileName = fileName
-								                                     	});
-			              	});
-		}
-
-		private void RemoveSyncingConfiguration(string fileName, string destination)
-		{
-			storage.Batch(accessor =>
-			{
-				var name = SynchronizationHelper.SyncNameForFile(fileName, destination);
-				accessor.DeleteConfig(name);
-			});
 		}
 
 		public Task<SynchronizationReport> StartSyncingToAsync(string fileName, string destination)
@@ -288,6 +245,55 @@ namespace RavenFS.Rdc
 					.Where(x => x.Metadata[SynchronizationConstants.RavenReplicationSource] != destinationId));
 
 			return filesToSynchronization;
+		}
+
+		private Task<IEnumerable<SynchronizationConfirmation>> ConfirmFilesUploadedFiles(IEnumerable<string> filesNeedConfirmation, RavenFileSystemClient destinationClient)
+		{
+			if (filesNeedConfirmation.Count() == 0)
+			{
+				return new CompletedTask<IEnumerable<SynchronizationConfirmation>>(Enumerable.Empty<SynchronizationConfirmation>());
+			}
+			return destinationClient.Synchronization.ConfirmFilesAsync(filesNeedConfirmation);
+		}
+
+		private IEnumerable<string> GetSyncingConfigurations(string destination)
+		{
+			IList<SynchronizationDetails> configObjects = null;
+			storage.Batch(
+				accessor =>
+				{
+					var configKeys =
+						from item in accessor.GetConfigNames()
+						where SynchronizationHelper.IsSyncName(item, destination)
+						select item;
+					configObjects =
+						(from item in configKeys
+						 select accessor.GetConfigurationValue<SynchronizationDetails>(item)).ToList();
+				});
+
+			return configObjects.Select(x => x.FileName);
+		}
+
+		private void CreateSyncingConfiguration(string fileName, string destination)
+		{
+			storage.Batch(accessor =>
+			{
+				var name = SynchronizationHelper.SyncNameForFile(fileName, destination);
+				accessor.SetConfigurationValue(name, new SynchronizationDetails()
+				{
+					DestinationUrl = destination,
+					FileName = fileName
+				});
+			});
+		}
+
+		private void RemoveSyncingConfiguration(string fileName, string destination)
+		{
+			storage.Batch(accessor =>
+			{
+				var name = SynchronizationHelper.SyncNameForFile(fileName, destination);
+				accessor.DeleteConfig(name);
+			});
 		}
 
 		private Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, string fileName, SignatureManifest sourceSignatureManifest, NameValueCollection sourceMetadata)

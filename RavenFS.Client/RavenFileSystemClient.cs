@@ -710,13 +710,6 @@ namespace RavenFS.Client
 				request.ContentType = "application/json";
 				request.Method = "POST";
 
-				if (sentFiles.Count() == 0)
-				{
-					var tcs = new TaskCompletionSource<IEnumerable<SynchronizationConfirmation>>();
-					tcs.SetResult(null);
-					return tcs.Task;
-				}
-
 				return request.GetRequestStreamAsync()
 					.ContinueWith(
 						task =>
