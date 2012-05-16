@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace RavenFS.Client
 {
+	using Newtonsoft.Json;
+
 	///<summary>
 	/// Extension methods to handle common scenarios
 	///</summary>
@@ -28,9 +30,9 @@ namespace RavenFS.Client
 					if (httpWebResponse.StatusCode == HttpStatusCode.PreconditionFailed)
 					{
 						using (var stream = webException.Response.GetResponseStream())
-						using (var reader = new StreamReader(stream))
 						{
-							throw new SynchronizationException(reader.ReadToEnd().Trim('\"'));
+							throw new SynchronizationException(
+								new JsonSerializer().Deserialize<string>(new JsonTextReader(new StreamReader(stream))));
 						}
 					}
 				}
@@ -65,9 +67,9 @@ namespace RavenFS.Client
 					if (httpWebResponse.StatusCode == HttpStatusCode.PreconditionFailed)
 					{
 						using (var stream = webException.Response.GetResponseStream())
-						using (var reader = new StreamReader(stream))
 						{
-							throw new SynchronizationException(reader.ReadToEnd().Trim('\"'));
+							throw new SynchronizationException(
+								new JsonSerializer().Deserialize<string>(new JsonTextReader(new StreamReader(stream))));
 						}
 					}
 				}
