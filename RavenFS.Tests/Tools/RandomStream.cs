@@ -48,7 +48,27 @@ namespace RavenFS.Tests.Tools
                 return 0;
             }
             var newValues = new byte[length];
-            _random.NextBytes(newValues);
+
+			// TODO: Temporary solution to avoid multipart parsing problems
+			// if characters with special meaning for parser (\r \n) occur in body part.
+			// Next version of WepApi will fix that issue:
+			// http://aspnetwebstack.codeplex.com/SourceControl/changeset/changes/fc9958338137
+
+            //_random.NextBytes(newValues);
+
+        	const byte carriageReturn = 0xd;
+        	const byte newLine = 0xa;
+
+        	for (int i = 0; i < newValues.Length; i++)
+        	{
+        		newValues[i] = (byte) _random.Next(byte.MaxValue);
+        		
+				if(newValues[i] == carriageReturn || newValues[i] == newLine)
+				{
+					newValues[i] = (byte) _random.Next(carriageReturn + 1, byte.MaxValue);
+				}
+        	}
+
             Array.Copy(newValues, 0, buffer, offset, length);
             _position += length;
             return Convert.ToInt32(length);

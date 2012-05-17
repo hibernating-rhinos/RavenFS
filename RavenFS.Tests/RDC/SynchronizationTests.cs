@@ -106,7 +106,7 @@ namespace RavenFS.Tests.RDC
 		public void Big_file_test(long size)
 		{
 			var sourceContent = new RandomStream(size);
-			var destinationContent = new RandomlyModifiedStream(new RandomStream(size, 1), 0.01);
+			var destinationContent = new RandomlyModifiedStream(new RandomStream(size), 0.01);
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
@@ -130,7 +130,7 @@ namespace RavenFS.Tests.RDC
 		public void Big_character_file_test(long size)
 		{
 			var sourceContent = new RandomCharacterStream(size);
-			var destinationContent = new RandomlyModifiedStream(new RandomCharacterStream(size, 1), 0.01);
+			var destinationContent = new RandomlyModifiedStream(new RandomCharacterStream(size), 0.01);
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
@@ -152,7 +152,7 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Destination_should_know_what_is_last_file_etag_after_synchronization()
 		{
-			var sourceContent = new RandomStream(10, 1);
+			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
 		                       {
 		                           {"SomeTest-metadata", "some-value"}
@@ -175,7 +175,7 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Destination_should_not_override_last_etag_if_greater_value_exists()
 		{
-			var sourceContent = new RandomStream(10, 1);
+			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
 		                       {
 		                           {"SomeTest-metadata", "some-value"}
@@ -209,7 +209,7 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Source_should_upload_file_to_destination_if_doesnt_exist_there()
 		{
-			var sourceContent = new RandomStream(10, 1);
+			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
 		                       {
 		                           {"SomeTest-metadata", "some-value"}
@@ -230,7 +230,7 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Should_modify_etag_after_upload()
 		{
-			var sourceContent1 = new RandomStream(10, 1);
+			var sourceContent1 = new RandomStream(10);
 			var sourceClient = NewClient(1);
 			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
 			var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
@@ -245,7 +245,7 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Should_be_possible_to_apply_conflict()
 		{
-			var content = new RandomStream(10, 1);
+			var content = new RandomStream(10);
 			var client = NewClient(1);
 			client.UploadAsync("test.bin", new NameValueCollection(), content).Wait();
 			var guid = Guid.NewGuid().ToString();
@@ -275,7 +275,7 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Should_mark_file_as_conflicted_when_two_differnet_versions()
 		{
-			var sourceContent = new RandomStream(10, 1);
+			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
 		                       {
 		                           {"SomeTest-metadata", "some-value"}
@@ -297,7 +297,7 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Must_not_synchronize_conflicted_file()
 		{
-			var sourceContent = new RandomStream(10, 1);
+			var sourceContent = new RandomStream(10);
 			var sourceMetadataWithConflict = new NameValueCollection
 		                       {
 		                           {SynchronizationConstants.RavenReplicationConflict, "true"}
@@ -317,7 +317,7 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Shold_change_history_after_upload()
 		{
-			var sourceContent1 = new RandomStream(10, 1);
+			var sourceContent1 = new RandomStream(10);
 			var sourceClient = NewClient(1);
 			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
 			var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenReplicationHistory];
@@ -337,7 +337,7 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Should_change_history_after_metadata_change()
 		{
-			var sourceContent1 = new RandomStream(10, 1);
+			var sourceContent1 = new RandomStream(10);
 			var sourceClient = NewClient(1);
 			sourceClient.UploadAsync("test.bin", new NameValueCollection { { "test", "Change me" } }, sourceContent1).Wait();
 			var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenReplicationHistory];
@@ -439,7 +439,7 @@ namespace RavenFS.Tests.RDC
 			foreach (var item in files)
 			{
 				Task.WaitAll(
-					destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(300000, 1), 0.01)),
+					destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(300000), 0.01)),
 					sourceClient.UploadAsync(item, new RandomStream(300000, 1)));
 
 				// try to synchronize and resolve conflicts
@@ -469,8 +469,8 @@ namespace RavenFS.Tests.RDC
 			foreach (var item in files)
 			{
 				Task.WaitAll(
-					destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(1000, 1), 0.01)),
-					sourceClient.UploadAsync(item, new RandomStream(1000, 1)));
+					destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(1000), 0.01)),
+					sourceClient.UploadAsync(item, new RandomStream(1000)));
 
 				RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, item);
 			}
