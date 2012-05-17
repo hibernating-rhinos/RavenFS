@@ -19,8 +19,8 @@ namespace RavenFS.Rdc
 
             // TODO: This code is causing a Stack Over Flow Exception, not sure how to fix this, so this is a workaround for now
 
-		    //Task.Factory.StartNew(() =>
-		    //                          {
+		    Task.Factory.StartNew(() =>
+		                              {
 		                                  try
 		                                  {
                                               foreach (var item in needList)
@@ -47,7 +47,7 @@ namespace RavenFS.Rdc
                                               log.ErrorException("Error during need list parsing", e);
 		                                      tcs.TrySetException(e);
 		                                  }
-		      //                        });
+		                              });
 
 		    return tcs.Task;
 		}
