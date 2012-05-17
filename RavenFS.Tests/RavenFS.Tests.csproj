@@ -84,6 +84,7 @@
     <Compile Include="MtaFactAttribute.cs" />
     <Compile Include="Notifications.cs" />
     <Compile Include="RDC\ConflictNotificationTests.cs" />
+    <Compile Include="RDC\NeedListParserTest.cs" />
     <Compile Include="RDC\SynchronizationTests.cs" />
     <Compile Include="RDC\IO\RandomlyModifiedStream.cs" />
     <Compile Include="RDC\IO\RandomStream.cs" />
