@@ -24,7 +24,7 @@ namespace RavenFS.Infrastructure
         {
             get
             {
-                return ((RavenFileSystem) ControllerContext.Configuration.ServiceResolver.GetService(typeof (RavenFileSystem)))
+                return ((RavenFileSystem) ControllerContext.Configuration.DependencyResolver.GetService(typeof (RavenFileSystem)))
                     .Publisher.SignalRDependencyResolver;
             }
         }
@@ -47,7 +47,7 @@ namespace RavenFS.Infrastructure
             connection.Initialize(Resolver);
 
             var response = new HttpResponseMessage();
-            var hostContext = new HostContext(new WebApiRequest(controllerContext.Request), new WebApiResponse(response), controllerContext.Request.GetUserPrincipal());
+            var hostContext = new HostContext(new WebApiRequest(controllerContext.Request), new WebApiResponse(response), User);
 
             return connection.ProcessRequestAsync(hostContext).ContinueWith(t => response);
         }

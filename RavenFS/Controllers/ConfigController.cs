@@ -24,7 +24,7 @@ namespace RavenFS.Controllers
 			return names;
 		}
 
-		public HttpResponseMessage<NameValueCollection> Get(string name)
+		public HttpResponseMessage Get(string name)
 		{
 			try
 			{
@@ -33,11 +33,11 @@ namespace RavenFS.Controllers
 				{
 					nameValueCollection = accessor.GetConfig(name);
 				});
-				return new HttpResponseMessage<NameValueCollection>(nameValueCollection);
+				return Request.CreateResponse(HttpStatusCode.OK, nameValueCollection);
 			}
 			catch (FileNotFoundException)
 			{
-				return new HttpResponseMessage<NameValueCollection>(HttpStatusCode.NotFound);
+				return Request.CreateResponse(HttpStatusCode.NotFound);
 			}
 
 		}

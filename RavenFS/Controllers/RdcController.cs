@@ -9,8 +9,11 @@ using RavenFS.Rdc.Wrapper.Unmanaged;
 
 namespace RavenFS.Controllers
 {
+	using System.Web.Http;
+
 	public class RdcController : RavenController
 	{
+		[AcceptVerbs("GET")]
 		public HttpResponseMessage Signatures(string filename)
 		{
 			filename = Uri.UnescapeDataString(filename);
@@ -23,6 +26,7 @@ namespace RavenFS.Controllers
 		    }
 		}
 
+		[AcceptVerbs("GET")]
 		public RdcStats Stats()
 		{
 			return new RdcStats
@@ -31,7 +35,8 @@ namespace RavenFS.Controllers
 			};
 		}
 
-		public HttpResponseMessage<SignatureManifest> Manifest(string filename)
+		[AcceptVerbs("GET")]
+		public HttpResponseMessage Manifest(string filename)
 		{
 			filename = Uri.UnescapeDataString(filename);
 		    long? fileLength = null;
@@ -41,7 +46,7 @@ namespace RavenFS.Controllers
 			}
 			catch (FileNotFoundException)
 			{
-				return new HttpResponseMessage<SignatureManifest>(HttpStatusCode.NotFound);
+				return Request.CreateResponse(HttpStatusCode.NotFound);
 			}
 
 			using (var signatureRepository = new StorageSignatureRepository(Storage, filename))
@@ -49,7 +54,7 @@ namespace RavenFS.Controllers
 				var rdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
 				var signatureManifest = rdcManager.GetSignatureManifest(new DataInfo {Name = filename});
 				signatureManifest.FileLength = fileLength ?? 0;
-				return new HttpResponseMessage<SignatureManifest>(signatureManifest);
+				return Request.CreateResponse(HttpStatusCode.OK, signatureManifest);
 			}
 		}
 

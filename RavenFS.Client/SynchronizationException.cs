@@ -19,8 +19,10 @@ namespace RavenFS.Client
 #if !SILVERLIGHT
 		protected SynchronizationException(
 			SerializationInfo info,
-			StreamingContext context) : base(info, context)
+			StreamingContext context)
+			: this(info.GetString("ExceptionMessage"))
 		{
+			
 		}
 #endif
     }

@@ -39,7 +39,7 @@ namespace RavenFS.Controllers
 		}
 
 		[AcceptVerbs("POST")]
-		public Task<HttpResponseMessage<SynchronizationReport>> MultipartProceed()
+		public Task<HttpResponseMessage> MultipartProceed()
 		{
 			if (!Request.Content.IsMimeMultipartContent())
 			{
@@ -99,8 +99,9 @@ namespace RavenFS.Controllers
 				              		                                                         sourceMetadata);
 
 				              		var multipartProcessor = new SynchronizationMultipartProcessor(fileName,
-				              		                                                               multipartReadTask.Result.
-				              		                                                               	GetEnumerator(), localFile,
+				              		                                                               multipartReadTask.Result.Contents
+																								   .GetEnumerator(), 
+																								   localFile,
 				              		                                                               synchronizingFile);
 
 				              		return multipartProcessor.ProcessAsync()
@@ -174,7 +175,7 @@ namespace RavenFS.Controllers
 				              			.ContinueWith(task =>
 				              			              	{
 				              			              		task.AssertNotFaulted();
-				              			              		return new HttpResponseMessage<SynchronizationReport>(task.Result);
+				              			              		return Request.CreateResponse(HttpStatusCode.OK, task.Result);
 				              			              	});
 				              	}).Unwrap();
 		}
@@ -232,7 +233,7 @@ namespace RavenFS.Controllers
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage<SynchronizationReport> Status(string fileName)
+		public HttpResponseMessage Status(string fileName)
 		{
 			SynchronizationReport preResult = null;
 			Storage.Batch(
@@ -241,11 +242,11 @@ namespace RavenFS.Controllers
 					var name = SynchronizationHelper.SyncResultNameForFile(fileName);
 					accessor.TryGetConfigurationValue(name, out preResult);
 				});
-			return new HttpResponseMessage<SynchronizationReport>(preResult);
+			return Request.CreateResponse(HttpStatusCode.OK, preResult);
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage<IEnumerable<SynchronizationReport>> Finished(int page, int pageSize)
+		public HttpResponseMessage Finished(int page, int pageSize)
 		{
 			IList<SynchronizationReport> configObjects = null;
 			Storage.Batch(
@@ -259,19 +260,19 @@ namespace RavenFS.Controllers
 						(from item in configKeys.Skip(pageSize * page).Take(pageSize)
 						 select accessor.GetConfigurationValue<SynchronizationReport>(item)).ToList();
 				});
-			return new HttpResponseMessage<IEnumerable<SynchronizationReport>>(configObjects);
+			return Request.CreateResponse(HttpStatusCode.OK, configObjects);
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage<IEnumerable<SynchronizationDetails>> Active(int page, int pageSize)
+		public HttpResponseMessage Active(int page, int pageSize)
 		{
-			return new HttpResponseMessage<IEnumerable<SynchronizationDetails>>(SynchronizationTask.Queue.Active.Skip(pageSize * page).Take(pageSize));
+			return Request.CreateResponse(HttpStatusCode.OK, SynchronizationTask.Queue.Active.Skip(pageSize * page).Take(pageSize));
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage<IEnumerable<SynchronizationDetails>> Pending(int page, int pageSize)
+		public HttpResponseMessage Pending(int page, int pageSize)
 		{
-			return new HttpResponseMessage<IEnumerable<SynchronizationDetails>>(SynchronizationTask.Queue.Pending.Skip(pageSize * page).Take(pageSize));
+			return Request.CreateResponse(HttpStatusCode.OK, SynchronizationTask.Queue.Pending.Skip(pageSize * page).Take(pageSize));
 		}
 
 		[AcceptVerbs("PATCH")]
@@ -336,11 +337,11 @@ namespace RavenFS.Controllers
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage<SourceSynchronizationInformation> LastSynchronization(string from)
+		public HttpResponseMessage LastSynchronization(string from)
 		{
 			SourceSynchronizationInformation lastEtag = null;
 			Storage.Batch(accessor => lastEtag = GetLastSynchronization(StringUtils.RemoveTrailingSlashAndEncode(from), accessor));
-			return new HttpResponseMessage<SourceSynchronizationInformation>(lastEtag);
+			return Request.CreateResponse(HttpStatusCode.OK, lastEtag);
 		}
 
 		[AcceptVerbs("GET")]

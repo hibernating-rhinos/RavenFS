@@ -6,8 +6,11 @@ using RavenFS.Storage;
 
 namespace RavenFS.Controllers
 {
+	using System.Web.Http;
+
 	public class SearchController : RavenController
 	{
+		[AcceptVerbs("GET")]
 		public string[] Terms()
 		{
 			IndexSearcher searcher;
@@ -17,7 +20,7 @@ namespace RavenFS.Controllers
 			}
 		}
 
-		public SearchResults Get(string query, string[] sort)
+		public SearchResults Get(string query, [FromUri] string[] sort)
 		{
 			int results;
 			var keys = Search.Query(query, sort, Paging.Start, Paging.PageSize, out results);

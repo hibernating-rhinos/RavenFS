@@ -7,6 +7,7 @@ namespace RavenFS.Controllers
 {
 	public class FoldersController : RavenController
 	{
+		[AcceptVerbs("GET")]
 		public IEnumerable<string> Subdirectories(string directory)
 		{
 			var add = directory == null ? 0 : 1;

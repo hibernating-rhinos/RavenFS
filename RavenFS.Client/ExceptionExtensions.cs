@@ -31,8 +31,7 @@ namespace RavenFS.Client
 					{
 						using (var stream = webException.Response.GetResponseStream())
 						{
-							throw new SynchronizationException(
-								new JsonSerializer().Deserialize<string>(new JsonTextReader(new StreamReader(stream))));
+							throw new JsonSerializer().Deserialize<SynchronizationException>(new JsonTextReader(new StreamReader(stream)));
 						}
 					}
 				}
@@ -68,8 +67,7 @@ namespace RavenFS.Client
 					{
 						using (var stream = webException.Response.GetResponseStream())
 						{
-							throw new SynchronizationException(
-								new JsonSerializer().Deserialize<string>(new JsonTextReader(new StreamReader(stream))));
+							throw new JsonSerializer().Deserialize<SynchronizationException>(new JsonTextReader(new StreamReader(stream)));
 						}
 					}
 				}

@@ -17,6 +17,7 @@ using RavenFS.Util;
 namespace RavenFS.Controllers
 {
 	using System.Net;
+	using Client;
 	using Rdc;
 	using Rdc.Conflictuality;
 
@@ -38,7 +39,7 @@ namespace RavenFS.Controllers
 			get
 			{
 				if (ravenFileSystem == null)
-					ravenFileSystem = (RavenFileSystem) ControllerContext.Configuration.ServiceResolver.GetService(typeof (RavenFileSystem));
+					ravenFileSystem = (RavenFileSystem) ControllerContext.Configuration.DependencyResolver.GetService(typeof (RavenFileSystem));
 				return ravenFileSystem;
 			}
 		}
@@ -198,8 +199,9 @@ namespace RavenFS.Controllers
 			}
 			else
 			{
-				throw new HttpResponseException(string.Format("File {0} is being synced", fileName),
-				                                HttpStatusCode.PreconditionFailed);
+				throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.PreconditionFailed,
+				                                                            new SynchronizationException(
+				                                                            	string.Format("File {0} is being synced", fileName))));
 			}
 		}
 	}

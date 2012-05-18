@@ -9,6 +9,8 @@ using Newtonsoft.Json;
 
 namespace RavenFS.Infrastructure
 {
+	using System.Net.Http;
+
 	public class JsonNetFormatter : MediaTypeFormatter
 	{
 		private readonly JsonSerializerSettings _jsonSerializerSettings;
@@ -19,25 +21,20 @@ namespace RavenFS.Infrastructure
 
 			// Fill out the mediatype and encoding we support 
 			SupportedMediaTypes.Add(new MediaTypeHeaderValue("application/json"));
-			Encoding = new UTF8Encoding(false, true);
+			SupportedEncodings.Add(new UTF8Encoding(false, true));
 		}
 
-		protected override bool CanReadType(Type type)
-		{
-			if (type == typeof(IKeyValueModel))
-			{
-				return false;
-			}
-
-			return true;
-		}
-
-		protected override bool CanWriteType(Type type)
+		public override bool CanReadType(Type type)
 		{
 			return true;
 		}
 
-		protected override Task<object> OnReadFromStreamAsync(Type type, Stream stream, HttpContentHeaders contentHeaders, FormatterContext formatterContext)
+		public override bool CanWriteType(Type type)
+		{
+			return true;
+		}
+
+		public override Task<object> ReadFromStreamAsync(Type type, Stream stream, HttpContent content, IFormatterLogger formatterLogger)
 		{
 			// Create a serializer 
 			JsonSerializer serializer = JsonSerializer.Create(_jsonSerializerSettings);
@@ -45,7 +42,7 @@ namespace RavenFS.Infrastructure
 			// Create task reading the content 
 			return Task.Factory.StartNew(() =>
 			{
-				using (StreamReader streamReader = new StreamReader(stream, Encoding))
+				using (StreamReader streamReader = new StreamReader(stream, SupportedEncodings[0]))
 				{
 					using (JsonTextReader jsonTextReader = new JsonTextReader(streamReader))
 					{
@@ -55,7 +52,7 @@ namespace RavenFS.Infrastructure
 			});
 		}
 
-		protected override Task OnWriteToStreamAsync(Type type, object value, Stream stream, HttpContentHeaders contentHeaders, FormatterContext formatterContext, TransportContext transportContext)
+		public override Task WriteToStreamAsync(Type type, object value, Stream stream, HttpContent content, TransportContext transportContext)
 		{
 			// Create a serializer 
 			JsonSerializer serializer = JsonSerializer.Create(_jsonSerializerSettings);
@@ -63,7 +60,7 @@ namespace RavenFS.Infrastructure
 			// Create task writing the serialized content 
 			return Task.Factory.StartNew(() =>
 			{
-				using (StreamWriter streamWriter = new StreamWriter(stream, Encoding))
+				using (StreamWriter streamWriter = new StreamWriter(stream, SupportedEncodings[0]))
 				{
 					using (JsonTextWriter jsonTextWriter = new JsonTextWriter(streamWriter))
 					{
@@ -72,5 +69,5 @@ namespace RavenFS.Infrastructure
 				}
 			});
 		}
-	} 
+	}
 }

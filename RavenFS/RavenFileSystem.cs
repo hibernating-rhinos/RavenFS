@@ -1,26 +1,22 @@
 using System;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Web.Http;
-using System.Web.Http.ModelBinding;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using RavenFS.Controllers;
 using RavenFS.Extensions;
 using RavenFS.Infrastructure;
-using RavenFS.Infrastructure.Workarounds;
 using RavenFS.Notifications;
 using RavenFS.Rdc;
 using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
 using RavenFS.Util;
-using SignalR.Infrastructure;
 
 namespace RavenFS
 {
+	using System.Linq;
 	using System.Web;
+	using System.Web.Http;
 	using System.Web.Http.SelfHost;
 	using Rdc.Conflictuality;
 
@@ -30,8 +26,8 @@ namespace RavenFS
 		private readonly TransactionalStorage storage;
 		private readonly IndexStorage search;
 		private readonly SigGenerator sigGenerator;
-	    private readonly NotificationPublisher notificationPublisher;
-	    private readonly HistoryUpdater historyUpdater;
+		private readonly NotificationPublisher notificationPublisher;
+		private readonly HistoryUpdater historyUpdater;
 		private readonly FileLockManager fileLockManager;
 		private readonly SynchronizationTask synchronizationTask;
 		private readonly ConflictActifactManager conflictActifactManager;
@@ -57,14 +53,14 @@ namespace RavenFS
 			storage = new TransactionalStorage(this.path, new NameValueCollection());
 			search = new IndexStorage(this.path, new NameValueCollection());
 			sigGenerator = new SigGenerator();
-		    var replicationHiLo = new ReplicationHiLo(storage);
-		    var sequenceActions = new SequenceActions(storage);
-            notificationPublisher = new NotificationPublisher();
+			var replicationHiLo = new ReplicationHiLo(storage);
+			var sequenceActions = new SequenceActions(storage);
+			notificationPublisher = new NotificationPublisher();
 			fileLockManager = new FileLockManager();
 			storage.Initialize();
 			search.Initialize();
-            var uuidGenerator = new UuidGenerator(sequenceActions);
-            historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
+			var uuidGenerator = new UuidGenerator(sequenceActions);
+			historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
 			conflictActifactManager = new ConflictActifactManager(storage);
 			conflictDetector = new ConflictDetector();
@@ -100,15 +96,15 @@ namespace RavenFS
 			get { return sigGenerator; }
 		}
 
-	    public NotificationPublisher Publisher
-	    {
-	        get { return notificationPublisher; }
-	    }
+		public NotificationPublisher Publisher
+		{
+			get { return notificationPublisher; }
+		}
 
-	    public HistoryUpdater HistoryUpdater
-	    {
-	        get { return historyUpdater; }
-	    }
+		public HistoryUpdater HistoryUpdater
+		{
+			get { return historyUpdater; }
+		}
 
 		public FileLockManager FileLockManager
 		{
@@ -153,33 +149,30 @@ namespace RavenFS
 			}
 		}
 
-	    [MethodImpl(MethodImplOptions.Synchronized)]
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		public void Start(HttpConfiguration config)
-	    {
-	    	var selfHost = config as HttpSelfHostConfiguration;
+		{
+			var selfHost = config as HttpSelfHostConfiguration;
 
-	    	if (selfHost != null)
-	    	{
-	    		baseAddress = selfHost.BaseAddress;
-	    	}
-
-			config.ServiceResolver.SetResolver(type =>
+			if (selfHost != null)
 			{
-				if(type == typeof(RavenFileSystem))
+				baseAddress = selfHost.BaseAddress;
+			}
+
+			config.DependencyResolver = new DelegateDependencyResolver(type =>
+			{
+				if (type == typeof(RavenFileSystem))
 					return this;
 				return null;
 			}, type =>
 			{
 				if (type == typeof(RavenFileSystem))
-					return new[] {this};
+					return new[] { this };
 				return Enumerable.Empty<object>();
 			});
 
 			// we don't like XML, let us remove support for it.
 			config.Formatters.XmlFormatter.SupportedMediaTypes.Clear();
-
-			// Workaround for an issue with paraemters and body not mixing properly
-			config.ServiceResolver.SetService(typeof(IRequestContentReadPolicy), new ReadAsSingleObjectPolicy());
 
 			// the default json parser can't handle NameValueCollection
 			var serializerSettings = new JsonSerializerSettings();
@@ -192,7 +185,7 @@ namespace RavenFS
 			config.Routes.MapHttpRoute(
 				name: "ClientAccessPolicy.xml",
 				routeTemplate: "ClientAccessPolicy.xml",
-				defaults: new {controller = "static", action = "ClientAccessPolicy"});
+				defaults: new { controller = "static", action = "ClientAccessPolicy" });
 
 			config.Routes.MapHttpRoute(
 			name: "favicon.ico",
@@ -216,11 +209,11 @@ namespace RavenFS
 				defaults: new { controller = "rdc", filename = RouteParameter.Optional }
 				);
 
-	        config.Routes.MapHttpRoute(
-                name: "synchronizationWithFile",
-                routeTemplate: "synchronization/{action}/{*filename}",
-                defaults: new { controller = "synchronization", filename = RouteParameter.Optional }
-                );
+			config.Routes.MapHttpRoute(
+				name: "synchronizationWithFile",
+				routeTemplate: "synchronization/{action}/{*filename}",
+				defaults: new { controller = "synchronization", filename = RouteParameter.Optional }
+				);
 
 			config.Routes.MapHttpRoute(
 				name: "folders",
@@ -240,10 +233,10 @@ namespace RavenFS
 				defaults: new { controller = "files", name = RouteParameter.Optional }
 				);
 
-            config.Routes.MapHttpRoute(
-                "Notifications", 
-                routeTemplate: "notifications/{*path}", 
-                defaults: new {controller = "notifications"});
+			config.Routes.MapHttpRoute(
+				"Notifications",
+				routeTemplate: "notifications/{*path}",
+				defaults: new { controller = "notifications" });
 
 		}
 	}
