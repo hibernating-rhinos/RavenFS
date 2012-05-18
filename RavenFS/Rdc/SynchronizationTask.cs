@@ -67,56 +67,55 @@ namespace RavenFS.Rdc
 				destinationClient.Synchronization.CheckIfAvailableAsync()
 					.ContinueWith(availabilityTask =>
 					{
-					    if (availabilityTask.Result)
-					    {
-					    	destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
-					            .ContinueWith(etagTask =>
-					            {
-					              	var filesToSynchronization = GetFilesToSynchronization(etagTask, 100);
+						if (!availabilityTask.Result)
+							return;
+						destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
+							.ContinueWith(etagTask =>
+							{
+								var filesToSynchronization = GetFilesToSynchronization(etagTask, 100);
 
-					              	foreach (var fileHeader in filesToSynchronization)
-					              	{
-										synchronizationQueue.EnqueueSynchronization(destinationUrl, fileHeader.Name);
-					              	}
+								foreach (var fileHeader in filesToSynchronization)
+								{
+									synchronizationQueue.EnqueueSynchronization(destinationUrl, fileHeader.Name);
+								}
 
-					              	var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
+								var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
 
-					            	ConfirmPushedFiles(filesNeedConfirmation, destinationClient)
-					            		.ContinueWith(confirmationTask =>
-					            		{
-											confirmationTask.AssertNotFaulted();
+								ConfirmPushedFiles(filesNeedConfirmation, destinationClient)
+									.ContinueWith(confirmationTask =>
+									{
+										confirmationTask.AssertNotFaulted();
 
-					            		    foreach (var confirmation in confirmationTask.Result)
-					            		    {
-					            		        if (confirmation.Status == FileStatus.Safe)
-					            		        {
-					            		            RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
-					            		        }
-					            		        else
-					            		        {
-					            		            synchronizationQueue.EnqueueSynchronization(destinationUrl, confirmation.FileName);
-					            		        }
-					            		    }
-					            		})
-					            		.ContinueWith(t =>
-					            		{
-											t.AssertNotFaulted();
+										foreach (var confirmation in confirmationTask.Result)
+										{
+											if (confirmation.Status == FileStatus.Safe)
+											{
+												RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
+											}
+											else
+											{
+												synchronizationQueue.EnqueueSynchronization(destinationUrl, confirmation.FileName);
+											}
+										}
+									})
+									.ContinueWith(t =>
+									{
+										t.AssertNotFaulted();
 
-					            		    for (var i = 0; i < synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl); i++)
-					            		    {
-					            		        string fileName;
-					            		        if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out fileName))
-					            		        {
-					            		            StartSyncingToAsync(fileName, destinationUrl);
-					            		        }
-					            		        else
-					            		        {
-					            		            break;
-					            		        }
-					            		    }
-					            		});
-					            });
-					    }
+										for (var i = 0; i < synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl); i++)
+										{
+											string fileName;
+											if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out fileName))
+											{
+												StartSyncingToAsync(fileName, destinationUrl);
+											}
+											else
+											{
+												break;
+											}
+										}
+									});
+							});
 					});
 			}
 		}
@@ -263,16 +262,16 @@ namespace RavenFS.Rdc
 			return filesToSynchronization;
 		}
 
-		private Task<IEnumerable<SynchronizationConfirmation>> ConfirmPushedFiles(IEnumerable<string> filesNeedConfirmation, RavenFileSystemClient destinationClient)
+		private Task<IEnumerable<SynchronizationConfirmation>> ConfirmPushedFiles(List<string> filesNeedConfirmation, RavenFileSystemClient destinationClient)
 		{
-			if (filesNeedConfirmation.Count() == 0)
+			if (filesNeedConfirmation.Count == 0)
 			{
 				return new CompletedTask<IEnumerable<SynchronizationConfirmation>>(Enumerable.Empty<SynchronizationConfirmation>());
 			}
 			return destinationClient.Synchronization.ConfirmFilesAsync(filesNeedConfirmation);
 		}
 
-		private IEnumerable<string> GetSyncingConfigurations(string destination)
+		private List<string> GetSyncingConfigurations(string destination)
 		{
 			IList<SynchronizationDetails> configObjects = null;
 			storage.Batch(
@@ -287,7 +286,7 @@ namespace RavenFS.Rdc
 						 select accessor.GetConfigurationValue<SynchronizationDetails>(item)).ToList();
 				});
 
-			return configObjects.Select(x => x.FileName);
+			return configObjects.Select(x => x.FileName).ToList();
 		}
 
 		private void CreateSyncingConfiguration(string fileName, string destination)

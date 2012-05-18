@@ -44,8 +44,8 @@ namespace RavenFS.Rdc
 			{
 				return from destinationActive in activeSynchronizations
 				       from activeFile in destinationActive.Value
-				       select new SynchronizationDetails()
-				              	{
+				       select new SynchronizationDetails
+				       {
 				              		DestinationUrl = destinationActive.Key,
 				              		FileName = activeFile.Value
 				              	};
@@ -95,7 +95,8 @@ namespace RavenFS.Rdc
 			ConcurrentQueue<string> pendingForDestination;
 			if (pendingSynchronizations.TryGetValue(destination, out pendingForDestination) == false)
 			{
-				throw new SynchronizationException(string.Format("No pending tasks found for {0}", destination));
+				fileToSynchronize = null;
+				return false;
 			}
 
 			return pendingForDestination.TryDequeue(out fileToSynchronize);
@@ -112,10 +113,12 @@ namespace RavenFS.Rdc
 		{
 			ConcurrentDictionary<Guid, string> activeDestinationTasks;
 
-			activeSynchronizations.TryGetValue(destination, out activeDestinationTasks);
+			if (activeSynchronizations.TryGetValue(destination, out activeDestinationTasks) == false)
+				return;
+			
 			string removingItem;
 
-			if (activeDestinationTasks != null && activeDestinationTasks.TryRemove(etag, out removingItem))
+			if (activeDestinationTasks.TryRemove(etag, out removingItem))
 			{
 				if(removingItem == fileName)
 				{
