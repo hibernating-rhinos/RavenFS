@@ -1,23 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-namespace RavenFS.Tests.Tools
+namespace RavenFS.Tests.RDC.IO
 {
-    public class RandomlyModifiedStream : Stream
+	using System;
+	using System.IO;
+
+	public class RandomCharacterStream: Stream
     {
-        private readonly Stream _source;
-        private readonly double _probability;
+        private long _length;
+        private long _position;
         private Random _random;
 
-
-        public RandomlyModifiedStream(Stream source, double probability, int? seed = null)
+		public RandomCharacterStream(long length, int? seed = null)
         {
-            _source = source;
-            _probability = probability;
-
+            _length = length;
             if (seed != null)
             {
                 _random = new Random(seed.Value);
@@ -37,22 +31,30 @@ namespace RavenFS.Tests.Tools
         {
             throw new NotSupportedException();
         }
-        
+
         public override void SetLength(long value)
         {
             throw new NotSupportedException();
         }
 
+		private const string _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuwvxyz";
+
         public override int Read(byte[] buffer, int offset, int count)
-        {            
-            var result = _source.Read(buffer, offset, count);
-            if (_random.NextDouble() < _probability * result)
+        {
+            var length = Math.Min(_length - _position, count);
+            if (length < 1)
             {
-                var oneByte = new byte[1];
-                _random.NextBytes(oneByte);                
-                buffer[_random.Next(buffer.Length)] = BitConverter.GetBytes(buffer[_random.Next(buffer.Length)] ^ oneByte[0])[0];
+                return 0;
             }
-            return result;
+            var newValues = new byte[length];
+            for (int i = 0; i < length; i++)
+			{
+				newValues[i] = (byte) _chars[_random.Next(_chars.Length)];
+			}
+
+            Array.Copy(newValues, 0, buffer, offset, length);
+            _position += length;
+            return Convert.ToInt32(length);
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -77,13 +79,13 @@ namespace RavenFS.Tests.Tools
 
         public override long Length
         {
-            get { return _source.Length; }
+            get { return _length; }
         }
 
         public override long Position
         {
-            get { return _source.Position; }
+            get { return _position; }
             set { throw new NotSupportedException(); }
         }
-    }
+	}
 }

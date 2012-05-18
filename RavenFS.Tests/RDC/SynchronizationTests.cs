@@ -16,7 +16,9 @@ namespace RavenFS.Tests.RDC
 {
 	using System.Linq;
 	using System.Threading.Tasks;
+	using IO;
 	using Rdc.Conflictuality;
+	using Rdc.Utils.IO;
 
 	public class SynchronizationTests : MultiHostTestBase
 	{
@@ -59,12 +61,12 @@ namespace RavenFS.Tests.RDC
 				var metadata = destinationClient.DownloadAsync("test.txt", resultFileContent).Result;
 				Assert.Equal("some-value", metadata["SomeTest-metadata"]);
 				resultFileContent.Position = 0;
-				resultMd5 = resultFileContent.GetMD5Hash();
+				resultMd5 = IOExtensions.GetMD5Hash(resultFileContent);
 				resultFileContent.Position = 0;
 			}
 
 			sourceContent.Position = 0;
-			var sourceMd5 = sourceContent.GetMD5Hash();
+			var sourceMd5 = IOExtensions.GetMD5Hash(sourceContent);
 
 			Assert.True(resultMd5 == sourceMd5);
 		}
@@ -92,11 +94,11 @@ namespace RavenFS.Tests.RDC
 			{
 				destinationClient.DownloadAsync("test.txt", resultFileContent).Wait();
 				resultFileContent.Position = 0;
-				resultMd5 = resultFileContent.GetMD5Hash();
+				resultMd5 = IOExtensions.GetMD5Hash(resultFileContent);
 			}
 
 			sourceContent.Position = 0;
-			var sourceMd5 = sourceContent.GetMD5Hash();
+			var sourceMd5 = IOExtensions.GetMD5Hash(sourceContent);
 
 			Assert.Equal(sourceMd5, resultMd5);
 		}
@@ -417,12 +419,12 @@ namespace RavenFS.Tests.RDC
 		        var metadata = sourceClient.DownloadAsync("test.txt", resultFileContent).Result;
 		        Assert.Equal("shouldnt-be-overwritten", metadata["SomeTest-metadata"]);
 		        resultFileContent.Position = 0;
-		        resultMd5 = resultFileContent.GetMD5Hash();
+		        resultMd5 = IOExtensions.GetMD5Hash(resultFileContent);
 		        resultFileContent.Position = 0;
 		    }
 
 		    destinationContent.Position = 0;
-		    var destinationMd5 = destinationContent.GetMD5Hash();
+		    var destinationMd5 = IOExtensions.GetMD5Hash(destinationContent);
 		    sourceContent.Position = 0;
 
 		    Assert.True(resultMd5 == destinationMd5);

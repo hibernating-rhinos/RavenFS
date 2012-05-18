@@ -12,10 +12,9 @@ namespace RavenFS.Tests.RDC
 	using Newtonsoft.Json;
 	using RavenFS.Notifications;
 	using Rdc;
-	using Tools;
+	using Rdc.Utils.IO;
 	using Util;
 	using Xunit;
-	using Xunit.Extensions;
 
 	public class SynchronizationOfDestinationsTests : MultiHostTestBase
 	{
@@ -66,7 +65,7 @@ namespace RavenFS.Tests.RDC
 			{
 				destination1Client.DownloadAsync("test.bin", resultFileContent).Wait();
 				resultFileContent.Position = 0;
-				destination1Md5 = resultFileContent.GetMD5Hash();
+				destination1Md5 = IOExtensions.GetMD5Hash(resultFileContent);
 			}
 
 			string destination2Md5 = null;
@@ -74,11 +73,11 @@ namespace RavenFS.Tests.RDC
 			{
 				destination2Client.DownloadAsync("test.bin", resultFileContent).Wait();
 				resultFileContent.Position = 0;
-				destination2Md5 = resultFileContent.GetMD5Hash();
+				destination2Md5 = IOExtensions.GetMD5Hash(resultFileContent);
 			}
 
 			sourceContent.Position = 0;
-			var sourceMd5 = sourceContent.GetMD5Hash();
+			var sourceMd5 = IOExtensions.GetMD5Hash(sourceContent);
 
 			Assert.Equal(sourceMd5, destination1Md5);
 			Assert.Equal(sourceMd5, destination2Md5);

@@ -117,9 +117,7 @@
     <Compile Include="Tools\IisDeploymentUtil.cs" />
     <Compile Include="MultiHostTestBase.cs" />
     <Compile Include="NarrowedStreamTests.cs" />
-    <Compile Include="Tools\RandomCharacterStream.cs" />
-    <Compile Include="Tools\RandomlyModifiedStream.cs" />
-    <Compile Include="Tools\RandomStream.cs" />
+    <Compile Include="RDC\IO\RandomCharacterStream.cs" />
     <Compile Include="RemoteFilesHandlerTests.cs" />
     <Compile Include="PagesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
