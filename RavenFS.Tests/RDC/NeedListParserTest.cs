@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using RavenFS.Rdc;
@@ -17,12 +15,12 @@ namespace RavenFS.Tests.RDC
         private class PartialDataAccessMock : IPartialDataAccess
         {
             private readonly string _name;
-            private readonly ConcurrentStack<string> _stack;
+            private readonly Queue<string> _queue;
 
-            public PartialDataAccessMock(string name, ConcurrentStack<string> stack)
+            public PartialDataAccessMock(string name, Queue<string> queue)
             {
                 _name = name;
-                _stack = stack;
+                _queue = queue;
             }
 
             public Task CopyToAsync(Stream target, long from, long length)
@@ -31,7 +29,7 @@ namespace RavenFS.Tests.RDC
                     () =>
                     {
                         Thread.Sleep(new Random().Next(200));
-                        _stack.Push(_name);
+                        _queue.Enqueue(_name + length);
                     });
             }
         }
@@ -39,19 +37,19 @@ namespace RavenFS.Tests.RDC
         [Fact]
         public void Should_call_source_and_seed_methods_asynchronously_but_in_the_proper_order()
         {
-            var stack = new ConcurrentStack<string>();
+            var queue = new Queue<string>();
 
             const int needListSize = 100;
-            var partialDataAccessSourceMock = new PartialDataAccessMock("source", stack);
-            var partialDataAccessSeedMock = new PartialDataAccessMock("seed", stack);
+            var partialDataAccessSourceMock = new PartialDataAccessMock(RdcNeedType.Source.ToString(), queue);
+			var partialDataAccessSeedMock = new PartialDataAccessMock(RdcNeedType.Seed.ToString(), queue);
+        	var needList = GenerateAlternatedNeeds(needListSize).ToList();
             var result = NeedListParser.ParseAsync(partialDataAccessSourceMock, partialDataAccessSeedMock,
-                                                   Stream.Null, GenerateAlternatedNeeds(needListSize));
+                                                   Stream.Null, needList);
             result.Wait();
-            var calls = stack.Reverse().ToList();
+            var calls = queue.ToList();
             for (var i = 0; i < needListSize; i++)
             {
-                var s = i%2 == 0 ? "seed" : "source";
-                Assert.Equal(s, calls[i]);
+                Assert.Equal(string.Format("{0}{1}", needList[i].BlockType, needList[i].BlockLength), calls[i]);
             }
         }
 
@@ -60,7 +58,7 @@ namespace RavenFS.Tests.RDC
             for (int i = 0; i < numberOfItems; i++)
             {
                 var need = new RdcNeed();
-                need.BlockLength = 10;
+                need.BlockLength = (ulong) i;
                 if (i % 2 == 0)
                 {
                     need.BlockType = RdcNeedType.Seed;
