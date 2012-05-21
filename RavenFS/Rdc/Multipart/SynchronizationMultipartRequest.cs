@@ -5,10 +5,11 @@ namespace RavenFS.Rdc.Multipart
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Net;
-	using System.Text;
+	using System.Net.Http;
 	using System.Threading.Tasks;
 	using Client;
 	using Newtonsoft.Json;
+	using Util;
 	using Wrapper;
 
 	public class SynchronizationMultipartRequest
@@ -18,7 +19,7 @@ namespace RavenFS.Rdc.Multipart
 		private readonly string fileName;
 		private readonly NameValueCollection sourceMetadata;
 		private readonly Stream sourceStream;
-		private readonly IList<IFilePart> fileParts;
+		private readonly IList<RdcNeed> needList;
 		private readonly string syncingBoundary;
 
 		public SynchronizationMultipartRequest(string destinationUrl, string sourceUrl, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList)
@@ -28,31 +29,8 @@ namespace RavenFS.Rdc.Multipart
 			this.fileName = fileName;
 			this.sourceMetadata = sourceMetadata;
 			this.sourceStream = sourceStream;
+			this.needList = needList;
 			this.syncingBoundary = "syncing";
-
-			this.fileParts = CreateFileParts(needList);
-		}
-
-		private IList<IFilePart> CreateFileParts(IList<RdcNeed> needList)
-		{
-			var result = new List<IFilePart>();
-
-			foreach (var item in needList)
-			{
-				switch (item.BlockType)
-				{
-					case RdcNeedType.Source:
-						result.Add(new SourceFilePart(sourceStream, Convert.ToInt64(item.FileOffset), Convert.ToInt64(item.BlockLength), syncingBoundary));
-						break;
-					case RdcNeedType.Seed:
-						result.Add(new SeedFilePart(Convert.ToInt64(item.FileOffset), Convert.ToInt64(item.BlockLength), syncingBoundary));
-						break;
-					default:
-						throw new NotSupportedException();
-				}
-			}
-
-			return result;
 		}
 
 		private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
@@ -90,39 +68,49 @@ namespace RavenFS.Rdc.Multipart
 			request.Headers[SyncingMultipartConstants.SourceServerUrl] = sourceUrl;
 
 			return request.GetRequestStreamAsync()
-				.ContinueWith(task =>
-								{
-									var requestStream = task.Result;
-
-									foreach (var filePart in fileParts)
-									{
-										filePart.CopyTo(requestStream);
-									}
-
-									var footer = new StringBuilder();
-									footer.AppendFormat("{0}--{1}--{0}{0}", MimeConstants.LineSeparator, syncingBoundary);
-
-									var footerBuffer = Encoding.UTF8.GetBytes(footer.ToString());
-									task.Result.Write(footerBuffer, 0, footerBuffer.Length);
-
-									return task;
-								})
-				.Unwrap()
-				.ContinueWith(task => task.Result.Close())
-				.ContinueWith(task =>
-				{
-					task.Wait();
-					return request.GetResponseAsync();
-				})
+				.ContinueWith(task => PrepareMultipartContent().CopyToAsync(task.Result)
+					.ContinueWith(t => task.Result.Close()))
 				.Unwrap()
 				.ContinueWith(task =>
 				              	{
-									using (var stream = task.Result.GetResponseStream())
-									{
-										return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
-									}
+				              		task.Wait();
+									return request.GetResponseAsync();
 				              	})
+				.Unwrap()
+				.ContinueWith(task =>
+			                {
+			                    using (var stream = task.Result.GetResponseStream())
+			                    {
+			                        return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
+			                    }
+			                })
 				.TryThrowBetterError();
+		}
+
+		internal MultipartContent PrepareMultipartContent()
+		{
+			var content = new MultipartContent("form-data", syncingBoundary);
+
+			foreach (var item in needList)
+			{
+				long @from = Convert.ToInt64(item.FileOffset);
+				long length = Convert.ToInt64(item.BlockLength);
+				long to = from + length - 1;
+
+				switch (item.BlockType)
+				{
+					case RdcNeedType.Source:
+						content.Add(new SourceFilePart(new NarrowedStream(sourceStream, from, to)));
+						break;
+					case RdcNeedType.Seed:
+						content.Add(new SeedFilePart(@from, to));
+						break;
+					default:
+						throw new NotSupportedException();
+				}
+			}
+
+			return content;
 		}
 	}
 }

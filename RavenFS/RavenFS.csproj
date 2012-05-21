@@ -196,11 +196,8 @@
     <Compile Include="Rdc\Conflictuality\ConflictResolution.cs" />
     <Compile Include="Rdc\Conflictuality\ConflictResolver.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
-    <Compile Include="Rdc\Multipart\IFilePart.cs" />
-    <Compile Include="Rdc\Multipart\MimeConstants.cs" />
     <Compile Include="Rdc\Multipart\SeedFilePart.cs" />
     <Compile Include="Rdc\Multipart\SourceFilePart.cs" />
-    <Compile Include="Rdc\Multipart\IMimePart.cs" />
     <Compile Include="Rdc\Multipart\SynchronizationMultipartProcessor.cs" />
     <Compile Include="Rdc\Multipart\SynchronizationMultipartRequest.cs" />
     <Compile Include="Rdc\Multipart\SyncingMultipartConstants.cs" />

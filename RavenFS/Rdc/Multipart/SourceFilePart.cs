@@ -1,67 +1,37 @@
 namespace RavenFS.Rdc.Multipart
 {
-	using System;
 	using System.IO;
-	using System.Text;
+	using System.Net.Http;
+	using System.Net.Http.Headers;
+	using System.Threading.Tasks;
 	using Util;
 
-	public class SourceFilePart : IFilePart
+	public class SourceFilePart : StreamContent
 	{
-		private readonly Stream source;
-		private readonly long length;
-		private readonly long @from;
+		private readonly NarrowedStream sourceChunk;
 
-		public SourceFilePart(Stream source, long from, long length, string boundary)
+		public SourceFilePart(NarrowedStream sourceChunk)
+			: base(sourceChunk)
 		{
-			this.source = source;
-			this.length = length;
-			this.Boundary = boundary;
-			this.@from = from;
+			this.sourceChunk = sourceChunk;
+
+			Headers.ContentDisposition = new ContentDispositionHeaderValue("file");
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.NeedType, SyncingNeedType));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeFrom, sourceChunk.From.ToString()));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeTo, sourceChunk.To.ToString()));
+
+			Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
 		}
-
-		public string ContentDisposition
-		{
-			get { return "file"; }
-		}
-
-		public string ContentType
-		{
-			get { return "application/octet-stream"; }
-		}
-
-		public void CopyTo(Stream stream)
-		{
-			var sb = new StringBuilder();
-			sb.AppendFormat("{1}--{0}{1}", Boundary, MimeConstants.LineSeparator);
-			sb.AppendFormat("Content-Disposition: {0}; {1}={2}; {3}={4}; {5}={6}{7}", ContentDisposition,
-							SyncingMultipartConstants.NeedType, SyncingNeedType,
-							SyncingMultipartConstants.RangeFrom, SyncingRangeFrom,
-							SyncingMultipartConstants.RangeTo, SyncingRangeTo,
-							MimeConstants.LineSeparator);
-			sb.AppendFormat("Content-Type: {0}{1}{2}", ContentType, MimeConstants.LineSeparator, MimeConstants.LineSeparator);
-
-			byte[] buffer = Encoding.UTF8.GetBytes(sb.ToString());
-			stream.Write(buffer, 0, buffer.Length);
-
-			var narrowedStream = new NarrowedStream(source, from, from + length - 1);
-			narrowedStream.CopyTo(stream);
-		}
-
-		public string Boundary { get; set; }
 
 		public string SyncingNeedType
 		{
 			get { return "source"; }
 		}
 
-		public long SyncingRangeFrom
+		protected override Task SerializeToStreamAsync(Stream stream, System.Net.TransportContext context)
 		{
-			get { return from; }
-		}
-
-		public long SyncingRangeTo
-		{
-			get { return from + length; }
+			sourceChunk.Seek(0, SeekOrigin.Begin);
+			return base.SerializeToStreamAsync(stream, context);
 		}
 	}
 }

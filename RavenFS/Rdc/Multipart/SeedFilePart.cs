@@ -1,61 +1,38 @@
 namespace RavenFS.Rdc.Multipart
 {
-	using System;
 	using System.IO;
-	using System.Text;
+	using System.Net;
+	using System.Net.Http;
+	using System.Net.Http.Headers;
+	using System.Threading.Tasks;
+	using Infrastructure;
 
-	public class SeedFilePart : IFilePart
+	public class SeedFilePart : HttpContent
 	{
-		private readonly long @from;
-		private readonly long length;
-
-		public SeedFilePart(long from, long length, string boundary)
+		public SeedFilePart(long from, long to)
 		{
-			this.@from = from;
-			this.length = length;
-			this.Boundary = boundary;
+			Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data");
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.NeedType, SyncingNeedType));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeFrom, @from.ToString()));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeTo, to.ToString()));
+
+			Headers.ContentType = new MediaTypeHeaderValue("plain/text");
 		}
-
-		public string ContentDisposition
-		{
-			get { return "form-data"; }
-		}
-
-		public string ContentType
-		{
-			get { return "plain/text"; }
-		}
-
-		public void CopyTo(Stream stream)
-		{
-			var sb = new StringBuilder();
-			sb.AppendFormat("{1}--{0}{1}", Boundary, MimeConstants.LineSeparator);
-			sb.AppendFormat("Content-Disposition: {0}; {1}={2}; {3}={4}; {5}={6}{7}", ContentDisposition,
-							SyncingMultipartConstants.NeedType, SyncingNeedType,
-							SyncingMultipartConstants.RangeFrom, SyncingRangeFrom,
-							SyncingMultipartConstants.RangeTo, SyncingRangeTo,
-							MimeConstants.LineSeparator);
-			sb.AppendFormat("Content-Type: {0}{1}{2}", ContentType, MimeConstants.LineSeparator, MimeConstants.LineSeparator);
-
-			byte[] buffer = Encoding.UTF8.GetBytes(sb.ToString());
-			stream.Write(buffer, 0, buffer.Length);
-		}
-
-		public string Boundary { get; set; }
 
 		public string SyncingNeedType
 		{
 			get { return "seed"; }
 		}
 
-		public long SyncingRangeFrom
+		protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
 		{
-			get { return from; }
+			return new CompletedTask();
 		}
 
-		public long SyncingRangeTo
+		protected override bool TryComputeLength(out long length)
 		{
-			get { return from + length; }
+			length = 0;
+			return true;
 		}
 	}
 }
