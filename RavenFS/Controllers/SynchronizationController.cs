@@ -161,8 +161,7 @@ namespace RavenFS.Controllers
 				              						Storage.Batch(
 				              							accessor =>
 				              								{
-				              									var name = SynchronizationHelper.SyncResultNameForFile(fileName);
-				              									accessor.SetConfigurationValue(name, report);
+				              									SaveSynchronizationReport(fileName, accessor, report);
 
 				              									if (task.Status != TaskStatus.Faulted)
 				              									{
@@ -183,15 +182,10 @@ namespace RavenFS.Controllers
 		private void StartupProceed(string fileName, StorageActionsAccessor accessor)
 		{
 			// remove previous SyncResult
-			var name = SynchronizationHelper.SyncResultNameForFile(fileName);
-			accessor.DeleteConfig(name);
+			DeleteSynchronizationReport(fileName, accessor);
 
 			// remove previous .downloading file
-			if (accessor.ConfigExists(SynchronizationHelper.SyncLockNameForFile(fileName)) == false) // TODO
-			{
-				Search.Delete(name);
-				accessor.Delete(SynchronizationHelper.DownloadingFileName(fileName));
-			}
+			accessor.Delete(SynchronizationHelper.DownloadingFileName(fileName));
 		}
 
 		[AcceptVerbs("POST")]
@@ -214,35 +208,10 @@ namespace RavenFS.Controllers
 				             	});
 		}
 
-		private FileStatus CheckSynchronizedFileStatus(string fileName)
-		{
-			SynchronizationReport preResult = null;
-			Storage.Batch(
-				accessor =>
-				{
-					var name = SynchronizationHelper.SyncResultNameForFile(fileName);
-					accessor.TryGetConfigurationValue(name, out preResult);
-				});
-
-			if (preResult == null)
-			{
-				return FileStatus.Unknown;
-			}
-
-			return preResult.Exception == null ? FileStatus.Safe : FileStatus.Broken;
-		}
-
 		[AcceptVerbs("GET")]
 		public HttpResponseMessage Status(string fileName)
 		{
-			SynchronizationReport preResult = null;
-			Storage.Batch(
-				accessor =>
-				{
-					var name = SynchronizationHelper.SyncResultNameForFile(fileName);
-					accessor.TryGetConfigurationValue(name, out preResult);
-				});
-			return Request.CreateResponse(HttpStatusCode.OK, preResult);
+			return Request.CreateResponse(HttpStatusCode.OK, GetSynchronizationReport(fileName));
 		}
 
 		[AcceptVerbs("GET")]
@@ -375,6 +344,45 @@ namespace RavenFS.Controllers
 						new TypeHidingJsonSerializer().Stringify(conflictResolution);
 					accessor.UpdateFileMetadata(fileName, localMetadata);
 				});
+		}
+
+		private FileStatus CheckSynchronizedFileStatus(string fileName)
+		{
+			var report = GetSynchronizationReport(fileName);
+
+			if (report == null)
+			{
+				return FileStatus.Unknown;
+			}
+
+			return report.Exception == null ? FileStatus.Safe : FileStatus.Broken;
+		}
+
+		private void SaveSynchronizationReport(string fileName, StorageActionsAccessor accessor, SynchronizationReport report)
+		{
+			var name = SynchronizationHelper.SyncResultNameForFile(fileName);
+			accessor.SetConfigurationValue(name, report);
+		}
+
+		private void DeleteSynchronizationReport(string fileName, StorageActionsAccessor accessor)
+		{
+			var name = SynchronizationHelper.SyncResultNameForFile(fileName);
+			accessor.DeleteConfig(name);
+			Search.Delete(name);
+		}
+
+		private SynchronizationReport GetSynchronizationReport(string fileName)
+		{
+			SynchronizationReport preResult = null;
+
+			Storage.Batch(
+				accessor =>
+				{
+					var name = SynchronizationHelper.SyncResultNameForFile(fileName);
+					accessor.TryGetConfigurationValue(name, out preResult);
+				});
+
+			return preResult;
 		}
 
 		private NameValueCollection GetLocalMetadata(string fileName)
