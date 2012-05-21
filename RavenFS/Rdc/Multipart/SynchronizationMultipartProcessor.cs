@@ -61,7 +61,17 @@ namespace RavenFS.Rdc.Multipart
 
 			if (needType == "source")
 			{
-				sourceBytes += (to - from + 1);
+				var expectedLength = (to - from + 1);
+
+				if (currentPart.Headers.ContentLength.HasValue && currentPart.Headers.ContentLength.Value != expectedLength)
+				{
+					internalProcessingTask.SetException(
+						new SynchronizationException(
+							string.Format("Received content has a different length ({0}) than expected ({1})", currentPart.Headers.ContentLength.Value, expectedLength)));
+					return;
+				}
+
+				sourceBytes += expectedLength;
 				currentPart.CopyToAsync(synchronizingFile)
 					.ContinueWith(t => ContinueProcessingIfNotFaulted(t));
 			}
