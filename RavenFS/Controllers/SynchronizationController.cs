@@ -344,12 +344,6 @@ namespace RavenFS.Controllers
 			return Request.CreateResponse(HttpStatusCode.OK, lastEtag);
 		}
 
-		[AcceptVerbs("GET")]
-		public HttpResponseMessage Availability()
-		{
-			return new HttpResponseMessage(HttpStatusCode.OK);
-		}
-
 		private Task StrategyAsGetCurrent(string fileName, string sourceServerUrl)
 		{
 			var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);

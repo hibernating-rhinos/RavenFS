@@ -12,44 +12,54 @@ namespace RavenFS.Tests
 {
 	public abstract class MultiHostTestBase : IDisposable
 	{
-		public static readonly int[] Ports = { 19079, 19081, 19083 };
+		public static readonly int[] Ports = { 19079, 19081 };
 
 		private readonly IList<IDisposable> disposables = new List<IDisposable>();
 
-		private const string UrlBase = "http://localhost:";
+		protected const string UrlBase = "http://localhost:";
 
 		protected MultiHostTestBase()
 		{
 			foreach (var port in Ports)
 			{
-				NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(port);
-				HttpSelfHostConfiguration config = null;
-				Task.Factory.StartNew(() => // initialize in MTA thread
-				{
-					config = new HttpSelfHostConfiguration(UrlBase + port + "/")
-					{
-						MaxReceivedMessageSize = Int64.MaxValue,
-						TransferMode = TransferMode.Streamed
-					};
-					disposables.Add(config);
-					var path = "~/" + port;
-                    IOExtensions.DeleteDirectory(path.ToFullPath());
-					var ravenFileSystem = new RavenFileSystem(path);
-					ravenFileSystem.Start(config);
-					disposables.Add(ravenFileSystem);
-				})
-					.Wait();
-
-				var server = new HttpSelfHostServer(config);
-				server.OpenAsync().Wait();
-
-				disposables.Add(server);
+				StartServerInstance(port);
 			}
+		}
+
+		protected void StartServerInstance(int port)
+		{
+			NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(port);
+			HttpSelfHostConfiguration config = null;
+			Task.Factory.StartNew(() => // initialize in MTA thread
+			                      	{
+			                      		config = new HttpSelfHostConfiguration(ServerAddress(port))
+			                      		         	{
+			                      		         		MaxReceivedMessageSize = Int64.MaxValue,
+			                      		         		TransferMode = TransferMode.Streamed
+			                      		         	};
+			                      		disposables.Add(config);
+			                      		var path = "~/" + port;
+			                      		IOExtensions.DeleteDirectory(path.ToFullPath());
+			                      		var ravenFileSystem = new RavenFileSystem(path);
+			                      		ravenFileSystem.Start(config);
+			                      		disposables.Add(ravenFileSystem);
+			                      	})
+				.Wait();
+
+			var server = new HttpSelfHostServer(config);
+			server.OpenAsync().Wait();
+
+			disposables.Add(server);
+		}
+
+		protected static string ServerAddress(int port)
+		{
+			return UrlBase + port + "/";
 		}
 
 		protected RavenFileSystemClient NewClient(int index)
 		{
-			return new RavenFileSystemClient(UrlBase + Ports[index] + "/");
+			return new RavenFileSystemClient(ServerAddress(Ports[index]));
 		}
 
 		#region IDisposable Members

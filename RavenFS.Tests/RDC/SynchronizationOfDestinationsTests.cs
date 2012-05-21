@@ -18,16 +18,20 @@ namespace RavenFS.Tests.RDC
 
 	public class SynchronizationOfDestinationsTests : MultiHostTestBase
 	{
+		private const int AddtitionalServerInstancePortNumber = 19083;
+
 		[Fact]
 		public void Should_synchronize_to_all_destinations_when_file_uploaded()
 		{
+			StartServerInstance(AddtitionalServerInstancePortNumber);
+
 			var sourceContent = RdcTestUtils.PrepareSourceStream(10000);
 			sourceContent.Position = 0;
 
 			var sourceClient = NewClient(0);
 
 			var destination1Client = NewClient(1);
-			var destination2Client = NewClient(2);
+			var destination2Client = new RavenFileSystemClient(ServerAddress(AddtitionalServerInstancePortNumber));
 
 			var destination1Content = new RandomlyModifiedStream(sourceContent, 0.01);
 			sourceContent.Position = 0;
@@ -85,25 +89,25 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
-		public void When_destination_is_down_next_file_upload_should_synchronize_missing_files()
+		public void After_adding_destination_to_config_next_upload_should_synchronize_all_missing_files()
 		{
 			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
 
 			var source1Content = new RandomStream(10000);
 
 			sourceClient.UploadAsync("test1.bin", new NameValueCollection(), source1Content).Wait();
 
-			var destinationClient = NewClient(1);
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
+			
 			var source2Content = new RandomStream(10000);
 
 			sourceClient.UploadAsync("test2.bin", new NameValueCollection(), source2Content).Wait();
 
-			// TODO not sure why this line causes infitite loop
-			//RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destinationClient, "test1.bin");
+			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destinationClient, "test1.bin");
 			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destinationClient, "test2.bin");
 
 			var destinationFiles = destinationClient.GetFilesAsync("/").Result;

@@ -681,45 +681,6 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
 			}
 
-			public Task<bool> CheckIfAvailableAsync()
-			{
-				var requestUriString = String.Format("{0}/synchronization/Availability", ravenFileSystemClient.ServerUrl);
-				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
-				request.ContentLength = 0;
-
-				return request.GetResponseAsync()
-					.ContinueWith(task =>
-					              	{
-					              		try
-					              		{
-					              			var response = task.Result as HttpWebResponse;
-					              			if (response != null && response.StatusCode == HttpStatusCode.OK)
-					              			{
-					              				return true;
-					              			}
-					              			return false;
-					              		}
-					              		catch (AggregateException e)
-					              		{
-					              			var we = e.ExtractSingleInnerException() as WebException;
-					              			if (we == null)
-					              				throw;
-					              			if (we.Status == WebExceptionStatus.ConnectFailure)
-					              			{
-					              				return false;
-					              			}
-											
-					              			var httpWebResponse = we.Response as HttpWebResponse;
-					              			if (httpWebResponse == null)
-					              				throw;
-											if (httpWebResponse.StatusCode == HttpStatusCode.NotFound)
-												return false;
-					              			throw;
-					              		}
-					              	}
-					);
-			}
-
 			public Task<IEnumerable<SynchronizationConfirmation>> ConfirmFilesAsync(IEnumerable<string> sentFiles)
 			{
 				var requestUriString = String.Format("{0}/synchronization/Confirm", ravenFileSystemClient.ServerUrl);

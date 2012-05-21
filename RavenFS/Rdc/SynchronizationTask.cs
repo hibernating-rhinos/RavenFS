@@ -64,57 +64,53 @@ namespace RavenFS.Rdc
 
 				var destinationClient = new RavenFileSystemClient(destination);
 
-				destinationClient.Synchronization.CheckIfAvailableAsync()
-					.ContinueWith(availabilityTask =>
+				destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
+					.ContinueWith(etagTask =>
 					{
-						if (!availabilityTask.Result)
-							return;
-						destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
-							.ContinueWith(etagTask =>
+						etagTask.AssertNotFaulted();
+
+						var filesToSynchronization = GetFilesToSynchronization(etagTask, 100);
+
+						foreach (var fileHeader in filesToSynchronization)
+						{
+							synchronizationQueue.EnqueueSynchronization(destinationUrl, fileHeader.Name);
+						}
+
+						var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
+
+						ConfirmPushedFiles(filesNeedConfirmation, destinationClient)
+							.ContinueWith(confirmationTask =>
 							{
-								var filesToSynchronization = GetFilesToSynchronization(etagTask, 100);
+								confirmationTask.AssertNotFaulted();
 
-								foreach (var fileHeader in filesToSynchronization)
+								foreach (var confirmation in confirmationTask.Result)
 								{
-									synchronizationQueue.EnqueueSynchronization(destinationUrl, fileHeader.Name);
+									if (confirmation.Status == FileStatus.Safe)
+									{
+										RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
+									}
+									else
+									{
+										synchronizationQueue.EnqueueSynchronization(destinationUrl, confirmation.FileName);
+									}
 								}
+							})
+							.ContinueWith(t =>
+							{
+								t.AssertNotFaulted();
 
-								var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
-
-								ConfirmPushedFiles(filesNeedConfirmation, destinationClient)
-									.ContinueWith(confirmationTask =>
+								for (var i = 0; i < synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl); i++)
+								{
+									string fileName;
+									if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out fileName))
 									{
-										confirmationTask.AssertNotFaulted();
-
-										foreach (var confirmation in confirmationTask.Result)
-										{
-											if (confirmation.Status == FileStatus.Safe)
-											{
-												RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
-											}
-											else
-											{
-												synchronizationQueue.EnqueueSynchronization(destinationUrl, confirmation.FileName);
-											}
-										}
-									})
-									.ContinueWith(t =>
+										StartSyncingToAsync(fileName, destinationUrl);
+									}
+									else
 									{
-										t.AssertNotFaulted();
-
-										for (var i = 0; i < synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl); i++)
-										{
-											string fileName;
-											if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out fileName))
-											{
-												StartSyncingToAsync(fileName, destinationUrl);
-											}
-											else
-											{
-												break;
-											}
-										}
-									});
+										break;
+									}
+								}
 							});
 					});
 			}
