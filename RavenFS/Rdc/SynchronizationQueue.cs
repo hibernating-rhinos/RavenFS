@@ -125,8 +125,6 @@ namespace RavenFS.Rdc
 					return;
 				}
 			}
-
-			throw new SynchronizationException(string.Format("File {0} (ETag: {1}) wasn't synchronized to destination server {2}", fileName, etag, destination));
 		}
 	}
 }
