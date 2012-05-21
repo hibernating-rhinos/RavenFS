@@ -259,7 +259,7 @@ namespace RavenFS.Rdc
 				accessor =>
 				filesToSynchronization =
 				accessor.GetFilesAfter(destinationsSynchronizationInformationForSource.LastSourceFileEtag, take)
-					.Where(x => x.Metadata[SynchronizationConstants.RavenReplicationSource] != destinationId));
+					.Where(x => x.Metadata[SynchronizationConstants.RavenReplicationSource] != destinationId)); // prevent synchronizing to itself
 
 			return filesToSynchronization;
 		}
