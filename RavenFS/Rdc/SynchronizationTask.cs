@@ -62,7 +62,7 @@ namespace RavenFS.Rdc
 					continue;
 				}
 
-				var destinationClient = new RavenFileSystemClient(destination);
+				var destinationClient = new RavenFileSystemClient(destinationUrl);
 
 				destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
 					.ContinueWith(etagTask =>
@@ -99,20 +99,26 @@ namespace RavenFS.Rdc
 							{
 								t.AssertNotFaulted();
 
-								for (var i = 0; i < synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl); i++)
-								{
-									string fileName;
-									if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out fileName))
-									{
-										StartSyncingToAsync(fileName, destinationUrl);
-									}
-									else
-									{
-										break;
-									}
-								}
+								SynchronizePendingFiles(destinationUrl);
 							});
 					});
+			}
+		}
+
+		private void SynchronizePendingFiles(string destinationUrl)
+		{
+			for (var i = 0; i < synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl); i++)
+			{
+				string fileName;
+				if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out fileName))
+				{
+					StartSyncingToAsync(fileName, destinationUrl)
+						.ContinueWith(syncingTask => SynchronizePendingFiles(destinationUrl));
+				}
+				else
+				{
+					break;
+				}
 			}
 		}
 
