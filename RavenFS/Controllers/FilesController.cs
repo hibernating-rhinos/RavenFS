@@ -51,12 +51,13 @@ namespace RavenFS.Controllers
 		{
 			name = Uri.UnescapeDataString(name);
 
-			Search.Delete(name);
 			Storage.Batch(accessor =>
 			{
 			    accessor.Delete(name);
 			    AssertFileIsNotBeingSynced(name, accessor);
 			});
+
+			Search.Delete(name);
 
 			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Delete });
 
