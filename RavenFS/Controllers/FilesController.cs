@@ -51,10 +51,13 @@ namespace RavenFS.Controllers
 		{
 			name = Uri.UnescapeDataString(name);
 
-			Storage.Batch(accessor => AssertFileIsNotBeingSynced(name, accessor));
-
 			Search.Delete(name);
-			Storage.Batch(accessor => accessor.Delete(name));
+			Storage.Batch(accessor =>
+			{
+			    accessor.Delete(name);
+			    AssertFileIsNotBeingSynced(name, accessor);
+			});
+
 			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Delete });
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
@@ -84,14 +87,17 @@ namespace RavenFS.Controllers
 		{
 			name = Uri.UnescapeDataString(name);
 
-			Storage.Batch(accessor => AssertFileIsNotBeingSynced(name, accessor));
-
 			var headers = Request.Headers.FilterHeaders();
 			HistoryUpdater.UpdateLastModified(headers);
 			HistoryUpdater.Update(name, headers);
 			try
 			{
-				Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
+				Storage.Batch(accessor =>
+				{
+				    AssertFileIsNotBeingSynced(name, accessor);
+				    accessor.UpdateFileMetadata(name, headers);
+				});
+
 				Search.Index(name, headers);
 				Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Update });
 			}
@@ -106,16 +112,16 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("PATCH")]
 		public HttpResponseMessage Patch(string name, string rename)
 		{
-			Storage.Batch(accessor => AssertFileIsNotBeingSynced(name, accessor));
-
 			try
 			{
 				FileAndPages fileAndPages = null;
 				Storage.Batch(accessor =>
 				{
+					AssertFileIsNotBeingSynced(name, accessor);
 					fileAndPages = accessor.GetFile(name, 0, 0);
 					accessor.RenameFile(name, rename);
 				});
+
 				Search.Delete(name);
 				Search.Index(rename, fileAndPages.Metadata);
 				Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Renaming });
@@ -133,16 +139,14 @@ namespace RavenFS.Controllers
 		{
 			name = Uri.UnescapeDataString(name);
 
-			Storage.Batch(accessor => AssertFileIsNotBeingSynced(name, accessor));
-
 			var headers = Request.Headers.FilterHeaders();
 			HistoryUpdater.UpdateLastModified(headers);
 			HistoryUpdater.Update(name, headers);
 			name = Uri.UnescapeDataString(name);
 			Storage.Batch(accessor =>
 			{
+				AssertFileIsNotBeingSynced(name, accessor);
 				accessor.Delete(name);
-
 
 				long? contentLength = Request.Content.Headers.ContentLength;
 				if (Request.Headers.TransferEncodingChunked ?? false)
