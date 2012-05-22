@@ -1,6 +1,7 @@
 namespace RavenFS.Rdc
 {
 	using System;
+	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
@@ -51,7 +52,7 @@ namespace RavenFS.Rdc
 			timer.Subscribe(tick => SynchronizeDestinations());
 		}
 
-		public void SynchronizeDestinations()
+		public IEnumerable<Task<DestinationSyncResult>> SynchronizeDestinations()
 		{
 			foreach (var destination in GetSynchronizationDestinations())
 			{
@@ -64,7 +65,7 @@ namespace RavenFS.Rdc
 
 				var destinationClient = new RavenFileSystemClient(destinationUrl);
 
-				destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
+				yield return destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
 					.ContinueWith(etagTask =>
 					{
 						etagTask.AssertNotFaulted();
@@ -78,42 +79,49 @@ namespace RavenFS.Rdc
 
 						var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
 
-						ConfirmPushedFiles(filesNeedConfirmation, destinationClient)
+						return ConfirmPushedFiles(filesNeedConfirmation, destinationClient)
 							.ContinueWith(confirmationTask =>
-							{
-								confirmationTask.AssertNotFaulted();
+							              	{
+							              		confirmationTask.AssertNotFaulted();
 
-								foreach (var confirmation in confirmationTask.Result)
-								{
-									if (confirmation.Status == FileStatus.Safe)
-									{
-										RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
-									}
-									else
-									{
-										synchronizationQueue.EnqueueSynchronization(destinationUrl, confirmation.FileName);
-									}
-								}
-							})
+							              		foreach (var confirmation in confirmationTask.Result)
+							              		{
+							              			if (confirmation.Status == FileStatus.Safe)
+							              			{
+							              				RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
+							              			}
+							              			else
+							              			{
+							              				synchronizationQueue.EnqueueSynchronization(destinationUrl, confirmation.FileName);
+							              			}
+							              		}
+							              	})
 							.ContinueWith(t =>
-							{
-								t.AssertNotFaulted();
-
-								SynchronizePendingFiles(destinationUrl);
-							});
-					});
+							              	{
+							              		t.AssertNotFaulted();
+							              		return SynchronizePendingFiles(destinationUrl);
+							              	})
+							.ContinueWith(
+								syncingDestTask =>
+								Task.Factory.ContinueWhenAll(syncingDestTask.Result.ToArray(), t => new DestinationSyncResult(){
+									DestinationServer =  destinationUrl,
+									Reports = t.Select(syncingTask => syncingTask.Result)
+								}))
+							.Unwrap();
+					}).Unwrap();
 			}
 		}
 
-		private void SynchronizePendingFiles(string destinationUrl)
+		private IEnumerable<Task<SynchronizationReport>> SynchronizePendingFiles(string destinationUrl)
 		{
 			for (var i = 0; i < synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl); i++)
 			{
 				string fileName;
 				if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out fileName))
 				{
-					StartSyncingToAsync(fileName, destinationUrl)
-						.ContinueWith(syncingTask => SynchronizePendingFiles(destinationUrl));
+					yield return StartSyncingToAsync(fileName, destinationUrl);
+					// TODO we need to find better way to start syncing if one just finished
+					// .ContinueWith(t => SynchronizePendingFiles(destinationUrl));
 				}
 				else
 				{

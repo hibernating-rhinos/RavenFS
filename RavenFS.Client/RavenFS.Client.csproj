@@ -91,6 +91,7 @@
     <Compile Include="ConfigChange.cs" />
     <Compile Include="ConflictResolutionStrategy.cs" />
     <Compile Include="ConflictDetected.cs" />
+    <Compile Include="DestinationSyncResult.cs" />
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="FileChange.cs" />
     <Compile Include="FileInfo.cs" />

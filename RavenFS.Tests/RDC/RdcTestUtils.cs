@@ -4,19 +4,10 @@ namespace RavenFS.Tests.RDC
 {
 	using System;
 	using System.IO;
-	using System.Threading;
-	using RavenFS.Notifications;
-	using Rdc.Conflictuality;
-	using Util;
 	using Xunit;
 
 	public class RdcTestUtils
     {
-		static RdcTestUtils()
-		{
-			Destinations = new DestinationsSynchronizationUtils();
-		}
-
 		public static SynchronizationReport ResolveConflictAndSynchronize(RavenFileSystemClient sourceClient, RavenFileSystemClient destinationClient, string fileName)
         {
 			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync(fileName, destinationClient.ServerUrl).Result;
@@ -59,39 +50,6 @@ namespace RavenFS.Tests.RDC
 			writer.Flush();
 
 			return ms;
-		}
-
-		public static DestinationsSynchronizationUtils Destinations { get; set; }
-
-		public class DestinationsSynchronizationUtils
-		{
-			public SynchronizationReport WaitForSynchronizationFinishOnDestination(RavenFileSystemClient destinationClient, string fileName)
-			{
-				SynchronizationReport report;
-				do
-				{
-					report = destinationClient.Synchronization.GetSynchronizationStatusAsync(fileName).Result;
-					Thread.Sleep(50);
-				} while (report == null);
-
-				return report;
-			}
-
-			public ConflictItem WaitForConflict(RavenFileSystemClient destinationClient, string fileName)
-			{
-				ConflictItem conflict = null;
-				do
-				{
-					var result = destinationClient.Config.GetConfig(SynchronizationHelper.ConflictConfigNameForFile(fileName)).Result;
-					if (result != null)
-					{
-						conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(result["value"]);
-					}
-					Thread.Sleep(50);
-				} while (conflict == null);
-
-				return conflict;
-			}
 		}
     }
 }

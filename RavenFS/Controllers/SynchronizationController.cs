@@ -25,11 +25,9 @@ namespace RavenFS.Controllers
 	public class SynchronizationController : RavenController
 	{
 		[AcceptVerbs("POST")]
-		public HttpResponseMessage ToDestinations()
+		public Task<IEnumerable<DestinationSyncResult>> ToDestinations()
 		{
-			SynchronizationTask.SynchronizeDestinations();
-
-			return new HttpResponseMessage(HttpStatusCode.NoContent);
+			return Task.Factory.ContinueWhenAll(SynchronizationTask.SynchronizeDestinations().ToArray(), t => t.Select(destinationTasks => destinationTasks.Result));
 		}
 
 		[AcceptVerbs("POST")]

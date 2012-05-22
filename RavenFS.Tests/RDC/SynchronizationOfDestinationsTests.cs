@@ -21,7 +21,7 @@ namespace RavenFS.Tests.RDC
 		private const int AddtitionalServerInstancePortNumber = 19083;
 
 		[Fact]
-		public void Should_synchronize_to_all_destinations_when_file_uploaded()
+		public void Should_synchronize_to_all_destinations()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
@@ -41,29 +41,39 @@ namespace RavenFS.Tests.RDC
 			destination1Client.UploadAsync("test.bin", new NameValueCollection(), destination1Content).Wait();
 			destination2Client.UploadAsync("test.bin", new NameValueCollection(), destination2Content).Wait();
 
+			sourceContent.Position = 0;
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+			sourceContent.Position = 0;
+
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destination1Client.ServerUrl },
 																										{ "url", destination2Client.ServerUrl }
 			                                                                                     	}).Wait();
 
+			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
-			sourceContent.Position = 0;
-
-			RdcTestUtils.Destinations.WaitForConflict(destination1Client, "test.bin");
-			RdcTestUtils.Destinations.WaitForConflict(destination2Client, "test.bin");
+			// we expect conflicts after first attempt of synchronization
+			Assert.Equal(2, destinationSyncResults.Length);
+			Assert.Equal("File test.bin is conflicted.", destinationSyncResults[0].Reports.ToArray()[0].Exception.Message);
+			Assert.Equal("File test.bin is conflicted.", destinationSyncResults[1].Reports.ToArray()[0].Exception.Message);
 
 			destination1Client.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.bin",
 			                                                       ConflictResolutionStrategy.RemoteVersion).Wait();
 			destination2Client.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.bin",
 																	ConflictResolutionStrategy.RemoteVersion).Wait();
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+			destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
 
-			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destination2Client, "test.bin");
-			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destination1Client, "test.bin");
-			
+			// check if reports match
+			Assert.Equal(2, destinationSyncResults.Length);
+			var result1 = destinationSyncResults[0].Reports.ToArray()[0];
+			Assert.Equal(sourceContent.Length, result1.BytesCopied + result1.BytesTransfered);
+
+			var result2 = destinationSyncResults[1].Reports.ToArray()[0];
+			Assert.Equal(sourceContent.Length, result2.BytesCopied + result2.BytesTransfered);
+
+			// check content of files
 			string destination1Md5 = null;
 			using (var resultFileContent = new MemoryStream())
 			{
@@ -89,7 +99,7 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
-		public void After_adding_destination_to_config_next_upload_should_synchronize_all_missing_files()
+		public void Synchronization_should_upload_all_missing_files()
 		{
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
@@ -97,18 +107,17 @@ namespace RavenFS.Tests.RDC
 			var source1Content = new RandomStream(10000);
 
 			sourceClient.UploadAsync("test1.bin", new NameValueCollection(), source1Content).Wait();
-
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
 			
 			var source2Content = new RandomStream(10000);
 
 			sourceClient.UploadAsync("test2.bin", new NameValueCollection(), source2Content).Wait();
 
-			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destinationClient, "test1.bin");
-			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destinationClient, "test2.bin");
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destinationClient.ServerUrl }
+			                                                                                     	}).Wait();
+
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
 			var destinationFiles = destinationClient.GetFilesAsync("/").Result;
 			Assert.Equal(2, destinationFiles.FileCount);
@@ -126,13 +135,14 @@ namespace RavenFS.Tests.RDC
 
 			var destinationClient = NewClient(1);
 
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
 
-			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destinationClient, "test.bin");
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
 			var savedRecord =
 				sourceClient.Config.GetConfig(SynchronizationHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result
@@ -152,17 +162,16 @@ namespace RavenFS.Tests.RDC
 
 			var destinationClient = NewClient(1);
 
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+
+
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
-			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destinationClient, "test.bin");
-
-			sourceClient.UploadAsync("test2.bin", new NameValueCollection(), sourceContent).Wait();
-
-			RdcTestUtils.Destinations.WaitForSynchronizationFinishOnDestination(destinationClient, "test2.bin");
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait(); // start synchronization again to force confirmation by source
 
 			var shouldBeNull =
 				sourceClient.Config.GetConfig(SynchronizationHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result;
@@ -170,33 +179,30 @@ namespace RavenFS.Tests.RDC
 			Assert.Null(shouldBeNull);
 		}
 
-		[Fact(Skip = "Answer needed")]
+		[Fact]
 		public void File_should_be_in_pending_queue_if_no_synchronization_requests_available()
 		{
 			var sourceContent = new RandomStream(1);
 			var sourceClient = NewClient(0);
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationLimit,
-										  new NameValueCollection { { "value", "\"-1\"" } }).Wait();
+										  new NameValueCollection { { "value", "\"1\"" } }).Wait();
 
 			var destinationClient = NewClient(1);
+
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+			sourceClient.UploadAsync("test2.bin", new NameValueCollection(), sourceContent).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
-
-			IEnumerable<SynchronizationDetails> pedingSynchronizations = null;
-			do
-			{
-				pedingSynchronizations = sourceClient.Synchronization.GetPendingAsync().Result;
-				Thread.Sleep(100);
-			} while (pedingSynchronizations.Count() == 0);
-
+			var pedingSynchronizations = sourceClient.Synchronization.GetPendingAsync().Result;
+			
 			Assert.Equal(1, pedingSynchronizations.Count());
-			Assert.Equal("test.bin", pedingSynchronizations.ToArray()[0].FileName);
+			Assert.Equal("test2.bin", pedingSynchronizations.ToArray()[0].FileName);
 			Assert.Equal(destinationClient.ServerUrl, pedingSynchronizations.ToArray()[0].DestinationUrl);
 		}
 
@@ -215,18 +221,14 @@ namespace RavenFS.Tests.RDC
 			var sourceClient = NewClient(1);
 			var destinationClient = NewClient(0);
 
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
-			sourceClient.Synchronization.SynchronizeDestinationsAsync();
 
-			SynchronizationReport report;
-			do
-			{
-				report = destinationClient.Synchronization.GetSynchronizationStatusAsync("test.bin").Result;
-			} while (report == null);
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
 			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<string> {"test.bin"}).Result;
 

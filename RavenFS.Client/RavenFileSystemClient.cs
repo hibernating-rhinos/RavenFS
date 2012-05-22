@@ -536,14 +536,20 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
 			}
 
-			public Task SynchronizeDestinationsAsync()
+			public Task<IEnumerable<DestinationSyncResult>> SynchronizeDestinationsAsync()
 			{
 				var requestUriString = String.Format("{0}/synchronization/ToDestinations", ravenFileSystemClient.ServerUrl);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 				request.Method = "POST";
 				request.ContentLength = 0;
 				return request.GetResponseAsync()
-					.ContinueWith(task => task.Result.Close())
+					.ContinueWith(task =>
+					{
+						using (var stream = task.Result.GetResponseStream())
+						{
+							return new JsonSerializer().Deserialize<IEnumerable<DestinationSyncResult>>(new JsonTextReader(new StreamReader(stream)));
+						}
+					})
 					.TryThrowBetterError();
 			}
 
