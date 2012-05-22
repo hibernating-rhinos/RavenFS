@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
-using System.Threading;
 using RavenFS.Client;
 using RavenFS.Rdc.Utils.IO;
 using RavenFS.Util;
@@ -14,23 +12,7 @@ namespace RavenFS.Tests.RDC
 
 	public class LockFileTests : MultiHostTestBase
 	{
-		private const int RetriesCount = 300;
 		private readonly NameValueCollection EmptyData = new NameValueCollection();
-
-		[Fact(Skip = "This test is actually relying on a race condition to run, if the sync finished before the Wait starts, it will fail")]
-		public void Should_create_sync_configuration_during_synchronization()
-		{
-			RavenFileSystemClient destinationClient;
-			RavenFileSystemClient sourceClient;
-
-			UploadFilesSynchronously(out sourceClient, out destinationClient);
-
-			var configName = SynchronizationHelper.SyncLockNameForFile("test.bin");
-
-			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl);
-
-			Assert.True(WaitForBeginningSynchronization(destinationClient, configName));
-		}
 
 		[Fact]
 		public void Should_delete_sync_configuration_after_synchronization()
@@ -197,24 +179,6 @@ namespace RavenFS.Tests.RDC
 
 			destinationClient.UploadAsync(fileName, EmptyData, destinationContent).Wait();
 			sourceClient.UploadAsync(fileName, EmptyData, sourceContent).Wait();
-		}
-
-		
-
-		private static bool WaitForBeginningSynchronization(RavenFileSystemClient client, string configName)
-		{
-			for (int i = 0; i < RetriesCount; i++)
-			{
-				var configNames = client.Config.GetConfigNames().Result;
-				if (configNames.Any(t => t == configName))
-				{
-					return true;
-				}
-
-				Thread.Sleep(50);
-			}
-
-			return false;
 		}
 
 		private static NameValueCollection SynchronizationConfig(DateTime fileLockedDate)

@@ -430,37 +430,6 @@ namespace RavenFS.Tests.RDC
 		    Assert.True(resultMd5 == destinationMd5);
 		}
 
-		[Fact(Skip = "Race condition")]
-		public void Should_get_all_current_synchronizations()
-		{
-			var destinationClient = NewClient(0);
-			var sourceClient = NewClient(1);
-			var files = new[] { "test1.bin", "test2.bin", "test3.bin" };
-
-			// prepare for real synchronization
-			foreach (var item in files)
-			{
-				Task.WaitAll(
-					destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(300000), 0.01)),
-					sourceClient.UploadAsync(item, new RandomStream(300000, 1)));
-
-				// try to synchronize and resolve conflicts
-				var shouldBeConflict =
-					sourceClient.Synchronization.StartSynchronizationToAsync(item, destinationClient.ServerUrl).Result;
-				Assert.NotNull(shouldBeConflict.Exception);
-				destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, item, ConflictResolutionStrategy.RemoteVersion).Wait();
-			}
-
-			// synchronize all
-			foreach (var item in files)
-			{
-				sourceClient.Synchronization.StartSynchronizationToAsync(item, destinationClient.ServerUrl);
-			}
-
-			var result = destinationClient.Synchronization.GetActiveAsync().Result;
-			Assert.True(0 < result.Count());
-		}
-
 		[Fact]
 		public void Should_get_all_finished_synchronizations()
 		{
