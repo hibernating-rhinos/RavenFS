@@ -34,20 +34,20 @@ namespace RavenFS.Controllers
 
 		private RavenFileSystem ravenFileSystem;
 
-		public RavenFileSystem  RavenFileSystem
+		public RavenFileSystem RavenFileSystem
 		{
 			get
 			{
 				if (ravenFileSystem == null)
-					ravenFileSystem = (RavenFileSystem) ControllerContext.Configuration.DependencyResolver.GetService(typeof (RavenFileSystem));
+					ravenFileSystem = (RavenFileSystem)ControllerContext.Configuration.DependencyResolver.GetService(typeof(RavenFileSystem));
 				return ravenFileSystem;
 			}
 		}
 
-	    public NotificationPublisher Publisher
-	    {
-	        get { return ravenFileSystem.Publisher; }
-	    }
+		public NotificationPublisher Publisher
+		{
+			get { return ravenFileSystem.Publisher; }
+		}
 
 		protected Task<T> Result<T>(T result)
 		{
@@ -66,10 +66,10 @@ namespace RavenFS.Controllers
 			get { return RavenFileSystem.SigGenerator; }
 		}
 
-	    public HistoryUpdater HistoryUpdater
-	    {
-            get { return RavenFileSystem.HistoryUpdater;  }
-	    }
+		public HistoryUpdater HistoryUpdater
+		{
+			get { return RavenFileSystem.HistoryUpdater; }
+		}
 
 		private NameValueCollection QueryString
 		{
@@ -157,18 +157,18 @@ namespace RavenFS.Controllers
 
 				length = (to - from);
 
-                // "to" in Content-Range points on the last byte. In other words the set is: <from..to>  not <from..to)
-                if (from < to)
-                {
-                    contentRange = new ContentRangeHeaderValue(from, to - 1, resultContent.Length);
-                    resultContent = new LimitedStream(resultContent, from, to);
-                }
-                else
-                {
-                    contentRange = new ContentRangeHeaderValue(0);
-                    resultContent = Stream.Null;
-                }
-			    
+				// "to" in Content-Range points on the last byte. In other words the set is: <from..to>  not <from..to)
+				if (from < to)
+				{
+					contentRange = new ContentRangeHeaderValue(from, to - 1, resultContent.Length);
+					resultContent = new LimitedStream(resultContent, from, to);
+				}
+				else
+				{
+					contentRange = new ContentRangeHeaderValue(0);
+					resultContent = Stream.Null;
+				}
+
 			}
 			else
 			{
@@ -200,8 +200,8 @@ namespace RavenFS.Controllers
 			else
 			{
 				throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.PreconditionFailed,
-				                                                            new SynchronizationException(
-				                                                            	string.Format("File {0} is being synced", fileName))));
+																			new SynchronizationException(
+																				string.Format("File {0} is being synced", fileName))));
 			}
 		}
 	}

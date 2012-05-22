@@ -66,115 +66,115 @@ namespace RavenFS.Controllers
 
 			return Request.Content.ReadAsMultipartAsync()
 				.ContinueWith(multipartReadTask =>
-				              	{
-				              		var localMetadata = GetLocalMetadata(fileName);
+								{
+									var localMetadata = GetLocalMetadata(fileName);
 
-				              		if (localMetadata != null)
-				              		{
-				              			var conflict = ConflictDetector.Check(localMetadata, sourceMetadata);
-				              			isConflictResolved = ConflictResolver.IsResolved(localMetadata, conflict);
+									if (localMetadata != null)
+									{
+										var conflict = ConflictDetector.Check(localMetadata, sourceMetadata);
+										isConflictResolved = ConflictResolver.IsResolved(localMetadata, conflict);
 
-				              			if (conflict != null && !isConflictResolved)
-				              			{
-				              				ConflictActifactManager.CreateArtifact(fileName, conflict);
+										if (conflict != null && !isConflictResolved)
+										{
+											ConflictActifactManager.CreateArtifact(fileName, conflict);
 
-				              				Publisher.Publish(new ConflictDetected
-				              				                  	{
-				              				                  		FileName = fileName,
-				              				                  		ServerUrl = Request.GetServerUrl()
-				              				                  	});
+											Publisher.Publish(new ConflictDetected
+																{
+																	FileName = fileName,
+																	ServerUrl = Request.GetServerUrl()
+																});
 
-				              				throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
-				              			}
+											throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
+										}
 
-				              			localFile = StorageStream.Reading(Storage, fileName);
-				              		}
+										localFile = StorageStream.Reading(Storage, fileName);
+									}
 
-				              		HistoryUpdater.UpdateLastModified(sourceMetadata);
+									HistoryUpdater.UpdateLastModified(sourceMetadata);
 
-				              		synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search,
-				              		                                                         tempFileName,
-				              		                                                         sourceMetadata);
+									synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search,
+																							 tempFileName,
+																							 sourceMetadata);
 
-				              		var multipartProcessor = new SynchronizationMultipartProcessor(fileName,
-				              		                                                               multipartReadTask.Result.Contents
-																								   .GetEnumerator(), 
+									var multipartProcessor = new SynchronizationMultipartProcessor(fileName,
+																								   multipartReadTask.Result.Contents
+																								   .GetEnumerator(),
 																								   localFile,
-				              		                                                               synchronizingFile);
+																								   synchronizingFile);
 
-				              		return multipartProcessor.ProcessAsync()
-				              			.ContinueWith(task =>
-				              			              	{
-				              			              		if (synchronizingFile != null)
-				              			              		{
-				              			              			synchronizingFile.Dispose();
-				              			              		}
+									return multipartProcessor.ProcessAsync()
+										.ContinueWith(task =>
+														{
+															if (synchronizingFile != null)
+															{
+																synchronizingFile.Dispose();
+															}
 
-				              			              		if (localFile != null)
-				              			              		{
-				              			              			localFile.Dispose();
-				              			              		}
+															if (localFile != null)
+															{
+																localFile.Dispose();
+															}
 
-				              			              		task.AssertNotFaulted();
+															task.AssertNotFaulted();
 
-				              			              		Storage.Batch(
-				              			              			accessor =>
-				              			              				{
-				              			              					accessor.Delete(fileName);
-				              			              					accessor.RenameFile(tempFileName, fileName);
+															Storage.Batch(
+																accessor =>
+																{
+																	accessor.Delete(fileName);
+																	accessor.RenameFile(tempFileName, fileName);
 
-																		Search.Delete(tempFileName);
-																		Search.Index(fileName, sourceMetadata);
-				              			              				});
+																	Search.Delete(tempFileName);
+																	Search.Index(fileName, sourceMetadata);
+																});
 
-				              			              		if (isConflictResolved)
-				              			              		{
-				              			              			ConflictActifactManager.RemoveArtifact(fileName);
-				              			              		}
+															if (isConflictResolved)
+															{
+																ConflictActifactManager.RemoveArtifact(fileName);
+															}
 
-				              			              		return task.Result;
-				              			              	})
-				              			.ContinueWith(
-				              				task =>
-				              					{
-				              						Storage.Batch(accessor => FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor));
-				              						return task.Result;
-				              					})
-				              			.ContinueWith(
-				              				task =>
-				              					{
-				              						SynchronizationReport report;
-				              						if (task.Status == TaskStatus.Faulted)
-				              						{
-				              							report =
-				              								new SynchronizationReport
-				              									{
-				              										Exception = task.Exception.ExtractSingleInnerException()
-				              									};
-				              						}
-				              						else
-				              						{
-				              							report = task.Result;
-				              						}
-				              						Storage.Batch(
-				              							accessor =>
-				              								{
-				              									SaveSynchronizationReport(fileName, accessor, report);
+															return task.Result;
+														})
+										.ContinueWith(
+											task =>
+											{
+												Storage.Batch(accessor => FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor));
+												return task.Result;
+											})
+										.ContinueWith(
+											task =>
+											{
+												SynchronizationReport report;
+												if (task.Status == TaskStatus.Faulted)
+												{
+													report =
+														new SynchronizationReport
+															{
+																Exception = task.Exception.ExtractSingleInnerException()
+															};
+												}
+												else
+												{
+													report = task.Result;
+												}
+												Storage.Batch(
+													accessor =>
+													{
+														SaveSynchronizationReport(fileName, accessor, report);
 
-				              									if (task.Status != TaskStatus.Faulted)
-				              									{
-				              										SaveSynchronizationSourceInformation(sourceServerUrl, lastEtagFromSource, accessor);
-				              									}
-				              								});
-				              						return task;
-				              					})
-				              			.Unwrap()
-				              			.ContinueWith(task =>
-				              			              	{
-				              			              		task.AssertNotFaulted();
-				              			              		return Request.CreateResponse(HttpStatusCode.OK, task.Result);
-				              			              	});
-				              	}).Unwrap();
+														if (task.Status != TaskStatus.Faulted)
+														{
+															SaveSynchronizationSourceInformation(sourceServerUrl, lastEtagFromSource, accessor);
+														}
+													});
+												return task;
+											})
+										.Unwrap()
+										.ContinueWith(task =>
+														{
+															task.AssertNotFaulted();
+															return Request.CreateResponse(HttpStatusCode.OK, task.Result);
+														});
+								}).Unwrap();
 		}
 
 		private void StartupProceed(string fileName, StorageActionsAccessor accessor)
@@ -191,19 +191,19 @@ namespace RavenFS.Controllers
 		{
 			return Request.Content.ReadAsStreamAsync().
 				ContinueWith(t =>
-				             	{
+								{
 
-				             		var confirmingFiles =
-				             			new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(t.Result)));
+									var confirmingFiles =
+										new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(t.Result)));
 
-				             		var confirmations = confirmingFiles.Select(file => new SynchronizationConfirmation
-				             		                                                   	{
-				             		                                                   		FileName = file,
-				             		                                                   		Status = CheckSynchronizedFileStatus(file)
-				             		                                                   	}).ToList();
+									var confirmations = confirmingFiles.Select(file => new SynchronizationConfirmation
+																						{
+																							FileName = file,
+																							Status = CheckSynchronizedFileStatus(file)
+																						}).ToList();
 
-				             		return confirmations.AsEnumerable();
-				             	});
+									return confirmations.AsEnumerable();
+								});
 		}
 
 		[AcceptVerbs("GET")]
@@ -407,10 +407,10 @@ namespace RavenFS.Controllers
 			accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + from, out info);
 
 			return info ?? new SourceSynchronizationInformation()
-			               	{
-			               		LastSourceFileEtag = Guid.Empty,
-			               		DestinationServerInstanceId = Storage.Id
-			               	};
+							{
+								LastSourceFileEtag = Guid.Empty,
+								DestinationServerInstanceId = Storage.Id
+							};
 		}
 
 		private void SaveSynchronizationSourceInformation(string sourceServerUrl, Guid lastSourceEtag, StorageActionsAccessor accessor)

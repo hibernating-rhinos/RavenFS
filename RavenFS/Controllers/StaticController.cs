@@ -13,7 +13,7 @@ namespace RavenFS.Controllers
 	{
 		public HttpResponseMessage ClientAccessPolicy()
 		{
-			var manifestResourceStream = typeof (StaticController).Assembly.GetManifestResourceStream("RavenFS.Static.ClientAccessPolicy.xml");
+			var manifestResourceStream = typeof(StaticController).Assembly.GetManifestResourceStream("RavenFS.Static.ClientAccessPolicy.xml");
 
 			return new HttpResponseMessage(HttpStatusCode.OK)
 			{
@@ -29,8 +29,8 @@ namespace RavenFS.Controllers
 
 		public Stream GetRavenStudioStream()
 		{
-			return (from path in RavenStudioPotentialPaths 
-					where File.Exists(path) 
+			return (from path in RavenStudioPotentialPaths
+					where File.Exists(path)
 					select File.OpenRead(path)).FirstOrDefault();
 		}
 

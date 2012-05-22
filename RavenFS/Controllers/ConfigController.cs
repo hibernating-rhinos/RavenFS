@@ -1,14 +1,12 @@
-using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
 using Newtonsoft.Json;
 using RavenFS.Notifications;
 using RavenFS.Util;
-using System.Linq;
 
 namespace RavenFS.Controllers
 {
@@ -56,7 +54,7 @@ namespace RavenFS.Controllers
 				{
 					var nameValueCollection = jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(task.Result)));
 					Storage.Batch(accessor => accessor.SetConfig(name, nameValueCollection));
-                    Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Set });
+					Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Set });
 				});
 
 		}
@@ -64,7 +62,7 @@ namespace RavenFS.Controllers
 		public HttpResponseMessage Delete(string name)
 		{
 			Storage.Batch(accessor => accessor.DeleteConfig(name));
-            Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Delete});
+			Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Delete });
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 	}

@@ -18,12 +18,12 @@ namespace RavenFS.Controllers
 		{
 			filename = Uri.UnescapeDataString(filename);
 
-			using(var signatureRepository = new StorageSignatureRepository(Storage, filename))
-		    {
+			using (var signatureRepository = new StorageSignatureRepository(Storage, filename))
+			{
 				var localRdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
 				var resultContent = localRdcManager.GetSignatureContentForReading(filename);
 				return StreamResult(filename, resultContent);
-		    }
+			}
 		}
 
 		[AcceptVerbs("GET")]
@@ -31,7 +31,7 @@ namespace RavenFS.Controllers
 		{
 			return new RdcStats
 			{
-				Version = (int) Msrdc.Version
+				Version = (int)Msrdc.Version
 			};
 		}
 
@@ -39,10 +39,10 @@ namespace RavenFS.Controllers
 		public HttpResponseMessage Manifest(string filename)
 		{
 			filename = Uri.UnescapeDataString(filename);
-		    long? fileLength = null;
+			long? fileLength = null;
 			try
 			{
-                Storage.Batch(accessor => fileLength = accessor.GetFile(filename, 0, 0).TotalSize);
+				Storage.Batch(accessor => fileLength = accessor.GetFile(filename, 0, 0).TotalSize);
 			}
 			catch (FileNotFoundException)
 			{
@@ -52,7 +52,7 @@ namespace RavenFS.Controllers
 			using (var signatureRepository = new StorageSignatureRepository(Storage, filename))
 			{
 				var rdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
-				var signatureManifest = rdcManager.GetSignatureManifest(new DataInfo {Name = filename});
+				var signatureManifest = rdcManager.GetSignatureManifest(new DataInfo { Name = filename });
 				signatureManifest.FileLength = fileLength ?? 0;
 				return Request.CreateResponse(HttpStatusCode.OK, signatureManifest);
 			}

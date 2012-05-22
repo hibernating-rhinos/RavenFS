@@ -14,7 +14,7 @@ namespace RavenFS.Controllers
 		public string[] Terms()
 		{
 			IndexSearcher searcher;
-			using(Search.GetSearcher(out searcher))
+			using (Search.GetSearcher(out searcher))
 			{
 				return searcher.GetIndexReader().GetFieldNames(IndexReader.FieldOption.ALL).ToArray();
 			}
