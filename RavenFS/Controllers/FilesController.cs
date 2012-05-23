@@ -173,9 +173,9 @@ namespace RavenFS.Controllers
 						.ContinueWith(readingTask =>
 						{
 							HistoryUpdater.UpdateLastModified(headers);// update with the final file size
+							Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
 							headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
 							Search.Index(name, headers);
-							Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
 							Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });
 							SynchronizationTask.ProcessWork(new RdcWorkItem(name, RavenFileSystem.ServerUrl, Storage, SigGenerator));
 							readFileToDatabase.Dispose();
