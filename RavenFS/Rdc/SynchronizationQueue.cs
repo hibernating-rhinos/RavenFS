@@ -13,8 +13,8 @@ namespace RavenFS.Rdc
 		private readonly TransactionalStorage storage;
 		private const int DefaultLimitOfConcurrentSynchronizations = 5;
 
-		private readonly ConcurrentDictionary<string, ConcurrentQueue<string>> pendingSynchronizations =
-			new ConcurrentDictionary<string, ConcurrentQueue<string>>();
+		private readonly ConcurrentDictionary<string, ConcurrentQueue<SynchronizationWorkItem>> pendingSynchronizations =
+			new ConcurrentDictionary<string, ConcurrentQueue<SynchronizationWorkItem>>();
 
 		private readonly ConcurrentDictionary<string, ConcurrentDictionary<Guid, string>> activeSynchronizations =
 			new ConcurrentDictionary<string, ConcurrentDictionary<Guid, string>>();
@@ -33,7 +33,7 @@ namespace RavenFS.Rdc
 				       select new SynchronizationDetails
 				              	{
 				              		DestinationUrl = destinationPending.Key,
-				              		FileName = pendingFile
+				              		FileName = pendingFile.FileName
 				              	};
 			}
 		}
@@ -78,28 +78,28 @@ namespace RavenFS.Rdc
 			return LimitOfConcurrentSynchronizations() - NumberOfActiveSynchronizationTasksFor(destination);
 		}
 
-		public void EnqueueSynchronization(string destination, string fileName)
+		public void EnqueueSynchronization(string destination, SynchronizationWorkItem workItem)
 		{
-			var pendingForDestination = pendingSynchronizations.GetOrAdd(destination, new ConcurrentQueue<string>());
+			var pendingForDestination = pendingSynchronizations.GetOrAdd(destination, new ConcurrentQueue<SynchronizationWorkItem>());
 
-			if(pendingForDestination.Contains(fileName)) // if there is a file in pending synchronizations do not add it again
+			if(pendingForDestination.Contains(workItem)) // if there is a file in pending synchronizations do not add it again
 			{
 				return;
 			}
 
-			pendingForDestination.Enqueue(fileName);
+			pendingForDestination.Enqueue(workItem);
 		}
 
-		public bool TryDequeuePendingSynchronization(string destination, out string fileToSynchronize)
+		public bool TryDequeuePendingSynchronization(string destination, out SynchronizationWorkItem workItem)
 		{
-			ConcurrentQueue<string> pendingForDestination;
+			ConcurrentQueue<SynchronizationWorkItem> pendingForDestination;
 			if (pendingSynchronizations.TryGetValue(destination, out pendingForDestination) == false)
 			{
-				fileToSynchronize = null;
+				workItem = null;
 				return false;
 			}
 
-			return pendingForDestination.TryDequeue(out fileToSynchronize);
+			return pendingForDestination.TryDequeue(out workItem);
 		}
 
 		public void SynchronizationStarted(string fileName, Guid etag, string destination)

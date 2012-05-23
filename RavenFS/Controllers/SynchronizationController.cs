@@ -33,7 +33,7 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("POST")]
 		public Task<SynchronizationReport> Start(string fileName, string destinationServerUrl)
 		{
-			return SynchronizationTask.StartSyncingToAsync(fileName, destinationServerUrl);
+			return SynchronizationTask.PerformSynchronization(destinationServerUrl, new RdcWorkItem(fileName, RavenFileSystem.ServerUrl, Storage, SigGenerator));
 		}
 
 		[AcceptVerbs("POST")]
@@ -185,6 +185,24 @@ namespace RavenFS.Controllers
 			// remove previous .downloading file
 			accessor.Delete(SynchronizationHelper.DownloadingFileName(fileName));
 		}
+
+		//[AcceptVerbs("POST")]
+		//public HttpResponseMessage UpdateMetadata(string fileName)
+		//{
+		//    return Request.CreateResponse(HttpStatusCode.OK, task.Result);
+		//}
+
+		//[AcceptVerbs("DELETE")]
+		//public HttpResponseMessage Delete(string fileName)
+		//{
+		//    return Request.CreateResponse(HttpStatusCode.OK, task.Result);
+		//}
+
+		//[AcceptVerbs("PATCH")]
+		//public HttpResponseMessage Rename(string fileName)
+		//{
+		//    return Request.CreateResponse(HttpStatusCode.OK, task.Result);
+		//}
 
 		[AcceptVerbs("POST")]
 		public Task<IEnumerable<SynchronizationConfirmation>> Confirm()

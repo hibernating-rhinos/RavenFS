@@ -217,7 +217,10 @@
     <Compile Include="Rdc\StoragePartialAccess.cs" />
     <Compile Include="Rdc\LocalRdcManager.cs" />
     <Compile Include="Rdc\NeedListParser.cs" />
+    <Compile Include="Rdc\RdcWorkItem.cs" />
+    <Compile Include="Rdc\SynchronizationUtils.cs" />
     <Compile Include="Rdc\UuidGenerator.cs" />
+    <Compile Include="Rdc\SynchronizationWorkItem.cs" />
     <Compile Include="Rdc\Wrapper\ISignatureRepository.cs" />
     <Compile Include="Rdc\Wrapper\NeedListGenerator.cs" />
     <Compile Include="Rdc\Wrapper\RdcException.cs" />

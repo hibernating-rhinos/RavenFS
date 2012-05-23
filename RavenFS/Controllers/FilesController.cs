@@ -16,6 +16,8 @@ using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
+	using Rdc;
+
 	public class FilesController : RavenController
 	{
 		public List<FileHeader> Get()
@@ -60,6 +62,7 @@ namespace RavenFS.Controllers
 			Search.Delete(name);
 
 			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Delete });
+			//TODO SynchronizationTask.ProcessWork(fileDeleted);
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
@@ -100,7 +103,9 @@ namespace RavenFS.Controllers
 				});
 
 				Search.Index(name, headers);
-				Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Update });
+
+				Publisher.Publish(new FileChange {File = name, Action = FileChangeAction.Update});
+				//TODO SynchronizationTask.ProcessWork(fileMetadataUpdate);
 			}
 			catch (FileNotFoundException)
 			{
@@ -127,6 +132,7 @@ namespace RavenFS.Controllers
 				Search.Index(rename, fileAndPages.Metadata);
 				Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Renaming });
 				Publisher.Publish(new FileChange { File = rename, Action = FileChangeAction.Renamed });
+				//TODO SynchronizationTask.ProcessWork(fileRenamed);
 			}
 			catch (FileNotFoundException)
 			{
@@ -170,7 +176,7 @@ namespace RavenFS.Controllers
 							headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
 							Search.Index(name, headers);
 							Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });
-							SynchronizationTask.SynchronizeDestinations();
+							SynchronizationTask.ProcessWork(new RdcWorkItem(name, RavenFileSystem.ServerUrl, Storage, SigGenerator));
 							readFileToDatabase.Dispose();
 							return readingTask;
 						})
