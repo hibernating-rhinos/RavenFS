@@ -234,14 +234,19 @@ namespace RavenFS.Tests.RDC
 		{
 			var sourceContent1 = new RandomStream(10);
 			var sourceClient = NewClient(1);
+			
+			// note that file upload modifies ETag twice
 			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
 			var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
-			var etag0 = resultFileMetadata["ETag"];
+			var etag0 = resultFileMetadata.Value<Guid>("ETag");
 			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
 			resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
-			var etag1 = resultFileMetadata["ETag"];
+			var etag1 = resultFileMetadata.Value<Guid>("ETag");
 
-			Assert.False(etag0 == etag1);
+			Assert.True(Buffers.Compare(etag1.ToByteArray(), etag0.ToByteArray()) > 0,
+			            "ETag after second update should be greater");
+			Assert.Equal(Buffers.Compare(new Guid("00000000-0000-0100-0000-000000000002").ToByteArray(), etag0.ToByteArray()), 0);
+			Assert.Equal(Buffers.Compare(new Guid("00000000-0000-0100-0000-000000000004").ToByteArray(), etag1.ToByteArray()), 0);
 		}
 
 		[Fact]
