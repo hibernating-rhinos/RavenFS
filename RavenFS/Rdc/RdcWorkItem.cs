@@ -19,7 +19,6 @@
 		private readonly string source;
 		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
-		private readonly ConflictActifactManager conflictActifactManager;
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
 
@@ -31,7 +30,6 @@
 			this.sigGenerator = sigGenerator;
 			this.conflictDetector = new ConflictDetector();
 			this.conflictResolver = new ConflictResolver();
-			this.conflictActifactManager = new ConflictActifactManager(storage);
 		}
 
 		public override Task<SynchronizationReport> Perform(string destination)
@@ -136,11 +134,6 @@
 					else
 					{
 						report = task.Result;
-
-						if (task.Result.Exception == null)
-						{
-							conflictActifactManager.RemoveArtifact(FileName);
-						}
 					}
 
 					return report;
