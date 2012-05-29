@@ -28,6 +28,7 @@ namespace RavenFS.Extensions
 {
 	using System.IO;
 	using System.Linq;
+	using System.Text.RegularExpressions;
 	using Newtonsoft.Json;
 
 	/// <summary>
@@ -52,8 +53,14 @@ namespace RavenFS.Extensions
                 {
                     foreach (var value in values)
                     {
-
-                        context.Content.Headers.Add(key, value);
+                    	if (key == "Last-Modified")
+                    	{
+							context.Content.Headers.Add(key, new Regex("\\.\\d{5}").Replace(value, string.Empty)); // HTTP does not provide milliseconds, so remove it
+                    	}
+                        else
+                    	{
+                    		context.Content.Headers.Add(key, value);
+                    	}
                     }
                 }
 			}
