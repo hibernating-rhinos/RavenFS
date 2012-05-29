@@ -137,7 +137,8 @@ namespace RavenFS.Util
                     var pageLength = 0;
                     TransactionalStorage.Batch(accessor => pageLength = accessor.ReadPage(page.Id, innerBuffer));
                     var sourceIndex = currentOffset - pageOffset;
-                    length = Math.Min(innerBuffer.Length - sourceIndex, Math.Min(pageLength, Math.Min(buffer.Length - offset, count)));
+					length = Math.Min(innerBuffer.Length - sourceIndex,
+								   Math.Min(pageLength, Math.Min(buffer.Length - offset, Math.Min(pageLength - sourceIndex, count))));
 
                     Array.Copy(innerBuffer, sourceIndex, buffer, offset, length);
                     break;

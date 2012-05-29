@@ -104,6 +104,60 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Theory]
+		[InlineData(1024 * 1024)]
+		public void Synchronization_of_already_synchronized_file_should_not_transfer_any_bytes(int size)
+		{
+			var r = new Random(1);
+
+			var bytes = new byte[size];
+
+			r.NextBytes(bytes);
+
+			var sourceContent = new MemoryStream(bytes);
+			var destinationContent = new RandomlyModifiedStream(new RandomStream(size, 1), 0.01, 1);
+			var destinationClient = NewClient(0);
+			var sourceClient = NewClient(1);
+
+			destinationClient.UploadAsync("test.bin", new NameValueCollection(), destinationContent).Wait();
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+
+			var firstSynchronization = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+
+			Assert.Equal(sourceContent.Length, firstSynchronization.BytesCopied + firstSynchronization.BytesTransfered);
+
+			string resultMd5 = null;
+			using (var resultFileContent = new MemoryStream())
+			{
+				destinationClient.DownloadAsync("test.bin", resultFileContent).Wait();
+				resultFileContent.Position = 0;
+				resultMd5 = resultFileContent.GetMD5Hash();
+			}
+
+			sourceContent.Position = 0;
+			var sourceMd5 = sourceContent.GetMD5Hash();
+
+			Assert.Equal(sourceMd5, resultMd5);
+
+			var secondSynchronization = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+
+			using (var resultFileContent = new MemoryStream())
+			{
+				destinationClient.DownloadAsync("test.bin", resultFileContent).Wait();
+				resultFileContent.Position = 0;
+				resultMd5 = IOExtensions.GetMD5Hash(resultFileContent);
+			}
+
+			sourceContent.Position = 0;
+			sourceMd5 = IOExtensions.GetMD5Hash(sourceContent);
+
+			Assert.Equal(sourceMd5, resultMd5);
+
+			Assert.Equal(1, secondSynchronization.NeedListLength);
+			Assert.Equal(0, secondSynchronization.BytesTransfered);
+			Assert.Equal(sourceContent.Length, secondSynchronization.BytesCopied);
+		}
+
+		[Theory]
 		[InlineData(1024 * 1024 * 10)]
 		public void Big_file_test(long size)
 		{

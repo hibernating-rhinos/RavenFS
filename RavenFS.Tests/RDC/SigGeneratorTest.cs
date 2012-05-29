@@ -7,7 +7,9 @@ using Xunit;
 
 namespace RavenFS.Rdc.Wrapper.Test
 {
-    public class SigGeneratorTest : IDisposable
+	using System.Collections.Generic;
+
+	public class SigGeneratorTest : IDisposable
     {
         private readonly Stream _stream = new MemoryStream();
 
@@ -45,7 +47,58 @@ namespace RavenFS.Rdc.Wrapper.Test
             }
         }
 
-        public void Dispose()
+		[MtaFact]
+		public void Should_be_the_same_signatures()
+		{
+			int size = 1024*1024*5;
+			var randomStream = new RandomStream(size);
+			byte[] buffer = new byte[size];
+			randomStream.Read(buffer, 0, size);
+			var stream = new MemoryStream(buffer);
+
+			var firstSigContentHashes = new List<string>();
+
+			using (var signatureRepository = new VolatileSignatureRepository("test"))
+			using (var rested = new SigGenerator())
+			{
+				var result = rested.GenerateSignatures(stream, "test", signatureRepository);
+
+				foreach (var signatureInfo in result)
+				{
+					using (var content = signatureRepository.GetContentForReading(signatureInfo.Name))
+					{
+						firstSigContentHashes.Add(content.GetMD5Hash());
+					}
+				}
+			}
+
+			stream.Position = 0;
+
+			var secondSigContentHashes = new List<string>();
+
+			using (var signatureRepository = new VolatileSignatureRepository("test"))
+			using (var rested = new SigGenerator())
+			{
+				var result = rested.GenerateSignatures(stream, "test", signatureRepository);
+
+				foreach (var signatureInfo in result)
+				{
+					using (var content = signatureRepository.GetContentForReading(signatureInfo.Name))
+					{
+						secondSigContentHashes.Add(content.GetMD5Hash());
+					}
+				}
+			}
+
+			Assert.Equal(firstSigContentHashes.Count, secondSigContentHashes.Count);
+
+			for (int i = 0; i < firstSigContentHashes.Count; i++)
+			{
+				Assert.Equal(firstSigContentHashes[i], secondSigContentHashes[i]);
+			}
+		}
+
+		public void Dispose()
         {
            
         }

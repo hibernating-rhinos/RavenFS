@@ -226,7 +226,7 @@
 			}
 			return new DataInfo
 			{
-				CreatedAt = Convert.ToDateTime(fileAndPages.Metadata["Last-Modified"]),
+				CreatedAt = Convert.ToDateTime(fileAndPages.Metadata["Last-Modified"]).ToUniversalTime(),
 				Length = fileAndPages.TotalSize ?? 0,
 				Name = fileAndPages.Name
 			};
