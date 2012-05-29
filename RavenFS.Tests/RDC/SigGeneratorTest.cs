@@ -8,6 +8,7 @@ using Xunit;
 namespace RavenFS.Rdc.Wrapper.Test
 {
 	using System.Collections.Generic;
+	using Extensions;
 
 	public class SigGeneratorTest : IDisposable
     {

@@ -105,7 +105,6 @@
     <Compile Include="RDC\IO\RandomlyModifiedStream.cs" />
     <Compile Include="RDC\IO\RandomStream.cs" />
     <Compile Include="RDC\IO\TestDataGenerators.cs" />
-    <Compile Include="RDC\IO\TestUtils.cs" />
     <Compile Include="RDC\LockFileTests.cs" />
     <Compile Include="RDC\NeedListGeneratorTest.cs" />
     <Compile Include="RDC\RdcTestUtils.cs" />
