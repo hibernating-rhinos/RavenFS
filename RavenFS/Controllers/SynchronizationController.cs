@@ -117,6 +117,12 @@ namespace RavenFS.Controllers
 
 															task.AssertNotFaulted();
 
+															using (var stream = StorageStream.Reading(Storage, tempFileName))
+															{
+																sourceMetadata["Content-MD5"] = stream.GetMD5Hash();
+																Storage.Batch(accesor => accesor.UpdateFileMetadata(tempFileName, sourceMetadata));
+															}
+
 															Storage.Batch(
 																accessor =>
 																{

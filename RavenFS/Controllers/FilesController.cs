@@ -173,6 +173,12 @@ namespace RavenFS.Controllers
 						.ContinueWith(readingTask =>
 						{
 							HistoryUpdater.UpdateLastModified(headers);// update with the final file size
+
+							using (var stream = StorageStream.Reading(Storage, name))
+							{
+							    headers["Content-MD5"] = stream.GetMD5Hash();
+							}
+
 							Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
 							headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
 							Search.Index(name, headers);

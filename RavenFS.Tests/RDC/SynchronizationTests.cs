@@ -7,7 +7,6 @@ using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Notifications;
 using RavenFS.Rdc;
-using RavenFS.Tests.Tools;
 using RavenFS.Util;
 using Xunit;
 using Xunit.Extensions;
@@ -523,6 +522,46 @@ namespace RavenFS.Tests.RDC
 			var synchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", "http://localhost:1234").Result;
 
 			Assert.Equal("The limit of active synchronizations to http://localhost:1234 server has been achieved.", synchronizationReport.Exception.Message);
-		} 
+		}
+
+		[Fact]
+		public void Should_calculate_and_save_content_hash_after_upload()
+		{
+			var buffer = new byte[1024];
+			new Random().NextBytes(buffer);
+
+			var sourceContent = new MemoryStream(buffer);
+			var sourceClient = NewClient(0);
+
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+			sourceContent.Position = 0;
+			var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+
+			Assert.Contains("Content-MD5", resultFileMetadata.AllKeys);
+			Assert.Equal(sourceContent.GetMD5Hash(), resultFileMetadata["Content-MD5"]);
+		}
+
+		[Fact]
+		public void Should_calculate_and_save_content_hash_after_synchronization()
+		{
+			var buffer = new byte[1024*1024*5];
+			new Random().NextBytes(buffer);
+
+			var sourceContent = new MemoryStream(buffer);
+			var sourceClient = NewClient(0);
+
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+			sourceContent.Position = 0;
+
+			var destinationClient = NewClient(1);
+			destinationClient.UploadAsync("test.bin", new NameValueCollection(), new RandomlyModifiedStream(sourceContent, 0.01)).Wait();
+			sourceContent.Position = 0;
+
+			RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin"); 
+			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
+			
+			Assert.Contains("Content-MD5", resultFileMetadata.AllKeys);
+			Assert.Equal(sourceContent.GetMD5Hash(), resultFileMetadata["Content-MD5"]);
+		}
 	}
 }
