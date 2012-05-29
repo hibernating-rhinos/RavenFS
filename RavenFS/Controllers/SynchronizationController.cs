@@ -33,7 +33,7 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("POST")]
 		public Task<SynchronizationReport> Start(string fileName, string destinationServerUrl)
 		{
-			return SynchronizationTask.PerformSynchronization(destinationServerUrl, new RdcWorkItem(fileName, RavenFileSystem.ServerUrl, Storage, SigGenerator));
+			return SynchronizationTask.PerformSynchronization(destinationServerUrl, new ContentUpdateWorkItem(fileName, RavenFileSystem.ServerUrl, Storage, SigGenerator));
 		}
 
 		[AcceptVerbs("POST")]
@@ -192,11 +192,54 @@ namespace RavenFS.Controllers
 			accessor.Delete(SynchronizationHelper.DownloadingFileName(fileName));
 		}
 
-		//[AcceptVerbs("POST")]
-		//public HttpResponseMessage UpdateMetadata(string fileName)
-		//{
-		//    return Request.CreateResponse(HttpStatusCode.OK, task.Result);
-		//}
+		[AcceptVerbs("POST")]
+		public HttpResponseMessage UpdateMetadata(string fileName)
+		{
+			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
+			var lastEtagFromSource = Request.Headers.Value<Guid>("ETag");
+
+			var report = new SynchronizationReport
+			             	{
+			             		Type = SynchronizationType.MetadataUpdate
+			             	};
+
+			try
+			{
+				Storage.Batch(accessor =>
+				{
+				    AssertFileIsNotBeingSynced(fileName, accessor);
+				    StartupProceed(fileName, accessor);
+				    FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl, accessor);
+				});
+
+				var headers = Request.Headers.FilterHeaders();
+				HistoryUpdater.UpdateLastModified(headers);
+				HistoryUpdater.Update(fileName, headers);
+
+				Storage.Batch(accessor => accessor.UpdateFileMetadata(fileName, headers));
+
+				Search.Index(fileName, headers);
+			}
+			catch (Exception ex)
+			{
+				report.Exception = ex;
+			}
+			finally
+			{
+				Storage.Batch(accessor =>
+				{
+				    FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
+					SaveSynchronizationReport(fileName, accessor, report);
+
+					if (report.Exception != null)
+					{
+						SaveSynchronizationSourceInformation(sourceServerUrl, lastEtagFromSource, accessor);
+					}
+				});
+			}
+
+			return Request.CreateResponse(HttpStatusCode.OK, report);
+		}
 
 		//[AcceptVerbs("DELETE")]
 		//public HttpResponseMessage Delete(string fileName)

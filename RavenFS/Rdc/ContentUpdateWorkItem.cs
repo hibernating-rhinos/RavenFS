@@ -14,7 +14,7 @@
 	using Util;
 	using Wrapper;
 
-	public class RdcWorkItem : SynchronizationWorkItem
+	public class ContentUpdateWorkItem : SynchronizationWorkItem
 	{
 		private readonly string source;
 		private readonly TransactionalStorage storage;
@@ -22,7 +22,7 @@
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
 
-		public RdcWorkItem(string file, string source, TransactionalStorage storage, SigGenerator sigGenerator)
+		public ContentUpdateWorkItem(string file, string source, TransactionalStorage storage, SigGenerator sigGenerator)
 			: base(file)
 		{
 			this.source = source;
@@ -236,11 +236,11 @@
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != typeof (RdcWorkItem)) return false;
-			return Equals((RdcWorkItem) obj);
+			if (obj.GetType() != typeof (ContentUpdateWorkItem)) return false;
+			return Equals((ContentUpdateWorkItem) obj);
 		}
 
-		public bool Equals(RdcWorkItem other)
+		public bool Equals(ContentUpdateWorkItem other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

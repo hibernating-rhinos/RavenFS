@@ -563,5 +563,24 @@ namespace RavenFS.Tests.RDC
 			Assert.Contains("Content-MD5", resultFileMetadata.AllKeys);
 			Assert.Equal(sourceContent.GetMD5Hash(), resultFileMetadata["Content-MD5"]);
 		}
+
+		[Fact]
+		public void Should_not_change_content_hash_after_metadata_upload()
+		{
+			var buffer = new byte[1024];
+			new Random().NextBytes(buffer);
+
+			var sourceContent = new MemoryStream(buffer);
+			var sourceClient = NewClient(0);
+
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+			sourceClient.UpdateMetadataAsync("test.bin", new NameValueCollection() { { "someKey", "someValue" } }).Wait();
+
+			sourceContent.Position = 0;
+			var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+
+			Assert.Contains("Content-MD5", resultFileMetadata.AllKeys);
+			Assert.Equal(sourceContent.GetMD5Hash(), resultFileMetadata["Content-MD5"]);
+		}
 	}
 }

@@ -227,14 +227,63 @@ namespace RavenFS.Tests.RDC
 			var pedingSynchronizations = sourceClient.Synchronization.GetPendingAsync().Result;
 			
 			Assert.Equal(1, pedingSynchronizations.Count());
-			Assert.Equal("test2.bin", pedingSynchronizations.ToArray()[0].FileName);
 			Assert.Equal(destinationClient.ServerUrl, pedingSynchronizations.ToArray()[0].DestinationUrl);
 		}
 
 		[Fact]
 		public void Should_change_metadata_on_all_destinations()
 		{
+			StartServerInstance(AddtitionalServerInstancePortNumber);
 
+			var sourceClient = NewClient(0);
+
+			var destination1Client = NewClient(1);
+			var destination2Client = new RavenFileSystemClient(ServerAddress(AddtitionalServerInstancePortNumber));
+
+			var sourceContent = new MemoryStream();
+			var streamWriter = new StreamWriter(sourceContent);
+			var expected = new string('a', 1024 * 1024 * 10);
+			streamWriter.Write(expected);
+			streamWriter.Flush();
+			sourceContent.Position = 0;
+
+			sourceClient.UploadAsync("test.txt", new NameValueCollection(), sourceContent).Wait();
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destination1Client.ServerUrl },
+																										{ "url", destination2Client.ServerUrl }
+			                                                                                     	}).Wait();
+
+			// push file to all destinations
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
+
+			// prevent pushing files after metadata update
+			sourceClient.Config.DeleteConfig(SynchronizationConstants.RavenReplicationDestinations).Wait();
+
+			sourceClient.UpdateMetadataAsync("test.txt", new NameValueCollection() { { "value", "shouldBeSynchronized" } }).Wait();
+
+			// add destinations again
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destination1Client.ServerUrl },
+																										{ "url", destination2Client.ServerUrl }
+			                                                                                     	}).Wait();
+
+			// should synchronize metadata
+			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
+
+			foreach (var destinationSyncResult in destinationSyncResults)
+			{
+				foreach (var report in destinationSyncResult.Reports)
+				{
+					Assert.Null(report.Exception);
+					Assert.Equal(SynchronizationType.MetadataUpdate, report.Type);
+				}
+			}
+
+			Assert.Equal("shouldBeSynchronized", destination1Client.GetMetadataForAsync("test.txt").Result["value"]);
+			Assert.Equal("shouldBeSynchronized", destination2Client.GetMetadataForAsync("test.txt").Result["value"]);
 		}
 		
 		[Fact]

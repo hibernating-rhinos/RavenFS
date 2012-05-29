@@ -22,6 +22,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using RavenFS.Rdc;
 using RavenFS.Storage;
+using System.Net;
 #endif
 
 namespace RavenFS.Extensions
@@ -93,6 +94,20 @@ namespace RavenFS.Extensions
 		{
 			var value = self.GetValues(name).First();
 			return new JsonSerializer().Deserialize<T>(new JsonTextReader(new StringReader(value)));
+		}
+
+		public static void AddHeaders(this HttpWebRequest request, NameValueCollection metadata)
+		{
+			foreach (var key in metadata.AllKeys)
+			{
+				var values = metadata.GetValues(key);
+				if (values == null)
+					continue;
+				foreach (var value in values)
+				{
+					request.Headers[key] = value;
+				}
+			}
 		}
 #endif
 

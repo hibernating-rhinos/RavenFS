@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace RavenFS.Client
+﻿namespace RavenFS.Client
 {
+	using System;
+
     [Serializable]
     public class SynchronizationReport
     {
@@ -13,5 +10,6 @@ namespace RavenFS.Client
         public long BytesCopied { get; set; }
         public long NeedListLength { get; set; }
         public Exception Exception { get; set; }
+		public SynchronizationType Type { get; set; }
     }
 }

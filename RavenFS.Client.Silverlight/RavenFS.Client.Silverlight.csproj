@@ -145,6 +145,9 @@
     <Compile Include="..\RavenFS.Client\SynchronizationReport.cs">
       <Link>SynchronizationReport.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\SynchronizationType.cs">
+      <Link>SynchronizationType.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS\Extensions\MetadataExtensions.cs">
       <Link>Imports\MetadataExtensions.cs</Link>
     </Compile>

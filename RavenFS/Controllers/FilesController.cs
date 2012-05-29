@@ -105,7 +105,7 @@ namespace RavenFS.Controllers
 				Search.Index(name, headers);
 
 				Publisher.Publish(new FileChange {File = name, Action = FileChangeAction.Update});
-				//TODO SynchronizationTask.ProcessWork(fileMetadataUpdate);
+				SynchronizationTask.ProcessWork(new MetadataUpdateWorkItem(name, headers, RavenFileSystem.ServerUrl));
 			}
 			catch (FileNotFoundException)
 			{
@@ -183,7 +183,7 @@ namespace RavenFS.Controllers
 							headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
 							Search.Index(name, headers);
 							Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });
-							SynchronizationTask.ProcessWork(new RdcWorkItem(name, RavenFileSystem.ServerUrl, Storage, SigGenerator));
+							SynchronizationTask.ProcessWork(new ContentUpdateWorkItem(name, RavenFileSystem.ServerUrl, Storage, SigGenerator));
 							readFileToDatabase.Dispose();
 							return readingTask;
 						})

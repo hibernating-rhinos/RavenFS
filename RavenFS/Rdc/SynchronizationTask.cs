@@ -62,52 +62,92 @@ namespace RavenFS.Rdc
 					{
 						etagTask.AssertNotFaulted();
 
-						var filesToSynchronization = GetFilesToSynchronization(etagTask, 100);
-
-						foreach (var fileHeader in filesToSynchronization)
+						return EnqueueMissingUpdates(etagTask.Result, destinationClient)
+							.ContinueWith(enqueueTask =>
 						{
-							synchronizationQueue.EnqueueSynchronization(destinationUrl,
-							                                            new RdcWorkItem(fileHeader.Name,
-							                                                            localRavenFileSystem.ServerUrl, storage,
-							                                                            sigGenerator));
-						}
+							var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
 
-						var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
+							return ConfirmPushedFiles(filesNeedConfirmation, destinationClient)
+								.ContinueWith(confirmationTask =>
+												{
+													confirmationTask.AssertNotFaulted();
 
-						return ConfirmPushedFiles(filesNeedConfirmation, destinationClient)
-							.ContinueWith(confirmationTask =>
-							              	{
-							              		confirmationTask.AssertNotFaulted();
-
-							              		foreach (var confirmation in confirmationTask.Result)
-							              		{
-							              			if (confirmation.Status == FileStatus.Safe)
-							              			{
-							              				RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
-							              			}
-							              			else
-							              			{
-														synchronizationQueue.EnqueueSynchronization(destinationUrl,
-															 new RdcWorkItem(confirmation.FileName, localRavenFileSystem.ServerUrl,
-																						 storage, sigGenerator));
-							              			}
-							              		}
-							              	})
-							.ContinueWith(t =>
-							              	{
-							              		t.AssertNotFaulted();
-							              		return SynchronizePendingFiles(destinationUrl);
-							              	})
-							.ContinueWith(
-								syncingDestTask =>
-								Task.Factory.ContinueWhenAll(syncingDestTask.Result.ToArray(), t => new DestinationSyncResult
-																						{
-																							DestinationServer = destinationUrl,
-																							Reports = t.Select(syncingTask => syncingTask.Result)
-																						}))
-							.Unwrap();
+													foreach (var confirmation in confirmationTask.Result)
+													{
+														if (confirmation.Status == FileStatus.Safe)
+														{
+															RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
+														}
+														else
+														{
+															synchronizationQueue.EnqueueSynchronization(destinationUrl,
+																 new ContentUpdateWorkItem(confirmation.FileName, localRavenFileSystem.ServerUrl,
+																							 storage, sigGenerator));
+														}
+													}
+												})
+								.ContinueWith(t =>
+												{
+													t.AssertNotFaulted();
+													return SynchronizePendingFiles(destinationUrl);
+												})
+								.ContinueWith(
+									syncingDestTask =>
+									Task.Factory.ContinueWhenAll(syncingDestTask.Result.ToArray(), t => new DestinationSyncResult
+																							{
+																								DestinationServer = destinationUrl,
+																								Reports = t.Select(syncingTask => syncingTask.Result)
+																							}))
+								.Unwrap();
+						}).Unwrap();
 					}).Unwrap();
 			}
+		}
+
+		private Task EnqueueMissingUpdates(SourceSynchronizationInformation lastEtag, RavenFileSystemClient destinationClient)
+		{
+			var tcs = new TaskCompletionSource<object>();
+
+			string destinationUrl = destinationClient.ServerUrl;
+			var filesToSynchronization = GetFilesToSynchronization(lastEtag, 100).ToArray();
+
+			if (filesToSynchronization.Length == 0)
+			{
+				tcs.SetResult(null);
+			}
+
+			for (int i = 0; i < filesToSynchronization.Length; i++)
+			{
+				var file = filesToSynchronization[i].Name;
+
+				var localMetadata = GetLocalMetadata(file);
+
+				int index = i;
+				destinationClient.GetMetadataForAsync(file)
+					.ContinueWith(t =>
+					{
+						t.AssertNotFaulted();
+
+						if (t.Result == null || localMetadata["Content-MD5"] != t.Result["Content-MD5"])
+						{
+							synchronizationQueue.EnqueueSynchronization(destinationUrl,
+																		new ContentUpdateWorkItem(file,
+																						localRavenFileSystem.ServerUrl,
+																						storage, sigGenerator));
+						}
+						else
+						{
+							synchronizationQueue.EnqueueSynchronization(destinationUrl, new MetadataUpdateWorkItem(file, localMetadata, localRavenFileSystem.ServerUrl));
+						}
+
+						if (index == filesToSynchronization.Length - 1)
+						{
+							tcs.SetResult(null);
+						}
+					});
+			}
+
+			return tcs.Task;
 		}
 
 		public void ProcessWork(SynchronizationWorkItem workItem)
@@ -159,9 +199,9 @@ namespace RavenFS.Rdc
 				              	}).Unwrap();
 		}
 
-		private IEnumerable<FileHeader> GetFilesToSynchronization(Task<SourceSynchronizationInformation> lastEtagTask, int take)
+		private IEnumerable<FileHeader> GetFilesToSynchronization(SourceSynchronizationInformation lastEtag, int take)
 		{
-			var destinationsSynchronizationInformationForSource = lastEtagTask.Result;
+			var destinationsSynchronizationInformationForSource = lastEtag;
 			var destinationId = destinationsSynchronizationInformationForSource.DestinationServerInstanceId.ToString();
 
 			IEnumerable<FileHeader> filesToSynchronization = Enumerable.Empty<FileHeader>();

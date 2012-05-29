@@ -441,6 +441,13 @@ namespace RavenFS.Storage
 				var etag = innerEsentMetadata.Value<Guid>("ETag");
 				innerEsentMetadata.Remove("ETag");
 
+				var existingMetadata = RetrieveMetadata();
+
+				if (existingMetadata.AllKeys.Contains("Content-MD5"))
+				{
+					innerEsentMetadata["Content-MD5"] = existingMetadata["Content-MD5"];
+				}
+
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["etag"], etag.TransformToValueForEsentSorting());
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(innerEsentMetadata), Encoding.Unicode);
 

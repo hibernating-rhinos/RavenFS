@@ -8,6 +8,7 @@ namespace RavenFS.Rdc.Multipart
 	using System.Net.Http;
 	using System.Threading.Tasks;
 	using Client;
+	using Extensions;
 	using Newtonsoft.Json;
 	using Util;
 	using Wrapper;
@@ -33,20 +34,6 @@ namespace RavenFS.Rdc.Multipart
 			this.syncingBoundary = "syncing";
 		}
 
-		private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
-		{
-			foreach (var key in metadata.AllKeys)
-			{
-				var values = metadata.GetValues(key);
-				if (values == null)
-					continue;
-				foreach (var value in values)
-				{
-					request.Headers[key] = value;
-				}
-			}
-		}
-
 		public Task<SynchronizationReport> PushChangesAsync()
 		{
 			if (sourceStream.CanRead == false)
@@ -60,7 +47,7 @@ namespace RavenFS.Rdc.Multipart
 			request.AllowWriteStreamBuffering = false;
 			request.KeepAlive = true;
 
-			AddHeaders(sourceMetadata, request);
+			request.AddHeaders(sourceMetadata);
 
 			request.ContentType = "multipart/form-data; boundary=" + syncingBoundary;
 

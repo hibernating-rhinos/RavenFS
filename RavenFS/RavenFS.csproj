@@ -196,6 +196,7 @@
     <Compile Include="Rdc\Conflictuality\ConflictResolution.cs" />
     <Compile Include="Rdc\Conflictuality\ConflictResolver.cs" />
     <Compile Include="Rdc\DataInfo.cs" />
+    <Compile Include="Rdc\MetadataUpdateWorkItem.cs" />
     <Compile Include="Rdc\Multipart\SeedFilePart.cs" />
     <Compile Include="Rdc\Multipart\SourceFilePart.cs" />
     <Compile Include="Rdc\Multipart\SynchronizationMultipartProcessor.cs" />
@@ -217,7 +218,7 @@
     <Compile Include="Rdc\StoragePartialAccess.cs" />
     <Compile Include="Rdc\LocalRdcManager.cs" />
     <Compile Include="Rdc\NeedListParser.cs" />
-    <Compile Include="Rdc\RdcWorkItem.cs" />
+    <Compile Include="Rdc\ContentUpdateWorkItem.cs" />
     <Compile Include="Rdc\SynchronizationUtils.cs" />
     <Compile Include="Rdc\UuidGenerator.cs" />
     <Compile Include="Rdc\SynchronizationWorkItem.cs" />
