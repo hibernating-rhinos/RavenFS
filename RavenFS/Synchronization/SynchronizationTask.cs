@@ -41,7 +41,7 @@ namespace RavenFS.Synchronization
 
 		private void InitializeTimer()
 		{
-			timer.Subscribe(tick => SynchronizeDestinations());
+			timer.Subscribe(tick => SynchronizeDestinations().ToArray());
 		}
 
 		public IEnumerable<Task<DestinationSyncResult>> SynchronizeDestinations()
@@ -93,11 +93,23 @@ namespace RavenFS.Synchronization
 												})
 								.ContinueWith(
 									syncingDestTask =>
-									Task.Factory.ContinueWhenAll(syncingDestTask.Result.ToArray(), t => new DestinationSyncResult
-																							{
-																								DestinationServer = destinationUrl,
-																								Reports = t.Select(syncingTask => syncingTask.Result)
-																							}))
+										{
+											var tasks = syncingDestTask.Result.ToArray();
+
+											if(tasks.Length > 0)
+											{
+												return Task.Factory.ContinueWhenAll(tasks, t => new DestinationSyncResult
+																					{
+																						DestinationServer = destinationUrl,
+																						Reports = t.Select(syncingTask => syncingTask.Result)
+																					});
+											}
+
+											return new CompletedTask<DestinationSyncResult>(new DestinationSyncResult
+											{
+												DestinationServer = destinationUrl
+											});
+										})
 								.Unwrap();
 						}).Unwrap();
 					}).Unwrap();

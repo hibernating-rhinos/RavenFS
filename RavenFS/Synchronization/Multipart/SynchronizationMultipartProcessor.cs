@@ -44,7 +44,8 @@ namespace RavenFS.Synchronization.Multipart
 															FileName = fileName,
 															BytesTransfered = sourceBytes,
 															BytesCopied = seedBytes,
-															NeedListLength = numberOfFileParts
+															NeedListLength = numberOfFileParts,
+															Type = SynchronizationType.ContentUpdate
 														});
 				return;
 			}

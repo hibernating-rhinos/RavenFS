@@ -98,6 +98,37 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
+		public void Should_not_synchronize_file_back_to_source_if_origins_from_source()
+		{
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
+
+			sourceClient.UploadAsync("test.bin", new RandomStream(1024)).Wait();
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destinationClient.ServerUrl }
+			                                                                                     	}).Wait();
+
+			// synchronize from source to destination
+			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+
+			Assert.Equal(1, destinationSyncResults[0].Reports.Count());
+			Assert.Equal(SynchronizationType.ContentUpdate, destinationSyncResults[0].Reports.ToArray()[0].Type);
+
+			destinationClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", sourceClient.ServerUrl }
+			                                                                                     	}).Wait();
+
+			// synchronize from destination to source
+			var sourceSyncResults = destinationClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+
+			Assert.Equal(1, sourceSyncResults.Count());
+			Assert.Null(sourceSyncResults[0].Reports);
+		}
+
+		[Fact]
 		public void Synchronization_should_upload_all_missing_files()
 		{
 			var sourceClient = NewClient(0);

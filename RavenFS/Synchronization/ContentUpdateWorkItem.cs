@@ -77,7 +77,8 @@
 									task.AssertNotFaulted();
 									return new SynchronizationReport()
 									{
-										Exception = new SynchronizationException(string.Format("File {0} is conflicted.", FileName))
+										Exception = new SynchronizationException(string.Format("File {0} is conflicted.", FileName)),
+										Type = SynchronizationType.ContentUpdate
 									};
 								});
 
@@ -127,7 +128,8 @@
 						report =
 							new SynchronizationReport
 							{
-								Exception = task.Exception.ExtractSingleInnerException()
+								Exception = task.Exception.ExtractSingleInnerException(),
+								Type = SynchronizationType.ContentUpdate
 							};
 					}
 					else

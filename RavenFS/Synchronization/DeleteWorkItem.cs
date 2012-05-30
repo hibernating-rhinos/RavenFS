@@ -45,7 +45,11 @@ namespace RavenFS.Synchronization
 					}
 					catch (AggregateException e)
 					{
-						return new SynchronizationReport {Exception = e.ExtractSingleInnerException()};
+						return new SynchronizationReport
+						       	{
+						       		Exception = e.ExtractSingleInnerException(),
+									Type = SynchronizationType.Deletion
+						       	};
 					}
 				});
 		}

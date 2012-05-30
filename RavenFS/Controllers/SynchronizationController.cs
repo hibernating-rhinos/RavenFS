@@ -27,7 +27,15 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("POST")]
 		public Task<IEnumerable<DestinationSyncResult>> ToDestinations()
 		{
-			return Task.Factory.ContinueWhenAll(SynchronizationTask.SynchronizeDestinations().ToArray(), t => t.Select(destinationTasks => destinationTasks.Result));
+			var synchronizeDestinationTasks = SynchronizationTask.SynchronizeDestinations().ToArray();
+
+			if (synchronizeDestinationTasks.Length > 0)
+			{
+				return Task.Factory.ContinueWhenAll(synchronizeDestinationTasks,
+				                                    t => t.Select(destinationTasks => destinationTasks.Result));
+			}
+
+			return new CompletedTask<IEnumerable<DestinationSyncResult>>(Enumerable.Empty<DestinationSyncResult>());
 		}
 
 		[AcceptVerbs("POST")]
@@ -155,7 +163,8 @@ namespace RavenFS.Controllers
 													report =
 														new SynchronizationReport
 															{
-																Exception = task.Exception.ExtractSingleInnerException()
+																Exception = task.Exception.ExtractSingleInnerException(),
+																Type = SynchronizationType.ContentUpdate
 															};
 												}
 												else
