@@ -11,15 +11,15 @@ using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Infrastructure;
 using RavenFS.Notifications;
-using RavenFS.Rdc;
 using RavenFS.Storage;
 using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
 	using Newtonsoft.Json;
-	using Rdc.Conflictuality;
-	using Rdc.Multipart;
+	using Synchronization;
+	using Synchronization.Conflictuality;
+	using Synchronization.Multipart;
 	using ConflictDetected = Notifications.ConflictDetected;
 
 	public class SynchronizationController : RavenController

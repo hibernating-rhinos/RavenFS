@@ -11,7 +11,9 @@ using Xunit;
 
 namespace RavenFS.Rdc.Wrapper.Test
 {
-    public class NeedListGeneratorTest 
+	using Synchronization.Rdc.Wrapper;
+
+	public class NeedListGeneratorTest 
     {
     	private static RandomlyModifiedStream GetSeedStream()
     	{

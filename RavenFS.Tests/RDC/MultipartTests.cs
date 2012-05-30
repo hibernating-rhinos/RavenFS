@@ -6,8 +6,9 @@ namespace RavenFS.Tests.RDC
 	using System.IO;
 	using System.Net.Http;
 	using Extensions;
-	using Rdc.Multipart;
 	using Rdc.Wrapper;
+	using Synchronization.Multipart;
+	using Synchronization.Rdc.Wrapper;
 	using Util;
 	using Xunit;
 

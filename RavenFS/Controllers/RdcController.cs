@@ -3,14 +3,15 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using RavenFS.Client;
-using RavenFS.Rdc;
-using RavenFS.Rdc.Wrapper;
-using RavenFS.Rdc.Wrapper.Unmanaged;
 
 namespace RavenFS.Controllers
 {
 	using System.Web.Http;
 	using Storage;
+	using Synchronization;
+	using Synchronization.Rdc;
+	using Synchronization.Rdc.Wrapper;
+	using Synchronization.Rdc.Wrapper.Unmanaged;
 
 	public class RdcController : RavenController
 	{

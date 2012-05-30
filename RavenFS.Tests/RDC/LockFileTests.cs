@@ -9,6 +9,7 @@ using Xunit;
 namespace RavenFS.Tests.RDC
 {
 	using Rdc;
+	using Synchronization;
 
 	public class LockFileTests : MultiHostTestBase
 	{

@@ -9,7 +9,9 @@ using Xunit;
 
 namespace RavenFS.Tests
 {
-    public class StorageSignatureRepositoryTests : StorageTest
+	using Synchronization.Rdc.Wrapper;
+
+	public class StorageSignatureRepositoryTests : StorageTest
     {
         [Fact]
         public void Should_read_from_storage()

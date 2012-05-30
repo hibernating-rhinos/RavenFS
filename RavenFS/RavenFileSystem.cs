@@ -6,8 +6,6 @@ using Newtonsoft.Json.Converters;
 using RavenFS.Extensions;
 using RavenFS.Infrastructure;
 using RavenFS.Notifications;
-using RavenFS.Rdc;
-using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
 using RavenFS.Util;
@@ -18,7 +16,9 @@ namespace RavenFS
 	using System.Web;
 	using System.Web.Http;
 	using System.Web.Http.SelfHost;
-	using Rdc.Conflictuality;
+	using Synchronization;
+	using Synchronization.Conflictuality;
+	using Synchronization.Rdc.Wrapper;
 
 	public class RavenFileSystem : IDisposable
 	{

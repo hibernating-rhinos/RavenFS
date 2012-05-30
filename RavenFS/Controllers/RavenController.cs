@@ -9,7 +9,6 @@ using System.Web;
 using System.Web.Http;
 using RavenFS.Infrastructure;
 using RavenFS.Notifications;
-using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
 using RavenFS.Util;
@@ -18,8 +17,9 @@ namespace RavenFS.Controllers
 {
 	using System.Net;
 	using Client;
-	using Rdc;
-	using Rdc.Conflictuality;
+	using Synchronization;
+	using Synchronization.Conflictuality;
+	using Synchronization.Rdc.Wrapper;
 
 	public abstract class RavenController : ApiController
 	{

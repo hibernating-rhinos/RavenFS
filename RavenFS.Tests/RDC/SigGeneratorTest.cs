@@ -9,6 +9,7 @@ namespace RavenFS.Rdc.Wrapper.Test
 {
 	using System.Collections.Generic;
 	using Extensions;
+	using Synchronization.Rdc.Wrapper;
 
 	public class SigGeneratorTest : IDisposable
     {

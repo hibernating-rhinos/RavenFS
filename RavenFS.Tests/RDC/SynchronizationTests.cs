@@ -16,8 +16,9 @@ namespace RavenFS.Tests.RDC
 	using System.Linq;
 	using System.Threading.Tasks;
 	using IO;
-	using Rdc.Conflictuality;
 	using Rdc.Utils.IO;
+	using Synchronization;
+	using Synchronization.Conflictuality;
 
 	public class SynchronizationTests : MultiHostTestBase
 	{

@@ -10,7 +10,11 @@ using Xunit;
 
 namespace RavenFS.Tests.RDC
 {
-    public class NeedListParserTest
+	using Synchronization;
+	using Synchronization.Rdc;
+	using Synchronization.Rdc.Wrapper;
+
+	public class NeedListParserTest
     {
         private class PartialDataAccessMock : IPartialDataAccess
         {

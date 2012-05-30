@@ -12,6 +12,7 @@ namespace RavenFS.Tests.RDC
 	using RavenFS.Notifications;
 	using Rdc;
 	using Rdc.Utils.IO;
+	using Synchronization;
 	using Util;
 	using Xunit;
 

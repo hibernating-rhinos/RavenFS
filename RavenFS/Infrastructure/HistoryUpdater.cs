@@ -5,12 +5,13 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using Newtonsoft.Json;
-using RavenFS.Rdc;
 using RavenFS.Storage;
 
 namespace RavenFS.Infrastructure
 {
-    public class HistoryUpdater
+	using Synchronization;
+
+	public class HistoryUpdater
     {
         private readonly TransactionalStorage storage;
         private readonly ReplicationHiLo replicationHiLo;

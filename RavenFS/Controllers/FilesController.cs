@@ -16,7 +16,7 @@ using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
-	using Rdc;
+	using Synchronization;
 
 	public class FilesController : RavenController
 	{
