@@ -24,9 +24,11 @@ namespace RavenFS.Controllers
 		{
 			List<FileHeader> fileHeaders = null;
 			Storage.Batch(accessor =>
-			{
-				fileHeaders = accessor.ReadFiles(Paging.Start, Paging.PageSize).ToList();
-			});
+			              	{
+			              		fileHeaders =
+			              			accessor.ReadFiles(Paging.Start, Paging.PageSize).Where(
+			              				x => !x.Metadata.AllKeys.Contains(SynchronizationConstants.RavenDeleteMarker)).ToList();
+			              	});
 			return fileHeaders;
 		}
 
@@ -39,6 +41,11 @@ namespace RavenFS.Controllers
 				Storage.Batch(accessor => fileAndPages = accessor.GetFile(name, 0, 0));
 			}
 			catch (FileNotFoundException)
+			{
+				throw new HttpResponseException(HttpStatusCode.NotFound);
+			}
+
+			if (fileAndPages.Metadata.AllKeys.Contains(SynchronizationConstants.RavenDeleteMarker))
 			{
 				throw new HttpResponseException(HttpStatusCode.NotFound);
 			}

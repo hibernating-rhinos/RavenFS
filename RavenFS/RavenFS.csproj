@@ -206,7 +206,7 @@
     <Compile Include="Synchronization\SynchronizationLock.cs" />
     <Compile Include="Synchronization\SynchronizationTask.cs" />
     <Compile Include="Synchronization\SynchronizationQueue.cs" />
-    <Compile Include="Synchronization\SequenceActions.cs" />
+    <Compile Include="Infrastructure\SequenceActions.cs" />
     <Compile Include="Synchronization\HistoryItem.cs" />
     <Compile Include="Synchronization\Rdc\IPartialDataAccess.cs" />
     <Compile Include="Synchronization\FileLockManager.cs" />

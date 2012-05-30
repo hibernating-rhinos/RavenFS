@@ -304,21 +304,35 @@ namespace RavenFS.Tests
 		[Fact]
 		public void Should_modify_etag_after_upload()
 		{
-			var sourceContent1 = new RandomStream(10);
-			var sourceClient = NewClient();
+			var content = new RandomStream(10);
+			var client = NewClient();
 
 			// note that file upload modifies ETag twice
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
-			var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+			client.UploadAsync("test.bin", new NameValueCollection(), content).Wait();
+			var resultFileMetadata = client.GetMetadataForAsync("test.bin").Result;
 			var etag0 = resultFileMetadata.Value<Guid>("ETag");
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
-			resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
+			client.UploadAsync("test.bin", new NameValueCollection(), content).Wait();
+			resultFileMetadata = client.GetMetadataForAsync("test.bin").Result;
 			var etag1 = resultFileMetadata.Value<Guid>("ETag");
 
 			Assert.True(Buffers.Compare(etag1.ToByteArray(), etag0.ToByteArray()) > 0,
 						"ETag after second update should be greater");
 			Assert.Equal(Buffers.Compare(new Guid("00000000-0000-0100-0000-000000000002").ToByteArray(), etag0.ToByteArray()), 0);
 			Assert.Equal(Buffers.Compare(new Guid("00000000-0000-0100-0000-000000000004").ToByteArray(), etag1.ToByteArray()), 0);
+		}
+
+		[Fact]
+		public void Should_not_see_already_deleted_files()
+		{
+			var client = NewClient();
+			client.UploadAsync("visible.bin", new RandomStream(1)).Wait();
+			client.UploadAsync("toDelete.bin", new RandomStream(1)).Wait();
+
+			client.DeleteAsync("toDelete.bin").Wait();
+
+			var fileInfos = client.BrowseAsync().Result;
+			Assert.Equal(1, fileInfos.Length);
+			Assert.Equal("visible.bin", fileInfos[0].Name);
 		}
 
         private static MemoryStream PrepareTextSourceStream()
