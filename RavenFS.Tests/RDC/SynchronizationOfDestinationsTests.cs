@@ -10,7 +10,6 @@ namespace RavenFS.Tests.RDC
 	using Extensions;
 	using Newtonsoft.Json;
 	using RavenFS.Notifications;
-	using Rdc;
 	using Rdc.Utils.IO;
 	using Synchronization;
 	using Util;
@@ -87,11 +86,11 @@ namespace RavenFS.Tests.RDC
 			{
 				destination2Client.DownloadAsync("test.bin", resultFileContent).Wait();
 				resultFileContent.Position = 0;
-				destination2Md5 = IOExtensions.GetMD5Hash(resultFileContent);
+				destination2Md5 = resultFileContent.GetMD5Hash();
 			}
 
 			sourceContent.Position = 0;
-			var sourceMd5 = IOExtensions.GetMD5Hash(sourceContent);
+			var sourceMd5 = sourceContent.GetMD5Hash();
 
 			Assert.Equal(sourceMd5, destination1Md5);
 			Assert.Equal(sourceMd5, destination2Md5);
