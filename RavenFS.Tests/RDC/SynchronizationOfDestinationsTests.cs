@@ -320,6 +320,15 @@ namespace RavenFS.Tests.RDC
 
 			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
+			foreach (var destinationSyncResult in destinationSyncResults)
+			{
+				foreach (var report in destinationSyncResult.Reports)
+				{
+					Assert.Null(report.Exception);
+					Assert.Equal(SynchronizationType.Deletion, report.Type);
+				}
+			}
+
 			Assert.Null(destination1Client.GetMetadataForAsync("test.bin").Result);
 			Assert.Null(destination1Client.GetMetadataForAsync("test.bin").Result);
 		}
