@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Notifications;
-using RavenFS.Rdc;
 using RavenFS.Util;
 using Xunit;
 using Xunit.Extensions;
@@ -288,7 +287,7 @@ namespace RavenFS.Tests.RDC
 		{
 			var content = new RandomStream(10);
 			var client = NewClient(1);
-			client.UploadAsync("test.bin", new NameValueCollection(), content).Wait();
+			client.UploadAsync("test.bin", content).Wait();
 			var guid = Guid.NewGuid().ToString();
 			client.Synchronization.ApplyConflictAsync("test.bin", 8, guid).Wait();
 			var resultFileMetadata = client.GetMetadataForAsync("test.bin").Result;
@@ -360,13 +359,13 @@ namespace RavenFS.Tests.RDC
 		{
 			var sourceContent1 = new RandomStream(10);
 			var sourceClient = NewClient(1);
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
+			sourceClient.UploadAsync("test.bin", sourceContent1).Wait();
 			var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenReplicationHistory];
 			var history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
 			Assert.Equal(0, history.Count);
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent1).Wait();
+			sourceClient.UploadAsync("test.bin", sourceContent1).Wait();
 			historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenReplicationHistory];
 			history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
@@ -498,7 +497,7 @@ namespace RavenFS.Tests.RDC
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationLimit,
 			                              new NameValueCollection {{"value", "\"-1\""}}).Wait();
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 
 			var synchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", "http://localhost:1234").Result;
 
@@ -514,7 +513,7 @@ namespace RavenFS.Tests.RDC
 			var sourceContent = new MemoryStream(buffer);
 			var sourceClient = NewClient(0);
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 			sourceContent.Position = 0;
 			var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
 
@@ -531,11 +530,11 @@ namespace RavenFS.Tests.RDC
 			var sourceContent = new MemoryStream(buffer);
 			var sourceClient = NewClient(0);
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 			sourceContent.Position = 0;
 
 			var destinationClient = NewClient(1);
-			destinationClient.UploadAsync("test.bin", new NameValueCollection(), new RandomlyModifiedStream(sourceContent, 0.01)).Wait();
+			destinationClient.UploadAsync("test.bin", new RandomlyModifiedStream(sourceContent, 0.01)).Wait();
 			sourceContent.Position = 0;
 
 			RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin"); 
@@ -554,7 +553,7 @@ namespace RavenFS.Tests.RDC
 			var sourceContent = new MemoryStream(buffer);
 			var sourceClient = NewClient(0);
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
+			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 			sourceClient.UpdateMetadataAsync("test.bin", new NameValueCollection() { { "someKey", "someValue" } }).Wait();
 
 			sourceContent.Position = 0;
