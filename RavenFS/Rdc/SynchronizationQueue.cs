@@ -117,14 +117,7 @@ namespace RavenFS.Rdc
 				return;
 			
 			string removingItem;
-
-			if (activeDestinationTasks.TryRemove(etag, out removingItem))
-			{
-				if(removingItem == fileName)
-				{
-					return;
-				}
-			}
+			activeDestinationTasks.TryRemove(etag, out removingItem);
 		}
 	}
 }

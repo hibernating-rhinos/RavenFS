@@ -16,16 +16,14 @@
 
 	public class ContentUpdateWorkItem : SynchronizationWorkItem
 	{
-		private readonly string source;
 		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
 
-		public ContentUpdateWorkItem(string file, string source, TransactionalStorage storage, SigGenerator sigGenerator)
-			: base(file)
+		public ContentUpdateWorkItem(string file, string sourceServerUrl, TransactionalStorage storage, SigGenerator sigGenerator)
+			: base(file, sourceServerUrl)
 		{
-			this.source = source;
 			this.storage = storage;
 			this.sigGenerator = sigGenerator;
 			this.conflictDetector = new ConflictDetector();
@@ -177,7 +175,7 @@
 
 		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, string fileName, NameValueCollection sourceMetadata, Stream sourceFileStream, IList<RdcNeed> needList, params IDisposable[] disposables)
 		{
-			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, source, fileName, sourceMetadata,
+			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerUrl, fileName, sourceMetadata,
 																	   sourceFileStream, needList);
 
 			return multipartRequest.PushChangesAsync()

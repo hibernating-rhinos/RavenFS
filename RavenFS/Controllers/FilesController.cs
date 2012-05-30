@@ -55,14 +55,17 @@ namespace RavenFS.Controllers
 
 			Storage.Batch(accessor =>
 			{
+				AssertFileIsNotBeingSynced(name, accessor);
 			    accessor.Delete(name);
-			    AssertFileIsNotBeingSynced(name, accessor);
+				var tombstoneMetadata = new NameValueCollection {{SynchronizationConstants.RavenDeleteMarker, "true"}};
+				HistoryUpdater.UpdateLastModified(tombstoneMetadata);
+				accessor.PutFile(name, 0, tombstoneMetadata);
 			});
 
 			Search.Delete(name);
 
 			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Delete });
-			//TODO SynchronizationTask.ProcessWork(fileDeleted);
+			SynchronizationTask.ProcessWork(new DeleteWorkItem(name, RavenFileSystem.ServerUrl, Storage));
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}

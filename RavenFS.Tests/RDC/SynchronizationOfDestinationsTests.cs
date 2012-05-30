@@ -195,8 +195,9 @@ namespace RavenFS.Tests.RDC
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
-
-			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait(); // start synchronization again to force confirmation by source
+			
+			// start synchronization again to force confirmation by source
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait(); 
 
 			var shouldBeNull =
 				sourceClient.Config.GetConfig(SynchronizationHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result;
@@ -295,6 +296,32 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Should_delete_file_on_all_destinations()
 		{
+			StartServerInstance(AddtitionalServerInstancePortNumber);
+
+			var sourceClient = NewClient(0);
+
+			var destination1Client = NewClient(1);
+			var destination2Client = new RavenFileSystemClient(ServerAddress(AddtitionalServerInstancePortNumber));
+
+			// upload file to all servers
+			sourceClient.UploadAsync("test.bin", new NameValueCollection(), new RandomStream(10)).Wait();
+			destination1Client.UploadAsync("test.bin", new NameValueCollection(), new RandomStream(10)).Wait();
+			destination2Client.UploadAsync("test.bin", new NameValueCollection(), new RandomStream(10)).Wait();
+
+			// delete file on source
+			sourceClient.DeleteAsync("test.bin").Wait();
+
+			// set up destinations
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destination1Client.ServerUrl },
+																										{ "url", destination2Client.ServerUrl }
+			                                                                                     	}).Wait();
+
+			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
+
+			Assert.Null(destination1Client.GetMetadataForAsync("test.bin").Result);
+			Assert.Null(destination1Client.GetMetadataForAsync("test.bin").Result);
 		}
 
 		[Fact]

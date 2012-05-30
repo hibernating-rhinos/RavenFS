@@ -241,11 +241,50 @@ namespace RavenFS.Controllers
 			return Request.CreateResponse(HttpStatusCode.OK, report);
 		}
 
-		//[AcceptVerbs("DELETE")]
-		//public HttpResponseMessage Delete(string fileName)
-		//{
-		//    return Request.CreateResponse(HttpStatusCode.OK, task.Result);
-		//}
+		[AcceptVerbs("DELETE")]
+		public HttpResponseMessage Delete(string fileName)
+		{
+			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
+			var lastEtagFromSource = Request.Headers.Value<Guid>("ETag");
+
+			var report = new SynchronizationReport
+			{
+				Type = SynchronizationType.Deletion
+			};
+
+			try
+			{
+				Storage.Batch(accessor =>
+				{
+					AssertFileIsNotBeingSynced(fileName, accessor);
+					StartupProceed(fileName, accessor);
+					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl, accessor);
+				});
+
+				Storage.Batch(accessor => accessor.Delete(fileName));
+
+				Search.Delete(fileName);
+			}
+			catch (Exception ex)
+			{
+				report.Exception = ex;
+			}
+			finally
+			{
+				Storage.Batch(accessor =>
+				{
+					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
+					SaveSynchronizationReport(fileName, accessor, report);
+
+					if (report.Exception != null)
+					{
+						SaveSynchronizationSourceInformation(sourceServerUrl, lastEtagFromSource, accessor);
+					}
+				});
+			}
+
+			return Request.CreateResponse(HttpStatusCode.OK, report);
+		}
 
 		//[AcceptVerbs("PATCH")]
 		//public HttpResponseMessage Rename(string fileName)

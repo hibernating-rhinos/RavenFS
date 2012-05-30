@@ -1,5 +1,6 @@
 namespace RavenFS.Rdc
 {
+	using System;
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Net;
@@ -12,12 +13,10 @@ namespace RavenFS.Rdc
 	public class MetadataUpdateWorkItem : SynchronizationWorkItem
 	{
 		private readonly NameValueCollection metadata;
-		private readonly string sourceUrl;
 
-		public MetadataUpdateWorkItem(string fileName, NameValueCollection metadata, string sourceUrl) : base(fileName)
+		public MetadataUpdateWorkItem(string fileName, NameValueCollection metadata, string sourceUrl) : base(fileName, sourceUrl)
 		{
 			this.metadata = metadata;
-			this.sourceUrl = sourceUrl;
 		}
 
 		public override Task<SynchronizationReport> Perform(string destination)
@@ -28,18 +27,24 @@ namespace RavenFS.Rdc
 			request.ContentLength = 0;
 			request.AddHeaders(metadata);
 
-			request.Headers[SyncingMultipartConstants.SourceServerUrl] = sourceUrl;
+			request.Headers[SyncingMultipartConstants.SourceServerUrl] = SourceServerUrl;
 
 			return request
 				.GetResponseAsync()
 				.ContinueWith(task =>
 					{
-						using (var stream = task.Result.GetResponseStream())
+						try
 						{
-							return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
+							using (var stream = task.Result.GetResponseStream())
+							{
+								return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
+							}
 						}
-					})
-					.TryThrowBetterError();
+						catch (AggregateException e)
+						{
+							return new SynchronizationReport { Exception = e.ExtractSingleInnerException() };
+						}
+					});
 		}
 	}
 }

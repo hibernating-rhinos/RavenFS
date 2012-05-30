@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-
-namespace RavenFS.Rdc
+﻿namespace RavenFS.Rdc
 {
     public static class SynchronizationConstants
     {
@@ -18,6 +13,7 @@ namespace RavenFS.Rdc
         public const string RavenReplicationDestinationsBasePath = "Raven/Replication/Destinations/";
     	public const string RavenReplicationTimeout = "Raven-Replication-Timeout";
 		public const string RavenReplicationLimit = "Raven-Replication-Limit";
+		public const string RavenDeleteMarker = "Raven-Delete-Marker";
 
         public const int ChangeHistoryLength = 50;
     }

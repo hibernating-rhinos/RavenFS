@@ -128,16 +128,23 @@ namespace RavenFS.Rdc
 					{
 						t.AssertNotFaulted();
 
-						if (t.Result == null || localMetadata["Content-MD5"] != t.Result["Content-MD5"])
+						if (localMetadata[SynchronizationConstants.RavenDeleteMarker] != null)
 						{
 							synchronizationQueue.EnqueueSynchronization(destinationUrl,
-																		new ContentUpdateWorkItem(file,
-																						localRavenFileSystem.ServerUrl,
-																						storage, sigGenerator));
+							                                            new DeleteWorkItem(file, localRavenFileSystem.ServerUrl, storage));
+						}
+						else if (t.Result == null || localMetadata["Content-MD5"] != t.Result["Content-MD5"])
+						{
+							synchronizationQueue.EnqueueSynchronization(destinationUrl,
+							                                            new ContentUpdateWorkItem(file,
+							                                                                      localRavenFileSystem.ServerUrl,
+							                                                                      storage, sigGenerator));
 						}
 						else
 						{
-							synchronizationQueue.EnqueueSynchronization(destinationUrl, new MetadataUpdateWorkItem(file, localMetadata, localRavenFileSystem.ServerUrl));
+							synchronizationQueue.EnqueueSynchronization(destinationUrl,
+							                                            new MetadataUpdateWorkItem(file, localMetadata,
+							                                                                       localRavenFileSystem.ServerUrl));
 						}
 
 						if (index == filesToSynchronization.Length - 1)
@@ -210,7 +217,7 @@ namespace RavenFS.Rdc
 				accessor =>
 				filesToSynchronization =
 				accessor.GetFilesAfter(destinationsSynchronizationInformationForSource.LastSourceFileEtag, take)
-					.Where(x => x.Metadata[SynchronizationConstants.RavenReplicationSource] != destinationId)); // prevent synchronizing to itself
+					.Where(x => x.Metadata[SynchronizationConstants.RavenReplicationSource] != destinationId)); // prevent synchronization back to source
 
 			return filesToSynchronization;
 		}
