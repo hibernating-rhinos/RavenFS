@@ -27,7 +27,7 @@ namespace RavenFS.Studio.Behaviors
         {
             base.OnDetaching();
 
-            AssociatedObject.MouseRightButtonDown += HandleRightButtonClick;
+            AssociatedObject.MouseRightButtonDown -= HandleRightButtonClick;
         }
 
         private void HandleRightButtonClick(object sender, MouseButtonEventArgs e)
