@@ -111,6 +111,7 @@
     <Compile Include="Behaviors\AdjustPropertyWithThumbBehavior.cs" />
     <Compile Include="Behaviors\BindSelectedItemsBehavior.cs" />
     <Compile Include="Behaviors\ChangeDependencyPropertyAction.cs" />
+    <Compile Include="Behaviors\OpenDropDownAction.cs" />
     <Compile Include="Behaviors\OpenPopupAction.cs" />
     <Compile Include="Behaviors\ClosePopupAction.cs" />
     <Compile Include="Behaviors\DataGridRowDoubleClickCommandBehavior.cs" />

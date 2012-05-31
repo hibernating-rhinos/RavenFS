@@ -27,6 +27,10 @@
             <i:Interaction.Triggers>
                 <i:EventTrigger EventName="Loaded" SourceName="LayoutRoot">
                     <Behaviors:FocusElementAction />
+                    <Behaviors:OpenDropDownAction/>
+                </i:EventTrigger>
+                <i:EventTrigger EventName="GotFocus">
+                    <Behaviors:OpenDropDownAction/>
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </sdk:AutoCompleteBox>
