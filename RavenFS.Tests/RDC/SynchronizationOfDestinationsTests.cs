@@ -158,32 +158,6 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
-		public void Should_be_only_one_synchronization_item_in_pending_queue_if_the_same_file_was_updated_twice()
-		{
-			var sourceContent = new RandomStream(1);
-			var sourceClient = NewClient(0);
-
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationLimit,
-										  new NameValueCollection { { "value", "\"1\"" } }).Wait();
-
-			var destinationClient = NewClient(1);
-
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
-
-			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
-			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
-
-			var pedingSynchronizations = sourceClient.Synchronization.GetPendingAsync().Result;
-
-			Assert.Equal(1, pedingSynchronizations.Count());
-			Assert.Equal("test.bin", pedingSynchronizations.ToArray()[0].FileName);
-			Assert.Equal(destinationClient.ServerUrl, pedingSynchronizations.ToArray()[0].DestinationUrl);
-		}
-
-		[Fact]
 		public void Source_should_save_configuration_record_after_synchronization()
 		{
 			var sourceClient = NewClient(0);
@@ -321,7 +295,7 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Should_rename_file_on_all_destinations()
 		{
-			// TODO
+			//TODO
 		}
 
 		[Fact]
