@@ -295,7 +295,43 @@ namespace RavenFS.Tests.RDC
 		[Fact]
 		public void Should_rename_file_on_all_destinations()
 		{
-			//TODO
+			StartServerInstance(AddtitionalServerInstancePortNumber);
+
+			var sourceClient = NewClient(0);
+
+			var destination1Client = NewClient(1);
+			var destination2Client = new RavenFileSystemClient(ServerAddress(AddtitionalServerInstancePortNumber));
+
+			// upload file to all servers
+			sourceClient.UploadAsync("test.bin", new RandomStream(10)).Wait();
+			destination1Client.UploadAsync("test.bin", new RandomStream(10)).Wait();
+			destination2Client.UploadAsync("test.bin", new RandomStream(10)).Wait();
+
+			// delete file on source
+			sourceClient.RenameAsync("test.bin", "rename.bin").Wait();
+
+			// set up destinations
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destination1Client.ServerUrl },
+																										{ "url", destination2Client.ServerUrl }
+			                                                                                     	}).Wait();
+
+			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
+
+			foreach (var destinationSyncResult in destinationSyncResults)
+			{
+				foreach (var report in destinationSyncResult.Reports)
+				{
+					Assert.Null(report.Exception);
+					Assert.Equal(SynchronizationType.Renaming, report.Type);
+				}
+			}
+
+			Assert.Null(destination1Client.GetMetadataForAsync("test.bin").Result);
+			Assert.Null(destination2Client.GetMetadataForAsync("test.bin").Result);
+			Assert.NotNull(destination1Client.GetMetadataForAsync("rename.bin").Result);
+			Assert.NotNull(destination2Client.GetMetadataForAsync("rename.bin").Result);
 		}
 
 		[Fact]

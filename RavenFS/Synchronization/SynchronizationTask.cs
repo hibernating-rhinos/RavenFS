@@ -149,23 +149,34 @@ namespace RavenFS.Synchronization
 
 						if (localMetadata[SynchronizationConstants.RavenDeleteMarker] != null)
 						{
-							synchronizationQueue.EnqueueSynchronization(destinationUrl,
-							                                            new DeleteWorkItem(file, localRavenFileSystem.ServerUrl, storage));
+							var rename = localMetadata[SynchronizationConstants.RavenRenameFile];
+
+							if (rename != null)
+							{
+								synchronizationQueue.EnqueueSynchronization(destinationUrl,
+																			new RenameWorkItem(file, rename, localRavenFileSystem.ServerUrl, storage));
+							}
+							else
+							{
+								synchronizationQueue.EnqueueSynchronization(destinationUrl,
+								                                            new DeleteWorkItem(file, localRavenFileSystem.ServerUrl, storage));
+							}
 						}
-						else if (t.Result == null || localMetadata["Content-MD5"] != t.Result["Content-MD5"])
+						else if (t.Result != null && localMetadata["Content-MD5"] == t.Result["Content-MD5"]) // file exists on dest and has the same content
 						{
 							synchronizationQueue.EnqueueSynchronization(destinationUrl,
-							                                            new ContentUpdateWorkItem(file,
-							                                                                      localRavenFileSystem.ServerUrl,
-							                                                                      storage, sigGenerator));
+																		new MetadataUpdateWorkItem(file, localMetadata,
+																								   localRavenFileSystem.ServerUrl));
 						}
 						else
 						{
 							synchronizationQueue.EnqueueSynchronization(destinationUrl,
-							                                            new MetadataUpdateWorkItem(file, localMetadata,
-							                                                                       localRavenFileSystem.ServerUrl));
+																		new ContentUpdateWorkItem(file,
+																								  localRavenFileSystem.ServerUrl,
+																								  storage, sigGenerator));
 						}
 
+						// TODO make sure that SetResult is set, now it's wrong
 						if (index == filesToSynchronization.Length - 1)
 						{
 							tcs.SetResult(null);
@@ -220,13 +231,28 @@ namespace RavenFS.Synchronization
 			var destinationsSynchronizationInformationForSource = lastEtag;
 			var destinationId = destinationsSynchronizationInformationForSource.DestinationServerInstanceId.ToString();
 
-			IEnumerable<FileHeader> filesToSynchronization = Enumerable.Empty<FileHeader>();
+			var candidatesToSynchronization = Enumerable.Empty<FileHeader>();
 
 			storage.Batch(
 				accessor =>
-				filesToSynchronization =
+				candidatesToSynchronization =
 				accessor.GetFilesAfter(destinationsSynchronizationInformationForSource.LastSourceFileEtag, take)
 					.Where(x => x.Metadata[SynchronizationConstants.RavenReplicationSource] != destinationId)); // prevent synchronization back to source
+
+			var filesToSynchronization = new List<FileHeader>();
+
+			foreach (var file in candidatesToSynchronization)
+			{
+				var fileName = file.Name;
+
+				if (!candidatesToSynchronization.Any(
+						x =>
+						x.Metadata[SynchronizationConstants.RavenDeleteMarker] != null &&
+						x.Metadata[SynchronizationConstants.RavenRenameFile] == fileName)) // do not synchronize entire file after renaming, process only a tombstone file
+				{
+					filesToSynchronization.Add(file);
+				}
+			}
 
 			return filesToSynchronization;
 		}

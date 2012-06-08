@@ -294,11 +294,56 @@
 			return Request.CreateResponse(HttpStatusCode.OK, report);
 		}
 
-		//[AcceptVerbs("PATCH")]
-		//public HttpResponseMessage Rename(string fileName)
-		//{
-		//    return Request.CreateResponse(HttpStatusCode.OK, task.Result);
-		//}
+		[AcceptVerbs("PATCH")]
+		public HttpResponseMessage Rename(string fileName, string rename)
+		{
+			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
+			var lastEtagFromSource = Request.Headers.Value<Guid>("ETag");
+
+			var report = new SynchronizationReport
+			{
+				Type = SynchronizationType.Renaming
+			};
+
+			try
+			{
+				Storage.Batch(accessor =>
+				{
+					AssertFileIsNotBeingSynced(fileName, accessor);
+					StartupProceed(fileName, accessor);
+					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl, accessor);
+				});
+
+				FileAndPages fileAndPages = null;
+				Storage.Batch(accessor =>
+				{
+					fileAndPages = accessor.GetFile(fileName, 0, 0);
+					accessor.RenameFile(fileName, rename);
+				});
+
+				Search.Delete(fileName);
+				Search.Index(rename, fileAndPages.Metadata);
+			}
+			catch (Exception ex)
+			{
+				report.Exception = ex;
+			}
+			finally
+			{
+				Storage.Batch(accessor =>
+				{
+					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
+					SaveSynchronizationReport(fileName, accessor, report);
+
+					if (report.Exception != null)
+					{
+						SaveSynchronizationSourceInformation(sourceServerUrl, lastEtagFromSource, accessor);
+					}
+				});
+			}
+
+			return Request.CreateResponse(HttpStatusCode.OK, report);
+		}
 
 		[AcceptVerbs("POST")]
 		public Task<IEnumerable<SynchronizationConfirmation>> Confirm()
