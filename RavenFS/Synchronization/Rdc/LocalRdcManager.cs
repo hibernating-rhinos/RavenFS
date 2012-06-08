@@ -50,9 +50,7 @@
           
         private IEnumerable<SignatureInfo> PrepareSignatures(string filename)
         {
-            FileAndPages fileAndPages = null;
-            _transactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(filename, 0, 0));
-            var input = StorageStream.Reading(_transactionalStorage, fileAndPages.Name);
+            var input = StorageStream.Reading(_transactionalStorage, filename);
             return _sigGenerator.GenerateSignatures(input, filename, _signatureRepository);
         }
 
