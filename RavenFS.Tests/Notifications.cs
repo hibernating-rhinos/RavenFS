@@ -71,7 +71,7 @@ namespace RavenFS.Tests
             client.UploadAsync("abc.txt", new MemoryStream()).Wait();
             client.Notifications.Connect().Wait();
 
-            var notificationTask = client.Notifications.FolderChanges("/").Buffer(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+            var notificationTask = client.Notifications.FolderChanges("/").Buffer(TimeSpan.FromSeconds(5)).Take(1).ToTask();
 
             client.RenameAsync("abc.txt", "newName.txt").Wait();
 
