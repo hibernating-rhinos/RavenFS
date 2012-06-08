@@ -1,22 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Web.Http;
-using RavenFS.Client;
-using RavenFS.Extensions;
-using RavenFS.Infrastructure;
-using RavenFS.Notifications;
-using RavenFS.Storage;
-using RavenFS.Util;
-
-namespace RavenFS.Controllers
+﻿namespace RavenFS.Controllers
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Collections.Specialized;
+	using System.IO;
+	using System.Linq;
+	using System.Net;
+	using System.Net.Http;
+	using System.Threading.Tasks;
+	using System.Web.Http;
 	using Newtonsoft.Json;
+	using RavenFS.Client;
+	using RavenFS.Extensions;
+	using RavenFS.Infrastructure;
+	using RavenFS.Notifications;
+	using RavenFS.Storage;
+	using RavenFS.Util;
 	using Synchronization;
 	using Synchronization.Conflictuality;
 	using Synchronization.Multipart;
@@ -27,7 +26,7 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("POST")]
 		public Task<IEnumerable<DestinationSyncResult>> ToDestinations()
 		{
-			var synchronizeDestinationTasks = SynchronizationTask.SynchronizeDestinations().ToArray();
+			var synchronizeDestinationTasks = SynchronizationTask.SynchronizeDestinationsAsync().Result;
 
 			if (synchronizeDestinationTasks.Length > 0)
 			{

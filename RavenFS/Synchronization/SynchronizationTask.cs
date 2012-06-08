@@ -41,10 +41,17 @@ namespace RavenFS.Synchronization
 
 		private void InitializeTimer()
 		{
-			timer.Subscribe(tick => SynchronizeDestinations().ToArray());
+			timer.Subscribe(tick => SynchronizeDestinationsAsync());
 		}
 
-		public IEnumerable<Task<DestinationSyncResult>> SynchronizeDestinations()
+		public Task<Task<DestinationSyncResult>[]> SynchronizeDestinationsAsync()
+		{
+			var task = new Task<Task<DestinationSyncResult>[]>(() => SynchronizeDestinationsInternal().ToArray());
+			task.Start();
+			return task;
+		}
+
+		private IEnumerable<Task<DestinationSyncResult>> SynchronizeDestinationsInternal()
 		{
 			foreach (var destination in GetSynchronizationDestinations())
 			{
@@ -167,16 +174,6 @@ namespace RavenFS.Synchronization
 			}
 
 			return tcs.Task;
-		}
-
-		public void ProcessWork(SynchronizationWorkItem workItem)
-		{
-			foreach (var destination in GetSynchronizationDestinations())
-			{
-				synchronizationQueue.EnqueueSynchronization(destination, workItem);
-			}
-
-			SynchronizeDestinations();
 		}
 
 		private IEnumerable<Task<SynchronizationReport>> SynchronizePendingFiles(string destinationUrl)
