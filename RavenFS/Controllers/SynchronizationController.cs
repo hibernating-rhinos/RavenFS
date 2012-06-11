@@ -222,7 +222,6 @@
 
 				var headers = Request.Headers.FilterHeaders();
 				HistoryUpdater.UpdateLastModified(headers);
-				HistoryUpdater.Update(fileName, headers);
 
 				Storage.Batch(accessor => accessor.UpdateFileMetadata(fileName, headers));
 
