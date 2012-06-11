@@ -10,7 +10,7 @@ using RavenFS.Tests.Tools;
 
 namespace RavenFS.Tests
 {
-	public abstract class MultiHostTestBase : IDisposable
+	public abstract class MultiHostTestBase : WithNLog, IDisposable
 	{
 		public static readonly int[] Ports = { 19079, 19081 };
 

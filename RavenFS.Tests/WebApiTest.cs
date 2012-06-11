@@ -9,7 +9,7 @@ using RavenFS.Tests.Tools;
 
 namespace RavenFS.Tests
 {
-	public class WebApiTest : IDisposable
+	public class WebApiTest : WithNLog, IDisposable
 	{
 		private HttpSelfHostConfiguration config;
 		private HttpSelfHostServer server;

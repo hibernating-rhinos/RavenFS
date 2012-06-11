@@ -16,12 +16,15 @@ namespace RavenFS
 	using System.Web;
 	using System.Web.Http;
 	using System.Web.Http.SelfHost;
+	using NLog;
 	using Synchronization;
 	using Synchronization.Conflictuality;
 	using Synchronization.Rdc.Wrapper;
 
 	public class RavenFileSystem : IDisposable
 	{
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		private readonly string path;
 		private readonly TransactionalStorage storage;
 		private readonly IndexStorage search;
@@ -225,6 +228,12 @@ namespace RavenFS
 				name: "search",
 				routeTemplate: "search/{action}",
 				defaults: new { controller = "search", action = "get" }
+				);
+
+			config.Routes.MapHttpRoute(
+				name: "logs",
+				routeTemplate: "search/{action}/{*type}",
+				defaults: new { controller = "logs", action = "get", type = RouteParameter.Optional }
 				);
 
 			config.Routes.MapHttpRoute(
