@@ -133,7 +133,10 @@ namespace RavenFS.Synchronization
 			if (filesToSynchronization.Length == 0)
 			{
 				tcs.SetResult(null);
+				return tcs.Task;
 			}
+
+			var gettingMetadataTasks = new List<Task>();
 
 			for (int i = 0; i < filesToSynchronization.Length; i++)
 			{
@@ -141,8 +144,7 @@ namespace RavenFS.Synchronization
 
 				var localMetadata = GetLocalMetadata(file);
 
-				int index = i;
-				destinationClient.GetMetadataForAsync(file)
+				var task = destinationClient.GetMetadataForAsync(file)
 					.ContinueWith(t =>
 					{
 						t.AssertNotFaulted();
@@ -175,14 +177,12 @@ namespace RavenFS.Synchronization
 																								  localRavenFileSystem.ServerUrl,
 																								  storage, sigGenerator));
 						}
-
-						// TODO make sure that SetResult is set, now it's wrong
-						if (index == filesToSynchronization.Length - 1)
-						{
-							tcs.SetResult(null);
-						}
 					});
+
+				gettingMetadataTasks.Add(task);
 			}
+
+			Task.Factory.ContinueWhenAll(gettingMetadataTasks.ToArray(), x => tcs.SetResult(null));
 
 			return tcs.Task;
 		}
