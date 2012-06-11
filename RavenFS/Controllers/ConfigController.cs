@@ -10,8 +10,12 @@ using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
+	using NLog;
+
 	public class ConfigController : RavenController
 	{
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		public string[] Get()
 		{
 			string[] names = null;
@@ -55,6 +59,8 @@ namespace RavenFS.Controllers
 					var nameValueCollection = jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(task.Result)));
 					Storage.Batch(accessor => accessor.SetConfig(name, nameValueCollection));
 					Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Set });
+
+					log.Debug("Config '{0}' was inserted", name);
 				});
 
 		}
@@ -63,6 +69,8 @@ namespace RavenFS.Controllers
 		{
 			Storage.Batch(accessor => accessor.DeleteConfig(name));
 			Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Delete });
+
+			log.Debug("Config '{0}' was deleted", name);
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 	}

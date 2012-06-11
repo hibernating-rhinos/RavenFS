@@ -15,14 +15,18 @@ using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
+	using System.Diagnostics;
 	using System.Net;
 	using Client;
+	using NLog;
 	using Synchronization;
 	using Synchronization.Conflictuality;
 	using Synchronization.Rdc.Wrapper;
 
 	public abstract class RavenController : ApiController
 	{
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		protected class PagingInfo
 		{
 			public int Start;
@@ -199,6 +203,7 @@ namespace RavenFS.Controllers
 			}
 			else
 			{
+				log.Debug("Cannot execute operation because file '{0}' is being synced",  fileName);
 				throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.PreconditionFailed,
 																			new SynchronizationException(
 																				string.Format("File {0} is being synced", fileName))));

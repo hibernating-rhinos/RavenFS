@@ -16,10 +16,13 @@ using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
+	using NLog;
 	using Synchronization;
 
 	public class FilesController : RavenController
 	{
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		public List<FileHeader> Get()
 		{
 			List<FileHeader> fileHeaders = null;
@@ -42,11 +45,13 @@ namespace RavenFS.Controllers
 			}
 			catch (FileNotFoundException)
 			{
+				log.Debug("File '{0}' was not found", name);
 				throw new HttpResponseException(HttpStatusCode.NotFound);
 			}
 
 			if (fileAndPages.Metadata.AllKeys.Contains(SynchronizationConstants.RavenDeleteMarker))
 			{
+				log.Debug("File '{0}' is not accessible to get (Raven-Delete-Marker set)", name);
 				throw new HttpResponseException(HttpStatusCode.NotFound);
 			}
 
@@ -72,6 +77,7 @@ namespace RavenFS.Controllers
 			Search.Delete(name);
 
 			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Delete });
+			log.Debug("File '{0}' was deleted", name);
 			SynchronizationTask.SynchronizeDestinationsAsync();
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
@@ -88,6 +94,7 @@ namespace RavenFS.Controllers
 			}
 			catch (FileNotFoundException)
 			{
+				log.Debug("Cannot get metadata of a file '{0}' because file was not found", name);
 				return new HttpResponseMessage(HttpStatusCode.NotFound);
 			}
 
@@ -119,9 +126,11 @@ namespace RavenFS.Controllers
 			}
 			catch (FileNotFoundException)
 			{
+				log.Debug("Cannot update metadata because file '{0}' was not found", name);
 				return new HttpResponseMessage(HttpStatusCode.NotFound);
 			}
 
+			log.Debug("Metadata of a file '{0}' was updated", name);
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
@@ -154,9 +163,11 @@ namespace RavenFS.Controllers
 			}
 			catch (FileNotFoundException)
 			{
+				log.Debug("Cannot rename a file '{0}' to '{1}' because a file was not found", name, rename);
 				return new HttpResponseMessage(HttpStatusCode.NotFound);
 			}
 
+			log.Debug("File '{0}' was renamed to '{1}'", name, rename);
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
@@ -181,6 +192,8 @@ namespace RavenFS.Controllers
 				accessor.PutFile(name, contentLength, headers);
 
 				Search.Index(name, headers);
+
+				log.Debug("Inserted a new file '{0}' with ETag {1}", name, headers["ETag"]);
 			});
 
 			return Request.Content.ReadAsStreamAsync()
@@ -201,6 +214,9 @@ namespace RavenFS.Controllers
 							headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
 							Search.Index(name, headers);
 							Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });
+
+							log.Debug("File '{0}' was uploaded its new ETag is {1}", name, headers["ETag"]);
+
 							SynchronizationTask.SynchronizeDestinationsAsync();
 							readFileToDatabase.Dispose();
 							return readingTask;
