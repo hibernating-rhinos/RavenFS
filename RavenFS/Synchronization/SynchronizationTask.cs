@@ -338,7 +338,15 @@ namespace RavenFS.Synchronization
 
 			storage.Batch(accessor => destionationsConfig = accessor.GetConfig(SynchronizationConstants.RavenReplicationDestinations));
 
-			string[] destinations = destionationsConfig.GetValues("url");
+			var destinations = destionationsConfig.GetValues("url");
+
+			for (int i = 0; i < destinations.Length; i++)
+			{
+				if (destinations[i].EndsWith("/"))
+				{
+					destinations[i] = destinations[i].Substring(0, destinations[i].Length - 1);
+				}
+			}
 
 			return destinations;
 		}
