@@ -10,7 +10,7 @@ namespace RavenFS.Controllers
 
 	public class LogsController : ApiController
 	{
-		public HttpResponseMessage Get(string type)
+		public HttpResponseMessage Get(string type = null)
 		{
 			BoundedMemoryTarget boundedMemoryTarget = null;
 			if (LogManager.Configuration != null && LogManager.Configuration.AllTargets != null)
