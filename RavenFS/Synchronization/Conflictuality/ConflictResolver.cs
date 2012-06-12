@@ -9,7 +9,7 @@ namespace RavenFS.Synchronization.Conflictuality
 	{
 		public bool IsResolved(NameValueCollection destinationMetadata, ConflictItem conflict)
 		{
-			var conflictResolutionString = destinationMetadata[SynchronizationConstants.RavenReplicationConflictResolution];
+			var conflictResolutionString = destinationMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution];
 			if (String.IsNullOrEmpty(conflictResolutionString))
 			{
 				return false;

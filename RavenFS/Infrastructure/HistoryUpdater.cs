@@ -27,18 +27,18 @@ namespace RavenFS.Infrastructure
         public void Update(string fileName, NameValueCollection nameValueCollection)
         {
             var metadata = GetMetadata(fileName);
-            var serverId = metadata[SynchronizationConstants.RavenReplicationSource];
+            var serverId = metadata[SynchronizationConstants.RavenSynchronizationSource];
             var history = new List<HistoryItem>();
             // if there is RavenReplicationVersion metadata it means that file is not new and we have to add a new item to the history
             if (!String.IsNullOrEmpty(serverId))
             {
-                var currentVersion = long.Parse(metadata[SynchronizationConstants.RavenReplicationVersion]);
+                var currentVersion = long.Parse(metadata[SynchronizationConstants.RavenSynchronizationVersion]);
                 history = DeserializeHistory(metadata);
                 history.Add(new HistoryItem {ServerId = serverId, Version = currentVersion});
             }
-            nameValueCollection[SynchronizationConstants.RavenReplicationHistory] = SerializeHistory(history);
-            nameValueCollection[SynchronizationConstants.RavenReplicationVersion] = replicationHiLo.NextId().ToString(CultureInfo.InvariantCulture);
-            nameValueCollection[SynchronizationConstants.RavenReplicationSource] = storage.Id.ToString();
+            nameValueCollection[SynchronizationConstants.RavenSynchronizationHistory] = SerializeHistory(history);
+            nameValueCollection[SynchronizationConstants.RavenSynchronizationVersion] = replicationHiLo.NextId().ToString(CultureInfo.InvariantCulture);
+            nameValueCollection[SynchronizationConstants.RavenSynchronizationSource] = storage.Id.ToString();
         }
 
 
@@ -65,7 +65,7 @@ namespace RavenFS.Infrastructure
 
         public static List<HistoryItem> DeserializeHistory(NameValueCollection nameValueCollection)
         {
-            var serializedHistory = nameValueCollection[SynchronizationConstants.RavenReplicationHistory];
+            var serializedHistory = nameValueCollection[SynchronizationConstants.RavenSynchronizationHistory];
             return new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(serializedHistory)));
         }
 

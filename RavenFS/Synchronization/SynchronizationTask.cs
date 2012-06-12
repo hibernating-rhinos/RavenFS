@@ -283,7 +283,7 @@ namespace RavenFS.Synchronization
 					accessor =>
 					candidatesToSynchronization =
 					accessor.GetFilesAfter(destinationsSynchronizationInformationForSource.LastSourceFileEtag, take)
-						.Where(x => x.Metadata[SynchronizationConstants.RavenReplicationSource] != destinationId)); // prevent synchronization back to source
+						.Where(x => x.Metadata[SynchronizationConstants.RavenSynchronizationSource] != destinationId)); // prevent synchronization back to source
 
 				foreach (var file in candidatesToSynchronization)
 				{
@@ -375,7 +375,7 @@ namespace RavenFS.Synchronization
 		private IEnumerable<string> GetSynchronizationDestinations()
 		{
 			var destinationsConfigExists = false;
-			storage.Batch(accessor => destinationsConfigExists = accessor.ConfigExists(SynchronizationConstants.RavenReplicationDestinations));
+			storage.Batch(accessor => destinationsConfigExists = accessor.ConfigExists(SynchronizationConstants.RavenSynchronizationDestinations));
 
 			if (!destinationsConfigExists)
 			{
@@ -384,7 +384,7 @@ namespace RavenFS.Synchronization
 
 			var destionationsConfig = new NameValueCollection();
 
-			storage.Batch(accessor => destionationsConfig = accessor.GetConfig(SynchronizationConstants.RavenReplicationDestinations));
+			storage.Batch(accessor => destionationsConfig = accessor.GetConfig(SynchronizationConstants.RavenSynchronizationDestinations));
 
 			var destinations = destionationsConfig.GetValues("url");
 

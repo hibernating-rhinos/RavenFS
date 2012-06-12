@@ -58,7 +58,7 @@ namespace RavenFS.Synchronization
 			int configuredLimit = 0;
 
 			storage.Batch(
-				accessor => limit = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationLimit, out configuredLimit));
+				accessor => limit = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenSynchronizationLimit, out configuredLimit));
 
 			return limit ? configuredLimit : DefaultLimitOfConcurrentSynchronizations;
 		}

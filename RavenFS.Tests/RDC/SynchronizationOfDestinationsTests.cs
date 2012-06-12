@@ -44,7 +44,7 @@ namespace RavenFS.Tests.RDC
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 			sourceContent.Position = 0;
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destination1Client.ServerUrl },
 																										{ "url", destination2Client.ServerUrl }
@@ -105,7 +105,7 @@ namespace RavenFS.Tests.RDC
 
 			sourceClient.UploadAsync("test.bin", new RandomStream(1024)).Wait();
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
@@ -116,7 +116,7 @@ namespace RavenFS.Tests.RDC
 			Assert.Equal(1, destinationSyncResults[0].Reports.Count());
 			Assert.Equal(SynchronizationType.ContentUpdate, destinationSyncResults[0].Reports.ToArray()[0].Type);
 
-			destinationClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			destinationClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", sourceClient.ServerUrl }
 			                                                                                     	}).Wait();
@@ -142,7 +142,7 @@ namespace RavenFS.Tests.RDC
 
 			sourceClient.UploadAsync("test2.bin", source2Content).Wait();
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
@@ -167,7 +167,7 @@ namespace RavenFS.Tests.RDC
 
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
@@ -195,7 +195,7 @@ namespace RavenFS.Tests.RDC
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
@@ -216,7 +216,7 @@ namespace RavenFS.Tests.RDC
 			var sourceContent = new RandomStream(1);
 			var sourceClient = NewClient(0);
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationLimit,
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationLimit,
 										  new NameValueCollection { { "value", "\"1\"" } }).Wait();
 
 			var destinationClient = NewClient(1);
@@ -224,7 +224,7 @@ namespace RavenFS.Tests.RDC
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 			sourceClient.UploadAsync("test2.bin", sourceContent).Wait();
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
@@ -255,7 +255,7 @@ namespace RavenFS.Tests.RDC
 
 			sourceClient.UploadAsync("test.txt", sourceContent).Wait();
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destination1Client.ServerUrl },
 																										{ "url", destination2Client.ServerUrl }
@@ -265,12 +265,12 @@ namespace RavenFS.Tests.RDC
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
 			// prevent pushing files after metadata update
-			sourceClient.Config.DeleteConfig(SynchronizationConstants.RavenReplicationDestinations).Wait();
+			sourceClient.Config.DeleteConfig(SynchronizationConstants.RavenSynchronizationDestinations).Wait();
 
 			sourceClient.UpdateMetadataAsync("test.txt", new NameValueCollection() { { "value", "shouldBeSynchronized" } }).Wait();
 
 			// add destinations again
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destination1Client.ServerUrl },
 																										{ "url", destination2Client.ServerUrl }
@@ -311,7 +311,7 @@ namespace RavenFS.Tests.RDC
 			sourceClient.RenameAsync("test.bin", "rename.bin").Wait();
 
 			// set up destinations
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destination1Client.ServerUrl },
 																										{ "url", destination2Client.ServerUrl }
@@ -353,7 +353,7 @@ namespace RavenFS.Tests.RDC
 			sourceClient.DeleteAsync("test.bin").Wait();
 
 			// set up destinations
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destination1Client.ServerUrl },
 																										{ "url", destination2Client.ServerUrl }
@@ -384,7 +384,7 @@ namespace RavenFS.Tests.RDC
 
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationDestinations, new NameValueCollection
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 			                                                                                     	{
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();

@@ -294,7 +294,7 @@ namespace RavenFS.Tests.RDC
 			var conflictItemString = client.Config.GetConfig(SynchronizationHelper.ConflictConfigNameForFile("test.bin")).Result["value"];
 			var conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(conflictItemString);
 
-			Assert.Equal(true.ToString(), resultFileMetadata[SynchronizationConstants.RavenReplicationConflict]);
+			Assert.Equal(true.ToString(), resultFileMetadata[SynchronizationConstants.RavenSynchronizationConflict]);
 			Assert.Equal(guid, conflict.Remote.ServerId);
 			Assert.Equal(8, conflict.Remote.Version);
 			Assert.Equal(1, conflict.Current.Version);
@@ -331,7 +331,7 @@ namespace RavenFS.Tests.RDC
 
 			Assert.NotNull(synchronizationReport.Exception);
 			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
-			Assert.True(Convert.ToBoolean(resultFileMetadata[SynchronizationConstants.RavenReplicationConflict]));
+			Assert.True(Convert.ToBoolean(resultFileMetadata[SynchronizationConstants.RavenSynchronizationConflict]));
 		}
 
 		[Fact]
@@ -340,7 +340,7 @@ namespace RavenFS.Tests.RDC
 			var sourceContent = new RandomStream(10);
 			var sourceMetadataWithConflict = new NameValueCollection
 		                       {
-		                           {SynchronizationConstants.RavenReplicationConflict, "true"}
+		                           {SynchronizationConstants.RavenSynchronizationConflict, "true"}
 		                       };
 
 			var destinationClient = NewClient(0);
@@ -360,13 +360,13 @@ namespace RavenFS.Tests.RDC
 			var sourceContent1 = new RandomStream(10);
 			var sourceClient = NewClient(1);
 			sourceClient.UploadAsync("test.bin", sourceContent1).Wait();
-			var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenReplicationHistory];
+			var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenSynchronizationHistory];
 			var history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
 			Assert.Equal(0, history.Count);
 
 			sourceClient.UploadAsync("test.bin", sourceContent1).Wait();
-			historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenReplicationHistory];
+			historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenSynchronizationHistory];
 			history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
 			Assert.Equal(1, history.Count);
@@ -380,14 +380,14 @@ namespace RavenFS.Tests.RDC
 			var sourceContent1 = new RandomStream(10);
 			var sourceClient = NewClient(1);
 			sourceClient.UploadAsync("test.bin", new NameValueCollection { { "test", "Change me" } }, sourceContent1).Wait();
-			var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenReplicationHistory];
+			var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenSynchronizationHistory];
 			var history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
 			Assert.Equal(0, history.Count);
 
 			sourceClient.UpdateMetadataAsync("test.bin", new NameValueCollection { { "test", "Changed" } }).Wait();
 			var metadata = sourceClient.GetMetadataForAsync("test.bin").Result;
-			historySerialized = metadata[SynchronizationConstants.RavenReplicationHistory];
+			historySerialized = metadata[SynchronizationConstants.RavenSynchronizationHistory];
 			history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
 			Assert.Equal(1, history.Count);
@@ -494,7 +494,7 @@ namespace RavenFS.Tests.RDC
 			var sourceContent = new RandomStream(1);
 			var sourceClient = NewClient(1);
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenReplicationLimit,
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationLimit,
 			                              new NameValueCollection {{"value", "\"-1\""}}).Wait();
 
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();

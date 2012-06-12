@@ -15,7 +15,7 @@ namespace RavenFS.Synchronization
 
 		private TimeSpan ReplicationTimeout(StorageActionsAccessor accessor)
 		{
-			bool timeoutConfigExists = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationTimeout, out configuredTimeout);
+			bool timeoutConfigExists = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenSynchronizationTimeout, out configuredTimeout);
 
 			return timeoutConfigExists ? configuredTimeout : defaultTimeout;
 		}

@@ -50,7 +50,7 @@
 				return SynchronizationUtils.SynchronizationExceptionReport(string.Format("File {0} could not be found", FileName));
 			}
 
-			if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenReplicationConflict))
+			if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenSynchronizationConflict))
 			{
 				log.Debug("Could not synchronize file '{0}' because it does not exist");
 

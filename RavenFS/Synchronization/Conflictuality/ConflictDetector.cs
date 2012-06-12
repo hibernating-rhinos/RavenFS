@@ -9,10 +9,10 @@ namespace RavenFS.Synchronization.Conflictuality
 		public ConflictItem Check(NameValueCollection destinationMetadata, NameValueCollection sourceMetadata)
 		{
 			var sourceHistory = HistoryUpdater.DeserializeHistory(sourceMetadata);
-			var sourceVersion = long.Parse(sourceMetadata[SynchronizationConstants.RavenReplicationVersion]);
-			var sourceServerId = sourceMetadata[SynchronizationConstants.RavenReplicationSource];
-			var destinationVersion = long.Parse(destinationMetadata[SynchronizationConstants.RavenReplicationVersion]);
-			var destinationServerId = destinationMetadata[SynchronizationConstants.RavenReplicationSource];
+			var sourceVersion = long.Parse(sourceMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
+			var sourceServerId = sourceMetadata[SynchronizationConstants.RavenSynchronizationSource];
+			var destinationVersion = long.Parse(destinationMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
+			var destinationServerId = destinationMetadata[SynchronizationConstants.RavenSynchronizationSource];
 			// if there are the same files or destination is direct child there are no conflicts
 			if ((sourceServerId == destinationServerId && sourceVersion == destinationVersion)
 				|| sourceHistory.Any(item => item.ServerId == destinationServerId && item.Version == destinationVersion))

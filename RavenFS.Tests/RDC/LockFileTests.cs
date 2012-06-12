@@ -160,7 +160,7 @@ namespace RavenFS.Tests.RDC
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			destinationClient.Config.SetConfig(SynchronizationConstants.RavenReplicationTimeout, new NameValueCollection()
+			destinationClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationTimeout, new NameValueCollection()
                                                                                         {
                                                                                             {"value", "\"00:00:00\""}
                                                                                         }).Wait();
@@ -194,7 +194,7 @@ namespace RavenFS.Tests.RDC
 		{
 			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.MinValue)).Wait();
 
-			destinationClient.Config.SetConfig(SynchronizationConstants.RavenReplicationTimeout, new NameValueCollection()
+			destinationClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationTimeout, new NameValueCollection()
                                                                                         {
                                                                                             {"value", "\"00:00:00\""}
                                                                                         }).Wait();

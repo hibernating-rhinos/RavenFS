@@ -472,7 +472,7 @@
 				{
 					ServerId = Storage.Id.ToString(),
 					Version =
-						long.Parse(localMetadata[SynchronizationConstants.RavenReplicationVersion])
+						long.Parse(localMetadata[SynchronizationConstants.RavenSynchronizationVersion])
 				},
 				Remote = new HistoryItem
 				{
@@ -519,7 +519,7 @@
 			var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
 			ConflictActifactManager.RemoveArtifact(fileName);
 			var localMetadata = GetLocalMetadata(fileName);
-			var version = long.Parse(localMetadata[SynchronizationConstants.RavenReplicationVersion]);
+			var version = long.Parse(localMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
 			return sourceRavenFileSystemClient.Synchronization.ResolveConflictInFavorOfDestAsync(fileName, version,
 																								 Storage.Id.ToString());
 		}
@@ -541,7 +541,7 @@
 							RemoteServerId = conflictItem.Remote.ServerId,
 							Version = conflictItem.Remote.Version,
 						};
-					localMetadata[SynchronizationConstants.RavenReplicationConflictResolution] =
+					localMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] =
 						new TypeHidingJsonSerializer().Stringify(conflictResolution);
 					accessor.UpdateFileMetadata(fileName, localMetadata);
 				});
@@ -607,7 +607,7 @@
 		private SourceSynchronizationInformation GetLastSynchronization(string from, StorageActionsAccessor accessor)
 		{
 			SourceSynchronizationInformation info;
-			accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + from, out info);
+			accessor.TryGetConfigurationValue(SynchronizationConstants.RavenSynchronizationSourcesBasePath + "/" + from, out info);
 
 			return info ?? new SourceSynchronizationInformation()
 							{
@@ -630,7 +630,7 @@
 				DestinationServerInstanceId = Storage.Id
 			};
 
-			var key = SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl);
+			var key = SynchronizationConstants.RavenSynchronizationSourcesBasePath + "/" + StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl);
 
 			accessor.SetConfigurationValue(key, synchronizationSourceInfo);
 			log.Debug("Last synchronized file ETag from {0} is {1}", sourceServerUrl, lastSourceEtag);

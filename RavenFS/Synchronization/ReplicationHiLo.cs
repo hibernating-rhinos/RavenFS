@@ -42,9 +42,9 @@
             _storage.Batch(
                 accessor =>
                 {
-                    accessor.TryGetConfigurationValue(SynchronizationConstants.RavenReplicationVersionHiLo, out result);
+                    accessor.TryGetConfigurationValue(SynchronizationConstants.RavenSynchronizationVersionHiLo, out result);
                     result++;
-                    accessor.SetConfigurationValue(SynchronizationConstants.RavenReplicationVersionHiLo, result);
+                    accessor.SetConfigurationValue(SynchronizationConstants.RavenSynchronizationVersionHiLo, result);
                 });
             return result;
         }
