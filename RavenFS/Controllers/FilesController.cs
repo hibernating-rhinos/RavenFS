@@ -193,7 +193,7 @@ namespace RavenFS.Controllers
 
 				Search.Index(name, headers);
 
-				log.Debug("Inserted a new file '{0}' with ETag {1}", name, headers["ETag"]);
+				log.Debug("Inserted a new file '{0}' with ETag {1}", name, headers.Value<Guid>("ETag"));
 			});
 
 			return Request.Content.ReadAsStreamAsync()
@@ -215,7 +215,7 @@ namespace RavenFS.Controllers
 							Search.Index(name, headers);
 							Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });
 
-							log.Debug("File '{0}' was uploaded its new ETag is {1}", name, headers["ETag"]);
+							log.Debug("File '{0}' was uploaded its new ETag is {1}", name, headers.Value<Guid>("ETag"));
 
 							SynchronizationTask.SynchronizeDestinationsAsync();
 							readFileToDatabase.Dispose();
