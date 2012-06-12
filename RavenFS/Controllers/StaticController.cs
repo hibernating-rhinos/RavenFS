@@ -11,6 +11,7 @@ namespace RavenFS.Controllers
 {
 	public class StaticController : ApiController
 	{
+		[AcceptVerbs("GET")]
 		public HttpResponseMessage ClientAccessPolicy()
 		{
 			var manifestResourceStream = typeof(StaticController).Assembly.GetManifestResourceStream("RavenFS.Static.ClientAccessPolicy.xml");
@@ -43,6 +44,7 @@ namespace RavenFS.Controllers
 			}
 		}
 
+		[AcceptVerbs("GET")]
 		public HttpResponseMessage RavenStudioXap()
 		{
 			var ravenStudioStream = GetRavenStudioStream();
@@ -62,11 +64,13 @@ namespace RavenFS.Controllers
 			};
 		}
 
+		[AcceptVerbs("GET")]
 		public HttpResponseMessage FavIcon()
 		{
 			return new HttpResponseMessage(HttpStatusCode.NotFound);
 		}
 
+		[AcceptVerbs("GET")]
 		public HttpResponseMessage Root()
 		{
 			var file = RavenStudioPotentialPaths.Any(File.Exists) ? "RavenFS.Studio.html" : "studio_not_found.html";

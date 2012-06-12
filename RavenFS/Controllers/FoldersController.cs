@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Web.Http;
-using RavenFS.Client;
 using System.Linq;
+using System.Web.Http;
 
 namespace RavenFS.Controllers
 {
