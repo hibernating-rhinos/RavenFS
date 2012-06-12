@@ -24,7 +24,7 @@
 
 	public class SynchronizationController : RavenController
 	{
-		private readonly Logger log = LogManager.GetCurrentClassLogger();
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
 
 		[AcceptVerbs("POST")]
 		public Task<IEnumerable<DestinationSyncResult>> ToDestinations()

@@ -8,6 +8,7 @@
 	using System.Threading.Tasks;
 	using Conflictuality;
 	using Multipart;
+	using NLog;
 	using RavenFS.Client;
 	using RavenFS.Infrastructure;
 	using RavenFS.Storage;
@@ -17,6 +18,8 @@
 
 	public class ContentUpdateWorkItem : SynchronizationWorkItem
 	{
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
 		private readonly ConflictDetector conflictDetector;
@@ -42,11 +45,15 @@
 
 			if (sourceMetadata == null)
 			{
+				log.Debug("Could not synchronize file '{0}' because it does not exist");
+
 				return SynchronizationUtils.SynchronizationExceptionReport(string.Format("File {0} could not be found", FileName));
 			}
 
 			if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenReplicationConflict))
 			{
+				log.Debug("Could not synchronize file '{0}' because it does not exist");
+
 				return SynchronizationUtils.SynchronizationExceptionReport(string.Format("File {0} is conflicted", FileName));
 			}
 
