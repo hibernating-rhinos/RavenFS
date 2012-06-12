@@ -10,6 +10,7 @@
 	using System.Threading.Tasks;
 	using System.Web.Http;
 	using Newtonsoft.Json;
+	using NLog;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
 	using RavenFS.Infrastructure;
@@ -23,6 +24,8 @@
 
 	public class SynchronizationController : RavenController
 	{
+		private readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		[AcceptVerbs("POST")]
 		public Task<IEnumerable<DestinationSyncResult>> ToDestinations()
 		{
@@ -40,6 +43,8 @@
 		[AcceptVerbs("POST")]
 		public Task<SynchronizationReport> Start(string fileName, string destinationServerUrl)
 		{
+			log.Debug("Starting to synchronize a file '{0}' to {1}", fileName, destinationServerUrl);
+
 			return SynchronizationTask.PerformSynchronization(destinationServerUrl, new ContentUpdateWorkItem(fileName, RavenFileSystem.ServerUrl, Storage, SigGenerator));
 		}
 
@@ -51,11 +56,13 @@
 				throw new HttpResponseException(HttpStatusCode.UnsupportedMediaType);
 			}
 
-			string fileName = Request.Headers.GetValues(SyncingMultipartConstants.FileName).FirstOrDefault();
-			string tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
+			var fileName = Request.Headers.GetValues(SyncingMultipartConstants.FileName).FirstOrDefault();
+			var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
 
-			string sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
-			Guid lastEtagFromSource = Request.Headers.Value<Guid>("ETag");
+			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
+			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
+
+			log.Debug("Starting to process multipart synchronization request of file '{0}' with ETag {1} from {2}", fileName, sourceServerUrl, sourceFileETag);
 
 			Storage.Batch(accessor =>
 			{
@@ -90,6 +97,10 @@
 																	FileName = fileName,
 																	ServerUrl = Request.GetServerUrl()
 																});
+
+											log.Debug(
+												"File {0} is in conflict with synchronized version from {1}. File marked as conflicted, conflict configuration item created",
+												fileName, sourceServerUrl);
 
 											throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
 										}
@@ -165,10 +176,14 @@
 																Exception = task.Exception.ExtractSingleInnerException(),
 																Type = SynchronizationType.ContentUpdate
 															};
+													log.WarnException(
+														string.Format("Error was occured during synchronization of file '{0}' from {1}", fileName, sourceServerUrl),
+														report.Exception);
 												}
 												else
 												{
 													report = task.Result;
+													log.Debug("File '{0}' was synchronized successfully from {1}", fileName, sourceServerUrl);
 												}
 												Storage.Batch(
 													accessor =>
@@ -177,7 +192,7 @@
 
 														if (task.Status != TaskStatus.Faulted)
 														{
-															SaveSynchronizationSourceInformation(sourceServerUrl, lastEtagFromSource, accessor);
+															SaveSynchronizationSourceInformation(sourceServerUrl, sourceFileETag, accessor);
 														}
 													});
 												return task;
@@ -204,7 +219,9 @@
 		public HttpResponseMessage UpdateMetadata(string fileName)
 		{
 			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
-			var lastEtagFromSource = Request.Headers.Value<Guid>("ETag");
+			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
+
+			log.Debug("Starting to synchronize metadata of file '{0}' with ETag {1} from {2}", fileName, sourceServerUrl, sourceFileETag);
 
 			var report = new SynchronizationReport
 			             	{
@@ -230,6 +247,9 @@
 			catch (Exception ex)
 			{
 				report.Exception = ex;
+
+				log.WarnException(
+					string.Format("Error was occured during metadata synchronization of file '{0}' from {1}", fileName, sourceServerUrl), ex);
 			}
 			finally
 			{
@@ -240,7 +260,9 @@
 
 					if (report.Exception != null)
 					{
-						SaveSynchronizationSourceInformation(sourceServerUrl, lastEtagFromSource, accessor);
+						log.Debug("Metadata of file '{0}' was synchronized successfully from {1}", fileName, sourceServerUrl);	
+
+						SaveSynchronizationSourceInformation(sourceServerUrl, sourceFileETag, accessor);
 					}
 				});
 			}
@@ -252,7 +274,9 @@
 		public HttpResponseMessage Delete(string fileName)
 		{
 			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
-			var lastEtagFromSource = Request.Headers.Value<Guid>("ETag");
+			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
+
+			log.Debug("Starting to synchronize deleted file '{0}' with ETag {1} from {2}", fileName, sourceServerUrl, sourceFileETag);
 
 			var report = new SynchronizationReport
 			{
@@ -275,6 +299,9 @@
 			catch (Exception ex)
 			{
 				report.Exception = ex;
+
+				log.WarnException(
+					string.Format("Error was occured during deletion synchronization of file '{0}' from {1}", fileName, sourceServerUrl), ex);
 			}
 			finally
 			{
@@ -285,7 +312,9 @@
 
 					if (report.Exception != null)
 					{
-						SaveSynchronizationSourceInformation(sourceServerUrl, lastEtagFromSource, accessor);
+						log.Debug("File '{0}' was deleted during synchronization from {1}", fileName, sourceServerUrl);	
+
+						SaveSynchronizationSourceInformation(sourceServerUrl, sourceFileETag, accessor);
 					}
 				});
 			}
@@ -297,7 +326,9 @@
 		public HttpResponseMessage Rename(string fileName, string rename)
 		{
 			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
-			var lastEtagFromSource = Request.Headers.Value<Guid>("ETag");
+			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
+
+			log.Debug("Starting to synchronize renaming file '{0}' to {1} with ETag {2} from {3}", fileName, rename, sourceServerUrl, sourceFileETag);
 
 			var report = new SynchronizationReport
 			{
@@ -326,6 +357,9 @@
 			catch (Exception ex)
 			{
 				report.Exception = ex;
+				log.WarnException(
+					string.Format("Error was occured during renaming synchronization of file '{0}' from {1}", fileName, sourceServerUrl), ex);
+			
 			}
 			finally
 			{
@@ -336,7 +370,9 @@
 
 					if (report.Exception != null)
 					{
-						SaveSynchronizationSourceInformation(sourceServerUrl, lastEtagFromSource, accessor);
+						log.Debug("File '{0}' was renamed to {1} during synchronization from {2}", fileName, rename, sourceServerUrl);	
+
+						SaveSynchronizationSourceInformation(sourceServerUrl, sourceFileETag, accessor);
 					}
 				});
 			}
@@ -403,6 +439,9 @@
 		[AcceptVerbs("PATCH")]
 		public Task<HttpResponseMessage> ResolveConflict(string fileName, ConflictResolutionStrategy strategy, string sourceServerUrl)
 		{
+			log.Debug("Resolving conflict for file '{0}' with {1} version as using {1} strategy", fileName, sourceServerUrl,
+			          strategy);
+
 			if (strategy == ConflictResolutionStrategy.CurrentVersion)
 			{
 				return StrategyAsGetCurrent(fileName, sourceServerUrl)
@@ -450,6 +489,9 @@
 				ServerUrl = Request.GetServerUrl()
 			});
 
+			log.Debug(
+				"Conflict applied for file '{0}' (remote version: {1}, remote server id: {2}).", filename, remoteVersion, remoteServerId);
+
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
@@ -466,6 +508,9 @@
 		{
 			SourceSynchronizationInformation lastEtag = null;
 			Storage.Batch(accessor => lastEtag = GetLastSynchronization(StringUtils.RemoveTrailingSlashAndEncode(from), accessor));
+
+			log.Debug("Got synchronization last etag request from {0}: [{1}]", from, lastEtag);
+
 			return Request.CreateResponse(HttpStatusCode.OK, lastEtag);
 		}
 
@@ -588,6 +633,7 @@
 			var key = SynchronizationConstants.RavenReplicationSourcesBasePath + "/" + StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl);
 
 			accessor.SetConfigurationValue(key, synchronizationSourceInfo);
+			log.Debug("Last synchronized file ETag from {0} is {1}", sourceServerUrl, lastSourceEtag);
 		}
 	}
 }

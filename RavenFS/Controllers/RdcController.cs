@@ -23,7 +23,7 @@ namespace RavenFS.Controllers
 		{
 			filename = Uri.UnescapeDataString(filename);
 
-			log.Debug("Getting signatures of a file '{0}'", filename);
+			log.Debug("Got signatures of a file '{0}' request", filename);
 
 			using (var signatureRepository = new StorageSignatureRepository(Storage, filename))
 			{
