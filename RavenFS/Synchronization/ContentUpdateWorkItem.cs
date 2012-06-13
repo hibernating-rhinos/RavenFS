@@ -47,14 +47,14 @@
 			{
 				log.Debug("Could not synchronize a file '{0}' because it does not exist");
 
-				return SynchronizationUtils.SynchronizationExceptionReport(string.Format("File {0} could not be found", FileName));
+				return SynchronizationUtils.SynchronizationExceptionReport(FileName, string.Format("File {0} could not be found", FileName));
 			}
 
 			if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenSynchronizationConflict))
 			{
 				log.Debug("Could not synchronize a file '{0}' because it does not exist");
 
-				return SynchronizationUtils.SynchronizationExceptionReport(string.Format("File {0} is conflicted", FileName));
+				return SynchronizationUtils.SynchronizationExceptionReport(FileName, string.Format("File {0} is conflicted", FileName));
 			}
 
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
@@ -90,6 +90,7 @@
 									}
 									return new SynchronizationReport
 									{
+										FileName = FileName,
 										Exception = new SynchronizationException(string.Format("File {0} is conflicted.", FileName)),
 										Type = SynchronizationType.ContentUpdate
 									};
@@ -141,19 +142,30 @@
 						report =
 							new SynchronizationReport
 							{
+								FileName = FileName,
 								Exception = task.Exception.ExtractSingleInnerException(),
 								Type = SynchronizationType.ContentUpdate
 							};
 
-						log.ErrorException(
+						log.WarnException(
 							string.Format("Failed to perform a synchronization of a file '{0}' to {1}", FileName, destination), report.Exception);
 					}
 					else
 					{
 						report = task.Result;
-						log.Debug(
-							"Synchronization of a file '{0}' to {1} has finished. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
-							FileName, destination, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
+
+						if (report.Exception == null)
+						{
+							log.Debug(
+								"Synchronization of a file '{0}' to {1} has finished. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
+								FileName, destination, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
+						}
+						else
+						{
+							log.WarnException(
+								string.Format("Failed to perform a synchronization of a file '{0}' to {1}", FileName, destination),
+								report.Exception);
+						}
 					}
 
 					return report;
@@ -210,16 +222,7 @@
 						disposable.Dispose();
 					}
 
-					if (t.Exception != null)
-					{
-						var ex = t.Exception.ExtractSingleInnerException();
-
-						log.WarnException(
-							string.Format("Failed to synchronize a file '{0}' to {1} by using multipart request", fileName,
-							              destinationServerUrl), ex);
-
-						return new SynchronizationReport {Exception = ex};
-					}
+					t.AssertNotFaulted();
 
 					return t.Result;
 				});

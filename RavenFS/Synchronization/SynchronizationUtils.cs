@@ -6,10 +6,11 @@ namespace RavenFS.Synchronization
 
 	public static class SynchronizationUtils
 	{
-		public static Task<SynchronizationReport> SynchronizationExceptionReport(string exceptionMessage)
+		public static Task<SynchronizationReport> SynchronizationExceptionReport(string filename, string exceptionMessage)
 		{
 			return new CompletedTask<SynchronizationReport>(new SynchronizationReport()
 			{
+				FileName = filename,
 				Exception = new SynchronizationException(exceptionMessage)
 			});
 		}

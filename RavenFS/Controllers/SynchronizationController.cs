@@ -62,7 +62,7 @@
 			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
-			log.Debug("Starting to process multipart synchronization request of a file '{0}' with ETag {1} from {2}", fileName, sourceServerUrl, sourceFileETag);
+			log.Debug("Starting to process multipart synchronization request of a file '{0}' with ETag {1} from {2}", fileName, sourceFileETag, sourceServerUrl);
 
 			Storage.Batch(accessor =>
 			{
@@ -173,19 +173,20 @@
 													report =
 														new SynchronizationReport
 															{
+																FileName = fileName,
 																Exception = task.Exception.ExtractSingleInnerException(),
 																Type = SynchronizationType.ContentUpdate
 															};
 													log.WarnException(
-														string.Format("Error was occured during synchronization of file '{0}' from {1}", fileName, sourceServerUrl),
+														string.Format("Error has occured during synchronization of a file '{0}' from {1}", fileName, sourceServerUrl),
 														report.Exception);
 												}
 												else
 												{
 													report = task.Result;
-													log.Debug(
-														"File '{0}' was synchronized successfully from {1}. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
-														fileName, sourceServerUrl, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
+														log.Debug(
+															"File '{0}' was synchronized successfully from {1}. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
+															fileName, sourceServerUrl, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
 												}
 												Storage.Batch(
 													accessor =>
@@ -227,6 +228,7 @@
 
 			var report = new SynchronizationReport
 			             	{
+								FileName = fileName,
 			             		Type = SynchronizationType.MetadataUpdate
 			             	};
 
@@ -282,6 +284,7 @@
 
 			var report = new SynchronizationReport
 			{
+				FileName = fileName,
 				Type = SynchronizationType.Deletion
 			};
 
@@ -334,6 +337,7 @@
 
 			var report = new SynchronizationReport
 			{
+				FileName = fileName,
 				Type = SynchronizationType.Renaming
 			};
 
@@ -492,7 +496,7 @@
 			});
 
 			log.Debug(
-				"Conflict applied for file '{0}' (remote version: {1}, remote server id: {2}).", filename, remoteVersion, remoteServerId);
+				"Conflict applied for a file '{0}' (remote version: {1}, remote server id: {2}).", filename, remoteVersion, remoteServerId);
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
@@ -635,7 +639,7 @@
 			var key = SynchronizationConstants.RavenSynchronizationSourcesBasePath + "/" + StringUtils.RemoveTrailingSlashAndEncode(sourceServerUrl);
 
 			accessor.SetConfigurationValue(key, synchronizationSourceInfo);
-			log.Debug("Last synchronized file ETag from {0} is {1}", sourceServerUrl, lastSourceEtag);
+			log.Debug("Saved last synchronized file ETag {0} from {1}", lastSourceEtag, sourceServerUrl);
 		}
 	}
 }

@@ -147,7 +147,17 @@ namespace RavenFS.Synchronization
 											};
 					              		}
 
-										log.Debug("Synchronization to a destination {0} was completed. {1} files were synchronized", destinationUrl, t.Result.Reports != null ? t.Result.Reports.Count() : 0);
+					              		var successfullSynchronizationsCount = t.Result.Reports != null
+					              		                              	? t.Result.Reports.Where(x => x.Exception == null).Count()
+					              		                              	: 0;
+
+										var failedSynchronizationsCount = t.Result.Reports != null
+					              		                              	? t.Result.Reports.Where(x => x.Exception != null).Count()
+					              		                              	: 0;
+
+					              		log.Debug(
+					              			"Synchronization to a destination {0} has completed. {1} file(s) were synchronized successfully, {2} synchonization(s) were failed",
+					              			destinationUrl, successfullSynchronizationsCount, failedSynchronizationsCount);
 
 					              		return t.Result;
 					              	});
@@ -251,9 +261,10 @@ namespace RavenFS.Synchronization
 				log.Debug("The limit of active synchronizations to {0} server has been achieved.", destinationUrl);
 
 				return
-					SynchronizationUtils.SynchronizationExceptionReport(
-						string.Format("The limit of active synchronizations to {0} server has been achieved.",
-						              destinationUrl));
+					SynchronizationUtils.SynchronizationExceptionReport(work.FileName,
+					                                                    string.Format(
+					                                                    	"The limit of active synchronizations to {0} server has been achieved.",
+					                                                    	destinationUrl));
 			}
 
 			var fileName = work.FileName;
@@ -285,6 +296,9 @@ namespace RavenFS.Synchronization
 		{
 			var filesToSynchronization = new List<FileHeader>();
 
+			log.Debug("Getting files to synchronize with ETag greater than {0}",
+			          destinationsSynchronizationInformationForSource.LastSourceFileEtag);
+
 			try
 			{
 				var destinationId = destinationsSynchronizationInformationForSource.DestinationServerInstanceId.ToString();
@@ -314,6 +328,9 @@ namespace RavenFS.Synchronization
 			{
 				log.WarnException(string.Format("Could not get files to synchronize after: " + destinationsSynchronizationInformationForSource.LastSourceFileEtag), e);
 			}
+
+			log.Debug("There were {0} files that needed synchronization", filesToSynchronization.Count);
+
 			return filesToSynchronization;
 		}
 

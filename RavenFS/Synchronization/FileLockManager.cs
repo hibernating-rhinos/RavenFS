@@ -30,7 +30,7 @@ namespace RavenFS.Synchronization
 
 			accessor.SetConfigurationValue(SynchronizationHelper.SyncLockNameForFile(fileName), syncOperationDetails);
 
-			log.Debug("File '{0}' was locked at {1}", fileName, syncOperationDetails.FileLockedAt);
+			log.Debug("File '{0}' was locked", fileName);
 		}
 
 		public void UnlockByDeletingSyncConfiguration(string fileName, StorageActionsAccessor accessor)

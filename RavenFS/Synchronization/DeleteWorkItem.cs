@@ -47,6 +47,7 @@ namespace RavenFS.Synchronization
 					{
 						return new SynchronizationReport
 						       	{
+									FileName = FileName,
 						       		Exception = e.ExtractSingleInnerException(),
 									Type = SynchronizationType.Deletion
 						       	};
