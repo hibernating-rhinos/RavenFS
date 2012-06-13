@@ -4,12 +4,15 @@ namespace RavenFS.Synchronization
 	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Linq;
+	using NLog;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
 	using RavenFS.Storage;
 
 	public class SynchronizationQueue
 	{
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		private readonly TransactionalStorage storage;
 		private const int DefaultLimitOfConcurrentSynchronizations = 5;
 
@@ -84,10 +87,12 @@ namespace RavenFS.Synchronization
 
 			if(pendingForDestination.Contains(workItem)) // if there is a file in pending synchronizations do not add it again
 			{
+				log.Debug("{0} for a file {1} and a destination {2} was already existed in a pending queue", workItem.GetType().Name, workItem.FileName, destination);
 				return;
 			}
 
 			pendingForDestination.Enqueue(workItem);
+			log.Debug("{0} for a file {1} and a destination {2} was enqueued", workItem.GetType().Name, workItem.FileName, destination);
 		}
 
 		public bool TryDequeuePendingSynchronization(string destination, out SynchronizationWorkItem workItem)
@@ -95,6 +100,7 @@ namespace RavenFS.Synchronization
 			ConcurrentQueue<SynchronizationWorkItem> pendingForDestination;
 			if (pendingSynchronizations.TryGetValue(destination, out pendingForDestination) == false)
 			{
+				log.Warn("Could not get a pending synchronization queue for {0}", destination);
 				workItem = null;
 				return false;
 			}
@@ -106,7 +112,11 @@ namespace RavenFS.Synchronization
 		{
 			var activeForDestination = activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<Guid, string>());
 
-			activeForDestination.TryAdd(etag, fileName);
+			if(activeForDestination.TryAdd(etag, fileName))
+			{
+				log.Debug("File '{0}' with ETag {1} was added to an active synchronization queue for a destination {2}", fileName,
+				          etag, destination);
+			}
 		}
 
 		public void SynchronizationFinished(string fileName, Guid etag, string destination)
@@ -114,10 +124,17 @@ namespace RavenFS.Synchronization
 			ConcurrentDictionary<Guid, string> activeDestinationTasks;
 
 			if (activeSynchronizations.TryGetValue(destination, out activeDestinationTasks) == false)
+			{
+				log.Warn("Could not get an active synchronization queue for {0}", destination);
 				return;
+			}
 			
 			string removingItem;
-			activeDestinationTasks.TryRemove(etag, out removingItem);
+			if(activeDestinationTasks.TryRemove(etag, out removingItem))
+			{
+				log.Debug("File '{0}' with ETag {1} was removed from an active synchronization queue for a destination {2}", fileName,
+						  etag, destination);
+			}
 		}
 	}
 }

@@ -62,7 +62,7 @@
 			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
-			log.Debug("Starting to process multipart synchronization request of file '{0}' with ETag {1} from {2}", fileName, sourceServerUrl, sourceFileETag);
+			log.Debug("Starting to process multipart synchronization request of a file '{0}' with ETag {1} from {2}", fileName, sourceServerUrl, sourceFileETag);
 
 			Storage.Batch(accessor =>
 			{
@@ -99,7 +99,7 @@
 																});
 
 											log.Debug(
-												"File {0} is in conflict with synchronized version from {1}. File marked as conflicted, conflict configuration item created",
+												"File '{0}' is in conflict with synchronized version from {1}. File marked as conflicted, conflict configuration item created",
 												fileName, sourceServerUrl);
 
 											throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
@@ -183,7 +183,9 @@
 												else
 												{
 													report = task.Result;
-													log.Debug("File '{0}' was synchronized successfully from {1}", fileName, sourceServerUrl);
+													log.Debug(
+														"File '{0}' was synchronized successfully from {1}. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
+														fileName, sourceServerUrl, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
 												}
 												Storage.Batch(
 													accessor =>
@@ -221,7 +223,7 @@
 			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
-			log.Debug("Starting to synchronize metadata of file '{0}' with ETag {1} from {2}", fileName, sourceServerUrl, sourceFileETag);
+			log.Debug("Starting to update a metadata of file '{0}' with ETag {1} from {2} bacause of synchronization", fileName, sourceServerUrl, sourceFileETag);
 
 			var report = new SynchronizationReport
 			             	{
@@ -276,7 +278,7 @@
 			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
-			log.Debug("Starting to synchronize deleted file '{0}' with ETag {1} from {2}", fileName, sourceServerUrl, sourceFileETag);
+			log.Debug("Starting to delete a file '{0}' with ETag {1} from {2} bacause of synchronization", fileName, sourceServerUrl, sourceFileETag);
 
 			var report = new SynchronizationReport
 			{
@@ -328,7 +330,7 @@
 			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
-			log.Debug("Starting to synchronize renaming file '{0}' to {1} with ETag {2} from {3}", fileName, rename, sourceServerUrl, sourceFileETag);
+			log.Debug("Starting to rename a file '{0}' to '{1}' with ETag {2} from {3} because of synchronization", fileName, rename, sourceServerUrl, sourceFileETag);
 
 			var report = new SynchronizationReport
 			{
@@ -370,7 +372,7 @@
 
 					if (report.Exception != null)
 					{
-						log.Debug("File '{0}' was renamed to {1} during synchronization from {2}", fileName, rename, sourceServerUrl);	
+						log.Debug("File '{0}' was renamed to '{1}' during synchronization from {2}", fileName, rename, sourceServerUrl);	
 
 						SaveSynchronizationSourceInformation(sourceServerUrl, sourceFileETag, accessor);
 					}

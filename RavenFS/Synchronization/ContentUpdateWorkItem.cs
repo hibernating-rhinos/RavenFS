@@ -45,14 +45,14 @@
 
 			if (sourceMetadata == null)
 			{
-				log.Debug("Could not synchronize file '{0}' because it does not exist");
+				log.Debug("Could not synchronize a file '{0}' because it does not exist");
 
 				return SynchronizationUtils.SynchronizationExceptionReport(string.Format("File {0} could not be found", FileName));
 			}
 
 			if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenSynchronizationConflict))
 			{
-				log.Debug("Could not synchronize file '{0}' because it does not exist");
+				log.Debug("Could not synchronize a file '{0}' because it does not exist");
 
 				return SynchronizationUtils.SynchronizationExceptionReport(string.Format("File {0} is conflicted", FileName));
 			}
@@ -77,12 +77,18 @@
 						// optimization - conflict checking on source side before any changes pushed
 						if (conflict != null && !isConflictResolved)
 						{
+							log.Debug("File '{0}' is in conflict with destination version from {1}. Applying conflict on destination", FileName, destination);
+
 							return destinationRavenFileSystemClient.Synchronization
 								.ApplyConflictAsync(FileName, conflict.Current.Version, conflict.Remote.ServerId)
 								.ContinueWith(task =>
 								{
-									task.AssertNotFaulted();
-									return new SynchronizationReport()
+									if (task.Exception != null)
+									{
+										log.WarnException(string.Format("Failed to apply conflict on {0} for file '{1}'", destination, FileName),
+										                  task.Exception.ExtractSingleInnerException());
+									}
+									return new SynchronizationReport
 									{
 										Exception = new SynchronizationException(string.Format("File {0} is conflicted.", FileName)),
 										Type = SynchronizationType.ContentUpdate
@@ -138,10 +144,16 @@
 								Exception = task.Exception.ExtractSingleInnerException(),
 								Type = SynchronizationType.ContentUpdate
 							};
+
+						log.ErrorException(
+							string.Format("Failed to perform a synchronization of a file '{0}' to {1}", FileName, destination), report.Exception);
 					}
 					else
 					{
 						report = task.Result;
+						log.Debug(
+							"Synchronization of a file '{0}' to {1} has finished. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
+							FileName, destination, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
 					}
 
 					return report;
@@ -188,6 +200,8 @@
 			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerUrl, fileName, sourceMetadata,
 																	   sourceFileStream, needList);
 
+			log.Debug("Synchronizing a file '{0}' to {1} by using multipart request. Need list length is {2}", fileName, destinationServerUrl, needList.Count);
+
 			return multipartRequest.PushChangesAsync()
 				.ContinueWith(t =>
 				{
@@ -196,7 +210,16 @@
 						disposable.Dispose();
 					}
 
-					t.AssertNotFaulted();
+					if (t.Exception != null)
+					{
+						var ex = t.Exception.ExtractSingleInnerException();
+
+						log.WarnException(
+							string.Format("Failed to synchronize a file '{0}' to {1} by using multipart request", fileName,
+							              destinationServerUrl), ex);
+
+						return new SynchronizationReport {Exception = ex};
+					}
 
 					return t.Result;
 				});
