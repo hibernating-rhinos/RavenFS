@@ -7,7 +7,6 @@ namespace RavenFS.Synchronization
 	using System.Linq;
 	using System.Reactive.Linq;
 	using System.Threading.Tasks;
-	using Conflictuality;
 	using NLog;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
@@ -27,7 +26,7 @@ namespace RavenFS.Synchronization
 
 		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(10));
 
-		public SynchronizationTask(RavenFileSystem localRavenFileSystem, TransactionalStorage storage, SigGenerator sigGenerator, ConflictActifactManager conflictActifactManager, ConflictDetector conflictDetector, ConflictResolver conflictResolver)
+		public SynchronizationTask(RavenFileSystem localRavenFileSystem, TransactionalStorage storage, SigGenerator sigGenerator)
 		{
 			this.localRavenFileSystem = localRavenFileSystem;
 			this.storage = storage;
