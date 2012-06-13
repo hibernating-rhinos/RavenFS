@@ -431,5 +431,48 @@ namespace RavenFS.Tests.RDC
 			Assert.Equal(FileStatus.Broken, confirmations.ToArray()[0].Status);
 			Assert.Equal("test.bin", confirmations.ToArray()[0].FileName);
 		}
+
+		[Fact]
+		public void Should_not_synchronize_if_file_on_destination_is_conflicted()
+		{
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
+
+			destinationClient.UploadAsync("file.bin",
+			                              new NameValueCollection
+			                              	{{SynchronizationConstants.RavenSynchronizationConflict, "true"}},
+			                              new RandomStream(10)).Wait();
+
+			sourceClient.UploadAsync("file.bin", new RandomStream(10)).Wait();
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destinationClient.ServerUrl }
+			                                                                                     	}).Wait();
+
+			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+
+			Assert.Null(destinationSyncResults[0].Reports);
+		}
+
+		[Fact]
+		public void Should_not_synchronize_if_file_on_source_is_conflicted()
+		{
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
+
+			sourceClient.UploadAsync("file.bin",
+			                         new NameValueCollection {{SynchronizationConstants.RavenSynchronizationConflict, "true"}},
+			                         new RandomStream(10)).Wait();
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destinationClient.ServerUrl }
+			                                                                                     	}).Wait();
+
+			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+
+			Assert.Null(destinationSyncResults[0].Reports);
+		}
 	}
 }

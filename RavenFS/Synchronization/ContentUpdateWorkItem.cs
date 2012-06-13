@@ -52,7 +52,7 @@
 
 			if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenSynchronizationConflict))
 			{
-				log.Debug("Could not synchronize a file '{0}' because it does not exist");
+				log.Debug("Could not synchronize a file '{0}' because it is conflicted");
 
 				return SynchronizationUtils.SynchronizationExceptionReport(FileName, string.Format("File {0} is conflicted", FileName));
 			}
@@ -163,7 +163,7 @@
 						else
 						{
 							log.WarnException(
-								string.Format("Failed to perform a synchronization of a file '{0}' to {1}", FileName, destination),
+								string.Format("Synchronization of a file '{0}' to {1} has finished with an exception", FileName, destination),
 								report.Exception);
 						}
 					}

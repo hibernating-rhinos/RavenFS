@@ -197,6 +197,21 @@ namespace RavenFS.Synchronization
 							return;
 						}
 
+						var destinationMetadata = t.Result;
+
+						if (destinationMetadata != null && destinationMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null 
+							&& destinationMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] == null)
+						{
+							log.Debug("File '{0}' was conflicted on a destination {1} and had no resolution. No need to queue it", file, destinationUrl);
+							return;
+						}
+
+						if (localMetadata != null && localMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null)
+						{
+							log.Debug("File '{0}' was conflicted on our side. No need to queue it", file, destinationUrl);
+							return;
+						}
+
 						if (localMetadata[SynchronizationConstants.RavenDeleteMarker] != null)
 						{
 							var rename = localMetadata[SynchronizationConstants.RavenRenameFile];
@@ -212,18 +227,21 @@ namespace RavenFS.Synchronization
 								                                            new DeleteWorkItem(file, localRavenFileSystem.ServerUrl, storage));
 							}
 						}
-						else if (t.Result != null && localMetadata["Content-MD5"] == t.Result["Content-MD5"]) // file exists on dest and has the same content
-						{
-							synchronizationQueue.EnqueueSynchronization(destinationUrl,
-																		new MetadataUpdateWorkItem(file, localMetadata,
-																								   localRavenFileSystem.ServerUrl));
-						}
 						else
 						{
-							synchronizationQueue.EnqueueSynchronization(destinationUrl,
-																		new ContentUpdateWorkItem(file,
-																								  localRavenFileSystem.ServerUrl,
-																								  storage, sigGenerator));
+							if (destinationMetadata != null && localMetadata["Content-MD5"] == destinationMetadata["Content-MD5"]) // file exists on dest and has the same content
+							{
+								synchronizationQueue.EnqueueSynchronization(destinationUrl,
+								                                            new MetadataUpdateWorkItem(file, localMetadata,
+								                                                                       localRavenFileSystem.ServerUrl));
+							}
+							else
+							{
+								synchronizationQueue.EnqueueSynchronization(destinationUrl,
+								                                            new ContentUpdateWorkItem(file,
+								                                                                      localRavenFileSystem.ServerUrl,
+								                                                                      storage, sigGenerator));
+							}
 						}
 					});
 
