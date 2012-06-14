@@ -278,7 +278,7 @@ namespace RavenFS.Synchronization
 				// check metadata to detect if any synchronization is needed
 				if (localMetadata.AllKeys.Except(new[] { "ETag", "Last-Modified" }).Any(key => !destinationMetadata.AllKeys.Contains(key) || localMetadata[key] != destinationMetadata[key]))
 				{
-					return new MetadataUpdateWorkItem(file, localMetadata, localRavenFileSystem.ServerUrl);
+					return new MetadataUpdateWorkItem(file, localMetadata, destinationMetadata, localRavenFileSystem.ServerUrl);
 				}
 				return null; // the same content and metadata - no need to synchronize
 			}

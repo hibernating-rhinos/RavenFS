@@ -433,7 +433,7 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
-		public void Should_not_synchronize_if_file_on_destination_is_conflicted()
+		public void Should_not_synchronize_if_file_is_conflicted_on_destination()
 		{
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
@@ -456,7 +456,7 @@ namespace RavenFS.Tests.RDC
 		}
 
 		[Fact]
-		public void Should_not_synchronize_if_file_on_source_is_conflicted()
+		public void Should_not_synchronize_if_file_is_conflicted_on_source()
 		{
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);

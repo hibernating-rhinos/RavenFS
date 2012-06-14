@@ -232,21 +232,54 @@
 			             		Type = SynchronizationType.MetadataUpdate
 			             	};
 
+			
+			Storage.Batch(accessor =>
+			{
+				AssertFileIsNotBeingSynced(fileName, accessor);
+				StartupProceed(fileName, accessor);
+				FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl, accessor);
+			});
+
 			try
 			{
-				Storage.Batch(accessor =>
-				{
-				    AssertFileIsNotBeingSynced(fileName, accessor);
-				    StartupProceed(fileName, accessor);
-				    FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl, accessor);
-				});
-
+				var localMetadata = GetLocalMetadata(fileName);
 				var headers = Request.Headers.FilterHeaders();
+
+				var isConflictResolved = false;
+
+				if (localMetadata != null)
+				{
+					var conflict = ConflictDetector.Check(localMetadata, headers);
+					isConflictResolved = ConflictResolver.IsResolved(localMetadata, conflict);
+
+					if (conflict != null && !isConflictResolved)
+					{
+						ConflictActifactManager.CreateArtifact(fileName, conflict);
+
+						Publisher.Publish(new ConflictDetected
+						{
+							FileName = fileName,
+							ServerUrl = Request.GetServerUrl()
+						});
+
+						log.Debug(
+							"File '{0}' is in conflict with synchronized version from {1}. File marked as conflicted, conflict configuration item created",
+							fileName, sourceServerUrl);
+
+						throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
+					}
+				}
+
 				HistoryUpdater.UpdateLastModified(headers);
 
 				Storage.Batch(accessor => accessor.UpdateFileMetadata(fileName, headers));
 
 				Search.Index(fileName, headers);
+
+				if (isConflictResolved)
+				{
+					ConflictActifactManager.RemoveArtifact(fileName);
+				}
 			}
 			catch (Exception ex)
 			{

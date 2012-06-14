@@ -580,5 +580,44 @@ namespace RavenFS.Tests.RDC
 			Assert.Contains("Content-MD5", resultFileMetadata.AllKeys);
 			Assert.Equal(sourceContent.GetMD5Hash(), resultFileMetadata["Content-MD5"]);
 		}
+
+		[Fact]
+		public void Should_synchronize_just_metadata()
+		{
+			var content = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
+
+			sourceClient.UploadAsync("test.bin", new NameValueCollection { { "difference", "metadata" } }, content).Wait();
+			content.Position = 0;
+			destinationClient.UploadAsync("test.bin", content).Wait();
+
+			var report = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+
+			Assert.Equal(SynchronizationType.MetadataUpdate, report.Type);
+
+			var destinationMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
+
+			Assert.Equal("metadata",destinationMetadata["difference"]);
+		}
+
+		[Fact]
+		public void Should_detect_conflict_on_metadata_synchronization()
+		{
+			var content = new MemoryStream(new byte[] {1, 2, 3, 4});
+
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
+
+			sourceClient.UploadAsync("test.bin", new NameValueCollection {{"difference", "metadata"}}, content).Wait();
+			content.Position = 0;
+			destinationClient.UploadAsync("test.bin", content).Wait();
+
+			var report = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+
+			Assert.Equal(SynchronizationType.MetadataUpdate, report.Type);
+			Assert.Equal("File test.bin is conflicted.", report.Exception.Message);
+		}
 	}
 }

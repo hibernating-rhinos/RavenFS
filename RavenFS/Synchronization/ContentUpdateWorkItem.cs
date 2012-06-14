@@ -95,7 +95,6 @@
 										Type = SynchronizationType.ContentUpdate
 									};
 								});
-
 						}
 
 						var localFileDataInfo = GetLocalFileDataInfo(FileName);
