@@ -104,7 +104,7 @@ namespace RavenFS.Tests.RDC
 
 		[Theory]
 		[InlineData(1024 * 1024)]
-		public void Synchronization_of_already_synchronized_file_should_not_transfer_any_bytes(int size)
+		public void Synchronization_of_already_synchronized_file_should_detect_that_no_work_is_needed(int size)
 		{
 			var r = new Random(1);
 
@@ -143,17 +143,18 @@ namespace RavenFS.Tests.RDC
 			{
 				destinationClient.DownloadAsync("test.bin", resultFileContent).Wait();
 				resultFileContent.Position = 0;
-				resultMd5 = IOExtensions.GetMD5Hash(resultFileContent);
+				resultMd5 = resultFileContent.GetMD5Hash();
 			}
 
 			sourceContent.Position = 0;
-			sourceMd5 = IOExtensions.GetMD5Hash(sourceContent);
+			sourceMd5 = sourceContent.GetMD5Hash();
 
 			Assert.Equal(sourceMd5, resultMd5);
 
-			Assert.Equal(1, secondSynchronization.NeedListLength);
+			Assert.Equal(0, secondSynchronization.NeedListLength);
 			Assert.Equal(0, secondSynchronization.BytesTransfered);
-			Assert.Equal(sourceContent.Length, secondSynchronization.BytesCopied);
+			Assert.Equal(0, secondSynchronization.BytesCopied);
+			Assert.Equal("No synchronization work needed", secondSynchronization.Exception.Message);
 		}
 
 		[Theory]
@@ -477,9 +478,25 @@ namespace RavenFS.Tests.RDC
 
 			foreach (var item in files)
 			{
+				var sourceContent = new MemoryStream();
+				var sw = new StreamWriter(sourceContent);
+
+				sw.Write("abc123");
+				sw.Flush();
+
+				sourceContent.Position = 0;
+
+				var destinationContent = new MemoryStream();
+				var sw2 = new StreamWriter(destinationContent);
+
+				sw2.Write("cba321");
+				sw2.Flush();
+
+				destinationContent.Position = 0;
+
 				Task.WaitAll(
-					destinationClient.UploadAsync(item, new RandomlyModifiedStream(new RandomStream(1000), 0.01)),
-					sourceClient.UploadAsync(item, new RandomStream(1000)));
+					destinationClient.UploadAsync(item, destinationContent),
+					sourceClient.UploadAsync(item,  sourceContent));
 
 				RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, item);
 			}
@@ -492,16 +509,17 @@ namespace RavenFS.Tests.RDC
 		public void Should_refuse_to_synchronize_if_limit_of_concurrent_synchronizations_exceeded()
 		{
 			var sourceContent = new RandomStream(1);
-			var sourceClient = NewClient(1);
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationLimit,
 			                              new NameValueCollection {{"value", "\"-1\""}}).Wait();
 
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 
-			var synchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", "http://localhost:1234").Result;
+			var synchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
 
-			Assert.Equal("The limit of active synchronizations to http://localhost:1234 server has been achieved.", synchronizationReport.Exception.Message);
+			Assert.Equal("The limit of active synchronizations to " + destinationClient.ServerUrl + " server has been achieved.", synchronizationReport.Exception.Message);
 		}
 
 		[Fact]

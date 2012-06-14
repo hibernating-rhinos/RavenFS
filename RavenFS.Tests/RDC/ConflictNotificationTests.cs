@@ -4,7 +4,6 @@ namespace RavenFS.Tests.RDC
 	using System.Collections.Specialized;
 	using System.Reactive.Linq;
 	using System.Reactive.Threading.Tasks;
-	using Client;
 	using Rdc.Utils.IO;
 	using Xunit;
 
@@ -13,11 +12,11 @@ namespace RavenFS.Tests.RDC
         [Fact]
 		public void NotificationIsReceivedWhenConflictIsDetected()
 		{
-			RavenFileSystemClient destinationClient = NewClient(0);
-            RavenFileSystemClient sourceClient = NewClient(1);
+			var destinationClient = NewClient(0);
+            var sourceClient = NewClient(1);
 
-            var sourceContent = new RandomlyModifiedStream(new RandomStream(1, 1), 0.01);
-            var destinationContent = new RandomlyModifiedStream(new RandomStream(1, 1), 0.01);
+			var sourceContent = new RandomlyModifiedStream(new RandomStream(1), 0.01);
+			var destinationContent = new RandomlyModifiedStream(sourceContent, 0.01);
 
 			var sourceMetadata = new NameValueCollection
                                {

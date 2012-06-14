@@ -55,6 +55,32 @@ namespace RavenFS.Synchronization
 			return task;
 		}
 
+		public Task<SynchronizationReport> SynchronizeFileTo(string fileName, string destinationUrl)
+		{
+			var destinationClient = new RavenFileSystemClient(destinationUrl);
+
+			return destinationClient.GetMetadataForAsync(fileName)
+				.ContinueWith(t =>
+				{
+				    if (t.Exception != null)
+				    {
+				    	return SynchronizationUtils.SynchronizationExceptionReport(fileName,
+				    	                                                           t.Exception.ExtractSingleInnerException().ToString());
+				    }
+
+				    var localMetadata = GetLocalMetadata(fileName);
+
+					var work = DetermineSynchronizationWork(fileName, localMetadata, t.Result);
+
+					if (work == null)
+					{
+						return SynchronizationUtils.SynchronizationExceptionReport(fileName, "No synchronization work needed");
+					}
+
+				    return PerformSynchronization(destinationClient.ServerUrl, work);
+				}).Unwrap();
+		}
+
 		private IEnumerable<Task<DestinationSyncResult>> SynchronizeDestinationsInternal()
 		{
 			foreach (var destination in GetSynchronizationDestinations())
@@ -177,80 +203,86 @@ namespace RavenFS.Synchronization
 				return tcs.Task;
 			}
 
-			var gettingMetadataTasks = new List<Task>();
+			var determineWorkTasks = new List<Task>();
 
-			for (int i = 0; i < filesToSynchronization.Length; i++)
+			for (var i = 0; i < filesToSynchronization.Length; i++)
 			{
 				var file = filesToSynchronization[i].Name;
-
 				var localMetadata = GetLocalMetadata(file);
 
 				var task = destinationClient.GetMetadataForAsync(file)
 					.ContinueWith(t =>
 					{
-						if (t.Exception != null)
+					    if (t.Exception != null)
+					    {
+					        log.WarnException(
+					            string.Format(
+					              	"Could not retrieve a metadata of a file '{0}' from {1} in order to determine needed synchronization type",
+					              	file,
+					              	destinationUrl), t.Exception.ExtractSingleInnerException());
+					        return;
+					    }
+
+					    var destinationMetadata = t.Result;
+
+					    if (destinationMetadata != null &&
+					        destinationMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null
+					        && destinationMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] == null)
+					    {
+					        log.Debug(
+					            "File '{0}' was conflicted on a destination {1} and had no resolution. No need to queue it", file,
+					            destinationUrl);
+					        return;
+					    }
+
+					    if (localMetadata != null &&
+					        localMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null)
+					    {
+					        log.Debug("File '{0}' was conflicted on our side. No need to queue it", file, destinationUrl);
+					        return;
+					    }
+
+						var work = DetermineSynchronizationWork(file, localMetadata, destinationMetadata);
+
+						if (work == null)
 						{
-							log.WarnException(
-								string.Format(
-									"Could not retrieve a metadata of a file '{0}' from {1} in order to determine needed synchronization type", file,
-									destinationUrl), t.Exception.ExtractSingleInnerException());
+							log.Debug("There was no need to synchronize a file '{0}' to {1}", file, destinationUrl);
 							return;
 						}
 
-						var destinationMetadata = t.Result;
-
-						if (destinationMetadata != null && destinationMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null 
-							&& destinationMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] == null)
-						{
-							log.Debug("File '{0}' was conflicted on a destination {1} and had no resolution. No need to queue it", file, destinationUrl);
-							return;
-						}
-
-						if (localMetadata != null && localMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null)
-						{
-							log.Debug("File '{0}' was conflicted on our side. No need to queue it", file, destinationUrl);
-							return;
-						}
-
-						if (localMetadata[SynchronizationConstants.RavenDeleteMarker] != null)
-						{
-							var rename = localMetadata[SynchronizationConstants.RavenRenameFile];
-
-							if (rename != null)
-							{
-								synchronizationQueue.EnqueueSynchronization(destinationUrl,
-																			new RenameWorkItem(file, rename, localRavenFileSystem.ServerUrl, storage));
-							}
-							else
-							{
-								synchronizationQueue.EnqueueSynchronization(destinationUrl,
-								                                            new DeleteWorkItem(file, localRavenFileSystem.ServerUrl, storage));
-							}
-						}
-						else
-						{
-							if (destinationMetadata != null && localMetadata["Content-MD5"] == destinationMetadata["Content-MD5"]) // file exists on dest and has the same content
-							{
-								synchronizationQueue.EnqueueSynchronization(destinationUrl,
-								                                            new MetadataUpdateWorkItem(file, localMetadata,
-								                                                                       localRavenFileSystem.ServerUrl));
-							}
-							else
-							{
-								synchronizationQueue.EnqueueSynchronization(destinationUrl,
-								                                            new ContentUpdateWorkItem(file,
-								                                                                      localRavenFileSystem.ServerUrl,
-								                                                                      storage, sigGenerator));
-							}
-						}
+						synchronizationQueue.EnqueueSynchronization(destinationUrl, work);
 					});
 
-				gettingMetadataTasks.Add(task);
+				determineWorkTasks.Add(task);
 			}
 
-			Task.Factory.ContinueWhenAll(gettingMetadataTasks.ToArray(), x => tcs.SetResult(null));
+			Task.Factory.ContinueWhenAll(determineWorkTasks.ToArray(), x => tcs.SetResult(null));
 
 			return tcs.Task;
+		}
+
+		private SynchronizationWorkItem DetermineSynchronizationWork(string file, NameValueCollection localMetadata, NameValueCollection destinationMetadata)
+		{
+			if (localMetadata[SynchronizationConstants.RavenDeleteMarker] != null)
+			{
+				var rename = localMetadata[SynchronizationConstants.RavenRenameFile];
+
+				if (rename != null)
+				{
+					return new RenameWorkItem(file, rename, localRavenFileSystem.ServerUrl, storage);
+				}
+				return new DeleteWorkItem(file, localRavenFileSystem.ServerUrl, storage);
+			}
+			if (destinationMetadata != null && localMetadata["Content-MD5"] == destinationMetadata["Content-MD5"]) // file exists on dest and has the same content
+			{
+				// check metadata to detect if any synchronization is needed
+				if (localMetadata.AllKeys.Except(new[] { "ETag", "Last-Modified" }).Any(key => !destinationMetadata.AllKeys.Contains(key) || localMetadata[key] != destinationMetadata[key]))
+				{
+					return new MetadataUpdateWorkItem(file, localMetadata, localRavenFileSystem.ServerUrl);
+				}
+				return null; // the same content and metadata - no need to synchronize
+			}
+			return new ContentUpdateWorkItem(file, localRavenFileSystem.ServerUrl, storage, sigGenerator);
 		}
 
 		private IEnumerable<Task<SynchronizationReport>> SynchronizePendingFiles(string destinationUrl)
@@ -269,7 +301,7 @@ namespace RavenFS.Synchronization
 			}
 		}
 
-		public Task<SynchronizationReport> PerformSynchronization(string destinationUrl, SynchronizationWorkItem work)
+		private Task<SynchronizationReport> PerformSynchronization(string destinationUrl, SynchronizationWorkItem work)
 		{
 			log.Debug("Starting to perform {0} for a file '{1}' and a destination server {2}", work.GetType().Name, work.FileName,
 			          destinationUrl);
@@ -298,7 +330,7 @@ namespace RavenFS.Synchronization
 				              		{
 				              			log.WarnException(
 				              				string.Format(
-				              					"An exception was thrown during work {0} performing for file '{1}' and a destination {2}",
+				              					"An exception was thrown during {0} that was performed for a file '{1}' and a destination {2}",
 				              					work.GetType().Name, fileName, destinationUrl), t.Exception.ExtractSingleInnerException());
 				              		}
 				              		else if (t.Exception == null && t.Result.Exception == null)

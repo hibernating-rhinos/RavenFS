@@ -45,7 +45,7 @@
 		{
 			log.Debug("Starting to synchronize a file '{0}' to {1}", fileName, destinationServerUrl);
 
-			return SynchronizationTask.PerformSynchronization(destinationServerUrl, new ContentUpdateWorkItem(fileName, RavenFileSystem.ServerUrl, Storage, SigGenerator));
+			return SynchronizationTask.SynchronizeFileTo(fileName, destinationServerUrl);
 		}
 
 		[AcceptVerbs("POST")]
