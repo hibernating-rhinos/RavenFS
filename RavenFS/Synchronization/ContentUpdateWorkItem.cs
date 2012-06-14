@@ -6,7 +6,6 @@
 	using System.IO;
 	using System.Linq;
 	using System.Threading.Tasks;
-	using Conflictuality;
 	using Multipart;
 	using NLog;
 	using RavenFS.Client;
@@ -22,153 +21,142 @@
 
 		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
-		private readonly ConflictDetector conflictDetector;
-		private readonly ConflictResolver conflictResolver;
+		
 
 		public ContentUpdateWorkItem(string file, string sourceServerUrl, TransactionalStorage storage, SigGenerator sigGenerator)
 			: base(file, sourceServerUrl)
 		{
 			this.storage = storage;
 			this.sigGenerator = sigGenerator;
-			this.conflictDetector = new ConflictDetector();
-			this.conflictResolver = new ConflictResolver();
 		}
 
 		public override Task<SynchronizationReport> Perform(string destination)
 		{
-			return StartSyncingToAsync(destination);
+			return Task.Factory.StartNew(() =>
+			{
+				var localMetadata = GetLocalMetadata(FileName);
+				AssertLocalFileExistsAndIsNotConflicted(localMetadata);
+			    return StartSyncingToAsync(destination, localMetadata);
+			})
+			.Unwrap()
+			.ContinueWith(task =>
+			{
+			    SynchronizationReport report;
+			    if (task.Status == TaskStatus.Faulted)
+			    {
+			        report =
+			            new SynchronizationReport
+			                {
+			                    FileName = FileName,
+			                    Exception = task.Exception.ExtractSingleInnerException(),
+			                    Type = SynchronizationType.ContentUpdate
+			                };
+
+			        log.WarnException(
+			            string.Format("Failed to perform a synchronization of a file '{0}' to {1}", FileName,
+			                     		destination), report.Exception);
+			    }
+			    else
+			    {
+			        report = task.Result;
+
+			        if (report.Exception == null)
+			        {
+			            log.Debug(
+			                "Synchronization of a file '{0}' to {1} has finished. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
+			                FileName, destination, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
+			        }
+			        else
+			        {
+			            log.WarnException(
+			                string.Format("Synchronization of a file '{0}' to {1} has finished with an exception",
+			                     			FileName, destination),
+			                report.Exception);
+			        }
+			    }
+
+			    return report;
+			});
 		}
 
-		private Task<SynchronizationReport> StartSyncingToAsync(string destination)
+		private Task<SynchronizationReport> StartSyncingToAsync(string destination, NameValueCollection sourceMetadata)
 		{
-			var sourceMetadata = GetLocalMetadata(FileName);
-
-			if (sourceMetadata == null)
-			{
-				log.Debug("Could not synchronize a file '{0}' because it does not exist");
-
-				return SynchronizationUtils.SynchronizationExceptionReport(FileName, string.Format("File {0} could not be found", FileName));
-			}
-
-			if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenSynchronizationConflict))
-			{
-				log.Debug("Could not synchronize a file '{0}' because it is conflicted");
-
-				return SynchronizationUtils.SynchronizationExceptionReport(FileName, string.Format("File {0} is conflicted", FileName));
-			}
-
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 
 			return destinationRavenFileSystemClient.GetMetadataForAsync(FileName)
 				.ContinueWith(
 					getMetadataForAsyncTask =>
-					{
-						var destinationMetadata = getMetadataForAsyncTask.Result;
-
-						if (destinationMetadata == null)
 						{
-							// if file doesn't exist on destination server - upload it there
-							return UploadTo(destination, FileName, sourceMetadata);
-						}
+							var destinationMetadata = getMetadataForAsyncTask.Result;
 
-						var conflict = conflictDetector.Check(destinationMetadata, sourceMetadata);
-						var isConflictResolved = conflictResolver.IsResolved(destinationMetadata, conflict);
-
-						// optimization - conflict checking on source side before any changes pushed
-						if (conflict != null && !isConflictResolved)
-						{
-							log.Debug("File '{0}' is in conflict with destination version from {1}. Applying conflict on destination", FileName, destination);
-
-							return destinationRavenFileSystemClient.Synchronization
-								.ApplyConflictAsync(FileName, conflict.Current.Version, conflict.Remote.ServerId)
-								.ContinueWith(task =>
-								{
-									if (task.Exception != null)
-									{
-										log.WarnException(string.Format("Failed to apply conflict on {0} for file '{1}'", destination, FileName),
-										                  task.Exception.ExtractSingleInnerException());
-									}
-									return new SynchronizationReport
-									{
-										FileName = FileName,
-										Exception = new SynchronizationException(string.Format("File {0} is conflicted.", FileName)),
-										Type = SynchronizationType.ContentUpdate
-									};
-								});
-						}
-
-						var localFileDataInfo = GetLocalFileDataInfo(FileName);
-
-						var signatureRepository = new StorageSignatureRepository(storage, FileName);
-						var remoteSignatureCache = new VolatileSignatureRepository(FileName);
-						var localRdcManager = new LocalRdcManager(signatureRepository, storage, sigGenerator);
-						var destinationRdcManager = new RemoteRdcManager(destinationRavenFileSystemClient, signatureRepository,
-																		 remoteSignatureCache);
-
-						var sourceSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
-
-						return destinationRdcManager.SynchronizeSignaturesAsync(localFileDataInfo)
-							.ContinueWith(
-								task =>
-								{
-									var destinationSignatureManifest = task.Result;
-
-									if (destinationSignatureManifest.Signatures.Count > 0)
-									{
-										return SynchronizeTo(remoteSignatureCache, destination,
-															 FileName,
-															 sourceSignatureManifest,
-															 sourceMetadata);
-									}
-									return UploadTo(destination, FileName, sourceMetadata);
-								})
-							.Unwrap()
-							.ContinueWith(
-								synchronizationTask =>
-								{
-									signatureRepository.Dispose();
-									remoteSignatureCache.Dispose();
-
-									return synchronizationTask.Result;
-								});
-					})
-				.Unwrap()
-				.ContinueWith(task =>
-				{
-					SynchronizationReport report;
-					if (task.Status == TaskStatus.Faulted)
-					{
-						report =
-							new SynchronizationReport
+							if (destinationMetadata == null)
 							{
-								FileName = FileName,
-								Exception = task.Exception.ExtractSingleInnerException(),
-								Type = SynchronizationType.ContentUpdate
-							};
+								// if file doesn't exist on destination server - upload it there
+								return UploadTo(destination, FileName, sourceMetadata);
+							}
 
-						log.WarnException(
-							string.Format("Failed to perform a synchronization of a file '{0}' to {1}", FileName, destination), report.Exception);
-					}
-					else
-					{
-						report = task.Result;
+							var conflict = GetConflictWithDestination(sourceMetadata, destinationMetadata);
 
-						if (report.Exception == null)
-						{
-							log.Debug(
-								"Synchronization of a file '{0}' to {1} has finished. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
-								FileName, destination, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
-						}
-						else
-						{
-							log.WarnException(
-								string.Format("Synchronization of a file '{0}' to {1} has finished with an exception", FileName, destination),
-								report.Exception);
-						}
-					}
+							if(conflict != null)
+							{
+								log.Debug("File '{0}' is in conflict with destination version from {1}. Applying conflict on destination", FileName, destination);
 
-					return report;
-				});
+								return destinationRavenFileSystemClient.Synchronization
+									.ApplyConflictAsync(FileName, conflict.Current.Version, conflict.Remote.ServerId)
+									.ContinueWith(task =>
+									{
+										if (task.Exception != null)
+										{
+											log.WarnException(
+												string.Format("Failed to apply conflict on {0} for file '{1}'", destination, FileName),
+												task.Exception.ExtractSingleInnerException());
+										}
+
+										return new SynchronizationReport()
+										       	{
+										       		FileName = FileName,
+										       		Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
+										       		Type = SynchronizationType.ContentUpdate
+										       	};
+									});
+							}
+
+							var localFileDataInfo = GetLocalFileDataInfo(FileName);
+
+							var signatureRepository = new StorageSignatureRepository(storage, FileName);
+							var remoteSignatureCache = new VolatileSignatureRepository(FileName);
+							var localRdcManager = new LocalRdcManager(signatureRepository, storage, sigGenerator);
+							var destinationRdcManager = new RemoteRdcManager(destinationRavenFileSystemClient, signatureRepository,
+							                                                 remoteSignatureCache);
+
+							var sourceSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
+
+							return destinationRdcManager.SynchronizeSignaturesAsync(localFileDataInfo)
+								.ContinueWith(
+									task =>
+										{
+											var destinationSignatureManifest = task.Result;
+
+											if (destinationSignatureManifest.Signatures.Count > 0)
+											{
+												return SynchronizeTo(remoteSignatureCache, destination,
+												                     FileName,
+												                     sourceSignatureManifest,
+												                     sourceMetadata);
+											}
+											return UploadTo(destination, FileName, sourceMetadata);
+										})
+								.Unwrap()
+								.ContinueWith(
+									synchronizationTask =>
+										{
+											signatureRepository.Dispose();
+											remoteSignatureCache.Dispose();
+
+											return synchronizationTask.Result;
+										});
+						})
+				.Unwrap();
 		}
 
 		private Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, string fileName, SignatureManifest sourceSignatureManifest, NameValueCollection sourceMetadata)

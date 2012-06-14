@@ -445,7 +445,7 @@ namespace RavenFS.Tests.RDC
 			
 			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test.txt", destinationClient.ServerUrl).Result;
 
-			Assert.Equal("File test.txt is conflicted.", shouldBeConflict.Exception.Message);
+			Assert.Equal("File test.txt is conflicted", shouldBeConflict.Exception.Message);
 
 			destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.CurrentVersion).Wait();
 			var result = destinationClient.Synchronization.StartSynchronizationToAsync("test.txt", sourceClient.ServerUrl).Result;
@@ -617,7 +617,7 @@ namespace RavenFS.Tests.RDC
 			var report = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
 
 			Assert.Equal(SynchronizationType.MetadataUpdate, report.Type);
-			Assert.Equal("File test.bin is conflicted.", report.Exception.Message);
+			Assert.Equal("File test.bin is conflicted", report.Exception.Message);
 		}
 	}
 }
