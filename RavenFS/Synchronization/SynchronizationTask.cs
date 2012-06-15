@@ -325,6 +325,7 @@ namespace RavenFS.Synchronization
 				.ContinueWith(t =>
 				              	{
 				              		Queue.SynchronizationFinished(fileName, fileETag, destinationUrl);
+									CreateSyncingConfiguration(fileName, destinationUrl);
 
 				              		if (t.Exception != null)
 				              		{
@@ -332,10 +333,6 @@ namespace RavenFS.Synchronization
 				              				string.Format(
 				              					"An exception was thrown during {0} that was performed for a file '{1}' and a destination {2}",
 				              					work.GetType().Name, fileName, destinationUrl), t.Exception.ExtractSingleInnerException());
-				              		}
-				              		else if (t.Exception == null && t.Result.Exception == null)
-				              		{
-				              			CreateSyncingConfiguration(fileName, destinationUrl);
 				              		}
 
 				              		return t.Result;
