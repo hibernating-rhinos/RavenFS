@@ -73,11 +73,11 @@
 				}
 
 				return new SynchronizationReport
-				       	{
-				       		FileName = FileName,
-				       		Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
-				       		Type = GetCurrentWorkType()
-				       	};
+						{
+							FileName = FileName,
+							Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
+							Type = GetCurrentWorkType()
+						};
 			});
 		}
 

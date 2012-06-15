@@ -619,5 +619,36 @@ namespace RavenFS.Tests.RDC
 			Assert.Equal(SynchronizationType.MetadataUpdate, report.Type);
 			Assert.Equal("File test.bin is conflicted", report.Exception.Message);
 		}
+
+		[Fact]
+		public void Should_just_rename_file_in_synchronization_process()
+		{
+			var content = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
+
+			sourceClient.UploadAsync("test.bin", new NameValueCollection { { "key", "value" } }, content).Wait();
+			content.Position = 0;
+			destinationClient.UploadAsync("test.bin", new NameValueCollection { { "key", "value" } }, content).Wait();
+
+			sourceClient.RenameAsync("test.bin", "renamed.bin").Wait();
+
+			// we need to indicate old file name, otherwise content update would be performed because renamed file does not exist on dest
+			var report = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+
+			Assert.Equal(SynchronizationType.Renaming, report.Type);
+
+			var testMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
+			var renamedMetadata = destinationClient.GetMetadataForAsync("renamed.bin").Result;
+
+			Assert.Null(testMetadata);
+			Assert.NotNull(renamedMetadata);
+
+			var result = destinationClient.GetFilesAsync("/").Result;
+
+			Assert.Equal(1, result.FileCount);
+			Assert.Equal("renamed.bin", result.Files[0].Name);
+		}
 	}
 }

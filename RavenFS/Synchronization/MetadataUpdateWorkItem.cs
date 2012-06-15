@@ -49,12 +49,26 @@ namespace RavenFS.Synchronization
 											Type = SynchronizationType.MetadataUpdate
 										};
 
-									log.WarnException(string.Format("Metadata synchronization of a file '{0}' to {1} has finished with an exception",
-																		FileName, destination), report.Exception);
+									log.WarnException(
+										string.Format(
+											"Failed to perform a metadata synchronization of a file '{0}' to {1} has finished with an exception",
+											FileName, destination), report.Exception);
 								}
 								else
 								{
 									report = task.Result;
+
+									if (report.Exception == null)
+									{
+										log.Debug("Metadata synchronization of a file '{0}' to {1} has finished with an exception", FileName,
+										          destination);
+									}
+									else
+									{
+										log.WarnException(
+											string.Format("Metadata synchronization of a file '{0}' to {1} has finished with an exception",
+											              FileName, destination), report.Exception);
+									}
 								}
 
 			              		return report;
@@ -63,6 +77,8 @@ namespace RavenFS.Synchronization
 
 		private Task<SynchronizationReport> StartSyncingMedatataTo(string destination)
 		{
+			log.Debug("Synchronizing a metadata of a file '{0}' to {1}", FileName, destination);
+
 			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/updatemetadata/" + FileName);
 
 			request.Method = "POST";
