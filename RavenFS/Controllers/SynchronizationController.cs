@@ -295,7 +295,7 @@
 				    FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 					SaveSynchronizationReport(fileName, accessor, report);
 
-					if (report.Exception != null)
+					if (report.Exception == null)
 					{
 						log.Debug("Metadata of file '{0}' was synchronized successfully from {1}", fileName, sourceServerUrl);	
 
@@ -348,7 +348,7 @@
 					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 					SaveSynchronizationReport(fileName, accessor, report);
 
-					if (report.Exception != null)
+					if (report.Exception == null)
 					{
 						log.Debug("File '{0}' was deleted during synchronization from {1}", fileName, sourceServerUrl);	
 
@@ -407,7 +407,7 @@
 					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 					SaveSynchronizationReport(fileName, accessor, report);
 
-					if (report.Exception != null)
+					if (report.Exception == null)
 					{
 						log.Debug("File '{0}' was renamed to '{1}' during synchronization from {2}", fileName, rename, sourceServerUrl);	
 
