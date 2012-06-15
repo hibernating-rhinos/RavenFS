@@ -9,7 +9,7 @@
 
 	public abstract class SynchronizationWorkItem
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+		protected readonly Logger log = LogManager.GetCurrentClassLogger();
 
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
@@ -41,7 +41,7 @@
 			}
 		}
 
-		protected ConflictItem GetConflictWithDestination(NameValueCollection sourceMetadata, NameValueCollection destinationMetadata)
+		protected ConflictItem CheckConflictWithDestination(NameValueCollection sourceMetadata, NameValueCollection destinationMetadata)
 		{
 			var conflict = conflictDetector.Check(destinationMetadata, sourceMetadata);
 			var isConflictResolved = conflictResolver.IsResolved(destinationMetadata, conflict);
@@ -53,6 +53,56 @@
 			}
 
 			return null;
+		}
+
+		protected Task<SynchronizationReport> ApplyConflictOnDestination(ConflictItem conflict, string  destination)
+		{
+			log.Debug("File '{0}' is in conflict with destination version from {1}. Applying conflict on destination", FileName, destination);
+
+			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
+
+			return destinationRavenFileSystemClient.Synchronization
+			.ApplyConflictAsync(FileName, conflict.Current.Version, conflict.Remote.ServerId)
+			.ContinueWith(task =>
+			{
+				if (task.Exception != null)
+				{
+					log.WarnException(
+						string.Format("Failed to apply conflict on {0} for file '{1}'", destination, FileName),
+						task.Exception.ExtractSingleInnerException());
+				}
+
+				return new SynchronizationReport
+				       	{
+				       		FileName = FileName,
+				       		Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
+				       		Type = GetCurrentWorkType()
+				       	};
+			});
+		}
+
+		private SynchronizationType GetCurrentWorkType()
+		{
+			var type = GetType();
+
+			if (type == typeof (ContentUpdateWorkItem))
+			{
+				return SynchronizationType.ContentUpdate;
+			}
+			if (type == typeof (MetadataUpdateWorkItem))
+			{
+				return SynchronizationType.MetadataUpdate;
+			}
+			if (type == typeof (RenameWorkItem))
+			{
+				return SynchronizationType.Renaming;
+			}
+			if (type == typeof (DeleteWorkItem))
+			{
+				return SynchronizationType.Deletion;
+			}
+
+			return SynchronizationType.Unknown;
 		}
 	}
 }

@@ -7,7 +7,6 @@
 	using System.Linq;
 	using System.Threading.Tasks;
 	using Multipart;
-	using NLog;
 	using RavenFS.Client;
 	using RavenFS.Infrastructure;
 	using RavenFS.Storage;
@@ -17,8 +16,6 @@
 
 	public class ContentUpdateWorkItem : SynchronizationWorkItem
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
-
 		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
 		
@@ -95,30 +92,11 @@
 								return UploadTo(destination, FileName, sourceMetadata);
 							}
 
-							var conflict = GetConflictWithDestination(sourceMetadata, destinationMetadata);
+							var conflict = CheckConflictWithDestination(sourceMetadata, destinationMetadata);
 
 							if(conflict != null)
 							{
-								log.Debug("File '{0}' is in conflict with destination version from {1}. Applying conflict on destination", FileName, destination);
-
-								return destinationRavenFileSystemClient.Synchronization
-									.ApplyConflictAsync(FileName, conflict.Current.Version, conflict.Remote.ServerId)
-									.ContinueWith(task =>
-									{
-										if (task.Exception != null)
-										{
-											log.WarnException(
-												string.Format("Failed to apply conflict on {0} for file '{1}'", destination, FileName),
-												task.Exception.ExtractSingleInnerException());
-										}
-
-										return new SynchronizationReport()
-										       	{
-										       		FileName = FileName,
-										       		Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
-										       		Type = SynchronizationType.ContentUpdate
-										       	};
-									});
+								return ApplyConflictOnDestination(conflict, destination);
 							}
 
 							var localFileDataInfo = GetLocalFileDataInfo(FileName);

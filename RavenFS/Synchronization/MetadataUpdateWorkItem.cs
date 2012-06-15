@@ -1,22 +1,16 @@
 namespace RavenFS.Synchronization
 {
-	using System;
 	using System.Collections.Specialized;
 	using System.IO;
-	using System.Linq;
 	using System.Net;
 	using System.Threading.Tasks;
-	using Conflictuality;
 	using Multipart;
 	using Newtonsoft.Json;
-	using NLog;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
 
 	public class MetadataUpdateWorkItem : SynchronizationWorkItem
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
-
 		private readonly NameValueCollection sourceMetadata;
 		private readonly NameValueCollection destinationMetadata;
 
@@ -32,33 +26,12 @@ namespace RavenFS.Synchronization
 			return Task.Factory.StartNew(() =>
 			{
 			    AssertLocalFileExistsAndIsNotConflicted(sourceMetadata);
-				
-				var conflict = GetConflictWithDestination(sourceMetadata, destinationMetadata);
+
+				var conflict = CheckConflictWithDestination(sourceMetadata, destinationMetadata);
 
 				if (conflict != null)
 				{
-					log.Debug("File '{0}' is in conflict with destination version from {1}. Applying conflict on destination", FileName, destination);
-
-					var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
-
-					return destinationRavenFileSystemClient.Synchronization
-						.ApplyConflictAsync(FileName, conflict.Current.Version, conflict.Remote.ServerId)
-						.ContinueWith(task =>
-						{
-							if (task.Exception != null)
-							{
-								log.WarnException(
-									string.Format("Failed to apply conflict on {0} for file '{1}'", destination, FileName),
-									task.Exception.ExtractSingleInnerException());
-							}
-
-							return new SynchronizationReport()
-							{
-								FileName = FileName,
-								Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
-								Type = SynchronizationType.MetadataUpdate
-							};
-						});
+					return ApplyConflictOnDestination(conflict, destination);
 				}
 
 			    return StartSyncingMedatataTo(destination);
