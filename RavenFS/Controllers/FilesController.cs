@@ -145,11 +145,11 @@ namespace RavenFS.Controllers
 					AssertFileIsNotBeingSynced(name, accessor);
 					fileAndPages = accessor.GetFile(name, 0, 0);
 
-					var tombstoneMetadata = new NameValueCollection
+					// copy renaming file metadata and set special markers
+					var tombstoneMetadata = new NameValueCollection(fileAndPages.Metadata)
 					                        	{
 					                        		{SynchronizationConstants.RavenDeleteMarker, "true"},
-					                        		{SynchronizationConstants.RavenRenameFile, rename},
-													{"ETag", fileAndPages.Metadata["ETag"]} // set the same ETag
+					                        		{SynchronizationConstants.RavenRenameFile, rename}
 					                        	};
 
 					accessor.RenameFile(name, rename);

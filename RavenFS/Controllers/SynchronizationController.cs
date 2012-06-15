@@ -85,25 +85,7 @@
 
 									if (localMetadata != null)
 									{
-										var conflict = ConflictDetector.Check(localMetadata, sourceMetadata);
-										isConflictResolved = ConflictResolver.IsResolved(localMetadata, conflict);
-
-										if (conflict != null && !isConflictResolved)
-										{
-											ConflictActifactManager.CreateArtifact(fileName, conflict);
-
-											Publisher.Publish(new ConflictDetected
-																{
-																	FileName = fileName,
-																	ServerUrl = Request.GetServerUrl()
-																});
-
-											log.Debug(
-												"File '{0}' is in conflict with synchronized version from {1}. File marked as conflicted, conflict configuration item created",
-												fileName, sourceServerUrl);
-
-											throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
-										}
+										AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerUrl, out isConflictResolved);
 
 										localFile = StorageStream.Reading(Storage, fileName);
 									}
@@ -209,6 +191,29 @@
 								}).Unwrap();
 		}
 
+		private void AssertConflictDetection(string fileName, NameValueCollection destinationMetadata, NameValueCollection sourceMetadata, string sourceServerUrl, out bool isConflictResolved)
+		{
+			var conflict = ConflictDetector.Check(destinationMetadata, sourceMetadata);
+			isConflictResolved = ConflictResolver.IsResolved(destinationMetadata, conflict);
+
+			if (conflict != null && !isConflictResolved)
+			{
+				ConflictActifactManager.CreateArtifact(fileName, conflict);
+
+				Publisher.Publish(new ConflictDetected
+				                  	{
+				                  		FileName = fileName,
+				                  		ServerUrl = Request.GetServerUrl()
+				                  	});
+
+				log.Debug(
+					"File '{0}' is in conflict with synchronized version from {1}. File marked as conflicted, conflict configuration item created",
+					fileName, sourceServerUrl);
+
+				throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
+			}
+		}
+
 		private void StartupProceed(string fileName, StorageActionsAccessor accessor)
 		{
 			// remove previous SyncResult
@@ -243,38 +248,17 @@
 			try
 			{
 				var localMetadata = GetLocalMetadata(fileName);
-				var headers = Request.Headers.FilterHeaders();
+				var sourceMetadata = Request.Headers.FilterHeaders();
 
-				var isConflictResolved = false;
+				bool isConflictResolved;
 
-				if (localMetadata != null)
-				{
-					var conflict = ConflictDetector.Check(localMetadata, headers);
-					isConflictResolved = ConflictResolver.IsResolved(localMetadata, conflict);
+				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerUrl, out isConflictResolved);
 
-					if (conflict != null && !isConflictResolved)
-					{
-						ConflictActifactManager.CreateArtifact(fileName, conflict);
+				HistoryUpdater.UpdateLastModified(sourceMetadata);
 
-						Publisher.Publish(new ConflictDetected
-						{
-							FileName = fileName,
-							ServerUrl = Request.GetServerUrl()
-						});
+				Storage.Batch(accessor => accessor.UpdateFileMetadata(fileName, sourceMetadata));
 
-						log.Debug(
-							"File '{0}' is in conflict with synchronized version from {1}. File marked as conflicted, conflict configuration item created",
-							fileName, sourceServerUrl);
-
-						throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
-					}
-				}
-
-				HistoryUpdater.UpdateLastModified(headers);
-
-				Storage.Batch(accessor => accessor.UpdateFileMetadata(fileName, headers));
-
-				Search.Index(fileName, headers);
+				Search.Index(fileName, sourceMetadata);
 
 				if (isConflictResolved)
 				{
@@ -365,6 +349,7 @@
 		{
 			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerUrl).FirstOrDefault();
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
+			var sourceMetadata = Request.Headers.FilterHeaders();
 
 			log.Debug("Starting to rename a file '{0}' to '{1}' with ETag {2} from {3} because of synchronization", fileName, rename, sourceServerUrl, sourceFileETag);
 
@@ -374,14 +359,21 @@
 				Type = SynchronizationType.Renaming
 			};
 
+			
+			Storage.Batch(accessor =>
+			{
+				AssertFileIsNotBeingSynced(fileName, accessor);
+				StartupProceed(fileName, accessor);
+				FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl, accessor);
+			});
+
 			try
 			{
-				Storage.Batch(accessor =>
-				{
-					AssertFileIsNotBeingSynced(fileName, accessor);
-					StartupProceed(fileName, accessor);
-					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerUrl, accessor);
-				});
+				var localMetadata = GetLocalMetadata(fileName);
+
+				bool isConflictResolved;
+
+				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerUrl, out isConflictResolved);
 
 				FileAndPages fileAndPages = null;
 				Storage.Batch(accessor =>

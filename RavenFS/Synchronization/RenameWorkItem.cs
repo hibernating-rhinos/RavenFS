@@ -34,7 +34,7 @@ namespace RavenFS.Synchronization
 									{
 										FileName = FileName,
 										Exception = task.Exception.ExtractSingleInnerException(),
-										Type = SynchronizationType.MetadataUpdate
+										Type = SynchronizationType.Renaming
 									};
 
 							log.WarnException(
