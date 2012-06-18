@@ -304,8 +304,16 @@ namespace RavenFS.Tests.RDC
 
 			// upload file to all servers
 			sourceClient.UploadAsync("test.bin", new RandomStream(10)).Wait();
-			destination1Client.UploadAsync("test.bin", new RandomStream(10)).Wait();
-			destination2Client.UploadAsync("test.bin", new RandomStream(10)).Wait();
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destination1Client.ServerUrl },
+																										{ "url", destination2Client.ServerUrl }
+			                                                                                     	}).Wait();
+
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
+
+			sourceClient.Config.DeleteConfig(SynchronizationConstants.RavenSynchronizationDestinations).Wait();
+			
 
 			// delete file on source
 			sourceClient.RenameAsync("test.bin", "rename.bin").Wait();
