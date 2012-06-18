@@ -6,11 +6,14 @@ namespace RavenFS.Synchronization
 	using System.Threading.Tasks;
 	using Multipart;
 	using Newtonsoft.Json;
+	using NLog;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
 
 	public class MetadataUpdateWorkItem : SynchronizationWorkItem
 	{
+		private readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		private readonly NameValueCollection sourceMetadata;
 		private readonly NameValueCollection destinationMetadata;
 
@@ -31,7 +34,7 @@ namespace RavenFS.Synchronization
 
 				if (conflict != null)
 				{
-					return ApplyConflictOnDestination(conflict, destination);
+					return ApplyConflictOnDestination(conflict, destination, log);
 				}
 
 			    return StartSyncingMedatataTo(destination);

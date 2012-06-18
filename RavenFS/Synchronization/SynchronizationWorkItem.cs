@@ -9,8 +9,6 @@
 
 	public abstract class SynchronizationWorkItem
 	{
-		protected readonly Logger log = LogManager.GetCurrentClassLogger();
-
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
 
@@ -55,7 +53,7 @@
 			return null;
 		}
 
-		protected Task<SynchronizationReport> ApplyConflictOnDestination(ConflictItem conflict, string  destination)
+		protected Task<SynchronizationReport> ApplyConflictOnDestination(ConflictItem conflict, string  destination, Logger log)
 		{
 			log.Debug("File '{0}' is in conflict with destination version from {1}. Applying conflict on destination", FileName, destination);
 

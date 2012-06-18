@@ -7,6 +7,7 @@
 	using System.Linq;
 	using System.Threading.Tasks;
 	using Multipart;
+	using NLog;
 	using RavenFS.Client;
 	using RavenFS.Infrastructure;
 	using RavenFS.Storage;
@@ -16,10 +17,11 @@
 
 	public class ContentUpdateWorkItem : SynchronizationWorkItem
 	{
+		private readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
 		
-
 		public ContentUpdateWorkItem(string file, string sourceServerUrl, TransactionalStorage storage, SigGenerator sigGenerator)
 			: base(file, sourceServerUrl)
 		{
@@ -96,7 +98,7 @@
 
 							if(conflict != null)
 							{
-								return ApplyConflictOnDestination(conflict, destination);
+								return ApplyConflictOnDestination(conflict, destination, log);
 							}
 
 							var localFileDataInfo = GetLocalFileDataInfo(FileName);

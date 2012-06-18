@@ -7,10 +7,13 @@ namespace RavenFS.Synchronization
 	using Extensions;
 	using Multipart;
 	using Newtonsoft.Json;
+	using NLog;
 	using Storage;
 
 	public class RenameWorkItem : SynchronizationWorkItem
 	{
+		private readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		private readonly string rename;
 		private readonly TransactionalStorage storage;
 
