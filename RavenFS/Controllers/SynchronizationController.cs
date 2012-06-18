@@ -29,7 +29,7 @@
 		[AcceptVerbs("POST")]
 		public Task<IEnumerable<DestinationSyncResult>> ToDestinations()
 		{
-			var synchronizeDestinationTasks = SynchronizationTask.SynchronizeDestinationsAsync().Result;
+			var synchronizeDestinationTasks = SynchronizationTask.SynchronizeDestinationsAsync(forceSyncingContinuation:false).Result;
 
 			if (synchronizeDestinationTasks.Length > 0)
 			{

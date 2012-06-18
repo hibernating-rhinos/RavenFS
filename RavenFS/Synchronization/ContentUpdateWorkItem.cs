@@ -34,7 +34,7 @@
 				var localMetadata = GetLocalMetadata(FileName);
 				AssertLocalFileExistsAndIsNotConflicted(localMetadata);
 			    return StartSyncingToAsync(destination, localMetadata);
-			})
+			}, TaskCreationOptions.LongRunning)
 			.Unwrap()
 			.ContinueWith(task =>
 			{

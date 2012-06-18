@@ -46,11 +46,11 @@ namespace RavenFS.Synchronization
 			timer.Subscribe(tick => SynchronizeDestinationsAsync());
 		}
 
-		public Task<Task<DestinationSyncResult>[]> SynchronizeDestinationsAsync()
+		public Task<Task<DestinationSyncResult>[]> SynchronizeDestinationsAsync(bool forceSyncingContinuation = true)
 		{
 			log.Debug("Starting to synchronize destinations");
 
-			var task = new Task<Task<DestinationSyncResult>[]>(() => SynchronizeDestinationsInternal().ToArray());
+			var task = new Task<Task<DestinationSyncResult>[]>(() => SynchronizeDestinationsInternal(forceSyncingContinuation).ToArray());
 			task.Start();
 			return task;
 		}
@@ -81,7 +81,7 @@ namespace RavenFS.Synchronization
 				}).Unwrap();
 		}
 
-		private IEnumerable<Task<DestinationSyncResult>> SynchronizeDestinationsInternal()
+		private IEnumerable<Task<DestinationSyncResult>> SynchronizeDestinationsInternal(bool forceSyncingContinuation)
 		{
 			foreach (var destination in GetSynchronizationDestinations())
 			{
@@ -134,7 +134,7 @@ namespace RavenFS.Synchronization
 								.ContinueWith(t =>
 												{
 													t.AssertNotFaulted();
-													return SynchronizePendingFiles(destinationUrl);
+													return SynchronizePendingFiles(destinationUrl, forceSyncingContinuation);
 												})
 								.ContinueWith(
 									syncingDestTask =>
@@ -285,14 +285,20 @@ namespace RavenFS.Synchronization
 			return new ContentUpdateWorkItem(file, localRavenFileSystem.ServerUrl, storage, sigGenerator);
 		}
 
-		private IEnumerable<Task<SynchronizationReport>> SynchronizePendingFiles(string destinationUrl)
+		private IEnumerable<Task<SynchronizationReport>> SynchronizePendingFiles(string destinationUrl, bool forceSyncingContinuation)
 		{
 			for (var i = 0; i < synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl); i++)
 			{
 				SynchronizationWorkItem work;
 				if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out work))
 				{
-					yield return PerformSynchronization(destinationUrl, work);
+					var workTask = PerformSynchronization(destinationUrl, work);
+					
+					if(forceSyncingContinuation)
+					{
+						workTask.ContinueWith(t => SynchronizePendingFiles(destinationUrl, true).ToArray());
+					}
+					yield return workTask;
 				}
 				else
 				{
