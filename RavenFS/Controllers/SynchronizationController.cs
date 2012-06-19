@@ -143,12 +143,6 @@
 										.ContinueWith(
 											task =>
 											{
-												Storage.Batch(accessor => FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor));
-												return task.Result;
-											})
-										.ContinueWith(
-											task =>
-											{
 												SynchronizationReport report;
 												if (task.Status == TaskStatus.Faulted)
 												{
@@ -183,6 +177,7 @@
 													accessor =>
 													{
 														SaveSynchronizationReport(fileName, accessor, report);
+														FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 
 														if (task.Status != TaskStatus.Faulted)
 														{
@@ -285,8 +280,8 @@
 			{
 				Storage.Batch(accessor =>
 				{
-				    FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 					SaveSynchronizationReport(fileName, accessor, report);
+					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 
 					if (report.Exception == null)
 					{
@@ -338,8 +333,8 @@
 			{
 				Storage.Batch(accessor =>
 				{
-					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 					SaveSynchronizationReport(fileName, accessor, report);
+					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 
 					if (report.Exception == null)
 					{
@@ -405,8 +400,8 @@
 			{
 				Storage.Batch(accessor =>
 				{
-					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 					SaveSynchronizationReport(fileName, accessor, report);
+					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 
 					if (report.Exception == null)
 					{
