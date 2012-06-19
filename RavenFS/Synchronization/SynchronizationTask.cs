@@ -292,13 +292,22 @@ namespace RavenFS.Synchronization
 				SynchronizationWorkItem work;
 				if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out work))
 				{
-					var workTask = PerformSynchronization(destinationUrl, work);
-					
-					if(forceSyncingContinuation)
+					if (synchronizationQueue.IsSynchronizationWorkBeingPerformed(work.FileName, destinationUrl))
 					{
-						workTask.ContinueWith(t => SynchronizePendingFiles(destinationUrl, true).ToArray());
+						log.Debug("There was an alredy being performed synchronization of a file '{0}' to {1}", work.FileName,
+								  destinationUrl);
+						synchronizationQueue.EnqueueSynchronization(destinationUrl, work); // add it again at the end of the queue
 					}
-					yield return workTask;
+					else
+					{
+						var workTask = PerformSynchronization(destinationUrl, work);
+
+						if (forceSyncingContinuation)
+						{
+							workTask.ContinueWith(t => SynchronizePendingFiles(destinationUrl, true).ToArray());
+						}
+						yield return workTask;
+					}
 				}
 				else
 				{
