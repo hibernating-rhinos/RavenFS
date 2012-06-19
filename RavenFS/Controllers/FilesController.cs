@@ -207,11 +207,13 @@ namespace RavenFS.Controllers
 					return readFileToDatabase.Execute()
 						.ContinueWith(readingTask =>
 						{
-							HistoryUpdater.UpdateLastModified(headers);// update with the final file size
+							readingTask.AssertNotFaulted();
+
+							HistoryUpdater.UpdateLastModified(headers); // update with the final file size
 
 							using (var stream = StorageStream.Reading(Storage, name))
 							{
-							    headers["Content-MD5"] = stream.GetMD5Hash();
+								headers["Content-MD5"] = stream.GetMD5Hash();
 							}
 
 							Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
@@ -222,8 +224,12 @@ namespace RavenFS.Controllers
 							log.Debug("File '{0}' was uploaded its new ETag is {1}", name, headers.Value<Guid>("ETag"));
 
 							SynchronizationTask.SynchronizeDestinationsAsync();
-							readFileToDatabase.Dispose();
 							return readingTask;
+						}).Unwrap()
+						.ContinueWith(t =>
+						{
+							readFileToDatabase.Dispose();
+							return t;
 						})
 						.Unwrap();
 				})
