@@ -159,17 +159,26 @@
 																Exception = task.Exception.ExtractSingleInnerException(),
 																Type = SynchronizationType.ContentUpdate
 															};
-													log.WarnException(
-														string.Format("Error has occured during synchronization of a file '{0}' from {1}", fileName, sourceServerUrl),
-														report.Exception);
 												}
 												else
 												{
 													report = task.Result;
-														log.Debug(
-															"File '{0}' was synchronized successfully from {1}. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
-															fileName, sourceServerUrl, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
 												}
+
+												if (report.Exception == null)
+												{
+													log.Debug(
+														"File '{0}' was synchronized successfully from {1}. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
+														fileName, sourceServerUrl, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
+												}
+												else
+												{
+													log.WarnException(
+														string.Format("Error has occured during synchronization of a file '{0}' from {1}", fileName,
+														              sourceServerUrl),
+														report.Exception);
+												}
+
 												Storage.Batch(
 													accessor =>
 													{
