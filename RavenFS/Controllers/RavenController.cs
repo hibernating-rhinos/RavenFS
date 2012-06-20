@@ -212,7 +212,7 @@ namespace RavenFS.Controllers
 
 		protected HttpResponseException ConcurrencyResponseException(ConcurrencyException concurrencyException)
 		{
-			return new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.Conflict, concurrencyException));
+			return new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.MethodNotAllowed, concurrencyException));
 		}
 	}
 }

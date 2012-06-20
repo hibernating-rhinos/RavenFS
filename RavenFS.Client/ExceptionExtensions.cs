@@ -34,6 +34,13 @@ namespace RavenFS.Client
 							throw new JsonSerializer().Deserialize<SynchronizationException>(new JsonTextReader(new StreamReader(stream)));
 						}
 					}
+					else if (httpWebResponse.StatusCode == HttpStatusCode.MethodNotAllowed)
+					{
+						using (var stream = webException.Response.GetResponseStream())
+						{
+							throw new JsonSerializer().Deserialize<ConcurrencyException>(new JsonTextReader(new StreamReader(stream)));
+						}
+					}
 				}
 
 				using (var stream = webException.Response.GetResponseStream())
