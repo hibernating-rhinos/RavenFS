@@ -5,12 +5,15 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using RavenFS.Notifications;
-using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
+	using System.Web.Http;
+	using Client;
 	using NLog;
+	using ConfigChange = Notifications.ConfigChange;
+	using ConfigChangeAction = Notifications.ConfigChangeAction;
+	using NameValueCollectionJsonConverter = Util.NameValueCollectionJsonConverter;
 
 	public class ConfigController : RavenController
 	{
@@ -56,9 +59,29 @@ namespace RavenFS.Controllers
 			return Request.Content.ReadAsStreamAsync()
 				.ContinueWith(task =>
 				{
-					var nameValueCollection = jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(task.Result)));
-					Storage.Batch(accessor => accessor.SetConfig(name, nameValueCollection));
-					Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Set });
+					var nameValueCollection =
+						jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(task.Result)));
+
+					var shouldRetry = false;
+					var retries = 128;
+
+					do
+					{
+						try
+						{
+							Storage.Batch(accessor => accessor.SetConfig(name, nameValueCollection));
+						}
+						catch (ConcurrencyException ce)
+						{
+							if (retries-- > 0)
+							{
+								shouldRetry = true;
+								continue;
+							}
+							throw ConcurrencyResponseException(ce);
+						}
+					} while (shouldRetry);
+					Publisher.Publish(new ConfigChange() {Name = name, Action = ConfigChangeAction.Set});
 
 					log.Debug("Config '{0}' was inserted", name);
 				});
@@ -67,7 +90,26 @@ namespace RavenFS.Controllers
 
 		public HttpResponseMessage Delete(string name)
 		{
-			Storage.Batch(accessor => accessor.DeleteConfig(name));
+			var shouldRetry = false;
+			var retries = 128;
+
+			do
+			{
+				try
+				{
+					Storage.Batch(accessor => accessor.DeleteConfig(name));
+				}
+				catch (ConcurrencyException ce)
+				{
+					if (retries-- > 0)
+					{
+						shouldRetry = true;
+						continue;
+					}
+					throw ConcurrencyResponseException(ce);
+				}
+			} while (shouldRetry);
+
 			Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Delete });
 
 			log.Debug("Config '{0}' was deleted", name);

@@ -88,6 +88,7 @@
       <Link>NameValueCollectionJsonConverter.cs</Link>
     </Compile>
     <Compile Include="AsyncExtensions.cs" />
+    <Compile Include="ConcurrencyException.cs" />
     <Compile Include="ConfigChange.cs" />
     <Compile Include="ConflictResolutionStrategy.cs" />
     <Compile Include="ConflictDetected.cs" />

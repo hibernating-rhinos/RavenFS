@@ -73,6 +73,9 @@
     <Compile Include="..\RavenFS.Client\AsyncExtensions.cs">
       <Link>AsyncExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\ConcurrencyException.cs">
+      <Link>ConcurrencyException.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\ConfigChange.cs">
       <Link>ConfigChange.cs</Link>
     </Compile>

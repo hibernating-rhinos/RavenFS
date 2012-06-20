@@ -14,6 +14,8 @@ using RavenFS.Extensions;
 
 namespace RavenFS.Storage
 {
+	using Client;
+
 	public class TransactionalStorage : CriticalFinalizerObject, IDisposable
 	{
 		private readonly ThreadLocal<StorageActionsAccessor> current = new ThreadLocal<StorageActionsAccessor>();
@@ -220,6 +222,18 @@ namespace RavenFS.Storage
 			try
 			{
 				ExecuteBatch(action);
+			}
+			catch (EsentErrorException e)
+			{
+				switch (e.Error)
+				{
+					case JET_err.WriteConflict:
+					case JET_err.SessionWriteConflict:
+					case JET_err.WriteConflictPrimaryIndex:
+						throw new ConcurrencyException("Concurrent modification to the same file are not allowed", e);
+					default:
+						throw;
+				}
 			}
 			finally
 			{

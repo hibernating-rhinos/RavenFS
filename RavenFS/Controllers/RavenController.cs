@@ -209,5 +209,10 @@ namespace RavenFS.Controllers
 																				string.Format("File {0} is being synced", fileName))));
 			}
 		}
+
+		protected HttpResponseException ConcurrencyResponseException(ConcurrencyException concurrencyException)
+		{
+			return new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.Conflict, concurrencyException));
+		}
 	}
 }
