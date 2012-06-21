@@ -204,7 +204,7 @@ namespace RavenFS.Controllers
 			else
 			{
 				log.Debug("Cannot execute operation because file '{0}' is being synced",  fileName);
-				throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.PreconditionFailed,
+				throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.PreconditionFailed,
 																			new SynchronizationException(
 																				string.Format("File {0} is being synced", fileName))));
 			}
@@ -212,7 +212,7 @@ namespace RavenFS.Controllers
 
 		protected HttpResponseException ConcurrencyResponseException(ConcurrencyException concurrencyException)
 		{
-			return new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.MethodNotAllowed, concurrencyException));
+			return new HttpResponseException(Request.CreateResponse(HttpStatusCode.MethodNotAllowed, concurrencyException));
 		}
 	}
 }

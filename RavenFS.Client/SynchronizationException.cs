@@ -20,7 +20,7 @@ namespace RavenFS.Client
 		protected SynchronizationException(
 			SerializationInfo info,
 			StreamingContext context)
-			: this(info.GetString("ExceptionMessage"))
+			: base(info, context)
 		{
 			
 		}
