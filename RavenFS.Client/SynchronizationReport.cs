@@ -2,7 +2,6 @@
 {
 	using System;
 
-    [Serializable]
     public class SynchronizationReport
     {
         public string FileName { get; set; }

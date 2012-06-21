@@ -177,14 +177,10 @@ namespace RavenFS
 			// we don't like XML, let us remove support for it.
 			config.Formatters.XmlFormatter.SupportedMediaTypes.Clear();
 
+			config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new IsoDateTimeConverter());
 			// the default json parser can't handle NameValueCollection
-			var serializerSettings = new JsonSerializerSettings();
-			serializerSettings.Converters.Add(new IsoDateTimeConverter());
-			serializerSettings.Converters.Add(new NameValueCollectionJsonConverter());
-			var indexOfJson = config.Formatters.IndexOf(config.Formatters.JsonFormatter);
-			config.Formatters[indexOfJson] = new JsonNetFormatter(serializerSettings);
-
-
+			config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new NameValueCollectionJsonConverter());
+			config.Formatters.JsonFormatter.SerializerSettings.NullValueHandling = NullValueHandling.Include;
 			config.Routes.MapHttpRoute(
 				name: "ClientAccessPolicy.xml",
 				routeTemplate: "ClientAccessPolicy.xml",

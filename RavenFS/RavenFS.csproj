@@ -173,7 +173,6 @@
     </Compile>
     <Compile Include="Infrastructure\ConnectionController.cs" />
     <Compile Include="Infrastructure\ErrorLoggingConcurrentMergeScheduler.cs" />
-    <Compile Include="Infrastructure\JsonNetFormatter.cs" />
     <Compile Include="Infrastructure\LimitedStream.cs" />
     <Compile Include="Infrastructure\RavenReadOnlyStream.cs" />
     <Compile Include="Infrastructure\RedirectHandler.cs" />
