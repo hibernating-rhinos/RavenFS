@@ -50,9 +50,7 @@ namespace RavenFS.Synchronization
 		{
 			log.Debug("Starting to synchronize destinations");
 
-			var task = new Task<Task<DestinationSyncResult>[]>(() => SynchronizeDestinationsInternal(forceSyncingContinuation).ToArray());
-			task.Start();
-			return task;
+			return Task.Factory.StartNew(() => SynchronizeDestinationsInternal(forceSyncingContinuation).ToArray());
 		}
 
 		public Task<SynchronizationReport> SynchronizeFileTo(string fileName, string destinationUrl)
