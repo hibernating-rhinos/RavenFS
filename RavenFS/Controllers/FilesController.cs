@@ -305,7 +305,19 @@ namespace RavenFS.Controllers
 				.Unwrap()
 				.ContinueWith(task =>
 				{
-					task.AssertNotFaulted();
+					if (task.Exception != null)
+					{
+						var innerException = task.Exception.ExtractSingleInnerException();
+
+						log.WarnException(string.Format("Failed to upload a file '{0}'", name), innerException);
+
+						if (innerException is ConcurrencyException)
+						{
+							throw ConcurrencyResponseException((ConcurrencyException) innerException);
+						}
+
+						task.AssertNotFaulted();
+					}
 
 					return new HttpResponseMessage(HttpStatusCode.Created);
 				});
