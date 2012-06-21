@@ -180,7 +180,7 @@ namespace RavenFS
 			config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new IsoDateTimeConverter());
 			// the default json parser can't handle NameValueCollection
 			config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new NameValueCollectionJsonConverter());
-			config.Formatters.JsonFormatter.SerializerSettings.NullValueHandling = NullValueHandling.Include;
+			
 			config.Routes.MapHttpRoute(
 				name: "ClientAccessPolicy.xml",
 				routeTemplate: "ClientAccessPolicy.xml",
