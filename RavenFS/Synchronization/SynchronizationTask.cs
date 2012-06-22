@@ -50,9 +50,7 @@ namespace RavenFS.Synchronization
 		{
 			log.Debug("Starting to synchronize destinations");
 
-			var task = new Task<Task<DestinationSyncResult>[]>(() => SynchronizeDestinationsInternal(forceSyncingContinuation).ToArray());
-			task.Start();
-			return task;
+			return Task.Factory.StartNew(() => SynchronizeDestinationsInternal(forceSyncingContinuation).ToArray());
 		}
 
 		public Task<SynchronizationReport> SynchronizeFileTo(string fileName, string destinationUrl)
@@ -64,11 +62,18 @@ namespace RavenFS.Synchronization
 				{
 				    if (t.Exception != null)
 				    {
+						log.WarnException("Could not get metadata details for " + fileName +" from " + destinationUrl, t.Exception);
 				    	return SynchronizationUtils.SynchronizationExceptionReport(fileName,
 				    	                                                           t.Exception.ExtractSingleInnerException().ToString());
 				    }
 
 				    var localMetadata = GetLocalMetadata(fileName);
+
+					if(localMetadata == null)
+					{
+						log.Warn("Could not find local file '{0}' to syncronize");
+						return SynchronizationUtils.SynchronizationExceptionReport(fileName,"File does not exists locally");
+					}
 
 					var work = DetermineSynchronizationWork(fileName, localMetadata, t.Result);
 
