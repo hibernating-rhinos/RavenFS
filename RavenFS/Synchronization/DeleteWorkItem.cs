@@ -1,14 +1,13 @@
 namespace RavenFS.Synchronization
 {
-	using System;
 	using System.IO;
 	using System.Net;
 	using System.Threading.Tasks;
 	using Multipart;
+	using Newtonsoft.Json;
 	using NLog;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
-	using Newtonsoft.Json;
 	using RavenFS.Storage;
 
 	public class DeleteWorkItem : SynchronizationWorkItem
@@ -90,6 +89,26 @@ namespace RavenFS.Synchronization
 					}
 				})
 				.TryThrowBetterError();
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != typeof(DeleteWorkItem)) return false;
+			return Equals((DeleteWorkItem)obj);
+		}
+
+		public bool Equals(DeleteWorkItem other)
+		{
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
+			return Equals(other.FileName, FileName);
+		}
+
+		public override int GetHashCode()
+		{
+			return (FileName != null ? GetType().Name.GetHashCode() ^ FileName.GetHashCode() : 0);
 		}
 	}
 }

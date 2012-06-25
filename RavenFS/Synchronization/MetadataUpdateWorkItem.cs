@@ -103,5 +103,25 @@ namespace RavenFS.Synchronization
 				    }
 				}).TryThrowBetterError();
 		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != typeof(MetadataUpdateWorkItem)) return false;
+			return Equals((MetadataUpdateWorkItem)obj);
+		}
+
+		public bool Equals(MetadataUpdateWorkItem other)
+		{
+			if (ReferenceEquals(null, other)) return false;
+			if (ReferenceEquals(this, other)) return true;
+			return Equals(other.FileName, FileName);
+		}
+
+		public override int GetHashCode()
+		{
+			return (FileName != null ? GetType().Name.GetHashCode() ^ FileName.GetHashCode() : 0);
+		}
 	}
 }

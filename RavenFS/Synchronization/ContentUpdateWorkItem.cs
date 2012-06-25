@@ -250,7 +250,7 @@
 
 		public override int GetHashCode()
 		{
-			return (FileName != null ? FileName.GetHashCode() : 0);
+			return (FileName != null ? GetType().Name.GetHashCode() ^ FileName.GetHashCode() : 0);
 		}
 	}
 }
