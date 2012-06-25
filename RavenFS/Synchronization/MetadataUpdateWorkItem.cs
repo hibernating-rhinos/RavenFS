@@ -1,5 +1,6 @@
 namespace RavenFS.Synchronization
 {
+	using System;
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Net;
@@ -26,19 +27,27 @@ namespace RavenFS.Synchronization
 
 		public override Task<SynchronizationReport> Perform(string destination)
 		{
-			return Task.Factory.StartNew(() =>
+			try
 			{
-			    AssertLocalFileExistsAndIsNotConflicted(sourceMetadata);
+				AssertLocalFileExistsAndIsNotConflicted(sourceMetadata);
+			}
+			catch (SynchronizationException ex)
+			{
+				log.WarnException(
+					string.Format("Failed to perform a metadata synchronization of a file '{0}' to {1} has finished with an exception",
+					              FileName, destination), ex);
 
-				var conflict = CheckConflictWithDestination(sourceMetadata, destinationMetadata);
+				return SynchronizationUtils.SynchronizationExceptionReport(FileName, ex.Message);
+			}
+			
+			var conflict = CheckConflictWithDestination(sourceMetadata, destinationMetadata);
 
-				if (conflict != null)
-				{
-					return ApplyConflictOnDestination(conflict, destination, log);
-				}
+			if (conflict != null)
+			{
+				return ApplyConflictOnDestination(conflict, destination, log);
+			}
 
-			    return StartSyncingMedatataTo(destination);
-			}).Unwrap()
+			return StartSyncingMedatataTo(destination)
 			.ContinueWith(task =>
 			              	{
 								SynchronizationReport report;
