@@ -1,13 +1,12 @@
 namespace RavenFS.Client
 {
 	using System;
+	using System.Runtime.Serialization;
 
 	/// <summary>
 	/// This exception is raised when a concurrency conflict is encountered
 	/// </summary>
-#if SILVERILGHT
 	[Serializable]
-#endif
 	public class ConcurrencyException : Exception
 	{
 		/// <summary>
@@ -36,7 +35,7 @@ namespace RavenFS.Client
 		{
 		}
 
-#if SILERLIGHT
+#if !SILVERLIGHT
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ConcurrencyException"/> class.
 		/// </summary>
