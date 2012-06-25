@@ -13,11 +13,15 @@ using Xunit.Extensions;
 namespace RavenFS.Tests.RDC
 {
 	using System.Linq;
+	using System.Net;
+	using System.Text;
 	using System.Threading.Tasks;
 	using IO;
 	using Rdc.Utils.IO;
 	using Synchronization;
 	using Synchronization.Conflictuality;
+	using Synchronization.Multipart;
+	using Tools;
 
 	public class SynchronizationTests : MultiHostTestBase
 	{
@@ -670,6 +674,47 @@ namespace RavenFS.Tests.RDC
 
 			Assert.Equal(SynchronizationType.Renaming, report.Type);
 			Assert.Equal("File test.bin is conflicted", report.Exception.Message);
+		}
+
+		[Fact]
+		public void Should_successfully_get_finished_and_conflicted_synchronization()
+		{
+			var destinationClient = NewClient(1);
+
+			destinationClient.UploadAsync("test.bin", new NameValueCollection { { "key", "value" } }, new MemoryStream(new byte[] { 1, 2, 3, 4 })).Wait();
+
+			var webRequest =
+				(HttpWebRequest) WebRequest.Create(destinationClient.ServerUrl + "/synchronization/updatemetadata/test.bin");
+			webRequest.ContentLength = 0;
+			webRequest.Method = "POST";
+
+			webRequest.Headers.Add(SyncingMultipartConstants.SourceServerUrl, "http://localhost/");
+			webRequest.Headers.Add("ETag", "\"" + new Guid() + "\"");
+			webRequest.Headers.Add("MetadataKey", "MetadataValue");
+
+			var sb = new StringBuilder();
+			new JsonSerializer().Serialize(new JsonTextWriter(new StringWriter(sb)),
+			                               new List<HistoryItem>
+			                               	{
+			                               		new HistoryItem
+			                               			{
+			                               				ServerId = new Guid().ToString(),
+			                               				Version = 1
+			                               			}
+			                               	});
+			
+			webRequest.Headers.Add(SynchronizationConstants.RavenSynchronizationHistory, sb.ToString());
+			webRequest.Headers.Add(SynchronizationConstants.RavenSynchronizationVersion, "1");
+
+			var httpWebResponse = webRequest.MakeRequest();
+			Assert.Equal(HttpStatusCode.OK, httpWebResponse.StatusCode);
+
+			var finishedSynchronizations = destinationClient.Synchronization.GetFinishedAsync().Result.ToList();
+
+			Assert.Equal(1, finishedSynchronizations.Count);
+			Assert.Equal("test.bin", finishedSynchronizations[0].FileName);
+			Assert.Equal(SynchronizationType.MetadataUpdate, finishedSynchronizations[0].Type);
+			Assert.Equal("File test.bin is conflicted", finishedSynchronizations[0].Exception.Message);
 		}
 	}
 }

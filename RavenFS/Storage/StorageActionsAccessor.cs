@@ -184,7 +184,7 @@ namespace RavenFS.Storage
 				{
 					sb.Append(key)
 						.Append("=")
-						.Append(Uri.EscapeUriString(value))
+						.Append(Uri.EscapeDataString(value))
 						.Append("&");
 				}
 			}
