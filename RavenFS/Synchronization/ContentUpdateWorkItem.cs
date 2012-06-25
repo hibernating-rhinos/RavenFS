@@ -29,6 +29,11 @@
 			this.sigGenerator = sigGenerator;
 		}
 
+		public override SynchronizationType SynchronizationType
+		{
+			get { return SynchronizationType.ContentUpdate; }
+		}
+
 		public override Task<SynchronizationReport> Perform(string destination)
 		{
 			return Task.Factory.StartNew(() =>

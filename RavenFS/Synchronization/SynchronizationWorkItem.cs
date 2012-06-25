@@ -24,6 +24,8 @@
 		public string FileName { get; private set; }
 		public string SourceServerUrl { get; private set; }
 
+		public abstract SynchronizationType SynchronizationType { get; }
+
 		public abstract Task<SynchronizationReport> Perform(string destination);
 
 		protected void AssertLocalFileExistsAndIsNotConflicted(NameValueCollection sourceMetadata)
@@ -74,33 +76,9 @@
 						{
 							FileName = FileName,
 							Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
-							Type = GetCurrentWorkType()
+							Type = SynchronizationType
 						};
 			});
-		}
-
-		private SynchronizationType GetCurrentWorkType()
-		{
-			var type = GetType();
-
-			if (type == typeof (ContentUpdateWorkItem))
-			{
-				return SynchronizationType.ContentUpdate;
-			}
-			if (type == typeof (MetadataUpdateWorkItem))
-			{
-				return SynchronizationType.MetadataUpdate;
-			}
-			if (type == typeof (RenameWorkItem))
-			{
-				return SynchronizationType.Renaming;
-			}
-			if (type == typeof (DeleteWorkItem))
-			{
-				return SynchronizationType.Deletion;
-			}
-
-			return SynchronizationType.Unknown;
 		}
 	}
 }

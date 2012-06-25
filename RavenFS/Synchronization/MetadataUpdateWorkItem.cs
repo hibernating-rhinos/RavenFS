@@ -1,6 +1,5 @@
 namespace RavenFS.Synchronization
 {
-	using System;
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Net;
@@ -23,6 +22,11 @@ namespace RavenFS.Synchronization
 		{
 			this.sourceMetadata = sourceMetadata;
 			this.destinationMetadata = destinationMetadata;
+		}
+
+		public override SynchronizationType SynchronizationType
+		{
+			get { return SynchronizationType.MetadataUpdate; }
 		}
 
 		public override Task<SynchronizationReport> Perform(string destination)

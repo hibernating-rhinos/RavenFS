@@ -19,8 +19,8 @@ namespace RavenFS.Synchronization
 		private readonly ConcurrentDictionary<string, ConcurrentQueue<SynchronizationWorkItem>> pendingSynchronizations =
 			new ConcurrentDictionary<string, ConcurrentQueue<SynchronizationWorkItem>>();
 
-		private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Guid>> activeSynchronizations =
-			new ConcurrentDictionary<string, ConcurrentDictionary<string, Guid>>();
+		private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, SynchronizationWorkItem>> activeSynchronizations =
+			new ConcurrentDictionary<string, ConcurrentDictionary<string, SynchronizationWorkItem>>();
 
 		public SynchronizationQueue(TransactionalStorage storage)
 		{
@@ -36,7 +36,8 @@ namespace RavenFS.Synchronization
 				       select new SynchronizationDetails
 				              	{
 				              		DestinationUrl = destinationPending.Key,
-				              		FileName = pendingFile.FileName
+				              		FileName = pendingFile.FileName,
+									Type = pendingFile.SynchronizationType
 				              	};
 			}
 		}
@@ -50,7 +51,8 @@ namespace RavenFS.Synchronization
 				       select new SynchronizationDetails
 				       {
 				              		DestinationUrl = destinationActive.Key,
-				              		FileName = activeFile.Key
+				              		FileName = activeFile.Key,
+									Type = activeFile.Value.SynchronizationType
 				              	};
 			}
 		}
@@ -68,7 +70,7 @@ namespace RavenFS.Synchronization
 
 		private int NumberOfActiveSynchronizationTasksFor(string destination)
 		{
-			return activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, Guid>()).Count;
+			return activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, SynchronizationWorkItem>()).Count;
 		}
 
 		public bool CanSynchronizeTo(string destination)
@@ -110,30 +112,30 @@ namespace RavenFS.Synchronization
 
 		public bool IsSynchronizationWorkBeingPerformed(string fileName, string destination)
 		{
-			ConcurrentDictionary<string, Guid> activeForDestination;
+			ConcurrentDictionary<string, SynchronizationWorkItem> activeForDestination;
 			if(!activeSynchronizations.TryGetValue(destination, out activeForDestination))
 			{
 				return false;
 			}
 
-			Guid etag;
-			return activeForDestination.TryGetValue(fileName, out etag);
+			SynchronizationWorkItem work;
+			return activeForDestination.TryGetValue(fileName, out work);
 		}
 
-		public void SynchronizationStarted(string fileName, Guid etag, string destination)
+		public void SynchronizationStarted(SynchronizationWorkItem work, Guid etag, string destination)
 		{
-			var activeForDestination = activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, Guid>());
+			var activeForDestination = activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, SynchronizationWorkItem>());
 
-			if(activeForDestination.TryAdd(fileName, etag))
+			if(activeForDestination.TryAdd(work.FileName, work))
 			{
-				log.Debug("File '{0}' with ETag {1} was added to an active synchronization queue for a destination {2}", fileName,
+				log.Debug("File '{0}' with ETag {1} was added to an active synchronization queue for a destination {2}", work.FileName,
 				          etag, destination);
 			}
 		}
 
 		public void SynchronizationFinished(string fileName, Guid etag, string destination)
 		{
-			ConcurrentDictionary<string, Guid> activeDestinationTasks;
+			ConcurrentDictionary<string, SynchronizationWorkItem> activeDestinationTasks;
 
 			if (activeSynchronizations.TryGetValue(destination, out activeDestinationTasks) == false)
 			{
@@ -141,7 +143,7 @@ namespace RavenFS.Synchronization
 				return;
 			}
 			
-			Guid removingItem;
+			SynchronizationWorkItem removingItem;
 			if(activeDestinationTasks.TryRemove(fileName, out removingItem))
 			{
 				log.Debug("File '{0}' with ETag {1} was removed from an active synchronization queue for a destination {2}", fileName,

@@ -339,13 +339,13 @@ namespace RavenFS.Synchronization
 
 			var fileName = work.FileName;
 			var fileETag = GetLocalMetadata(fileName).Value<Guid>("ETag");
-			synchronizationQueue.SynchronizationStarted(fileName, fileETag, destinationUrl);
+			synchronizationQueue.SynchronizationStarted(work, fileETag, destinationUrl);
 
 			return work.Perform(destinationUrl)
 				.ContinueWith(t =>
 				              	{
 				              		Queue.SynchronizationFinished(fileName, fileETag, destinationUrl);
-									CreateSyncingConfiguration(fileName, destinationUrl);
+									CreateSyncingConfiguration(fileName, destinationUrl, work.SynchronizationType);
 
 				              		if (t.Exception != null)
 				              		{
@@ -436,7 +436,7 @@ namespace RavenFS.Synchronization
 			return configObjects.Select(x => x.FileName).ToList();
 		}
 
-		private void CreateSyncingConfiguration(string fileName, string destination)
+		private void CreateSyncingConfiguration(string fileName, string destination, SynchronizationType synchronizationType)
 		{
 			try
 			{
@@ -444,7 +444,8 @@ namespace RavenFS.Synchronization
 				storage.Batch(accessor => accessor.SetConfigurationValue(name, new SynchronizationDetails
 				                                                               	{
 				                                                               		DestinationUrl = destination,
-				                                                               		FileName = fileName
+				                                                               		FileName = fileName,
+																					Type = synchronizationType
 				                                                               	}));
 			}
 			catch (Exception e)

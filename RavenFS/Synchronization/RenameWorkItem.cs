@@ -24,6 +24,11 @@ namespace RavenFS.Synchronization
 			this.storage = storage;
 		}
 
+		public override SynchronizationType SynchronizationType
+		{
+			get { return SynchronizationType.Renaming; }
+		}
+
 		public override Task<SynchronizationReport> Perform(string destination)
 		{
 			return StartSyncingRenamingTo(destination)

@@ -438,7 +438,7 @@
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage Finished(int page, int pageSize)
+		public HttpResponseMessage Finished()
 		{
 			IList<SynchronizationReport> configObjects = null;
 			Storage.Batch(
@@ -449,22 +449,26 @@
 						where SynchronizationHelper.IsSyncResultName(item)
 						select item;
 					configObjects =
-						(from item in configKeys.Skip(pageSize * page).Take(pageSize)
+						(from item in configKeys.Skip(Paging.PageSize * Paging.Start).Take(Paging.PageSize)
 						 select accessor.GetConfigurationValue<SynchronizationReport>(item)).ToList();
 				});
 			return Request.CreateResponse(HttpStatusCode.OK, configObjects);
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage Active(int page, int pageSize)
+		public HttpResponseMessage Active()
 		{
-			return Request.CreateResponse(HttpStatusCode.OK, SynchronizationTask.Queue.Active.Skip(pageSize * page).Take(pageSize));
+			return Request.CreateResponse(HttpStatusCode.OK,
+			                              SynchronizationTask.Queue.Active.Skip(Paging.PageSize*Paging.Start).Take(
+			                              	Paging.PageSize));
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage Pending(int page, int pageSize)
+		public HttpResponseMessage Pending()
 		{
-			return Request.CreateResponse(HttpStatusCode.OK, SynchronizationTask.Queue.Pending.Skip(pageSize * page).Take(pageSize));
+			return Request.CreateResponse(HttpStatusCode.OK,
+			                              SynchronizationTask.Queue.Pending.Skip(Paging.PageSize*Paging.Start).Take(
+			                              	Paging.PageSize));
 		}
 
 		[AcceptVerbs("PATCH")]

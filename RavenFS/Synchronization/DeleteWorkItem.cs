@@ -21,6 +21,11 @@ namespace RavenFS.Synchronization
 			this.storage = storage;
 		}
 
+		public override SynchronizationType SynchronizationType
+		{
+			get { return SynchronizationType.Deletion; }
+		}
+
 		public override Task<SynchronizationReport> Perform(string destination)
 		{
 			return StartDeleteFileOn(destination)
