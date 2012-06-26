@@ -104,6 +104,7 @@
     <Compile Include="RDC\ConflictNotificationTests.cs" />
     <Compile Include="RDC\MultipartTests.cs" />
     <Compile Include="RDC\NeedListParserTest.cs" />
+    <Compile Include="RDC\SynchronizationNotificationTests.cs" />
     <Compile Include="RDC\SynchronizationTests.cs" />
     <Compile Include="RDC\IO\RandomlyModifiedStream.cs" />
     <Compile Include="RDC\IO\RandomStream.cs" />

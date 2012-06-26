@@ -21,6 +21,9 @@
 	using Synchronization.Conflictuality;
 	using Synchronization.Multipart;
 	using ConflictDetected = Notifications.ConflictDetected;
+	using SynchronizationAction = Notifications.SynchronizationAction;
+	using SynchronizationDirection = Notifications.SynchronizationDirection;
+	using SynchronizationUpdate = Notifications.SynchronizationUpdate;
 
 	public class SynchronizationController : RavenController
 	{
@@ -181,6 +184,9 @@
 									SaveSynchronizationSourceInformation(sourceServerUrl, sourceFileETag, accessor);
 								}
 							});
+
+						PublishSynchronizationFinishedNotification(fileName, sourceServerUrl, report.Type);
+
 						return task;
 					})
 				.Unwrap()
@@ -286,6 +292,8 @@
 						SaveSynchronizationSourceInformation(sourceServerUrl, sourceFileETag, accessor);
 					}
 				});
+
+				PublishSynchronizationFinishedNotification(fileName, sourceServerUrl, report.Type);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -339,6 +347,8 @@
 						SaveSynchronizationSourceInformation(sourceServerUrl, sourceFileETag, accessor);
 					}
 				});
+
+				PublishSynchronizationFinishedNotification(fileName, sourceServerUrl, report.Type);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -406,6 +416,8 @@
 						SaveSynchronizationSourceInformation(sourceServerUrl, sourceFileETag, accessor);
 					}
 				});
+
+				PublishSynchronizationFinishedNotification(fileName, sourceServerUrl, report.Type);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -547,6 +559,19 @@
 			log.Debug("Got synchronization last etag request from {0}: [{1}]", from, lastEtag);
 
 			return Request.CreateResponse(HttpStatusCode.OK, lastEtag);
+		}
+
+		private void PublishSynchronizationFinishedNotification(string fileName, string sourceServerUrl, SynchronizationType type)
+		{
+			Publisher.Publish(new SynchronizationUpdate
+			{
+				FileName = fileName,
+				DestinationServer = RavenFileSystem.ServerUrl,
+				SourceServer = sourceServerUrl,
+				Type = type,
+				Action = SynchronizationAction.Finish,
+				SynchronizationDirection = SynchronizationDirection.Incoming
+			});
 		}
 
 		private Task StrategyAsGetCurrent(string fileName, string sourceServerUrl)

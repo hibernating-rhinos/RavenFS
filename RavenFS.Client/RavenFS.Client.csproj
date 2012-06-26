@@ -115,6 +115,7 @@
     <Compile Include="NotificationJSonUtilities.cs" />
     <Compile Include="FileStatus.cs" />
     <Compile Include="SynchronizationType.cs" />
+    <Compile Include="SynchronizationUpdate.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

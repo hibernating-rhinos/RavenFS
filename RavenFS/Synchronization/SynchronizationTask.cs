@@ -8,12 +8,16 @@ namespace RavenFS.Synchronization
 	using System.Reactive.Linq;
 	using System.Threading.Tasks;
 	using NLog;
+	using Notifications;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
 	using RavenFS.Infrastructure;
 	using RavenFS.Storage;
 	using RavenFS.Util;
 	using Rdc.Wrapper;
+	using SynchronizationAction = Notifications.SynchronizationAction;
+	using SynchronizationDirection = Notifications.SynchronizationDirection;
+	using SynchronizationUpdate = Notifications.SynchronizationUpdate;
 
 	public class SynchronizationTask
 	{
@@ -23,14 +27,16 @@ namespace RavenFS.Synchronization
 		private readonly RavenFileSystem localRavenFileSystem;
 		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
+		private readonly NotificationPublisher publisher;
 
 		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(10));
 
-		public SynchronizationTask(RavenFileSystem localRavenFileSystem, TransactionalStorage storage, SigGenerator sigGenerator)
+		public SynchronizationTask(RavenFileSystem localRavenFileSystem, TransactionalStorage storage, SigGenerator sigGenerator, NotificationPublisher publisher)
 		{
 			this.localRavenFileSystem = localRavenFileSystem;
 			this.storage = storage;
 			this.sigGenerator = sigGenerator;
+			this.publisher = publisher;
 			synchronizationQueue = new SynchronizationQueue(storage);
 
 			InitializeTimer();
@@ -340,6 +346,15 @@ namespace RavenFS.Synchronization
 			var fileName = work.FileName;
 			var fileETag = GetLocalMetadata(fileName).Value<Guid>("ETag");
 			synchronizationQueue.SynchronizationStarted(work, fileETag, destinationUrl);
+			publisher.Publish(new SynchronizationUpdate
+			                  	{
+			                  		FileName = work.FileName,
+									DestinationServer = destinationUrl,
+									SourceServer = localRavenFileSystem.ServerUrl,
+									Type = work.SynchronizationType,
+									Action = SynchronizationAction.Start,
+									SynchronizationDirection = SynchronizationDirection.Outgoing
+			                  	});
 
 			return work.Perform(destinationUrl)
 				.ContinueWith(t =>
@@ -354,6 +369,16 @@ namespace RavenFS.Synchronization
 				              					"An exception was thrown during {0} that was performed for a file '{1}' and a destination {2}",
 				              					work.GetType().Name, fileName, destinationUrl), t.Exception.ExtractSingleInnerException());
 				              		}
+
+									publisher.Publish(new SynchronizationUpdate
+									{
+										FileName = work.FileName,
+										DestinationServer = destinationUrl,
+										SourceServer = localRavenFileSystem.ServerUrl,
+										Type = work.SynchronizationType,
+										Action = SynchronizationAction.Finish,
+										SynchronizationDirection = SynchronizationDirection.Outgoing
+									});
 
 				              		return t.Result;
 				              	});

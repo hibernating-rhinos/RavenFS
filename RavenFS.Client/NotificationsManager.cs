@@ -56,6 +56,11 @@ namespace RavenFS.Client
                 .Where(f => f.File.StartsWith(canonicalisedFolder, StringComparison.InvariantCultureIgnoreCase));
         }
 
+    	public IObservable<SynchronizationUpdate> SynchronizationUpdates(SynchronizationDirection synchronizationDirection)
+    	{
+    		return Notifications().OfType<SynchronizationUpdate>().Where(x => x.SynchronizationDirection == synchronizationDirection);
+    	}
+
         public IObservable<Notification> Notifications()
         {
             StartListening();

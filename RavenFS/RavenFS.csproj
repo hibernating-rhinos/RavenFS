@@ -185,6 +185,7 @@
     <Compile Include="Infrastructure\SignalR\WebApiResponse.cs" />
     <Compile Include="NonAdminHttp.cs" />
     <Compile Include="Notifications\NotificationPublisher.cs" />
+    <Compile Include="Notifications\SynchronizationUpdate.cs" />
     <Compile Include="Notifications\TypeHidingJsonSerializer.cs" />
     <Compile Include="Infrastructure\DelegateDependencyResolver.cs" />
     <Compile Include="RavenFileSystem.cs" />
