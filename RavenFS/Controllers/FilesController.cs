@@ -57,8 +57,8 @@ namespace RavenFS.Controllers
 				throw new HttpResponseException(HttpStatusCode.NotFound);
 			}
 
-			var ravenReadOnlyStream = new RavenReadOnlyStream(Storage, BufferPool, name);
-			var result = StreamResult(name, ravenReadOnlyStream);
+			var readingStream = StorageStream.Reading(Storage,name);
+			var result = StreamResult(name, readingStream);
 			MetadataExtensions.AddHeaders(result, fileAndPages);
 			return result;
 		}
