@@ -47,7 +47,7 @@ namespace RavenFS.Infrastructure
             connection.Initialize(Resolver);
 
             var response = new HttpResponseMessage();
-            var hostContext = new HostContext(new WebApiRequest(controllerContext.Request), new WebApiResponse(response), User);
+            var hostContext = new HostContext(new WebApiRequest(controllerContext.Request), new WebApiResponse(response));
 
             return connection.ProcessRequestAsync(hostContext).ContinueWith(t => response);
         }

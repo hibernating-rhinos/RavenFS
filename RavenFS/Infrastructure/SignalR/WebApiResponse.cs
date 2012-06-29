@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
-using RavenFS.Util;
-using SignalR.Hosting;
+using SignalR;
 
 namespace RavenFS.Infrastructure.SignalR
 {
@@ -24,14 +19,14 @@ namespace RavenFS.Infrastructure.SignalR
             message.Content = new StreamContent(this.memoryStream);
         }
 
-        public Task WriteAsync(string data)
+        public Task WriteAsync(ArraySegment<byte> data)
         {
             throw new NotImplementedException();
         }
 
-        public Task EndAsync(string data)
-        {
-            message.Content = new StringContent(data, Encoding.UTF8, ContentType);
+		public Task EndAsync(ArraySegment<byte> data)
+		{
+			message.Content = new ByteArrayContent(data.Array);
             return TaskEx.FromResult(true);
         }
 

@@ -1,5 +1,4 @@
 ﻿using SignalR;
-using SignalR.Infrastructure;
 
 namespace RavenFS.Notifications
 {
@@ -15,7 +14,8 @@ namespace RavenFS.Notifications
             var serializer = new TypeHidingJsonSerializer();
             dependencyResolver.Register(typeof(IJsonSerializer), () => serializer);
 
-            connection = dependencyResolver.Resolve<IConnectionManager>().GetConnection<NotificationEndpoint>();
+        	connection =
+        		dependencyResolver.Resolve<IConnectionManager>().GetConnectionContext<NotificationEndpoint>().Connection;
         }
 
         public IDependencyResolver SignalRDependencyResolver
