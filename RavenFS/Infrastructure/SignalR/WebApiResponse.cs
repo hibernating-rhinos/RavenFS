@@ -21,7 +21,7 @@ namespace RavenFS.Infrastructure.SignalR
 
         public Task WriteAsync(ArraySegment<byte> data)
         {
-            throw new NotImplementedException();
+        	return Task.Factory.StartNew(() => message.Content = new ByteArrayContent(data.Array));
         }
 
 		public Task EndAsync(ArraySegment<byte> data)
