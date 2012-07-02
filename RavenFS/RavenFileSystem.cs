@@ -92,6 +92,7 @@ namespace RavenFS
 			storage.Dispose();
 			search.Dispose();
 			sigGenerator.Dispose();
+			BufferPool.Dispose();
 		}
 
 		public SigGenerator SigGenerator
