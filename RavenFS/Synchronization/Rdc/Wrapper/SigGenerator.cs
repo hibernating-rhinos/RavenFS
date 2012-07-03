@@ -8,10 +8,13 @@
 	using System.Runtime.ConstrainedExecution;
 	using System.Runtime.InteropServices;
 	using System.Threading;
+	using NLog;
 	using Unmanaged;
 
 	public class SigGenerator : CriticalFinalizerObject, IDisposable
     {
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
         private readonly ReaderWriterLockSlim _disposerLock = new ReaderWriterLockSlim();
         private bool _disposed;
 
@@ -22,14 +25,19 @@
 
         public SigGenerator()
         {
-            try
-            {
-                _rdcLibrary = (IRdcLibrary)new RdcLibrary();
-            }
-            catch (InvalidCastException e)
-            {
-                throw new InvalidOperationException("This code must run in an MTA thread", e);
-            }
+        	try
+        	{
+        		_rdcLibrary = (IRdcLibrary) new RdcLibrary();
+        	}
+        	catch (InvalidCastException e)
+        	{
+        		throw new InvalidOperationException("This code must run in an MTA thread", e);
+        	}
+        	catch (COMException comException)
+        	{
+				log.ErrorException("Remote Differential Compression feature is not installed", comException);
+        		throw new NotSupportedException("Remote Differential Compression feature is not installed", comException);
+        	}
         }
 
         public IList<SignatureInfo> GenerateSignatures(Stream source, string fileName, ISignatureRepository signatureRepository)
