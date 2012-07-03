@@ -37,7 +37,7 @@ namespace RavenFS.Tests
 			                      		         		MaxReceivedMessageSize = Int64.MaxValue,
 			                      		         		TransferMode = TransferMode.Streamed
 			                      		         	};
-			                      		disposables.Add(config);
+
 			                      		var path = "~/" + port;
 			                      		IOExtensions.DeleteDirectory(path.ToFullPath());
 			                      		var ravenFileSystem = new RavenFileSystem(path);
@@ -71,7 +71,8 @@ namespace RavenFS.Tests
 				var httpSelfHostServer = disposable as HttpSelfHostServer;
 				if (httpSelfHostServer != null)
 					httpSelfHostServer.CloseAsync().Wait();
-				disposable.Dispose();
+				else
+					disposable.Dispose();
 			}
 		}
 
