@@ -1,6 +1,8 @@
 ﻿namespace RavenFS.Util
 {
-	public interface IBufferPool
+	using System;
+
+	public interface IBufferPool : IDisposable
 	{
 		void Dispose();
 		byte[] TakeBuffer(int size);
