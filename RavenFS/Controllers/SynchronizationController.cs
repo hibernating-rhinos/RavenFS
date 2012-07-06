@@ -146,11 +146,17 @@
 						SynchronizationReport report;
 						if (task.Status == TaskStatus.Faulted)
 						{
+							var exception = task.Exception.ExtractSingleInnerException();
+							if (exception is HttpRequestException)
+							{
+								exception = exception.InnerException;
+							}
+
 							report =
 								new SynchronizationReport
 									{
 										FileName = fileName,
-										Exception = task.Exception.ExtractSingleInnerException(),
+										Exception = exception,
 										Type = SynchronizationType.ContentUpdate
 									};
 						}
@@ -187,14 +193,8 @@
 
 						PublishSynchronizationFinishedNotification(fileName, sourceServerUrl, report.Type);
 
-						return task;
-					})
-				.Unwrap()
-				.ContinueWith(task =>
-				{
-					task.AssertNotFaulted();
-					return Request.CreateResponse(HttpStatusCode.OK, task.Result);
-				});
+						return Request.CreateResponse(HttpStatusCode.OK, report);
+					});
 		}
 
 		private void AssertConflictDetection(string fileName, NameValueCollection destinationMetadata, NameValueCollection sourceMetadata, string sourceServerUrl, out bool isConflictResolved)
