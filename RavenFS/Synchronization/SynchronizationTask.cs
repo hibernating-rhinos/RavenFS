@@ -47,6 +47,11 @@ namespace RavenFS.Synchronization
 			get { return synchronizationQueue; }
 		}
 
+		private Guid ServerId
+		{
+			get { return storage.Id; }
+		}
+
 		private void InitializeTimer()
 		{
 			timer.Subscribe(tick => SynchronizeDestinationsAsync());
@@ -108,7 +113,7 @@ namespace RavenFS.Synchronization
 
 				var destinationClient = new RavenFileSystemClient(destinationUrl);
 
-				yield return destinationClient.Synchronization.GetLastSynchronizationFromAsync(localRavenFileSystem.ServerUrl)
+				yield return destinationClient.Synchronization.GetLastSynchronizationFromAsync(ServerId)
 					.ContinueWith(etagTask =>
 					{
 						etagTask.AssertNotFaulted();
@@ -133,7 +138,7 @@ namespace RavenFS.Synchronization
 														else
 														{
 															synchronizationQueue.EnqueueSynchronization(destinationUrl,
-																 new ContentUpdateWorkItem(confirmation.FileName, localRavenFileSystem.ServerUrl,
+																 new ContentUpdateWorkItem(confirmation.FileName, ServerId,
 																							 storage, sigGenerator));
 															log.Debug(
 																"Destination server {0} said that file '{1}' is {2}. File was added to a synchronization queue again.",
@@ -280,20 +285,20 @@ namespace RavenFS.Synchronization
 
 				if (rename != null)
 				{
-					return new RenameWorkItem(file, rename, localRavenFileSystem.ServerUrl, storage);
+					return new RenameWorkItem(file, rename, ServerId, storage);
 				}
-				return new DeleteWorkItem(file, localRavenFileSystem.ServerUrl, storage);
+				return new DeleteWorkItem(file, ServerId, storage);
 			}
 			if (destinationMetadata != null && localMetadata["Content-MD5"] == destinationMetadata["Content-MD5"]) // file exists on dest and has the same content
 			{
 				// check metadata to detect if any synchronization is needed
 				if (localMetadata.AllKeys.Except(new[] { "ETag", "Last-Modified" }).Any(key => !destinationMetadata.AllKeys.Contains(key) || localMetadata[key] != destinationMetadata[key]))
 				{
-					return new MetadataUpdateWorkItem(file, localMetadata, destinationMetadata, localRavenFileSystem.ServerUrl);
+					return new MetadataUpdateWorkItem(file, localMetadata, destinationMetadata, ServerId);
 				}
 				return null; // the same content and metadata - no need to synchronize
 			}
-			return new ContentUpdateWorkItem(file, localRavenFileSystem.ServerUrl, storage, sigGenerator);
+			return new ContentUpdateWorkItem(file, ServerId, storage, sigGenerator);
 		}
 
 		private IEnumerable<Task<SynchronizationReport>> SynchronizePendingFiles(string destinationUrl, bool forceSyncingContinuation)
@@ -350,7 +355,7 @@ namespace RavenFS.Synchronization
 			                  	{
 			                  		FileName = work.FileName,
 									DestinationServer = destinationUrl,
-									SourceServer = localRavenFileSystem.ServerUrl,
+									SourceServerId = ServerId,
 									Type = work.SynchronizationType,
 									Action = SynchronizationAction.Start,
 									SynchronizationDirection = SynchronizationDirection.Outgoing
@@ -374,7 +379,7 @@ namespace RavenFS.Synchronization
 									{
 										FileName = work.FileName,
 										DestinationServer = destinationUrl,
-										SourceServer = localRavenFileSystem.ServerUrl,
+										SourceServerId = ServerId,
 										Type = work.SynchronizationType,
 										Action = SynchronizationAction.Finish,
 										SynchronizationDirection = SynchronizationDirection.Outgoing

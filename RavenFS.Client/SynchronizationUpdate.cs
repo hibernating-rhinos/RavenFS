@@ -1,12 +1,14 @@
 namespace RavenFS.Client
 {
+	using System;
+
 	public class SynchronizationUpdate : Notification
 	{
 		public string FileName { get; set; }
 
 		public string DestinationServer { get; set; }
 
-		public string SourceServer { get; set; }
+		public Guid SourceServerId { get; set; }
 
 		public SynchronizationType Type { get; set; }
 

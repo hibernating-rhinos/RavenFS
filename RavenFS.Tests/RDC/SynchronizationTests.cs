@@ -214,9 +214,9 @@ namespace RavenFS.Tests.RDC
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
-		                       {
-		                           {"SomeTest-metadata", "some-value"}
-		                       };
+			                   {
+			                       {"SomeTest-metadata", "some-value"}
+			                   };
 
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
@@ -225,7 +225,7 @@ namespace RavenFS.Tests.RDC
 
 			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Wait();
 
-			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.ServerUrl).Result;
+			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
 
 			var sourceMetadataWithEtag = sourceClient.GetMetadataForAsync("test.bin").Result;
 
@@ -237,9 +237,9 @@ namespace RavenFS.Tests.RDC
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
-		                       {
-		                           {"SomeTest-metadata", "some-value"}
-		                       };
+			                   {
+			                       {"SomeTest-metadata", "some-value"}
+			                   };
 
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
@@ -251,7 +251,7 @@ namespace RavenFS.Tests.RDC
 			sourceClient.Synchronization.StartSynchronizationToAsync("test1.bin", destinationClient.ServerUrl).Wait();
 
 			var lastSourceETag = sourceClient.GetMetadataForAsync("test2.bin").Result.Value<Guid>("ETag");
-			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.ServerUrl).Result;
+			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
 
 			Assert.Equal(lastSourceETag, lastSynchronization.LastSourceFileEtag);
 		}
@@ -261,7 +261,7 @@ namespace RavenFS.Tests.RDC
 		{
 			var destinationClient = NewClient(0);
 
-			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync("http://localhost:1234").Result;
+			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync(Guid.Empty).Result;
 
 			Assert.Equal(Guid.Empty, lastSynchronization.LastSourceFileEtag);
 		}
@@ -688,7 +688,7 @@ namespace RavenFS.Tests.RDC
 			webRequest.ContentLength = 0;
 			webRequest.Method = "POST";
 
-			webRequest.Headers.Add(SyncingMultipartConstants.SourceServerUrl, "http://localhost/");
+			webRequest.Headers.Add(SyncingMultipartConstants.SourceServerId, Guid.Empty.ToString());
 			webRequest.Headers.Add("ETag", "\"" + new Guid() + "\"");
 			webRequest.Headers.Add("MetadataKey", "MetadataValue");
 

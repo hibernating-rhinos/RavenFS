@@ -22,8 +22,8 @@
 		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
 		
-		public ContentUpdateWorkItem(string file, string sourceServerUrl, TransactionalStorage storage, SigGenerator sigGenerator)
-			: base(file, sourceServerUrl)
+		public ContentUpdateWorkItem(string file, Guid sourceServerId, TransactionalStorage storage, SigGenerator sigGenerator)
+			: base(file, sourceServerId)
 		{
 			this.storage = storage;
 			this.sigGenerator = sigGenerator;
@@ -181,7 +181,7 @@
 
 		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, string fileName, NameValueCollection sourceMetadata, Stream sourceFileStream, IList<RdcNeed> needList, params IDisposable[] disposables)
 		{
-			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerUrl, fileName, sourceMetadata,
+			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerId, fileName, sourceMetadata,
 																	   sourceFileStream, needList);
 
 			log.Debug("Synchronizing a file '{0}' to {1} by using multipart request. Need list length is {2}", fileName, destinationServerUrl, needList.Count);

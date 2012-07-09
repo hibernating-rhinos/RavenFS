@@ -1,5 +1,6 @@
 namespace RavenFS.Notifications
 {
+	using System;
 	using Client;
 
 	public class SynchronizationUpdate : Notification
@@ -8,7 +9,7 @@ namespace RavenFS.Notifications
 
 		public string DestinationServer { get; set; }
 
-		public string SourceServer { get; set; }
+		public Guid SourceServerId { get; set; }
 
 		public SynchronizationType Type { get; set; }
 

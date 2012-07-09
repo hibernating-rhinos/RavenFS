@@ -88,5 +88,13 @@ namespace RavenFS.Controllers
 				}
 			};
 		}
+
+		[AcceptVerbs("GET")]
+		public HttpResponseMessage Id()
+		{
+			var ravenFileSystem = (RavenFileSystem)ControllerContext.Configuration.DependencyResolver.GetService(typeof(RavenFileSystem));
+
+			return Request.CreateResponse(HttpStatusCode.OK, ravenFileSystem.Storage.Id);
+		}
 	}
 }

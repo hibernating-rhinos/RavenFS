@@ -41,7 +41,7 @@ namespace RavenFS.Tests.RDC
 				offset += randomLength;
 			}
 
-			var synchronizationRequest = new SynchronizationMultipartRequest(string.Empty, string.Empty, string.Empty,
+			var synchronizationRequest = new SynchronizationMultipartRequest(string.Empty, Guid.Empty, string.Empty,
 			                                                                 new NameValueCollection(), sourceStream, needList);
 
 			var content = synchronizationRequest.PrepareMultipartContent();

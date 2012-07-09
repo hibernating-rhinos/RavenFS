@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Specialized;
 using System.Runtime.CompilerServices;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using RavenFS.Extensions;
 using RavenFS.Infrastructure;
@@ -13,9 +12,7 @@ using RavenFS.Util;
 namespace RavenFS
 {
 	using System.Linq;
-	using System.Web;
 	using System.Web.Http;
-	using System.Web.Http.SelfHost;
 	using NLog;
 	using Synchronization;
 	using Synchronization.Conflictuality;
@@ -36,7 +33,6 @@ namespace RavenFS
 		private readonly ConflictActifactManager conflictActifactManager;
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
-		private Uri baseAddress;
 
 		public TransactionalStorage Storage
 		{
@@ -135,34 +131,9 @@ namespace RavenFS
 			get { return conflictResolver; }
 		}
 
-		public string ServerUrl
-		{
-			get
-			{
-				if (HttpContext.Current != null)// running in IIS, let us figure out how
-				{
-					var url = HttpContext.Current.Request.Url;
-					return new UriBuilder(url)
-					{
-						Path = HttpContext.Current.Request.ApplicationPath,
-						Query = ""
-					}.Uri.ToString();
-				}
-
-				return baseAddress.ToString();
-			}
-		}
-
 		[MethodImpl(MethodImplOptions.Synchronized)]
 		public void Start(HttpConfiguration config)
 		{
-			var selfHost = config as HttpSelfHostConfiguration;
-
-			if (selfHost != null)
-			{
-				baseAddress = selfHost.BaseAddress;
-			}
-
 			config.DependencyResolver = new DelegateDependencyResolver(type =>
 			{
 				if (type == typeof(RavenFileSystem))
@@ -196,6 +167,11 @@ namespace RavenFS
 				name: "RavenFS.Studio.xap",
 				routeTemplate: "RavenFS.Studio.xap",
 				defaults: new { controller = "static", action = "RavenStudioXap" });
+
+			config.Routes.MapHttpRoute(
+				name: "Id",
+				routeTemplate: "id",
+				defaults: new { controller = "static", action = "Id" });
 
 			config.Routes.MapHttpRoute(
 				name: "Empty",

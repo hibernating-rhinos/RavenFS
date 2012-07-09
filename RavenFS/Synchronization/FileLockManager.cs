@@ -20,11 +20,11 @@ namespace RavenFS.Synchronization
 			return timeoutConfigExists ? configuredTimeout : defaultTimeout;
 		}
 
-		public void LockByCreatingSyncConfiguration(string fileName, string sourceServerUrl, StorageActionsAccessor accessor)
+		public void LockByCreatingSyncConfiguration(string fileName, Guid sourceServerId, StorageActionsAccessor accessor)
 		{
 			var syncOperationDetails = new SynchronizationLock
 											{
-												SourceUrl = sourceServerUrl,
+												SourceServerId = sourceServerId,
 												FileLockedAt = DateTime.UtcNow
 											};
 

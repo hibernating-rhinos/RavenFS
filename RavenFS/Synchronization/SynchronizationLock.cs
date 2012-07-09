@@ -4,7 +4,7 @@ namespace RavenFS.Synchronization
 
 	public class SynchronizationLock
 	{
-		public string SourceUrl { get; set; }
+		public Guid SourceServerId { get; set; }
 
 		public DateTime FileLockedAt { get; set; }
 	}

@@ -1,5 +1,6 @@
 namespace RavenFS.Synchronization
 {
+	using System;
 	using System.IO;
 	using System.Net;
 	using System.Threading.Tasks;
@@ -16,7 +17,7 @@ namespace RavenFS.Synchronization
 
 		private readonly TransactionalStorage storage;
 
-		public DeleteWorkItem(string fileName, string sourceServerUrl, TransactionalStorage storage) : base(fileName, sourceServerUrl)
+		public DeleteWorkItem(string fileName, Guid sourceServerId, TransactionalStorage storage) : base(fileName, sourceServerId)
 		{
 			this.storage = storage;
 		}
@@ -82,7 +83,7 @@ namespace RavenFS.Synchronization
 			request.ContentLength = 0;
 			request.AddHeaders(fileAndPages.Metadata);
 
-			request.Headers[SyncingMultipartConstants.SourceServerUrl] = SourceServerUrl;
+			request.Headers[SyncingMultipartConstants.SourceServerId] = SourceServerId.ToString();
 
 			return request
 				.GetResponseAsync()

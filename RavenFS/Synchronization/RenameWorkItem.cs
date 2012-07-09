@@ -1,5 +1,6 @@
 namespace RavenFS.Synchronization
 {
+	using System;
 	using System.IO;
 	using System.Net;
 	using System.Threading.Tasks;
@@ -17,8 +18,8 @@ namespace RavenFS.Synchronization
 		private readonly string rename;
 		private readonly TransactionalStorage storage;
 
-		public RenameWorkItem(string name, string rename, string sourceServerUrl, TransactionalStorage storage)
-			: base(name, sourceServerUrl)
+		public RenameWorkItem(string name, string rename, Guid sourceServerId, TransactionalStorage storage)
+			: base(name, sourceServerId)
 		{
 			this.rename = rename;
 			this.storage = storage;
@@ -87,7 +88,7 @@ namespace RavenFS.Synchronization
 			request.ContentLength = 0;
 			request.AddHeaders(fileAndPages.Metadata);
 
-			request.Headers[SyncingMultipartConstants.SourceServerUrl] = SourceServerUrl;
+			request.Headers[SyncingMultipartConstants.SourceServerId] = SourceServerId.ToString();
 
 			return request
 				.GetResponseAsync()

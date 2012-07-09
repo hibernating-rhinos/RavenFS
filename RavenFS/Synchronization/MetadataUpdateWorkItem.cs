@@ -1,5 +1,6 @@
 namespace RavenFS.Synchronization
 {
+	using System;
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Net;
@@ -17,8 +18,8 @@ namespace RavenFS.Synchronization
 		private readonly NameValueCollection sourceMetadata;
 		private readonly NameValueCollection destinationMetadata;
 
-		public MetadataUpdateWorkItem(string fileName, NameValueCollection sourceMetadata, NameValueCollection destinationMetadata, string sourceUrl)
-			: base(fileName, sourceUrl)
+		public MetadataUpdateWorkItem(string fileName, NameValueCollection sourceMetadata, NameValueCollection destinationMetadata, Guid sourceId)
+			: base(fileName, sourceId)
 		{
 			this.sourceMetadata = sourceMetadata;
 			this.destinationMetadata = destinationMetadata;
@@ -101,7 +102,7 @@ namespace RavenFS.Synchronization
 			request.ContentLength = 0;
 			request.AddHeaders(sourceMetadata);
 
-			request.Headers[SyncingMultipartConstants.SourceServerUrl] = SourceServerUrl;
+			request.Headers[SyncingMultipartConstants.SourceServerId] = SourceServerId.ToString();
 
 			return request
 				.GetResponseAsync()

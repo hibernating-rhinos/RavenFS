@@ -268,6 +268,9 @@ namespace RavenFS.Client
 			request.SendChunked = true;
 			request.AllowWriteStreamBuffering = false;
 #endif
+			request.ContentLength = source.Length;
+			request.AllowWriteStreamBuffering = false;
+
 			AddHeaders(metadata, request);
 			return request.GetRequestStreamAsync()
 				.ContinueWith(
@@ -359,6 +362,21 @@ namespace RavenFS.Client
 		    var fileNameQueryPart = GetFileNameQueryPart(fileNameSearchPattern);
 
 		    return SearchAsync(folderQueryPart + fileNameQueryPart, GetSortFields(options), start, pageSize);
+		}
+
+		public Task<Guid> GetServerId()
+		{
+			var requestUriString = ServerUrl + "/id";
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+			return request.GetResponseAsync()
+				.ContinueWith(task =>
+				{
+					using (var stream = task.Result.GetResponseStream())
+					{
+						return new JsonSerializer().Deserialize<Guid>(new JsonTextReader(new StreamReader(stream)));
+					}
+				})
+				.TryThrowBetterError();
 		}
 
 	    private static string GetFileNameQueryPart(string fileNameSearchPattern)
@@ -670,9 +688,9 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
 			}
 
-			public Task<SourceSynchronizationInformation> GetLastSynchronizationFromAsync(string serverUrl)
+			public Task<SourceSynchronizationInformation> GetLastSynchronizationFromAsync(Guid serverId)
 			{
-				var requestUriString = String.Format("{0}/synchronization/LastSynchronization?from={1}", ravenFileSystemClient.ServerUrl, serverUrl);
+				var requestUriString = String.Format("{0}/synchronization/LastSynchronization?from={1}", ravenFileSystemClient.ServerUrl, serverId);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 				request.ContentLength = 0;
 				return request.GetResponseAsync()

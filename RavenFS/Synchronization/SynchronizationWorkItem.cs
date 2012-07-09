@@ -1,5 +1,6 @@
 ﻿namespace RavenFS.Synchronization
 {
+	using System;
 	using System.Collections.Specialized;
 	using System.Linq;
 	using System.Threading.Tasks;
@@ -12,17 +13,17 @@
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
 
-		protected SynchronizationWorkItem(string fileName, string sourceServerUrl)
+		protected SynchronizationWorkItem(string fileName, Guid sourceServerId)
 		{
 			FileName = fileName;
-			SourceServerUrl = sourceServerUrl;
+			SourceServerId = sourceServerId;
 
 			this.conflictDetector = new ConflictDetector();
 			this.conflictResolver = new ConflictResolver();
 		}
 
 		public string FileName { get; private set; }
-		public string SourceServerUrl { get; private set; }
+		public Guid SourceServerId { get; private set; }
 
 		public abstract SynchronizationType SynchronizationType { get; }
 
