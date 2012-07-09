@@ -267,6 +267,12 @@ namespace RavenFS.Client
 #if !SILVERLIGHT
 			request.SendChunked = true;
 			request.AllowWriteStreamBuffering = false;
+#else
+			if (source.CanSeek)
+			{
+				request.ContentLength = source.Length;
+				request.AllowWriteStreamBuffering = false;
+			}
 #endif
 			request.ContentLength = source.Length;
 			request.AllowWriteStreamBuffering = false;
