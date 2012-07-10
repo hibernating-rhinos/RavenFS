@@ -5,24 +5,21 @@ namespace RavenFS.Synchronization
 	using System.IO;
 	using System.Net;
 	using System.Threading.Tasks;
+	using Extensions;
 	using Multipart;
 	using Newtonsoft.Json;
 	using NLog;
 	using RavenFS.Client;
-	using RavenFS.Extensions;
-	using Storage;
 
 	public class MetadataUpdateWorkItem : SynchronizationWorkItem
 	{
 		private readonly Logger log = LogManager.GetCurrentClassLogger();
 
-		private readonly NameValueCollection sourceMetadata;
 		private readonly NameValueCollection destinationMetadata;
 
-		public MetadataUpdateWorkItem(string fileName, NameValueCollection sourceMetadata, NameValueCollection destinationMetadata, TransactionalStorage storage)
-			: base(fileName, storage)
+		public MetadataUpdateWorkItem(string fileName, NameValueCollection sourceMetadata, NameValueCollection destinationMetadata, Guid serverId)
+			: base(fileName, sourceMetadata, serverId)
 		{
-			this.sourceMetadata = sourceMetadata;
 			this.destinationMetadata = destinationMetadata;
 		}
 
@@ -35,7 +32,7 @@ namespace RavenFS.Synchronization
 		{
 			try
 			{
-				AssertLocalFileExistsAndIsNotConflicted(sourceMetadata);
+				AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
 			}
 			catch (SynchronizationException ex)
 			{
@@ -45,8 +42,8 @@ namespace RavenFS.Synchronization
 
 				return SynchronizationUtils.SynchronizationExceptionReport(FileName, ex.Message);
 			}
-			
-			var conflict = CheckConflictWithDestination(sourceMetadata, destinationMetadata);
+
+			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata);
 
 			if (conflict != null)
 			{
@@ -101,7 +98,7 @@ namespace RavenFS.Synchronization
 
 			request.Method = "POST";
 			request.ContentLength = 0;
-			request.AddHeaders(sourceMetadata);
+			request.AddHeaders(FileMetadata);
 
 			request.Headers[SyncingMultipartConstants.SourceServerId] = SourceServerId.ToString();
 

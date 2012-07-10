@@ -287,7 +287,7 @@ namespace RavenFS.Synchronization
 				// check metadata to detect if any synchronization is needed
 				if (localMetadata.AllKeys.Except(new[] { "ETag", "Last-Modified" }).Any(key => !destinationMetadata.AllKeys.Contains(key) || localMetadata[key] != destinationMetadata[key]))
 				{
-					return new MetadataUpdateWorkItem(file, localMetadata, destinationMetadata, storage);
+					return new MetadataUpdateWorkItem(file, localMetadata, destinationMetadata, storage.Id);
 				}
 				return null; // the same content and metadata - no need to synchronize
 			}
@@ -342,8 +342,7 @@ namespace RavenFS.Synchronization
 			}
 
 			var fileName = work.FileName;
-			var fileETag = GetLocalMetadata(fileName).Value<Guid>("ETag");
-			synchronizationQueue.SynchronizationStarted(work, fileETag, destinationUrl);
+			synchronizationQueue.SynchronizationStarted(work, destinationUrl);
 			publisher.Publish(new SynchronizationUpdate
 			                  	{
 			                  		FileName = work.FileName,
@@ -357,7 +356,7 @@ namespace RavenFS.Synchronization
 			return work.Perform(destinationUrl)
 				.ContinueWith(t =>
 				              	{
-				              		Queue.SynchronizationFinished(fileName, fileETag, destinationUrl);
+				              		Queue.SynchronizationFinished(work, destinationUrl);
 									CreateSyncingConfiguration(fileName, destinationUrl, work.SynchronizationType);
 
 				              		if (t.Exception != null)

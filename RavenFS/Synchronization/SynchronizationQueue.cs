@@ -122,18 +122,18 @@ namespace RavenFS.Synchronization
 			return activeForDestination.TryGetValue(fileName, out work);
 		}
 
-		public void SynchronizationStarted(SynchronizationWorkItem work, Guid etag, string destination)
+		public void SynchronizationStarted(SynchronizationWorkItem work, string destination)
 		{
 			var activeForDestination = activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, SynchronizationWorkItem>());
 
 			if(activeForDestination.TryAdd(work.FileName, work))
 			{
 				log.Debug("File '{0}' with ETag {1} was added to an active synchronization queue for a destination {2}", work.FileName,
-				          etag, destination);
+				          work.FileETag, destination);
 			}
 		}
 
-		public void SynchronizationFinished(string fileName, Guid etag, string destination)
+		public void SynchronizationFinished(SynchronizationWorkItem work, string destination)
 		{
 			ConcurrentDictionary<string, SynchronizationWorkItem> activeDestinationTasks;
 
@@ -144,10 +144,10 @@ namespace RavenFS.Synchronization
 			}
 			
 			SynchronizationWorkItem removingItem;
-			if(activeDestinationTasks.TryRemove(fileName, out removingItem))
+			if(activeDestinationTasks.TryRemove(work.FileName, out removingItem))
 			{
-				log.Debug("File '{0}' with ETag {1} was removed from an active synchronization queue for a destination {2}", fileName,
-						  etag, destination);
+				log.Debug("File '{0}' with ETag {1} was removed from an active synchronization queue for a destination {2}", work.FileName,
+						  work.FileETag, destination);
 			}
 		}
 	}

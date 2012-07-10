@@ -5,6 +5,7 @@
 	using System.Linq;
 	using System.Threading.Tasks;
 	using Conflictuality;
+	using Extensions;
 	using NLog;
 	using RavenFS.Client;
 	using Storage;
@@ -13,11 +14,26 @@
 	{
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
+		private readonly Guid serverId;
 
 		protected SynchronizationWorkItem(string fileName, TransactionalStorage storage)
 		{
 			Storage = storage;
 			FileName = fileName;
+
+			FileAndPages fileAndPages = null;
+			Storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0,0));
+			FileMetadata = fileAndPages.Metadata;
+
+			this.conflictDetector = new ConflictDetector();
+			this.conflictResolver = new ConflictResolver();
+		}
+
+		protected SynchronizationWorkItem(string fileName, NameValueCollection metadata, Guid serverId)
+		{
+			this.serverId = serverId;
+			FileName = fileName;
+			FileMetadata = metadata;
 
 			this.conflictDetector = new ConflictDetector();
 			this.conflictResolver = new ConflictResolver();
@@ -27,7 +43,11 @@
 
 		public string FileName { get; private set; }
 
-		protected Guid SourceServerId { get { return Storage.Id; } }
+		public Guid FileETag { get { return FileMetadata.Value<Guid>("ETag"); } }
+
+		protected NameValueCollection FileMetadata { get; set; }
+
+		protected Guid SourceServerId { get { return Storage != null ? Storage.Id : serverId; } }
 
 		public abstract SynchronizationType SynchronizationType { get; }
 
