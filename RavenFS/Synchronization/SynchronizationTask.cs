@@ -24,16 +24,14 @@ namespace RavenFS.Synchronization
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
 
 		private readonly SynchronizationQueue synchronizationQueue;
-		private readonly RavenFileSystem localRavenFileSystem;
 		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
 		private readonly NotificationPublisher publisher;
 
 		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(10));
 
-		public SynchronizationTask(RavenFileSystem localRavenFileSystem, TransactionalStorage storage, SigGenerator sigGenerator, NotificationPublisher publisher)
+		public SynchronizationTask(TransactionalStorage storage, SigGenerator sigGenerator, NotificationPublisher publisher)
 		{
-			this.localRavenFileSystem = localRavenFileSystem;
 			this.storage = storage;
 			this.sigGenerator = sigGenerator;
 			this.publisher = publisher;
