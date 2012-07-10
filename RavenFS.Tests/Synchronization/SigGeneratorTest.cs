@@ -1,15 +1,13 @@
-﻿using System;
-using System.IO;
-using RavenFS.Infrastructure;
-using RavenFS.Rdc.Utils.IO;
-using RavenFS.Tests;
-using Xunit;
-
-namespace RavenFS.Rdc.Wrapper.Test
+﻿namespace RavenFS.Tests.Synchronization
 {
+	using System;
+	using System.IO;
+	using IO;
+	using RavenFS.Tests;
+	using Xunit;
 	using System.Collections.Generic;
-	using Extensions;
-	using Synchronization.Rdc.Wrapper;
+	using RavenFS.Extensions;
+	using RavenFS.Synchronization.Rdc.Wrapper;
 
 	public class SigGeneratorTest : IDisposable
     {

@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using RavenFS.Rdc;
-using RavenFS.Rdc.Wrapper;
-using Xunit;
-
-namespace RavenFS.Tests.RDC
+﻿namespace RavenFS.Tests.Synchronization
 {
-	using Synchronization;
-	using Synchronization.Rdc;
-	using Synchronization.Rdc.Wrapper;
+	using System;
+	using System.Collections.Generic;
+	using System.IO;
+	using System.Linq;
+	using System.Threading;
+	using System.Threading.Tasks;
+	using RavenFS.Synchronization.Rdc.Wrapper;
+	using Xunit;
+	using RavenFS.Synchronization.Rdc;
 
 	public class NeedListParserTest
     {

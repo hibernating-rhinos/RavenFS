@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Specialized;
-using System.IO;
-using RavenFS.Client;
-using RavenFS.Rdc.Utils.IO;
-using RavenFS.Util;
-using Xunit;
-
-namespace RavenFS.Tests.RDC
+﻿namespace RavenFS.Tests.Synchronization
 {
-	using Rdc;
-	using Synchronization;
+	using System;
+	using System.Collections.Specialized;
+	using System.IO;
+	using IO;
+	using RavenFS.Client;
+	using RavenFS.Synchronization;
+	using RavenFS.Util;
+	using Xunit;
 
 	public class LockFileTests : MultiHostTestBase
 	{
@@ -39,7 +37,7 @@ namespace RavenFS.Tests.RDC
 
 			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
-			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.UpdateMetadataAsync("test.bin", new NameValueCollection()).Wait());
+			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => destinationClient.UpdateMetadataAsync("test.bin", new NameValueCollection()).Wait());
 
 			Assert.IsType(typeof(SynchronizationException), innerException);
 			Assert.Equal("File test.bin is being synced", innerException.Message);
@@ -55,7 +53,7 @@ namespace RavenFS.Tests.RDC
 
 			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
-			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.DeleteAsync("test.bin").Wait());
+			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => destinationClient.DeleteAsync("test.bin").Wait());
 
 			Assert.IsType(typeof(SynchronizationException), innerException);
 			Assert.Equal("File test.bin is being synced", innerException.Message);
@@ -71,7 +69,7 @@ namespace RavenFS.Tests.RDC
 
 			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
-			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.RenameAsync("test.bin", "newname.bin").Wait());
+			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => destinationClient.RenameAsync("test.bin", "newname.bin").Wait());
 
 			Assert.IsType(typeof(SynchronizationException), innerException);
 			Assert.Equal("File test.bin is being synced", innerException.Message);
@@ -87,7 +85,7 @@ namespace RavenFS.Tests.RDC
 
 			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
-			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => destinationClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
+			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => destinationClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
 
 			Assert.IsType(typeof(SynchronizationException), innerException);
 			Assert.Equal("File test.bin is being synced", innerException.Message);
@@ -103,7 +101,7 @@ namespace RavenFS.Tests.RDC
 
 			destinationClient.Config.SetConfig(SynchronizationHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.UtcNow)).Wait();
 
-			var synchronizationReport = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+			var synchronizationReport = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 
 			Assert.Equal("File test.bin is being synced", synchronizationReport.Exception.Message);
 		}
@@ -165,7 +163,7 @@ namespace RavenFS.Tests.RDC
                                                                                             {"value", "\"00:00:00\""}
                                                                                         }).Wait();
 
-			Assert.DoesNotThrow(() => RdcTestUtils.ResolveConflictAndSynchronize(sourceClient,
+			Assert.DoesNotThrow(() => SyncTestUtils.ResolveConflictAndSynchronize(sourceClient,
 			                                                                     destinationClient,
 			                                                                     "test.bin"));
 		}

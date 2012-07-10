@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Text;
-using RavenFS.Extensions;
-using RavenFS.Rdc.Wrapper;
 using Xunit;
 
 namespace RavenFS.Tests
 {
-	using Synchronization.Rdc.Wrapper;
+	using RavenFS.Synchronization.Rdc.Wrapper;
 
 	public class StorageSignatureRepositoryTests : StorageTest
     {

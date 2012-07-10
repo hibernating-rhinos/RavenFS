@@ -1,15 +1,14 @@
-namespace RavenFS.Tests.RDC
+namespace RavenFS.Tests.Synchronization
 {
 	using System;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Net.Http;
-	using Extensions;
-	using Rdc.Wrapper;
-	using Synchronization.Multipart;
-	using Synchronization.Rdc.Wrapper;
-	using Util;
+	using RavenFS.Extensions;
+	using RavenFS.Synchronization.Multipart;
+	using RavenFS.Synchronization.Rdc.Wrapper;
+	using RavenFS.Util;
 	using Xunit;
 
 	public class MultipartTests

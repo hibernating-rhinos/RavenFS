@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
-using RavenFS.Rdc.Utils.IO;
 using Xunit;
 using Xunit.Extensions;
 
 namespace RavenFS.Tests
 {
 	using Extensions;
+	using Synchronization.IO;
 
 	public class ClientUsage : WebApiTest
     {

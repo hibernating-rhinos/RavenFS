@@ -1,10 +1,10 @@
-namespace RavenFS.Tests.RDC
+namespace RavenFS.Tests.Synchronization
 {
 	using System;
 	using System.Collections.Specialized;
 	using System.Reactive.Linq;
 	using System.Reactive.Threading.Tasks;
-	using Rdc.Utils.IO;
+	using IO;
 	using Xunit;
 
 	public class ConflictNotificationTests : MultiHostTestBase

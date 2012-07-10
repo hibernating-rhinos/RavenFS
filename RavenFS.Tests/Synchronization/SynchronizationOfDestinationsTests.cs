@@ -1,4 +1,4 @@
-namespace RavenFS.Tests.RDC
+namespace RavenFS.Tests.Synchronization
 {
 	using System;
 	using System.Collections.Generic;
@@ -6,13 +6,13 @@ namespace RavenFS.Tests.RDC
 	using System.IO;
 	using System.Linq;
 	using System.Text;
-	using Client;
-	using Extensions;
+	using IO;
+	using RavenFS.Client;
+	using RavenFS.Extensions;
 	using Newtonsoft.Json;
 	using RavenFS.Notifications;
-	using Rdc.Utils.IO;
-	using Synchronization;
-	using Util;
+	using RavenFS.Synchronization;
+	using RavenFS.Util;
 	using Xunit;
 
 	public class SynchronizationOfDestinationsTests : MultiHostTestBase
@@ -24,7 +24,7 @@ namespace RavenFS.Tests.RDC
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
-			var sourceContent = RdcTestUtils.PrepareSourceStream(10000);
+			var sourceContent = SyncTestUtils.PrepareSourceStream(10000);
 			sourceContent.Position = 0;
 
 			var sourceClient = NewClient(0);

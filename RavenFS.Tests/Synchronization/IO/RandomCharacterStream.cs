@@ -1,4 +1,4 @@
-namespace RavenFS.Tests.RDC.IO
+namespace RavenFS.Tests.Synchronization.IO
 {
 	using System;
 	using System.IO;

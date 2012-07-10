@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-namespace RavenFS.Rdc.Utils.IO
+﻿namespace RavenFS.Tests.Synchronization.IO
 {
-    public static class TestDataGenerators
+	using System;
+	using System.IO;
+	using System.Text;
+
+	public static class TestDataGenerators
     {
         public static void WriteNumbers(Stream output, int lines = 1000, Func<int, string, string> disturbator = null)
         {

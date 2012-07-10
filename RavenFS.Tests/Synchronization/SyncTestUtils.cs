@@ -1,12 +1,11 @@
-﻿using RavenFS.Client;
-
-namespace RavenFS.Tests.RDC
+﻿namespace RavenFS.Tests.Synchronization
 {
+	using RavenFS.Client;
 	using System;
 	using System.IO;
 	using Xunit;
 
-	public class RdcTestUtils
+	public class SyncTestUtils
     {
 		public static SynchronizationReport ResolveConflictAndSynchronize(RavenFileSystemClient sourceClient, RavenFileSystemClient destinationClient, string fileName)
         {

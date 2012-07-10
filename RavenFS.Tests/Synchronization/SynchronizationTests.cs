@@ -1,27 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.IO;
-using Newtonsoft.Json;
-using RavenFS.Client;
-using RavenFS.Extensions;
-using RavenFS.Notifications;
-using RavenFS.Util;
-using Xunit;
-using Xunit.Extensions;
-
-namespace RavenFS.Tests.RDC
+﻿namespace RavenFS.Tests.Synchronization
 {
+	using System;
+	using System.Collections.Generic;
+	using System.Collections.Specialized;
+	using System.IO;
+	using IO;
+	using Newtonsoft.Json;
+	using RavenFS.Client;
+	using RavenFS.Extensions;
+	using RavenFS.Notifications;
+	using RavenFS.Synchronization;
+	using RavenFS.Synchronization.Conflictuality;
+	using RavenFS.Synchronization.Multipart;
+	using RavenFS.Util;
+	using Xunit;
+	using Xunit.Extensions;
 	using System.Linq;
 	using System.Net;
 	using System.Text;
 	using System.Threading.Tasks;
-	using IO;
-	using Rdc.Utils.IO;
-	using Synchronization;
-	using Synchronization.Conflictuality;
-	using Synchronization.Multipart;
-	using Tools;
+	using RavenFS.Tests.Tools;
 
 	public class SynchronizationTests : MultiHostTestBase
 	{
@@ -36,7 +34,7 @@ namespace RavenFS.Tests.RDC
 			sw.Write("Coconut is Stupid");
 			sw.Flush();
 
-			var sourceContent = RdcTestUtils.PrepareSourceStream(size);
+			var sourceContent = SyncTestUtils.PrepareSourceStream(size);
 			sourceContent.Position = 0;
 			var destinationContent = new CombinedStream(differenceChunk, sourceContent);
 			var destinationClient = NewClient(0);
@@ -54,7 +52,7 @@ namespace RavenFS.Tests.RDC
 			sourceContent.Position = 0;
 			sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-			SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
+			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
 
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
@@ -78,7 +76,7 @@ namespace RavenFS.Tests.RDC
 		[InlineData(5000)]
 		public void Should_have_the_same_content(int size)
 		{
-			var sourceContent = RdcTestUtils.PrepareSourceStream(size);
+			var sourceContent = SyncTestUtils.PrepareSourceStream(size);
 			sourceContent.Position = 0;
 			var destinationContent = new RandomlyModifiedStream(sourceContent, 0.01);
 			var destinationClient = NewClient(0);
@@ -88,7 +86,7 @@ namespace RavenFS.Tests.RDC
 			sourceContent.Position = 0;
 			sourceClient.UploadAsync("test.txt", new NameValueCollection(), sourceContent).Wait();
 
-			SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
+			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
 
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
@@ -124,7 +122,7 @@ namespace RavenFS.Tests.RDC
 			destinationClient.UploadAsync("test.bin", new NameValueCollection(), destinationContent).Wait();
 			sourceClient.UploadAsync("test.bin", new NameValueCollection(), sourceContent).Wait();
 
-			var firstSynchronization = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+			var firstSynchronization = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 
 			Assert.Equal(sourceContent.Length, firstSynchronization.BytesCopied + firstSynchronization.BytesTransfered);
 
@@ -181,7 +179,7 @@ namespace RavenFS.Tests.RDC
 			destinationClient.UploadAsync("test.bin", destinationMetadata, destinationContent).Wait();
 			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-			SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 		}
 
@@ -205,7 +203,7 @@ namespace RavenFS.Tests.RDC
 			destinationClient.UploadAsync("test.bin", destinationMetadata, destinationContent).Wait();
 			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-			SynchronizationReport result = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 		}
 
@@ -311,7 +309,7 @@ namespace RavenFS.Tests.RDC
 			var client = NewClient(1);
 
 			var guid = Guid.NewGuid().ToString();
-			var innerException = RdcTestUtils.ExecuteAndGetInnerException(() => client.Synchronization.ApplyConflictAsync("test.bin", 8, guid).Wait());
+			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => client.Synchronization.ApplyConflictAsync("test.bin", 8, guid).Wait());
 
 			Assert.IsType(typeof(InvalidOperationException), innerException);
 			Assert.Contains("404", innerException.Message);
@@ -412,7 +410,7 @@ namespace RavenFS.Tests.RDC
 			destinationClient.UploadAsync("test.bin", new RandomStream(10)).Wait();
 			var destinationEtag = sourceClient.GetMetadataForAsync("test.bin").Result["ETag"];
 
-			RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+			SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 
 			var result = destinationClient.GetMetadataForAsync("test.bin").Result["ETag"];
 
@@ -428,7 +426,7 @@ namespace RavenFS.Tests.RDC
 		    sw.Write("Coconut is Stupid");
 		    sw.Flush();
 
-		    var sourceContent = RdcTestUtils.PrepareSourceStream(10);
+		    var sourceContent = SyncTestUtils.PrepareSourceStream(10);
 		    sourceContent.Position = 0;
 		    var destinationContent = new CombinedStream(differenceChunk, sourceContent);
 		    var destinationClient = NewClient(0);
@@ -502,7 +500,7 @@ namespace RavenFS.Tests.RDC
 					destinationClient.UploadAsync(item, destinationContent),
 					sourceClient.UploadAsync(item,  sourceContent));
 
-				RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, item);
+				SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, item);
 			}
 
 			var result = destinationClient.Synchronization.GetFinishedAsync().Result;
@@ -559,7 +557,7 @@ namespace RavenFS.Tests.RDC
 			destinationClient.UploadAsync("test.bin", new RandomlyModifiedStream(sourceContent, 0.01)).Wait();
 			sourceContent.Position = 0;
 
-			RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin"); 
+			SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin"); 
 			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
 			
 			Assert.Contains("Content-MD5", resultFileMetadata.AllKeys);
@@ -597,7 +595,7 @@ namespace RavenFS.Tests.RDC
 			content.Position = 0;
 			destinationClient.UploadAsync("test.bin", content).Wait();
 
-			var report = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+			var report = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 
 			Assert.Equal(SynchronizationType.MetadataUpdate, report.Type);
 
@@ -639,7 +637,7 @@ namespace RavenFS.Tests.RDC
 			sourceClient.RenameAsync("test.bin", "renamed.bin").Wait();
 
 			// we need to indicate old file name, otherwise content update would be performed because renamed file does not exist on dest
-			var report = RdcTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+			var report = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 
 			Assert.Equal(SynchronizationType.Renaming, report.Type);
 

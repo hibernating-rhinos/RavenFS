@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-namespace RavenFS.Rdc.Utils.IO
+﻿namespace RavenFS.Tests.Synchronization.IO
 {
-    public class RandomStream : Stream
+	using System;
+	using System.IO;
+
+	public class RandomStream : Stream
     {
         private long _length;
         private long _position;

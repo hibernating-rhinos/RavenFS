@@ -1,17 +1,14 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using RavenFS.Infrastructure;
-using RavenFS.Rdc.Utils.IO;
-using RavenFS.Tests;
-using RavenFS.Util;
-using Xunit;
-
-
-namespace RavenFS.Rdc.Wrapper.Test
+﻿namespace RavenFS.Tests.Synchronization
 {
-	using Synchronization.Rdc.Wrapper;
+	using System;
+	using System.IO;
+	using System.Collections.Generic;
+	using System.Linq;
+	using IO;
+	using RavenFS.Tests;
+	using RavenFS.Util;
+	using Xunit;
+	using RavenFS.Synchronization.Rdc.Wrapper;
 
 	public class NeedListGeneratorTest 
     {
