@@ -6,26 +6,16 @@ namespace RavenFS.Synchronization
 	using System.Linq;
 	using NLog;
 	using RavenFS.Client;
-	using RavenFS.Extensions;
-	using RavenFS.Storage;
 
 	public class SynchronizationQueue
 	{
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
-
-		private readonly TransactionalStorage storage;
-		private const int DefaultLimitOfConcurrentSynchronizations = 5;
 
 		private readonly ConcurrentDictionary<string, ConcurrentQueue<SynchronizationWorkItem>> pendingSynchronizations =
 			new ConcurrentDictionary<string, ConcurrentQueue<SynchronizationWorkItem>>();
 
 		private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, SynchronizationWorkItem>> activeSynchronizations =
 			new ConcurrentDictionary<string, ConcurrentDictionary<string, SynchronizationWorkItem>>();
-
-		public SynchronizationQueue(TransactionalStorage storage)
-		{
-			this.storage = storage;
-		}
 
 		public IEnumerable<SynchronizationDetails> Pending
 		{
@@ -57,30 +47,9 @@ namespace RavenFS.Synchronization
 			}
 		}
 
-		private int LimitOfConcurrentSynchronizations()
-		{
-			bool limit = false;
-			int configuredLimit = 0;
-
-			storage.Batch(
-				accessor => limit = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenSynchronizationLimit, out configuredLimit));
-
-			return limit ? configuredLimit : DefaultLimitOfConcurrentSynchronizations;
-		}
-
-		private int NumberOfActiveSynchronizationTasksFor(string destination)
+		public int NumberOfActiveSynchronizationTasksFor(string destination)
 		{
 			return activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, SynchronizationWorkItem>()).Count;
-		}
-
-		public bool CanSynchronizeTo(string destination)
-		{
-			return LimitOfConcurrentSynchronizations() > NumberOfActiveSynchronizationTasksFor(destination);
-		}
-
-		public int AvailableSynchronizationRequestsTo(string destination)
-		{
-			return LimitOfConcurrentSynchronizations() - NumberOfActiveSynchronizationTasksFor(destination);
 		}
 
 		public void EnqueueSynchronization(string destination, SynchronizationWorkItem workItem)
@@ -90,6 +59,14 @@ namespace RavenFS.Synchronization
 			if(pendingForDestination.Contains(workItem)) // if there is a file in pending synchronizations do not add it again
 			{
 				log.Debug("{0} for a file {1} and a destination {2} was already existed in a pending queue", workItem.GetType().Name, workItem.FileName, destination);
+				return;
+			}
+
+			var activeForDestination = activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, SynchronizationWorkItem>());
+
+			if (activeForDestination.ContainsKey(workItem.FileName) && activeForDestination[workItem.FileName].Equals(workItem)) // if there is a file in pending synchronizations do not add it again
+			{
+				log.Debug("{0} for a file {1} and a destination {2} was already existed in a active queue", workItem.GetType().Name, workItem.FileName, destination);
 				return;
 			}
 

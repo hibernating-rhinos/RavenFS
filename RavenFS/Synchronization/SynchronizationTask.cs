@@ -21,6 +21,8 @@ namespace RavenFS.Synchronization
 
 	public class SynchronizationTask
 	{
+		private const int DefaultLimitOfConcurrentSynchronizations = 5;
+
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
 
 		private readonly SynchronizationQueue synchronizationQueue;
@@ -35,7 +37,7 @@ namespace RavenFS.Synchronization
 			this.storage = storage;
 			this.sigGenerator = sigGenerator;
 			this.publisher = publisher;
-			synchronizationQueue = new SynchronizationQueue(storage);
+			synchronizationQueue = new SynchronizationQueue();
 
 			InitializeTimer();
 		}
@@ -98,7 +100,7 @@ namespace RavenFS.Synchronization
 
 				string destinationUrl = destination;
 
-				if (!synchronizationQueue.CanSynchronizeTo(destinationUrl))
+				if (!CanSynchronizeTo(destinationUrl))
 				{
 					log.Debug("Could not synchronize to {0} because no synchronization request was available", destination);
 					continue;
@@ -294,9 +296,9 @@ namespace RavenFS.Synchronization
 			return new ContentUpdateWorkItem(file, storage, sigGenerator);
 		}
 
-		private IEnumerable<Task<SynchronizationReport>> SynchronizePendingFiles(string destinationUrl, bool forceSyncingContinuation)
+		internal IEnumerable<Task<SynchronizationReport>> SynchronizePendingFiles(string destinationUrl, bool forceSyncingContinuation)
 		{
-			for (var i = 0; i < synchronizationQueue.AvailableSynchronizationRequestsTo(destinationUrl); i++)
+			for (var i = 0; i < AvailableSynchronizationRequestsTo(destinationUrl); i++)
 			{
 				SynchronizationWorkItem work;
 				if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out work))
@@ -330,7 +332,7 @@ namespace RavenFS.Synchronization
 			log.Debug("Starting to perform {0} for a file '{1}' and a destination server {2}", work.GetType().Name, work.FileName,
 			          destinationUrl);
 
-			if (!Queue.CanSynchronizeTo(destinationUrl))
+			if (!CanSynchronizeTo(destinationUrl))
 			{
 				log.Debug("The limit of active synchronizations to {0} server has been achieved.", destinationUrl);
 
@@ -546,6 +548,28 @@ namespace RavenFS.Synchronization
 			}
 
 			return destinations;
+		}
+
+		private bool CanSynchronizeTo(string destination)
+		{
+			return LimitOfConcurrentSynchronizations() > synchronizationQueue.NumberOfActiveSynchronizationTasksFor(destination);
+		}
+
+		private int AvailableSynchronizationRequestsTo(string destination)
+		{
+			return LimitOfConcurrentSynchronizations() - synchronizationQueue.NumberOfActiveSynchronizationTasksFor(destination);
+		}
+
+		private int LimitOfConcurrentSynchronizations()
+		{
+			bool limit = false;
+			int configuredLimit = 0;
+
+			storage.Batch(
+				accessor =>
+				limit = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenSynchronizationLimit, out configuredLimit));
+
+			return limit ? configuredLimit : DefaultLimitOfConcurrentSynchronizations;
 		}
 	}
 }

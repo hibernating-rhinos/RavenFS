@@ -111,12 +111,12 @@ namespace RavenFS.Synchronization
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
-			return Equals(other.FileName, FileName);
+			return Equals(other.FileName, FileName) && Equals(other.FileETag, FileETag);
 		}
 
 		public override int GetHashCode()
 		{
-			return (FileName != null ? GetType().Name.GetHashCode() ^ FileName.GetHashCode() : 0);
+			return (FileName != null ? GetType().Name.GetHashCode() ^ FileName.GetHashCode() ^ FileETag.GetHashCode() : 0);
 		}
 	}
 }
