@@ -19,13 +19,11 @@
 	{
 		private readonly Logger log = LogManager.GetCurrentClassLogger();
 
-		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
 		
-		public ContentUpdateWorkItem(string file, Guid sourceServerId, TransactionalStorage storage, SigGenerator sigGenerator)
-			: base(file, sourceServerId)
+		public ContentUpdateWorkItem(string file, TransactionalStorage storage, SigGenerator sigGenerator)
+			: base(file, storage)
 		{
-			this.storage = storage;
 			this.sigGenerator = sigGenerator;
 		}
 
@@ -108,9 +106,9 @@
 
 							var localFileDataInfo = GetLocalFileDataInfo(FileName);
 
-							var signatureRepository = new StorageSignatureRepository(storage, FileName);
+							var signatureRepository = new StorageSignatureRepository(Storage, FileName);
 							var remoteSignatureCache = new VolatileSignatureRepository(FileName);
-							var localRdcManager = new LocalRdcManager(signatureRepository, storage, sigGenerator);
+							var localRdcManager = new LocalRdcManager(signatureRepository, Storage, sigGenerator);
 							var destinationRdcManager = new RemoteRdcManager(destinationRavenFileSystemClient, signatureRepository,
 							                                                 remoteSignatureCache);
 
@@ -149,10 +147,10 @@
 			var seedSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
 			var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
 
-			var localFile = StorageStream.Reading(storage, fileName);
+			var localFile = StorageStream.Reading(Storage, fileName);
 
 			IList<RdcNeed> needList;
-			using (var signatureRepository = new StorageSignatureRepository(storage, fileName))
+			using (var signatureRepository = new StorageSignatureRepository(Storage, fileName))
 			using (var needListGenerator = new NeedListGenerator(remoteSignatureRepository, signatureRepository))
 			{
 				needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
@@ -163,7 +161,7 @@
 
 		private Task<SynchronizationReport> UploadTo(string destinationServerUrl, string fileName, NameValueCollection localMetadata)
 		{
-			var sourceFileStream = StorageStream.Reading(storage, fileName);
+			var sourceFileStream = StorageStream.Reading(Storage, fileName);
 			var fileSize = sourceFileStream.Length;
 
 			var onlySourceNeed = new List<RdcNeed>
@@ -205,7 +203,7 @@
 			NameValueCollection result = null;
 			try
 			{
-				storage.Batch(
+				Storage.Batch(
 					accessor =>
 					{
 						result = accessor.GetFile(fileName, 0, 0).Metadata;
@@ -224,7 +222,7 @@
 
 			try
 			{
-				storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0, 0));
+				Storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0, 0));
 			}
 			catch (FileNotFoundException)
 			{

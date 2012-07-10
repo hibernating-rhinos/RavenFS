@@ -1,6 +1,5 @@
 namespace RavenFS.Synchronization
 {
-	using System;
 	using System.IO;
 	using System.Net;
 	using System.Threading.Tasks;
@@ -16,13 +15,11 @@ namespace RavenFS.Synchronization
 		private readonly Logger log = LogManager.GetCurrentClassLogger();
 
 		private readonly string rename;
-		private readonly TransactionalStorage storage;
 
-		public RenameWorkItem(string name, string rename, Guid sourceServerId, TransactionalStorage storage)
-			: base(name, sourceServerId)
+		public RenameWorkItem(string name, string rename, TransactionalStorage storage)
+			: base(name, storage)
 		{
 			this.rename = rename;
-			this.storage = storage;
 		}
 
 		public override SynchronizationType SynchronizationType
@@ -80,7 +77,7 @@ namespace RavenFS.Synchronization
 			log.Debug("Synchronizing a renaming of a file '{0}' to '{1}' to {2}", FileName, rename, destination);
 
 			FileAndPages fileAndPages = null;
-			storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));
+			Storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));
 
 			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/rename/" + FileName + "?rename=" + rename);
 

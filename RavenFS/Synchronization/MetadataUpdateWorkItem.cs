@@ -10,6 +10,7 @@ namespace RavenFS.Synchronization
 	using NLog;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
+	using Storage;
 
 	public class MetadataUpdateWorkItem : SynchronizationWorkItem
 	{
@@ -18,8 +19,8 @@ namespace RavenFS.Synchronization
 		private readonly NameValueCollection sourceMetadata;
 		private readonly NameValueCollection destinationMetadata;
 
-		public MetadataUpdateWorkItem(string fileName, NameValueCollection sourceMetadata, NameValueCollection destinationMetadata, Guid sourceId)
-			: base(fileName, sourceId)
+		public MetadataUpdateWorkItem(string fileName, NameValueCollection sourceMetadata, NameValueCollection destinationMetadata, TransactionalStorage storage)
+			: base(fileName, storage)
 		{
 			this.sourceMetadata = sourceMetadata;
 			this.destinationMetadata = destinationMetadata;

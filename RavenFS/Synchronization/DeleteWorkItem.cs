@@ -1,6 +1,5 @@
 namespace RavenFS.Synchronization
 {
-	using System;
 	using System.IO;
 	using System.Net;
 	using System.Threading.Tasks;
@@ -15,11 +14,8 @@ namespace RavenFS.Synchronization
 	{
 		private readonly Logger log = LogManager.GetCurrentClassLogger();
 
-		private readonly TransactionalStorage storage;
-
-		public DeleteWorkItem(string fileName, Guid sourceServerId, TransactionalStorage storage) : base(fileName, sourceServerId)
+		public DeleteWorkItem(string fileName, TransactionalStorage storage) : base(fileName, storage)
 		{
-			this.storage = storage;
 		}
 
 		public override SynchronizationType SynchronizationType
@@ -75,7 +71,7 @@ namespace RavenFS.Synchronization
 			log.Debug("Synchronizing a deletion of a file '{0}' to {1}", FileName, destination);
 
 			FileAndPages fileAndPages = null;
-			storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));
+			Storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));
 
 			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/delete/" + FileName);
 

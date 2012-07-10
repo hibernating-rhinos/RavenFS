@@ -7,23 +7,27 @@
 	using Conflictuality;
 	using NLog;
 	using RavenFS.Client;
+	using Storage;
 
 	public abstract class SynchronizationWorkItem
 	{
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
 
-		protected SynchronizationWorkItem(string fileName, Guid sourceServerId)
+		protected SynchronizationWorkItem(string fileName, TransactionalStorage storage)
 		{
+			Storage = storage;
 			FileName = fileName;
-			SourceServerId = sourceServerId;
 
 			this.conflictDetector = new ConflictDetector();
 			this.conflictResolver = new ConflictResolver();
 		}
 
+		protected TransactionalStorage Storage { get; private set; }
+
 		public string FileName { get; private set; }
-		public Guid SourceServerId { get; private set; }
+
+		protected Guid SourceServerId { get { return Storage.Id; } }
 
 		public abstract SynchronizationType SynchronizationType { get; }
 
