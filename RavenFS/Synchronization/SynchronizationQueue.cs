@@ -4,6 +4,7 @@ namespace RavenFS.Synchronization
 	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Linq;
+	using Extensions;
 	using NLog;
 	using RavenFS.Client;
 
@@ -27,7 +28,8 @@ namespace RavenFS.Synchronization
 				              	{
 				              		DestinationUrl = destinationPending.Key,
 				              		FileName = pendingFile.FileName,
-									Type = pendingFile.SynchronizationType
+									Type = pendingFile.SynchronizationType,
+									FileETag = pendingFile.FileETag
 				              	};
 			}
 		}
@@ -39,10 +41,11 @@ namespace RavenFS.Synchronization
 				return from destinationActive in activeSynchronizations
 				       from activeFile in destinationActive.Value
 				       select new SynchronizationDetails
-				       {
+				              	{
 				              		DestinationUrl = destinationActive.Key,
 				              		FileName = activeFile.Key,
-									Type = activeFile.Value.SynchronizationType
+				              		Type = activeFile.Value.SynchronizationType,
+				              		FileETag = activeFile.Value.FileETag
 				              	};
 			}
 		}
@@ -56,17 +59,31 @@ namespace RavenFS.Synchronization
 		{
 			var pendingForDestination = pendingSynchronizations.GetOrAdd(destination, new ConcurrentQueue<SynchronizationWorkItem>());
 
-			if(pendingForDestination.Contains(workItem)) // if there is a file in pending synchronizations do not add it again
+			foreach (var pendingWork in pendingForDestination)
 			{
-				log.Debug("{0} for a file {1} and a destination {2} was already existed in a pending queue", workItem.GetType().Name, workItem.FileName, destination);
-				return;
+				// if there is a file in pending synchronizations do not add it again
+				if (pendingWork.Equals(workItem))
+				{
+					log.Debug("{0} for a file {1} and a destination {2} was already existed in a pending queue", workItem.GetType().Name, workItem.FileName, destination);
+					return;
+				}
+
+				// if there is a work of the same type but for lower file ETag just refresh work metadata
+				if (pendingWork.SynchronizationType == workItem.SynchronizationType &&
+					Buffers.Compare(workItem.FileETag.ToByteArray(), pendingWork.FileETag.ToByteArray()) > 0)
+				{
+					pendingWork.RefreshMetadata();
+					log.Debug("{0} for a file {1} and a destination {2} was already existed in a pending queue byt with older ETag, it's metadata has been refreshed", workItem.GetType().Name, workItem.FileName, destination);
+					return;
+				}
 			}
 
 			var activeForDestination = activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, SynchronizationWorkItem>());
 
-			if (activeForDestination.ContainsKey(workItem.FileName) && activeForDestination[workItem.FileName].Equals(workItem)) // if there is a file in pending synchronizations do not add it again
+			// if there is a file in pending synchronizations do not add it again
+			if (activeForDestination.ContainsKey(workItem.FileName) && activeForDestination[workItem.FileName].Equals(workItem))
 			{
-				log.Debug("{0} for a file {1} and a destination {2} was already existed in a active queue", workItem.GetType().Name, workItem.FileName, destination);
+				log.Debug("{0} for a file {1} and a destination {2} was already existed in an active queue", workItem.GetType().Name, workItem.FileName, destination);
 				return;
 			}
 
@@ -87,7 +104,7 @@ namespace RavenFS.Synchronization
 			return pendingForDestination.TryDequeue(out workItem);
 		}
 
-		public bool IsSynchronizationWorkBeingPerformed(string fileName, string destination)
+		public bool IsDifferentWorkForTheSameFileBeingPerformed(SynchronizationWorkItem work, string destination)
 		{
 			ConcurrentDictionary<string, SynchronizationWorkItem> activeForDestination;
 			if(!activeSynchronizations.TryGetValue(destination, out activeForDestination))
@@ -95,8 +112,8 @@ namespace RavenFS.Synchronization
 				return false;
 			}
 
-			SynchronizationWorkItem work;
-			return activeForDestination.TryGetValue(fileName, out work);
+			SynchronizationWorkItem activeWork;
+			return activeForDestination.TryGetValue(work.FileName, out activeWork) && !activeWork.Equals(work);
 		}
 
 		public void SynchronizationStarted(SynchronizationWorkItem work, string destination)

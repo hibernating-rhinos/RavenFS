@@ -289,7 +289,7 @@ namespace RavenFS.Synchronization
 				// check metadata to detect if any synchronization is needed
 				if (localMetadata.AllKeys.Except(new[] { "ETag", "Last-Modified" }).Any(key => !destinationMetadata.AllKeys.Contains(key) || localMetadata[key] != destinationMetadata[key]))
 				{
-					return new MetadataUpdateWorkItem(file, localMetadata, destinationMetadata, storage.Id);
+					return new MetadataUpdateWorkItem(file, destinationMetadata, storage);
 				}
 				return null; // the same content and metadata - no need to synchronize
 			}
@@ -303,7 +303,7 @@ namespace RavenFS.Synchronization
 				SynchronizationWorkItem work;
 				if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out work))
 				{
-					if (synchronizationQueue.IsSynchronizationWorkBeingPerformed(work.FileName, destinationUrl))
+					if (synchronizationQueue.IsDifferentWorkForTheSameFileBeingPerformed(work, destinationUrl))
 					{
 						log.Debug("There was an alredy being performed synchronization of a file '{0}' to {1}", work.FileName,
 								  destinationUrl);

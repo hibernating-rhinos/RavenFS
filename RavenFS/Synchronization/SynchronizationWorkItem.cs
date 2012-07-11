@@ -29,16 +29,6 @@
 			this.conflictResolver = new ConflictResolver();
 		}
 
-		protected SynchronizationWorkItem(string fileName, NameValueCollection metadata, Guid serverId)
-		{
-			this.serverId = serverId;
-			FileName = fileName;
-			FileMetadata = metadata;
-
-			this.conflictDetector = new ConflictDetector();
-			this.conflictResolver = new ConflictResolver();
-		}
-
 		protected TransactionalStorage Storage { get; private set; }
 
 		public string FileName { get; private set; }
@@ -104,6 +94,16 @@
 							Type = SynchronizationType
 						};
 			});
+		}
+
+		public void RefreshMetadata()
+		{
+			if (Storage != null)
+			{
+				FileAndPages fileAndPages = null;
+				Storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));
+				FileMetadata = fileAndPages.Metadata;
+			}
 		}
 	}
 }

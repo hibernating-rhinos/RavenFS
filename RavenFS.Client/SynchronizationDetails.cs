@@ -1,8 +1,12 @@
 namespace RavenFS.Client
 {
-    public class SynchronizationDetails
+	using System;
+
+	public class SynchronizationDetails
 	{
 		public string FileName { get; set; }
+
+		public Guid FileETag { get; set; }
 
 		public string DestinationUrl { get; set; }
 
