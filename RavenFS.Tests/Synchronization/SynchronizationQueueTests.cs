@@ -3,6 +3,7 @@ namespace RavenFS.Tests.Synchronization
 	using System;
 	using System.Collections.Specialized;
 	using System.Linq;
+	using Client;
 	using RavenFS.Synchronization;
 	using RavenFS.Synchronization.Rdc.Wrapper;
 	using Xunit;
@@ -113,6 +114,23 @@ namespace RavenFS.Tests.Synchronization
 				Assert.True(queue.IsDifferentWorkForTheSameFileBeingPerformed(
 					new RenameWorkItem(FileName, "rename.txt", transactionalStorage), Destination));
 			}
+		}
+
+		[Fact]
+		public void Should_delete_other_works_if_delete_item_enqueued()
+		{
+			transactionalStorage.Batch(accessor => accessor.PutFile(FileName, 0, EmptyETagMetadata));
+
+			queue.EnqueueSynchronization(Destination,
+										 new MetadataUpdateWorkItem(FileName, new NameValueCollection(), transactionalStorage));
+			queue.EnqueueSynchronization(Destination, new RenameWorkItem(FileName, "rename.txt", transactionalStorage));
+
+			Assert.Equal(2, queue.Pending.Count());
+
+			queue.EnqueueSynchronization(Destination, new DeleteWorkItem(FileName, transactionalStorage));
+
+			Assert.Equal(1, queue.Pending.Count());
+			Assert.Equal(SynchronizationType.Delete, queue.Pending.ToArray()[0].Type);
 		}
 	}
 }

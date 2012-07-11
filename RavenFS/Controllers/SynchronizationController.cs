@@ -310,7 +310,7 @@
 			var report = new SynchronizationReport
 			{
 				FileName = fileName,
-				Type = SynchronizationType.Deletion
+				Type = SynchronizationType.Delete
 			};
 
 			try
@@ -366,7 +366,7 @@
 			var report = new SynchronizationReport
 			{
 				FileName = fileName,
-				Type = SynchronizationType.Renaming
+				Type = SynchronizationType.Rename
 			};
 
 			

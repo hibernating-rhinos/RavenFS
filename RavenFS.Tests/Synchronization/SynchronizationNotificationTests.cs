@@ -75,10 +75,10 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal(SynchronizationAction.Start, synchronizationUpdates[0].Action);
 			Assert.Equal("test.bin", synchronizationUpdates[0].FileName);
-			Assert.Equal(SynchronizationType.Renaming, synchronizationUpdates[0].Type);
+			Assert.Equal(SynchronizationType.Rename, synchronizationUpdates[0].Type);
 			Assert.Equal(SynchronizationAction.Finish, synchronizationUpdates[1].Action);
 			Assert.Equal("test.bin", synchronizationUpdates[1].FileName);
-			Assert.Equal(SynchronizationType.Renaming, synchronizationUpdates[1].Type);
+			Assert.Equal(SynchronizationType.Rename, synchronizationUpdates[1].Type);
 
 			// delete update
 			source.DeleteAsync("rename.bin").Wait();
@@ -96,10 +96,10 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal(SynchronizationAction.Start, synchronizationUpdates[0].Action);
 			Assert.Equal("rename.bin", synchronizationUpdates[0].FileName);
-			Assert.Equal(SynchronizationType.Deletion, synchronizationUpdates[0].Type);
+			Assert.Equal(SynchronizationType.Delete, synchronizationUpdates[0].Type);
 			Assert.Equal(SynchronizationAction.Finish, synchronizationUpdates[1].Action);
 			Assert.Equal("rename.bin", synchronizationUpdates[1].FileName);
-			Assert.Equal(SynchronizationType.Deletion, synchronizationUpdates[1].Type);
+			Assert.Equal(SynchronizationType.Delete, synchronizationUpdates[1].Type);
 		}
 
 		[Fact(Skip = "When running the build script from command line notification tests cause the crash")]
@@ -159,7 +159,7 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal(SynchronizationAction.Finish, synchronizationUpdates[0].Action);
 			Assert.Equal("test.bin", synchronizationUpdates[0].FileName);
-			Assert.Equal(SynchronizationType.Renaming, synchronizationUpdates[0].Type);
+			Assert.Equal(SynchronizationType.Rename, synchronizationUpdates[0].Type);
 
 			// delete update
 			source.DeleteAsync("rename.bin").Wait();
@@ -176,7 +176,7 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal(SynchronizationAction.Finish, synchronizationUpdates[0].Action);
 			Assert.Equal("rename.bin", synchronizationUpdates[0].FileName);
-			Assert.Equal(SynchronizationType.Deletion, synchronizationUpdates[0].Type);
+			Assert.Equal(SynchronizationType.Delete, synchronizationUpdates[0].Type);
 		}
 	}
 }

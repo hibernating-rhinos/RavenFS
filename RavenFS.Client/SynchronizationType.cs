@@ -5,7 +5,7 @@ namespace RavenFS.Client
 		Unknown = 0,
 		ContentUpdate = 1,
 		MetadataUpdate = 2,
-		Renaming = 3,
-		Deletion = 4,
+		Rename = 3,
+		Delete = 4,
 	}
 }

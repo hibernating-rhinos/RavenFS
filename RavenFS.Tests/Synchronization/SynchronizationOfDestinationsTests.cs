@@ -332,7 +332,7 @@ namespace RavenFS.Tests.Synchronization
 				foreach (var report in destinationSyncResult.Reports)
 				{
 					Assert.Null(report.Exception);
-					Assert.Equal(SynchronizationType.Renaming, report.Type);
+					Assert.Equal(SynchronizationType.Rename, report.Type);
 				}
 			}
 
@@ -374,7 +374,7 @@ namespace RavenFS.Tests.Synchronization
 				foreach (var report in destinationSyncResult.Reports)
 				{
 					Assert.Null(report.Exception);
-					Assert.Equal(SynchronizationType.Deletion, report.Type);
+					Assert.Equal(SynchronizationType.Delete, report.Type);
 				}
 			}
 

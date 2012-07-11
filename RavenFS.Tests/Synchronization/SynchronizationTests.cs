@@ -639,7 +639,7 @@
 			// we need to indicate old file name, otherwise content update would be performed because renamed file does not exist on dest
 			var report = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 
-			Assert.Equal(SynchronizationType.Renaming, report.Type);
+			Assert.Equal(SynchronizationType.Rename, report.Type);
 
 			var testMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
 			var renamedMetadata = destinationClient.GetMetadataForAsync("renamed.bin").Result;
@@ -670,7 +670,7 @@
 			// we need to indicate old file name, otherwise content update would be performed because renamed file does not exist on dest
 			var report = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
 
-			Assert.Equal(SynchronizationType.Renaming, report.Type);
+			Assert.Equal(SynchronizationType.Rename, report.Type);
 			Assert.Equal("File test.bin is conflicted", report.Exception.Message);
 		}
 

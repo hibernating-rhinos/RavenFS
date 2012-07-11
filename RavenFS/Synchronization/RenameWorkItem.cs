@@ -24,7 +24,7 @@ namespace RavenFS.Synchronization
 
 		public override SynchronizationType SynchronizationType
 		{
-			get { return SynchronizationType.Renaming; }
+			get { return SynchronizationType.Rename; }
 		}
 
 		public override Task<SynchronizationReport> Perform(string destination)
@@ -40,7 +40,7 @@ namespace RavenFS.Synchronization
 									{
 										FileName = FileName,
 										Exception = task.Exception.ExtractSingleInnerException(),
-										Type = SynchronizationType.Renaming
+										Type = SynchronizationType.Rename
 									};
 
 							log.WarnException(
