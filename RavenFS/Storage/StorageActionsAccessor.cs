@@ -152,7 +152,7 @@ namespace RavenFS.Storage
 
 				if(!metadata.AllKeys.Contains("ETag"))
 				{
-					throw new InvalidOperationException(string.Format("Metadata of file {0} does not contain 'ETag' key" + filename));
+					throw new InvalidOperationException(string.Format("Metadata of file {0} does not contain 'ETag' key", filename));
 				}
 
 				var innerEsentMetadata = new NameValueCollection(metadata);
