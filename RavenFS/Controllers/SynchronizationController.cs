@@ -67,6 +67,12 @@
 
 			log.Debug("Starting to process multipart synchronization request of a file '{0}' with ETag {1} from {2}", fileName, sourceFileETag, sourceServerId);
 
+			var report = new SynchronizationReport
+			{
+				FileName = fileName,
+				Type = SynchronizationType.ContentUpdate
+			};
+
 			Storage.Batch(accessor =>
 			{
 				AssertFileIsNotBeingSynced(fileName, accessor);
@@ -74,76 +80,74 @@
 				FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
 			});
 
-			StorageStream localFile = null;
-			StorageStream synchronizingFile = null;
-
 			bool isConflictResolved = false;
 
 			var sourceMetadata = Request.Headers.FilterHeaders();
 
-			return Request.Content.ReadAsMultipartAsync()
+			var localMetadata = GetLocalMetadata(fileName);
+
+			StorageStream localFile = null;
+
+			if (localMetadata != null)
+			{
+				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, out isConflictResolved);
+				localFile = StorageStream.Reading(Storage, fileName);
+			}
+
+			HistoryUpdater.UpdateLastModified(sourceMetadata);
+
+			var synchronizingFile = SynchronizingFileStream.CreatingOrOpeningAndWritting(Storage, Search, tempFileName, sourceMetadata);
+
+			var syncStreamProvider = new MultipartSyncStreamProvider(synchronizingFile, localFile);
+
+			return Request.Content.ReadAsMultipartAsync(syncStreamProvider)
 				.ContinueWith(multipartReadTask =>
 				{
-					var localMetadata = GetLocalMetadata(fileName);
-
-					if (localMetadata != null)
+					if (synchronizingFile != null)
 					{
-						AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, out isConflictResolved);
-
-						localFile = StorageStream.Reading(Storage, fileName);
+						synchronizingFile.PreventDispose = false;
+						synchronizingFile.Dispose();
 					}
 
-					HistoryUpdater.UpdateLastModified(sourceMetadata);
+					if (localFile != null)
+					{
+						localFile.Dispose();
+					}
 
-					synchronizingFile = StorageStream.CreatingNewAndWritting(Storage, Search, tempFileName, sourceMetadata);
+					multipartReadTask.AssertNotFaulted();
 
-					var multipartProcessor = new SynchronizationMultipartProcessor(fileName,
-					                                                               multipartReadTask.Result.Contents.GetEnumerator(),
-					                                                               localFile, synchronizingFile);
+					var provider = multipartReadTask.Result;
 
-					return multipartProcessor.ProcessAsync()
-						.ContinueWith(task =>
+					using (var stream = StorageStream.Reading(Storage, tempFileName))
+					{
+						sourceMetadata["Content-MD5"] = stream.GetMD5Hash();
+						Storage.Batch(accesor => accesor.UpdateFileMetadata(tempFileName, sourceMetadata));
+					}
+
+					Storage.Batch(
+						accessor =>
 						{
-							if (synchronizingFile != null)
-							{
-								synchronizingFile.Dispose();
-							}
+							accessor.Delete(fileName);
+							accessor.RenameFile(tempFileName, fileName);
 
-							if (localFile != null)
-							{
-								localFile.Dispose();
-							}
-
-							task.AssertNotFaulted();
-
-							using (var stream = StorageStream.Reading(Storage, tempFileName))
-							{
-								sourceMetadata["Content-MD5"] = stream.GetMD5Hash();
-								Storage.Batch(accesor => accesor.UpdateFileMetadata(tempFileName, sourceMetadata));
-							}
-
-							Storage.Batch(
-								accessor =>
-								{
-									accessor.Delete(fileName);
-									accessor.RenameFile(tempFileName, fileName);
-
-									Search.Delete(tempFileName);
-									Search.Index(fileName, sourceMetadata);
-								});
-
-							if (isConflictResolved)
-							{
-								ConflictActifactManager.RemoveArtifact(fileName);
-							}
-
-							return task.Result;
+							Search.Delete(tempFileName);
+							Search.Index(fileName, sourceMetadata);
 						});
-				}).Unwrap()
+
+					if (isConflictResolved)
+					{
+						ConflictActifactManager.RemoveArtifact(fileName);
+					}
+
+					report.BytesCopied = provider.BytesCopied;
+					report.BytesTransfered = provider.BytesTransfered;
+					report.NeedListLength = provider.NumberOfFileParts;
+
+					return report;
+				})
 				.ContinueWith(
 					task =>
 					{
-						SynchronizationReport report;
 						if (task.Status == TaskStatus.Faulted)
 						{
 							var exception = task.Exception.ExtractSingleInnerException();
@@ -152,17 +156,7 @@
 								exception = exception.InnerException;
 							}
 
-							report =
-								new SynchronizationReport
-									{
-										FileName = fileName,
-										Exception = exception,
-										Type = SynchronizationType.ContentUpdate
-									};
-						}
-						else
-						{
-							report = task.Result;
+							report.Exception = exception;
 						}
 
 						if (report.Exception == null)
@@ -175,8 +169,7 @@
 						{
 							log.WarnException(
 								string.Format("Error has occured during synchronization of a file '{0}' from {1}", fileName,
-								              sourceServerId),
-								report.Exception);
+								              sourceServerId), report.Exception);
 						}
 
 						Storage.Batch(

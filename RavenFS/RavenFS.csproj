@@ -200,6 +200,7 @@
     <Compile Include="Synchronization\DataInfo.cs" />
     <Compile Include="Synchronization\DeleteWorkItem.cs" />
     <Compile Include="Synchronization\MetadataUpdateWorkItem.cs" />
+    <Compile Include="Synchronization\Multipart\MultipartSyncStreamProvider.cs" />
     <Compile Include="Synchronization\Multipart\SeedFilePart.cs" />
     <Compile Include="Synchronization\Multipart\SourceFilePart.cs" />
     <Compile Include="Synchronization\Multipart\SynchronizationMultipartProcessor.cs" />
@@ -313,6 +314,7 @@
     <Compile Include="Util\SynchronizationHelper.cs" />
     <Compile Include="Util\StorageStream.cs" />
     <Compile Include="Util\StorageStreamAccess.cs" />
+    <Compile Include="Util\SynchronizingFileStream.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config">
