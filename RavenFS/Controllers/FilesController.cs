@@ -25,6 +25,7 @@ namespace RavenFS.Controllers
             {
                 fileHeaders = accessor.ReadFiles(Paging.Start, Paging.PageSize).ToList();
             });
+			
             return fileHeaders;
         }
 
@@ -75,7 +76,7 @@ namespace RavenFS.Controllers
             }
 
             var httpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK);
-            httpResponseMessage.Content = new HttpMessageContent(httpResponseMessage);
+            httpResponseMessage.Content = new StringContent("");
             MetadataExtensions.AddHeaders(httpResponseMessage, fileAndPages);
             return httpResponseMessage;
         }
