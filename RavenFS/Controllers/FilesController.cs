@@ -117,8 +117,7 @@ namespace RavenFS.Controllers
 				return new HttpResponseMessage(HttpStatusCode.NotFound);
 			}
 
-			var httpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK);
-			httpResponseMessage.Content = new HttpMessageContent(httpResponseMessage);
+			var httpResponseMessage = Request.CreateResponse(HttpStatusCode.OK, fileAndPages);
 			MetadataExtensions.AddHeaders(httpResponseMessage, fileAndPages);
 			return httpResponseMessage;
 		}
