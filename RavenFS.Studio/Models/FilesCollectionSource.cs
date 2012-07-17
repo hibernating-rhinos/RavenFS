@@ -22,25 +22,12 @@ namespace RavenFS.Studio.Models
 {
     public class FilesCollectionSource : VirtualCollectionSource<FileSystemModel>
     {
-        private object lockObject = new object();
         private string currentFolder;
-        private int fileCount;
         private string searchPattern;
 
         public FilesCollectionSource()
         {
             currentFolder = "/";
-        }
-
-        public override int Count
-        {
-            get
-            {
-                lock (lockObject)
-                {
-                    return fileCount;
-                }
-            }
         }
 
         public string CurrentFolder
@@ -49,7 +36,7 @@ namespace RavenFS.Studio.Models
             set
             {
                 currentFolder = value;
-                Refresh();
+                Refresh(RefreshMode.ClearStaleData);
             }
         }
 
@@ -63,24 +50,39 @@ namespace RavenFS.Studio.Models
                     return;
                 }
                 searchPattern = value;
-                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.Clear));
-                Refresh();
+                Refresh(RefreshMode.ClearStaleData);
             }
         }
 
-        public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
+        protected override Task<int> GetCount()
         {
-            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), fileNameSearchPattern:searchPattern, start: start, pageSize: pageSize)
+            return DoQuery(0, 0, null).ContinueWith(t => t.Result.FileCount,
+                TaskContinuationOptions.ExecuteSynchronously);
+        }
+
+        protected override Task<IList<FileSystemModel>> GetPageAsyncOverride(int start, int pageSize, IList<SortDescription> sortDescriptions)
+        {
+            return DoQuery(start, pageSize, sortDescriptions)
                         .ContinueWith(t =>
                                           {
                                               var result = (IList<FileSystemModel>) ToFileSystemModels(t.Result.Files).Take(pageSize).ToArray();
-                                              UpdateCount(t.Result.FileCount);
+                                              SetCount(t.Result.FileCount);
                                               return result;
                                           });
         }
 
+        private Task<SearchResults> DoQuery(int start, int pageSize, IList<SortDescription> sortDescriptions)
+        {
+            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), fileNameSearchPattern:searchPattern, start: start, pageSize: pageSize);
+        }
+
         private FilesSortOptions MapSortDescription(IList<SortDescription> sortDescriptions)
         {
+            if (sortDescriptions == null)
+            {
+                return FilesSortOptions.Default;
+            }
+
             var sortDescription = sortDescriptions.FirstOrDefault();
 
             FilesSortOptions sort = FilesSortOptions.Default;
@@ -116,44 +118,6 @@ namespace RavenFS.Studio.Models
                                       FullPath = fi.Name,
                                       Metadata = fi.Metadata
                                   });
-        }
-
-        public override void Refresh()
-        {
-            BeginGetCount();
-        }
-
-        private void BeginGetCount()
-        {
-            ApplicationModel.Current.Client.GetFilesAsync(currentFolder, fileNameSearchPattern:searchPattern, pageSize: 1)
-                .ContinueWith(t => {
-                    if (!t.IsFaulted)
-                    {
-                        UpdateCount(t.Result.FileCount, forceCollectionRefresh: true);
-                    }
-                    else
-                    {
-                        UpdateCount(0, forceCollectionRefresh: true);
-                        OnDataFetchError(new DataFetchErrorEventArgs(t.Exception));
-                    }
-                }, 
-                TaskContinuationOptions.ExecuteSynchronously);
-        }
-
-        private void UpdateCount(int newCount, bool forceCollectionRefresh = false)
-        {
-            bool fileCountChanged; 
-
-            lock(lockObject)
-            {
-                fileCountChanged = newCount != fileCount;
-                fileCount = newCount;
-            }
-
-            if (fileCountChanged || forceCollectionRefresh)
-            {
-                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.ShowStaleData));
-            }
         }
     }
 }

@@ -44,7 +44,7 @@ namespace RavenFS.Studio.Models
             if (!isPruningFolders)
             {
                 UpdateVirtualFolders();
-                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.ShowStaleData));
+                Refresh(RefreshMode.PermitStaleDataWhilstRefreshing);
             }
         }
 
@@ -94,19 +94,11 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        public override void Refresh()
+        protected override Task<int> GetCount()
         {
-            BeginGetFolders();
-        }
-
-        public override int Count
-        {
-            get
+            lock (_lock)
             {
-                lock (_lock)
-                {
-                    return combinedFilteredList.Count;
-                }
+                return TaskEx.FromResult(combinedFilteredList.Count);
             }
         }
 
@@ -124,7 +116,7 @@ namespace RavenFS.Studio.Models
                 searchPattern = value;
                 searchPatternRegEx = string.IsNullOrEmpty(searchPattern) ? "" : WildcardToRegex(searchPattern);
                 UpdateCombinedFilteredList();
-                OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.Clear));
+                Refresh(RefreshMode.ClearStaleData);
             }
         }
 
@@ -135,7 +127,7 @@ namespace RavenFS.Studio.Models
             Replace("\\?", ".") + "$";
         }
 
-        public override Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
+        protected override Task<IList<FileSystemModel>> GetPageAsyncOverride(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
             lock (_lock)
             {
@@ -188,10 +180,9 @@ namespace RavenFS.Studio.Models
                             else
                             {
                                 SetFolders(new DirectoryModel[0]);
-                                OnDataFetchError(new DataFetchErrorEventArgs(t.Exception));
                             }
 
-                            OnCollectionChanged(new VirtualCollectionChangedEventArgs(InterimDataMode.ShowStaleData));
+                            Refresh(RefreshMode.ClearStaleData);
 
                         }, synchronizationContextScheduler);
         }

@@ -23,6 +23,7 @@ namespace RavenFS.Studio.Models
 	public class FilesPageModel : PageModel
 	{
 	    private const int DefaultPageSize = 50;
+	    private const int DefaultCacheSize = 10;
         private const string SearchPatternValidationRegEx = @"^[\*\?\w|\-\.\s]*$";
 	    public static string SearchStartedMessage = "SearchStarted";
 
@@ -85,7 +86,7 @@ namespace RavenFS.Studio.Models
 		public FilesPageModel()
 		{
             filesSource = new FileSystemCollectionSource();
-            Files = new VirtualCollection<FileSystemModel>(filesSource, DefaultPageSize);
+            Files = new VirtualCollection<FileSystemModel>(filesSource, DefaultPageSize, DefaultCacheSize);
             SelectedFile = new Observable<VirtualItem<FileSystemModel>>();
             CurrentFolder = new Observable<string>() { Value = "/"};
             CurrentFolder.PropertyChanged += delegate

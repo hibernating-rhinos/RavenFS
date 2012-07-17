@@ -1,14 +1,5 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Infrastructure
 {
@@ -18,12 +9,12 @@ namespace RavenFS.Studio.Infrastructure
     /// in pages.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class SparseList<T>
+    public class SparseList<T> where T:class 
     {
         private readonly int _pageSize;
         private readonly PageList _allocatedPages;
         private Page _currentPage;
-
+ 
         public SparseList(int pageSize)
         {
             _pageSize = pageSize;
@@ -36,31 +27,45 @@ namespace RavenFS.Studio.Infrastructure
         {
             get
             {
-                var pageAndSubIndex = GetPageAndSubIndex(index);
-
-                if (_currentPage == null || _currentPage.PageIndex != pageAndSubIndex.PageIndex)
-                {
-                    _currentPage = _allocatedPages.GetOrCreatePage(pageAndSubIndex.PageIndex);
-                }
+                var pageAndSubIndex = EnsureCurrentPage(index);
 
                 return _currentPage[pageAndSubIndex.SubIndex];
             }
             set
             {
-                var pageAndSubIndex = GetPageAndSubIndex(index);
-
-                if (_currentPage == null || _currentPage.PageIndex != pageAndSubIndex.PageIndex)
-                {
-                    _currentPage = _allocatedPages.GetOrCreatePage(pageAndSubIndex.PageIndex);
-                }
+                var pageAndSubIndex = EnsureCurrentPage(index);
 
                 _currentPage[pageAndSubIndex.SubIndex] = value;
             }
         }
 
-        private PageAndSubIndex GetPageAndSubIndex(int itemIndex)
+        private PageAndSubIndex EnsureCurrentPage(int index)
         {
-            return new PageAndSubIndex(itemIndex / _pageSize, itemIndex % _pageSize);
+            var pageAndSubIndex = new PageAndSubIndex(index / _pageSize, index % _pageSize);
+
+            if (_currentPage == null || _currentPage.PageIndex != pageAndSubIndex.PageIndex)
+            {
+                _currentPage = _allocatedPages.GetOrCreatePage(pageAndSubIndex.PageIndex);
+            }
+
+            return pageAndSubIndex;
+        }
+
+        public void RemoveRange(int firstIndex, int count)
+        {
+            var firstItem = new PageAndSubIndex(firstIndex / _pageSize, firstIndex % _pageSize);
+            if (firstItem.SubIndex + count > _pageSize)
+            {
+                throw new NotImplementedException("RemoveRange is only implemented to work within page boundaries");
+            }
+
+            if (_allocatedPages.Contains(firstItem.PageIndex))
+            {
+                if (_allocatedPages[firstItem.PageIndex].Trim(firstItem.SubIndex, count))
+                {
+                    _allocatedPages.Remove(firstItem.PageIndex);
+                }
+            }
         }
 
         private struct PageAndSubIndex
@@ -103,8 +108,32 @@ namespace RavenFS.Studio.Infrastructure
 
             public T this[int index]
             {
-                get { return _items[index]; }
-                set { _items[index] = value; }
+                get
+                {
+                    return _items[index];
+                }
+                set
+                {
+                    _items[index] = value;
+                }
+            }
+
+            public bool Trim(int firstIndex, int count)
+            {
+                for (int i = firstIndex; i < firstIndex + count; i++)
+                {
+                    _items[i] = default(T);
+                }
+
+                for (int i = 0; i < _items.Length; i++)
+                {
+                    if (_items[i] != null)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
             }
         }
 

@@ -15,8 +15,11 @@ using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Infrastructure
 {
-    public class CompositeVirtualCollectionSource<T> : VirtualCollectionSource<T>
+    public class CompositeVirtualCollectionSource<T> : IVirtualCollectionSource<T>, INotifyBusyness
     {
+        public event EventHandler<VirtualCollectionSourceChangedEventArgs> CollectionChanged;
+        public event EventHandler<EventArgs> IsBusyChanged;
+
         private readonly IVirtualCollectionSource<T> source1;
         private readonly IVirtualCollectionSource<T> source2;
 
@@ -26,22 +29,42 @@ namespace RavenFS.Studio.Infrastructure
             this.source2 = source2;
 
             source1.CollectionChanged += HandleChildCollectionChanged;
-            source1.DataFetchError += HandleDataFetchError;
             source2.CollectionChanged += HandleChildCollectionChanged;
-            source2.DataFetchError += HandleDataFetchError;
+
+            if (source1 is INotifyBusyness)
+            {
+                ((INotifyBusyness) source1).IsBusyChanged += HandleIsBusyChanged;
+            }
+
+            if (source2 is INotifyBusyness)
+            {
+                ((INotifyBusyness)source2).IsBusyChanged += HandleIsBusyChanged;
+            }
         }
 
-        private void HandleDataFetchError(object sender, DataFetchErrorEventArgs e)
+        private void HandleIsBusyChanged(object sender, EventArgs e)
         {
-            OnDataFetchError(e);
+            OnIsBusyChanged(e);
         }
 
-        private void HandleChildCollectionChanged(object sender, VirtualCollectionChangedEventArgs e)
+        private void HandleChildCollectionChanged(object sender, VirtualCollectionSourceChangedEventArgs e)
         {
             OnCollectionChanged(e);
         }
 
-        public override int Count
+        protected void OnCollectionChanged(VirtualCollectionSourceChangedEventArgs e)
+        {
+            EventHandler<VirtualCollectionSourceChangedEventArgs> handler = CollectionChanged;
+            if (handler != null) handler(this, e);
+        }
+
+        protected void OnIsBusyChanged(EventArgs e)
+        {
+            EventHandler<EventArgs> handler = IsBusyChanged;
+            if (handler != null) handler(this, e);
+        }
+
+        public int Count
         {
             get { return Source1.Count + Source2.Count; }
         }
@@ -56,13 +79,7 @@ namespace RavenFS.Studio.Infrastructure
             get { return source2; }
         }
 
-        public override void Refresh()
-        {
-            source1.Refresh();
-            source2.Refresh();
-        }
-
-        public override Task<IList<T>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
+        public Task<IList<T>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
             var source1Count = Source1.Count;
 
@@ -89,6 +106,21 @@ namespace RavenFS.Studio.Infrastructure
                         .ContinueWith(_ => (IList<T>)source1Results.Result.Concat(source2Results.Result).ToArray());
 
                 return result;
+            }
+        }
+
+        public void Refresh(RefreshMode mode)
+        {
+            Source1.Refresh(mode);
+            Source2.Refresh(mode);
+        }
+
+        public bool IsBusy
+        {
+            get
+            {
+                return (Source1 is INotifyBusyness && ((INotifyBusyness) Source1).IsBusy)
+                       || (Source2 is INotifyBusyness && ((INotifyBusyness) Source2).IsBusy);
             }
         }
     }

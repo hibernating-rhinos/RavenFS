@@ -152,6 +152,9 @@
     <Compile Include="Commands\VirtualItemCommand.cs" />
     <Compile Include="Commands\VirtualItemSelectionCommand.cs" />
     <Compile Include="Controls\ActivityIndicator.cs" />
+    <Compile Include="Controls\BusynessIndicator.xaml.cs">
+      <DependentUpon>BusynessIndicator.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\DataFetchErrorNotifier.xaml.cs">
       <DependentUpon>DataFetchErrorNotifier.xaml</DependentUpon>
     </Compile>
@@ -217,15 +220,22 @@
     <Compile Include="Infrastructure\ActionCommand.cs" />
     <Compile Include="Infrastructure\CompositeVirtualCollectionSource.cs" />
     <Compile Include="Infrastructure\DataFetchErrorEventArgs.cs" />
+    <Compile Include="Infrastructure\Disposer.cs" />
+    <Compile Include="Infrastructure\IEnquireAboutItemVisibility.cs" />
+    <Compile Include="Infrastructure\INotifyBusyness.cs" />
     <Compile Include="Infrastructure\ItemSelection.cs" />
     <Compile Include="Infrastructure\INotifyOnDataFetchErrors.cs" />
     <Compile Include="Infrastructure\IObservable.cs" />
     <Compile Include="Infrastructure\DialogModel.cs" />
     <Compile Include="Infrastructure\DialogView.cs" />
     <Compile Include="Infrastructure\ItemSelection`1.cs" />
+    <Compile Include="Infrastructure\ItemsRealizedEventArgs.cs" />
     <Compile Include="Infrastructure\IVirtualCollectionSource.cs" />
+    <Compile Include="Infrastructure\MostRecentUsedList.cs" />
     <Compile Include="Infrastructure\Navigation.cs" />
     <Compile Include="Infrastructure\PageModel.cs" />
+    <Compile Include="Infrastructure\ProvideVisibleItemRangeFromDataGridBehavior.cs" />
+    <Compile Include="Infrastructure\RefreshMode.cs" />
     <Compile Include="Infrastructure\Schedulers.cs" />
     <Compile Include="Infrastructure\Validation.cs" />
     <Compile Include="Infrastructure\VirtualCollection.cs" />
@@ -235,6 +245,8 @@
     <Compile Include="Infrastructure\VirtualCollectionChangedEventArgs.cs" />
     <Compile Include="Infrastructure\VirtualCollectionSource.cs" />
     <Compile Include="Infrastructure\VirtualItem.cs" />
+    <Compile Include="Infrastructure\WeakCollectionViewWrapper.cs" />
+    <Compile Include="Infrastructure\WeakEventListener.cs" />
     <Compile Include="Models\ApplicationModel.cs" />
     <Compile Include="Infrastructure\BindableCollection.cs" />
     <Compile Include="Infrastructure\Command.cs" />
@@ -320,6 +332,10 @@
     <Page Include="Assets\WatermarkedTextBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\BusynessIndicator.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\DataFetchErrorNotifier.xaml">
       <SubType>Designer</SubType>

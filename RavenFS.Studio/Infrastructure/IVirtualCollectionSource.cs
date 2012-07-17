@@ -1,28 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Net;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Infrastructure
 {
     public interface IVirtualCollectionSource<T>
     {
-        event EventHandler<VirtualCollectionChangedEventArgs> CollectionChanged;
-        event EventHandler<DataFetchErrorEventArgs> DataFetchError;
+        event EventHandler<VirtualCollectionSourceChangedEventArgs> CollectionChanged;
 
         int Count { get; }
 
         Task<IList<T>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions);
 
-        void Refresh();
+        void Refresh(RefreshMode mode);
+    }
+
+    public class VirtualCollectionSourceChangedEventArgs : EventArgs
+    {
+        public ChangeType ChangeType { get; private set; }
+
+        public VirtualCollectionSourceChangedEventArgs(ChangeType changeType)
+        {
+            ChangeType = changeType;
+        }
+    }
+
+    public enum ChangeType
+    {
+        /// <summary>
+        /// Current data is invalid and should be cleared
+        /// </summary>
+        Reset,
+        /// <summary>
+        /// Current data may still be valid, and can be shown whilst refreshing
+        /// </summary>
+        Refresh,
     }
 }

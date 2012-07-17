@@ -37,7 +37,7 @@ namespace RavenFS.Studio.Models
         public SearchPageModel()
         {
             resultsSource = new SearchResultsCollectionSource();
-            Results = new VirtualCollection<FileSystemModel>(resultsSource, 50);
+            Results = new VirtualCollection<FileSystemModel>(resultsSource, 50, 10);
             Query = new Observable<string>();
             SelectedFile = new Observable<VirtualItem<FileSystemModel>>();
             SelectedItems = new ItemSelection<VirtualItem<FileSystemModel>>();
@@ -80,7 +80,7 @@ namespace RavenFS.Studio.Models
                                                         .Throttle(TimeSpan.FromSeconds(1))
                                                         .ObserveOn(DispatcherScheduler.Instance)
                                                         .Where(_ => !Query.Value.IsNullOrEmpty())
-                                                        .Subscribe(_ => resultsSource.Refresh());
+                                                        .Subscribe(_ => resultsSource.Refresh(RefreshMode.PermitStaleDataWhilstRefreshing));
 
             CreateSearchClauseBuilders();
         }

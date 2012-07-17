@@ -14,7 +14,8 @@
                      xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
                     xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
                      xmlns:Search="clr-namespace:RavenFS.Studio.Features.Search"
-                     xmlns:Controls="clr-namespace:Microsoft.Windows.Controls" Title="Search - RavenFS"
+                     xmlns:Controls="clr-namespace:Microsoft.Windows.Controls"
+                     xmlns:Controls1="clr-namespace:RavenFS.Studio.Controls" Title="Search - RavenFS"
             Style="{StaticResource Style_Page}"
             Infrastructure:ModelResolver.AttachModel="SearchPageModel" d:DataContext="{d:DesignInstance Models:SearchPageModel}" d:DesignHeight="154" d:DesignWidth="907">
     <Grid Margin="{StaticResource Margin_ContentPage}">
@@ -22,6 +23,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
@@ -94,6 +96,7 @@
                 <b:DataGridRowDoubleClickCommandBehavior Command="{Binding Download}"/>
                 <b:SelectRowOnRightClickBehavior/>
                 <b:BindSelectedItemsBehavior Target="{Binding SelectedItems}"/>
+                <Infrastructure:ProvideVisibleItemRangeFromDataGridBehavior/>
             </i:Interaction.Behaviors>
             <i:Interaction.Triggers>
                 <b:StudioKeyTrigger Key="Delete">
@@ -175,7 +178,10 @@
                 </sdk:DataGridTemplateColumn>
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
-        <Border Grid.Row="3" Style="{StaticResource Style_Border_Footer}">
+
+        <Controls1:BusynessIndicator BusyBody="{Binding Results.Source}" Grid.Row="3"/>
+        
+        <Border Grid.Row="4" Style="{StaticResource Style_Border_Footer}" Margin="0,3,0,0">
             <TextBlock Margin="3">
                 <Run Text="{Binding Results.Count}"/>
                 <Run Text=" Matching Files"/>

@@ -40,6 +40,7 @@
             <RowDefinition Height="Auto"/>
           <RowDefinition Height="*"/>
           <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
         <Border Style="{StaticResource Style_Border_Header}">
@@ -206,6 +207,7 @@
                 <b:DataGridRowDoubleClickCommandBehavior Command="{Binding Navigate}"/>
                 <b:SelectRowOnRightClickBehavior/>
                 <b:BindSelectedItemsBehavior Target="{Binding SelectedItems}"/>
+                <Infrastructure:ProvideVisibleItemRangeFromDataGridBehavior/>
             </i:Interaction.Behaviors>
             <i:Interaction.Triggers>
                 <b:StudioKeyTrigger Key="Delete">
@@ -284,7 +286,9 @@
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
         
-        <Border Grid.Row="5" Style="{StaticResource Style_Border_Footer}">
+        <Controls:BusynessIndicator BusyBody="{Binding Files.Source}" Grid.Row="5"/>
+        
+        <Border Grid.Row="6" Style="{StaticResource Style_Border_Footer}" Margin="0,3,0,0">
             <TextBlock Margin="3">
                 <Run Text="{Binding Files.Count}"/>
                 <Run Text=" Files"/>
