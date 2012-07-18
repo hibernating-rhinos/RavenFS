@@ -132,30 +132,45 @@ namespace RavenFS.Studio.Infrastructure
 			return task;
 		}
 
+        public static Task<TResult> Catch<TResult>(this Task<TResult> parent)
+        {
+            return parent.Catch(e => { });
+        }
+
+        public static Task<TResult> Catch<TResult>(this Task<TResult> parent, Action<AggregateException> action)
+        {
+            var stackTrace = new StackTrace();
+            return parent.ContinueWith(task =>
+            {
+                if (task.IsFaulted == false)
+                    return task;
+
+                var ex = task.Exception.ExtractSingleInnerException();
+                Execute.OnTheUI(() => ApplicationModel.Current.AddErrorNotification(ex, null, stackTrace))
+                    .ContinueWith(_ => action(task.Exception));
+                return task;
+            }).Unwrap();
+        }
+
 		public static Task Catch(this Task parent)
 		{
 			return parent.Catch(e => { });
 		}
 
-		
 
 		public static Task Catch(this Task parent, Action<AggregateException> action)
 		{
-			var stackTrace = new StackTrace();
-			parent.ContinueWith(task =>
-			{
-				if (task.IsFaulted == false)
-				{
-					ErrorPresenter.Hide();
-					return;
-				}
+            var stackTrace = new StackTrace();
+            return parent.ContinueWith(task =>
+            {
+                if (task.IsFaulted == false)
+                    return task;
 
-				var ex = task.Exception.ExtractSingleInnerException();
-				Deployment.Current.Dispatcher.InvokeAsync(() => ErrorPresenter.Show(ex, stackTrace))
-						.ContinueWith(_ => action(task.Exception));
-			});
-
-			return parent;
+                var ex = task.Exception.ExtractSingleInnerException();
+                Execute.OnTheUI(() => ApplicationModel.Current.AddErrorNotification(ex, null, stackTrace))
+                    .ContinueWith(_ => action(task.Exception));
+                return task;
+            }).Unwrap();
 		}
 
 		public static Task CatchIgnore<TException>(this Task parent) where TException : Exception

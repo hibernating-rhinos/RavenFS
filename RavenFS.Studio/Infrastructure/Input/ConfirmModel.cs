@@ -9,7 +9,7 @@
 			set
 			{
 				title = value;
-				OnPropertyChanged();
+				OnPropertyChanged(() => Title);
 			}
 		}
 
@@ -20,7 +20,7 @@
 			set
 			{
 				message = value;
-				OnPropertyChanged();
+				OnPropertyChanged(() => Message);
 			}
 		}
 
@@ -32,7 +32,7 @@
             set
             {
                 allowCancel = value;
-                OnPropertyChanged();
+                OnPropertyChanged(() => AllowCancel);
             }
         }
 	}

@@ -184,7 +184,8 @@ namespace RavenFS.Studio.Models
 
                             Refresh(RefreshMode.ClearStaleData);
 
-                        }, synchronizationContextScheduler);
+                        }, synchronizationContextScheduler)
+                        .Catch();
         }
 
         private void PruneVirtualFolders(DirectoryModel[] folders)

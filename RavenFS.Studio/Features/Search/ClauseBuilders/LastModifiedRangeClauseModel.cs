@@ -31,7 +31,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             {
                 lowerLimit = value;
                 TryParseAndSet(lowerLimit, d => LowerLimitDate = d);
-                OnPropertyChanged("LowerLimit");
+                OnPropertyChanged(() => LowerLimit);
             }
         }
 
@@ -42,7 +42,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             {
                 upperLimit = value;
                 TryParseAndSet(upperLimit, d => UpperLimitDate = d);
-                OnPropertyChanged("UpperLimit");
+                OnPropertyChanged(() => UpperLimit);
             }
         }
 
@@ -65,7 +65,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             set
             {
                 lowerLimitDate = value;
-                OnPropertyChanged("LowerLimitDate");
+                OnPropertyChanged(() => LowerLimitDate);
                 if (!_isSettingDate && lowerLimitDate.HasValue)
                 {
                     LowerLimit = lowerLimitDate.Value.ToString("d", CultureInfo.CurrentCulture);
@@ -82,7 +82,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             set
             {
                 upperLimitDate = value;
-                OnPropertyChanged("UpperLimitDate");
+                OnPropertyChanged(() => UpperLimitDate);
                 if (!_isSettingDate && upperLimitDate.HasValue)
                 {
                     UpperLimit = upperLimitDate.Value.ToString("d", CultureInfo.CurrentCulture);

@@ -18,6 +18,14 @@
                      xmlns:Controls1="clr-namespace:RavenFS.Studio.Controls" Title="Search - RavenFS"
             Style="{StaticResource Style_Page}"
             Infrastructure:ModelResolver.AttachModel="SearchPageModel" d:DataContext="{d:DesignInstance Models:SearchPageModel}" d:DesignHeight="154" d:DesignWidth="907">
+    <Infrastructure:View.Resources>
+        <Storyboard x:Key="ShowErrorPanel">
+            <DoubleAnimation Storyboard.TargetName="SearchErrorPanel" Storyboard.TargetProperty="Height" To="50" Duration="0:0:0.1"/>
+        </Storyboard>
+        <Storyboard x:Key="HideErrorPanel">
+            <DoubleAnimation Storyboard.TargetName="SearchErrorPanel" Storyboard.TargetProperty="Height" To="0" Duration="0:0:0.1"/>
+        </Storyboard>
+    </Infrastructure:View.Resources>
     <Grid Margin="{StaticResource Margin_ContentPage}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -179,6 +187,24 @@
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 
+        <Border Background="{StaticResource Brush_ErrorBackground}"
+                        Grid.Row="2" Height="0"
+                        VerticalAlignment="Bottom"
+                        x:Name="SearchErrorPanel">
+            <i:Interaction.Triggers>
+                <ei:DataTrigger Binding="{Binding IsErrorVisible.Value}" Value="True" Comparison="Equal">
+                    <ei:ControlStoryboardAction Storyboard="{StaticResource ShowErrorPanel}" ControlStoryboardOption="Play"/>
+                </ei:DataTrigger>
+                <ei:DataTrigger Binding="{Binding IsErrorVisible.Value}" Value="False" Comparison="Equal">
+                    <ei:ControlStoryboardAction Storyboard="{StaticResource HideErrorPanel}" ControlStoryboardOption="Play"/>
+                </ei:DataTrigger>
+            </i:Interaction.Triggers>
+            <TextBlock Text="{Binding SearchErrorMessage.Value}" Foreground="White" Margin="5" VerticalAlignment="Top" 
+                               TextWrapping="Wrap"
+                               b:FadeTrimming.IsEnabled="True"
+                               b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"/>
+        </Border>
+        
         <Controls1:BusynessIndicator BusyBody="{Binding Results.Source}" Grid.Row="3"/>
         
         <Border Grid.Row="4" Style="{StaticResource Style_Border_Footer}" Margin="0,3,0,0">

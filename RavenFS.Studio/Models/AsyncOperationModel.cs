@@ -34,7 +34,7 @@ namespace RavenFS.Studio.Models
             set
             {
                 description = value;
-                OnPropertyChanged("Name");
+                OnPropertyChanged("Description");
             }
         }
 

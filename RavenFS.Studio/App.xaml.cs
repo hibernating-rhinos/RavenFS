@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using RavenFS.Studio.Infrastructure;
+using RavenFS.Studio.Models;
 
 namespace RavenFS.Studio
 {

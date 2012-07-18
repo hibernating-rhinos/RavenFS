@@ -27,7 +27,7 @@ namespace RavenFS.Studio.Infrastructure.Input
 			set
 			{
 				title = value;
-				OnPropertyChanged();
+				OnPropertyChanged(() => Title);
 			}
 		}
 
@@ -39,7 +39,7 @@ namespace RavenFS.Studio.Infrastructure.Input
 			set
 			{
 				message = value;
-				OnPropertyChanged();
+				OnPropertyChanged(() => Message);
 			}
 		}
 
@@ -52,7 +52,7 @@ namespace RavenFS.Studio.Infrastructure.Input
 			{
 			    hasAnswered = true;
 				answer = value;
-				OnPropertyChanged();
+				OnPropertyChanged(() => Answer);
                 OnErrorsChanged(new DataErrorsChangedEventArgs("Answer"));
 			}
 		}

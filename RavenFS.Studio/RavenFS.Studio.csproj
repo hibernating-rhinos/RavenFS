@@ -95,6 +95,7 @@
       <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Libraries\Client\System.Windows.Controls.Navigation.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Controls.Toolkit, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Windows.Data, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Windows.Interactivity">
       <HintPath>..\SharedLibs\Silverlight\System.Windows.Interactivity.dll</HintPath>
     </Reference>
@@ -124,6 +125,7 @@
     <Compile Include="Behaviors\PlaceCursorAtEndOfTextAction.cs" />
     <Compile Include="Behaviors\PreventEditingReadOnlyRows.cs" />
     <Compile Include="Behaviors\SelectAllAction.cs" />
+    <Compile Include="Behaviors\SelectItemOnRightClick.cs" />
     <Compile Include="Behaviors\SelectRowOnRightClickBehavior.cs" />
     <Compile Include="Behaviors\ShowAutoCompleteDropDown.cs" />
     <Compile Include="Behaviors\StudioKeyTrigger.cs" />
@@ -135,13 +137,12 @@
     <Compile Include="Commands\AddFolderCommand.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
     <Compile Include="Commands\NavigateToFileSystemModelCommand.cs" />
+    <Compile Include="Commands\ShowErrorListWindowCommand.cs" />
     <Compile Include="Commands\ToggleOperationsPaneVisibilityCommand.cs" />
     <Compile Include="Commands\MoveFileCommand.cs" />
     <Compile Include="Commands\HideOperationsPaneCommand.cs" />
     <Compile Include="Commands\NavigateToCommand.cs" />
     <Compile Include="Commands\NavigateToParentFolderCommand.cs" />
-    <Compile Include="Commands\NavigateToNextPageCommand.cs" />
-    <Compile Include="Commands\NavigateToPrevPageCommand.cs" />
     <Compile Include="Commands\ObservableDependantCommand.cs" />
     <Compile Include="Commands\RenameFileCommand.cs" />
     <Compile Include="Commands\ShowOperationsPaneCommand.cs" />
@@ -155,11 +156,15 @@
     <Compile Include="Controls\BusynessIndicator.xaml.cs">
       <DependentUpon>BusynessIndicator.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\DataFetchErrorNotifier.xaml.cs">
-      <DependentUpon>DataFetchErrorNotifier.xaml</DependentUpon>
+    <Compile Include="Controls\Notification.xaml.cs">
+      <DependentUpon>Notification.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\NotificationArea.xaml.cs">
+      <DependentUpon>NotificationArea.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converters\AsyncOperationStatusConverter.cs" />
     <Compile Include="Commands\CopyExceptionToClipboardCommand.cs" />
+    <Compile Include="Converters\FirstLineOnlyConverter.cs" />
     <Compile Include="Converters\NullConverter.cs" />
     <Compile Include="Converters\EnumToVisibilityConverter.cs" />
     <Compile Include="Converters\DateStringToFormattedDateConverter.cs" />
@@ -206,6 +211,9 @@
     <Compile Include="Features\Search\SearchClauseBuilderView.xaml.cs">
       <DependentUpon>SearchClauseBuilderView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Features\Util\ErrorListWindow.xaml.cs">
+      <DependentUpon>ErrorListWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Impl\PopupPlacement\Popup.cs" />
     <Compile Include="Impl\PopupPlacement\PopupHorizontalAlignment.cs" />
     <Compile Include="Impl\PopupPlacement\PopupOrientation.cs" />
@@ -221,6 +229,7 @@
     <Compile Include="Infrastructure\CompositeVirtualCollectionSource.cs" />
     <Compile Include="Infrastructure\DataFetchErrorEventArgs.cs" />
     <Compile Include="Infrastructure\Disposer.cs" />
+    <Compile Include="Infrastructure\Execute.cs" />
     <Compile Include="Infrastructure\IEnquireAboutItemVisibility.cs" />
     <Compile Include="Infrastructure\INotifyBusyness.cs" />
     <Compile Include="Infrastructure\ItemSelection.cs" />
@@ -251,7 +260,6 @@
     <Compile Include="Infrastructure\BindableCollection.cs" />
     <Compile Include="Infrastructure\Command.cs" />
     <Compile Include="Infrastructure\ErrorPresenter.cs" />
-    <Compile Include="Infrastructure\PagerModel.cs" />
     <Compile Include="Infrastructure\UrlUtil.cs" />
     <Compile Include="Infrastructure\UrlParser.cs" />
     <Compile Include="Infrastructure\Observable.cs" />
@@ -272,6 +280,8 @@
     <Compile Include="Models\AsyncOperationStatus.cs" />
     <Compile Include="Models\AsyncOperationsViewModel.cs" />
     <Compile Include="Models\ConfigurationModel.cs" />
+    <Compile Include="Models\Notification.cs" />
+    <Compile Include="Models\NotificationLevel.cs" />
     <Compile Include="Models\SearchResultsCollectionSource.cs" />
     <Compile Include="Models\NameValueCollectionEditorModel.cs" />
     <Compile Include="Models\DirectoryModel.cs" />
@@ -289,6 +299,7 @@
     <Compile Include="Models\FoldersCollectionSource.cs" />
     <Compile Include="Models\ConfigurationPageModel.cs" />
     <Compile Include="Models\SearchPageModel.cs" />
+    <Compile Include="Models\StudioErrorListModel.cs" />
     <Compile Include="Models\VirtualFoldersManager.cs" />
     <Compile Include="Views\AsyncOperationsView.xaml.cs">
       <DependentUpon>AsyncOperationsView.xaml</DependentUpon>
@@ -298,9 +309,6 @@
     </Compile>
     <Compile Include="Views\ErrorWindow.xaml.cs">
       <DependentUpon>ErrorWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\About.xaml.cs">
-      <DependentUpon>About.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\FilePropertiesDialog.xaml.cs">
       <DependentUpon>FilePropertiesDialog.xaml</DependentUpon>
@@ -337,9 +345,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\DataFetchErrorNotifier.xaml">
-      <SubType>Designer</SubType>
+    <Page Include="Controls\Notification.xaml">
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\NotificationArea.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Features\Search\ClauseBuilders\HasMetadataClauseModelView.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -360,6 +372,10 @@
     <Page Include="Features\Search\SearchClauseBuilderView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Features\Util\ErrorListWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Impl\SplitButton\generic.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -425,10 +441,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\About.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Views\FilePropertiesDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -460,6 +472,8 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\Images\download.png" />
+    <Resource Include="Assets\Images\error_small.png" />
+    <Resource Include="Assets\Images\copy_to_clipboard_tiny.png" />
     <Content Include="Impl\PopupPlacement\Credit.txt" />
     <Content Include="Impl\SplitButton\Credits.txt" />
     <Content Include="Impl\WatermarkedTextBox\Credits.txt" />

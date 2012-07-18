@@ -14,7 +14,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             set
             {
                 input = value;
-                OnPropertyChanged("Input");
+                OnPropertyChanged(() => Input);
             }
         }
 

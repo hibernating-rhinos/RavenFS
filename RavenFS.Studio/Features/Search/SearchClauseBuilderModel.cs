@@ -74,7 +74,7 @@ namespace RavenFS.Studio.Features.Search
             private set
             {
                 inputView = value;
-                OnPropertyChanged("InputView");
+                OnPropertyChanged(() => InputView);
             }
         }
 

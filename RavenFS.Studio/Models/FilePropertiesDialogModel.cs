@@ -52,7 +52,7 @@ namespace RavenFS.Studio.Models
             private set
             {
                 metadata = value;
-                OnPropertyChanged();
+                OnPropertyChanged(() => Metadata);
             }
 		}
 

@@ -73,7 +73,9 @@ namespace RavenFS.Studio.Models
 
         private Task<SearchResults> DoQuery(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
-            return ApplicationModel.Current.Client.GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), fileNameSearchPattern:searchPattern, start: start, pageSize: pageSize);
+            return ApplicationModel.Current.Client
+                .GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), fileNameSearchPattern:searchPattern, start: start, pageSize: pageSize)
+                .Catch();
         }
 
         private FilesSortOptions MapSortDescription(IList<SortDescription> sortDescriptions)

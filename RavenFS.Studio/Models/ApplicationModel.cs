@@ -4,16 +4,21 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Browser;
+using Raven.Studio.Messages;
 using RavenFS.Client;
+using RavenFS.Studio.Infrastructure;
+using System.Linq;
 
 namespace RavenFS.Studio.Models
 {
-	public class ApplicationModel
+    public class ApplicationModel : Model
 	{
         public static readonly ApplicationModel Current = new ApplicationModel();
 
 		public ApplicationModel()
 		{
+            Notifications = new ObservableCollection<Notification>();
+            Notifications.CollectionChanged += delegate { OnPropertyChanged(() => ErrorCount); };
 			Client = new RavenFileSystemClient(DetermineUri());
 		    AsyncOperations = new AsyncOperationsModel();
 		    State = new ApplicationState();
@@ -25,7 +30,40 @@ namespace RavenFS.Studio.Models
 
 	    public RavenFileSystemClient Client { get; private set; }
 
-       
+        public ObservableCollection<Notification> Notifications { get; private set; }
+
+
+        public int ErrorCount
+        {
+            get { return Notifications.Count(n => n.Level == NotificationLevel.Error); }
+        }
+
+        public void AddNotification(Notification notification)
+        {
+            Execute.OnTheUI(() =>
+            {
+                Notifications.Add(notification);
+                if (Notifications.Count > 10)
+                {
+                    Notifications.RemoveAt(0);
+                }
+            });
+        }
+
+        public void AddInfoNotification(string message)
+        {
+            AddNotification(new Notification(message, NotificationLevel.Info));
+        }
+
+        public void AddWarningNotification(string message)
+        {
+            AddNotification(new Notification(message, NotificationLevel.Warning));
+        }
+
+        public void AddErrorNotification(Exception exception, string message = null, params object[] details)
+        {
+            AddNotification(new Notification(message ?? exception.Message, NotificationLevel.Error, exception, details));
+        }
 
 		private static string DetermineUri()
 		{

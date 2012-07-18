@@ -2,7 +2,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:Converters="clr-namespace:RavenFS.Studio.Converters"
     xmlns:Models="clr-namespace:RavenFS.Studio.Models"
-    xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions">
+    xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
+    xmlns:Messages="clr-namespace:Raven.Studio.Messages">
     
     <Converters:DateStringToFormattedDateConverter x:Key="Converter_DateStringToFormattedDateUTC" ConvertToUniversalTime="True"/>
     <Converters:EnumToVisibilityConverter x:Key="Converter_VisibileOnlyWhenAsyncOperationStatusIsProcessing" Type="{z:Type Name=Models:AsyncOperationStatus}" ValuesWhenVisibile="Processing"/>
@@ -28,4 +29,8 @@
     <Converters:IntegerToFormattedStringConverter x:Key="Converter_PendingOperationsCountToStatusConverter"
                                                   FormatWhenZero="Idle" FormatWhenOne="1 Operation Pending"
                                                   FormatWhenMany="{}{0} Operations Pending"/>
+
+    <Converters:EnumToVisibilityConverter x:Key="VisibleWhenNotificationLevelIsError" ValuesWhenVisibile="Error" Type="Messages:NotificationLevel"/>
+
+    <Converters:FirstLineOnlyConverter x:Key="FirstLineOnly" />
 </ResourceDictionary>

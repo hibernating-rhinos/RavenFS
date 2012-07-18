@@ -5,7 +5,10 @@
 			 xmlns:uriMapper="clr-namespace:System.Windows.Navigation;assembly=System.Windows.Controls.Navigation"
 			 xmlns:TiledBG="clr-namespace:TiledBG;assembly=TiledBG"
              xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
-             xmlns:Views="clr-namespace:RavenFS.Studio.Views" FontFamily="Segoe UI"
+             xmlns:Views="clr-namespace:RavenFS.Studio.Views"
+             xmlns:RavenControls="clr-namespace:RavenFS.Studio.Controls"
+             xmlns:MarkupExtensions="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
+             xmlns:Models="clr-namespace:RavenFS.Studio.Models" FontFamily="Segoe UI"
              FontSize="12">
 
     <Grid x:Name="LayoutRoot"
@@ -67,10 +70,23 @@
 				  x:Name="Logo">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="34" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <HyperlinkButton Grid.Column="1"
+                <Button Grid.Column="1"
+                        DataContext="{MarkupExtensions:Static Member=Models:ApplicationModel.Current}"
+                        Command="{StaticResource ShowErrorListWindowCommand}"
+                        Style="{StaticResource Style_Button_MouseOverChrome}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        ToolTipService.ToolTip="Show recent errors"
+                        Visibility="{Binding ErrorCount, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}">
+                    <Image Source="{StaticResource Image_Error_Small}"
+                           Stretch="Fill" Width="24" Height="24"/>
+                </Button>
+                
+                <HyperlinkButton Grid.Column="2"
 								 HorizontalAlignment="Left"
 								 Margin="0,5,5,1">
                     <StackPanel x:Name="BrandingStackPanel" Orientation="Horizontal">
@@ -110,7 +126,7 @@
                 <toolkit:Separator Style="{StaticResource Style_Separator_HeaderLink}" />
             </StackPanel>
         </Grid>
-
+        
         <Grid x:Name="ContentGrid"
 			  Grid.Row="1">
             <Grid>
@@ -176,14 +192,6 @@
             <Views:AsyncOperationsView Margin="10,0" VerticalAlignment="Bottom"/>
         </Grid>
 
-        <!--<RavenControls:NotificationArea Grid.RowSpan="999"
-										Grid.ColumnSpan="999"
-										Notifications="{Binding Notifications}"
-										VerticalAlignment="Top"
-										HorizontalAlignment="Right"
-										Margin="0,10,10,0"
-										Height="40" />-->
-
         <Grid Grid.Row="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -209,5 +217,14 @@
                 </StackPanel>
             </toolkit:DockPanel>
         </Grid>
+
+        <RavenControls:NotificationArea Grid.RowSpan="999"
+										Grid.ColumnSpan="999"
+                                        DataContext="{MarkupExtensions:Static Member=Models:ApplicationModel.Current}"
+										Notifications="{Binding Notifications}"
+										VerticalAlignment="Top"
+										HorizontalAlignment="Right"
+										Margin="0,35,120,0"
+										Height="40" />
     </Grid>
 </UserControl>

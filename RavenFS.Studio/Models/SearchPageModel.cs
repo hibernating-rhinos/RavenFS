@@ -5,6 +5,8 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Windows.Input;
+using Newtonsoft.Json.Linq;
+using RavenFS.Client;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Features.Search;
 using RavenFS.Studio.Features.Search.ClauseBuilders;
@@ -37,11 +39,55 @@ namespace RavenFS.Studio.Models
         public SearchPageModel()
         {
             resultsSource = new SearchResultsCollectionSource();
+            resultsSource.SearchError += HandleSearchError;
             Results = new VirtualCollection<FileSystemModel>(resultsSource, 50, 10);
             Query = new Observable<string>();
             SelectedFile = new Observable<VirtualItem<FileSystemModel>>();
             SelectedItems = new ItemSelection<VirtualItem<FileSystemModel>>();
+            SearchErrorMessage = new Observable<string>();
+            IsErrorVisible = new Observable<bool>();
+
         }
+
+        private void HandleSearchError(object sender, SearchErrorEventArgs e)
+        {
+            var exception = e.Exception;
+
+            string message;
+            if (exception is AggregateException)
+            {
+                var errorText = (exception as AggregateException).ExtractSingleInnerException().Message;
+                errorText = TryExtractMessageFromJSONError(errorText);
+                message = errorText;
+            }
+            else
+            {
+                message = exception.Message;
+            }
+
+            SearchErrorMessage.Value = message;
+            IsErrorVisible.Value = true;
+        }
+
+        public void ClearSearchError()
+        {
+            SearchErrorMessage.Value = string.Empty;
+            IsErrorVisible.Value = false;
+        }
+
+        private string TryExtractMessageFromJSONError(string errorText)
+        {
+            try
+            {
+                var jObject = JObject.Parse(errorText);
+                return jObject["Message"] != null ? jObject["Message"].Value<string>() : errorText;
+            }
+            catch (Exception)
+            {
+                return errorText;
+            }
+        }
+
 
         public ICommand Search { get { return searchCommand ?? (searchCommand = new ActionCommand(HandleSearch)); } }
 
@@ -59,6 +105,9 @@ namespace RavenFS.Studio.Models
         public VirtualCollection<FileSystemModel> Results { get; private set; }
         public Observable<VirtualItem<FileSystemModel>> SelectedFile { get; private set; }
         public ItemSelection<VirtualItem<FileSystemModel>> SelectedItems { get; private set; }
+
+        public Observable<string> SearchErrorMessage { get; private set; }
+        public Observable<bool> IsErrorVisible { get; private set; }
 
         public IList<SearchClauseBuilderModel> SearchClauseBuilders
         {
@@ -123,6 +172,7 @@ namespace RavenFS.Studio.Models
 
         private void HandleSearch()
         {
+            ClearSearchError();
             resultsSource.SearchPattern = Query.Value;
             ApplicationModel.Current.State.LastSearch = Query.Value;
         }

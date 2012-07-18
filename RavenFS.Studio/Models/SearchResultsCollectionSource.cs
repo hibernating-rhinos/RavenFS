@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,7 +14,9 @@ namespace RavenFS.Studio.Models
         public SearchResultsCollectionSource()
         {
             
-        } 
+        }
+
+        public event EventHandler<SearchErrorEventArgs> SearchError;
 
         private string searchPattern;
 
@@ -44,7 +47,16 @@ namespace RavenFS.Studio.Models
 
         private Task<SearchResults> DoQuery(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
-            return ApplicationModel.Current.Client.SearchAsync(searchPattern, MapSortDescription(sortDescriptions), start: start, pageSize: pageSize);
+            return ApplicationModel.Current.Client.SearchAsync(searchPattern, MapSortDescription(sortDescriptions), start: start, pageSize: pageSize)
+                .ContinueWith(t =>
+                                  {
+                                      if (t.IsFaulted)
+                                      {
+                                          OnSearchError(new SearchErrorEventArgs() { Exception = t.Exception});
+                                      }
+
+                                      return t.Result;
+                                  });
         }
 
         private string[] MapSortDescription(IList<SortDescription> sortDescriptions)
@@ -113,5 +125,16 @@ namespace RavenFS.Studio.Models
                     .ContinueWith(t => t.Result.FileCount, TaskContinuationOptions.ExecuteSynchronously);
             }
         }
+
+        protected void OnSearchError(SearchErrorEventArgs e)
+        {
+            var handler = SearchError;
+            if (handler != null) handler(this, e);
+        }
+    }
+
+    public class SearchErrorEventArgs : EventArgs
+    {
+        public Exception Exception { get; set; }
     }
 }

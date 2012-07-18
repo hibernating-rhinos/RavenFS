@@ -23,7 +23,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             set
             {
                 lowerLimit = value;
-                OnPropertyChanged("LowerLimit");
+                OnPropertyChanged(() => LowerLimit);
             }
         }
 
@@ -33,7 +33,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             set
             {
                 upperLimit = value;
-                OnPropertyChanged("UpperLimit");
+                OnPropertyChanged(() => UpperLimit);
             }
         }
     }

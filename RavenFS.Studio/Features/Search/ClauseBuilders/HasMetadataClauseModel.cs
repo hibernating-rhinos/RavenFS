@@ -66,7 +66,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             set
             {
                 selectedField = value;
-                OnPropertyChanged("SelectedField");
+                OnPropertyChanged(() => SelectedField);
             }
         }
 
@@ -76,7 +76,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             set
             {
                 searchPattern = value;
-                OnPropertyChanged("SearchPattern");
+                OnPropertyChanged(() => SearchPattern);
             }
         }
     }
