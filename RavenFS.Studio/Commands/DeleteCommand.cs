@@ -25,7 +25,7 @@ namespace RavenFS.Studio.Commands
         protected override void ExecuteOverride(IList<FileSystemModel> items)
         {
             var message = items.Count == 1 ? string.Format("Are you sure you want to delete file '{0}'?", items[0].Name)
-                : string.Format("Are you sure you want to delete {0} selected files", items.Count);
+                : string.Format("Are you sure you want to delete {0} selected files?", items.Count);
 
             AskUser.ConfirmationAsync("Delete", message)
                 .ContinueWhenTrueInTheUIThread(
