@@ -77,4 +77,5 @@
                  UriSource="CopyError.png"/>
     <BitmapImage x:Key="Image_CopyToClipboard_Tiny" UriSource="copy_to_clipboard_tiny.png"/>
     <BitmapImage x:Key="Image_Error_Small" UriSource="error_small.png"/>
+    <BitmapImage x:Key="Image_Synchronize_Tiny" UriSource="synchronize_tiny.png"/>
 </ResourceDictionary>

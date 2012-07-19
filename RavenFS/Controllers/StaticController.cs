@@ -40,7 +40,10 @@ namespace RavenFS.Controllers
 			get
 			{
 				yield return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RavenFS.Studio.xap");
+#if DEBUG
 				yield return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\RavenFS.Studio\Bin\Debug", "RavenFS.Studio.xap");
+				yield return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\RavenFS.Studio\Bin\Debug", "RavenFS.Studio.xap");
+#endif
 			}
 		}
 

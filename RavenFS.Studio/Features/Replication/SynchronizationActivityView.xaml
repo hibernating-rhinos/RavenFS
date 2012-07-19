@@ -1,0 +1,27 @@
+﻿<Infrastructure:View x:Class="RavenFS.Studio.Features.Replication.SynchronizationActivityView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+          xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
+                     xmlns:Models="clr-namespace:RavenFS.Studio.Models"
+                     xmlns:Replication="clr-namespace:RavenFS.Studio.Features.Replication"
+                     xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
+                     xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors" mc:Ignorable="d"
+    d:DesignHeight="300" d:DesignWidth="400"
+    Infrastructure:ModelResolver.AttachModel="SynchronizationActivityModel" d:DataContext="{d:DesignInstance Replication:SynchronizationActivityModel}">
+    
+    <Grid x:Name="LayoutRoot" >
+        <sdk:DataGrid ItemsSource="{Binding Queue}" IsReadOnly="True" RowHeight="25">
+            <sdk:DataGrid.Columns>
+                <sdk:DataGridTemplateColumn Header="Destination">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Item.DestinationUrl}" VerticalAlignment="Center" Behaviors:FadeTrimming.IsEnabled="True"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+            </sdk:DataGrid.Columns>
+        </sdk:DataGrid>
+    </Grid>
+</Infrastructure:View>

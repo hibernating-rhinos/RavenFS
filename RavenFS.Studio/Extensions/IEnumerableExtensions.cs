@@ -27,7 +27,7 @@ namespace RavenFS.Studio.Extensions
 
             foreach (var item in items)
             {
-                collection[item.Key] = item.Value;
+                collection.Add(item.Key, item.Value);
             }
 
             return collection;

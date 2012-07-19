@@ -2,6 +2,9 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:Commands="clr-namespace:RavenFS.Studio.Commands">
     <Commands:NavigateToCommand x:Name="NavigateToCommand" />
+    <Commands:NavigateToExternalUrlCommand x:Name="NavigateToExternalUrl" />
+    <Commands:RemoveReplicationDestinationCommand x:Name="RemoveReplicationDestinationCommand" />
+    <Commands:RunSynchronizationCommand x:Name="RunSynchronizationCommand" />
     <Commands:ShowOperationsPaneCommand x:Name="ShowOperationsPaneCommand"/>
     <Commands:ToggleOperationsPaneVisibilityCommand x:Name="ToggleOperationsPaneVisibilityCommand"/>
     <Commands:HideOperationsPaneCommand x:Name="HideOperationsPaneCommand"/>

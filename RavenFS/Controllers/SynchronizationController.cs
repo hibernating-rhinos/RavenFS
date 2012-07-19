@@ -470,17 +470,20 @@
 		[AcceptVerbs("GET")]
 		public HttpResponseMessage Active()
 		{
-			return Request.CreateResponse(HttpStatusCode.OK,
-			                              SynchronizationTask.Queue.Active.Skip(Paging.PageSize*Paging.Start).Take(
-			                              	Paging.PageSize));
+		    return Request.CreateResponse(HttpStatusCode.OK,
+		                                  new ListPage<SynchronizationDetails>(
+		                                      SynchronizationTask.Queue.Active.Skip(Paging.PageSize*Paging.Start).Take(
+		                                          Paging.PageSize), SynchronizationTask.Queue.GetTotalActiveTasks()));
 		}
 
 		[AcceptVerbs("GET")]
 		public HttpResponseMessage Pending()
 		{
 			return Request.CreateResponse(HttpStatusCode.OK,
+                                          new ListPage<SynchronizationDetails>(
 			                              SynchronizationTask.Queue.Pending.Skip(Paging.PageSize*Paging.Start).Take(
-			                              	Paging.PageSize));
+			                              	Paging.PageSize),
+                                            SynchronizationTask.Queue.GetTotalPendingTasks()));
 		}
 
 		[AcceptVerbs("PATCH")]

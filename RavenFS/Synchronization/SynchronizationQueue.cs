@@ -53,6 +53,16 @@ namespace RavenFS.Synchronization
 			}
 		}
 
+        public int GetTotalPendingTasks()
+        {
+            return pendingSynchronizations.Sum(queue => queue.Value.Count);
+        }
+
+        public int GetTotalActiveTasks()
+        {
+            return activeSynchronizations.Sum(queue => queue.Value.Count);
+        }
+
 		public int NumberOfActiveSynchronizationTasksFor(string destination)
 		{
 			return activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, SynchronizationWorkItem>()).Count;

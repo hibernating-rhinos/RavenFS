@@ -109,6 +109,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\RavenFS\Synchronization\SynchronizationConstants.cs">
+      <Link>Features\Replication\SynchronizationConstants.cs</Link>
+    </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
@@ -138,8 +141,12 @@
     <Compile Include="Behaviors\ValuePropagatorCollection.cs" />
     <Compile Include="Commands\ActionObservableDependantCommand.cs" />
     <Compile Include="Commands\AddFolderCommand.cs" />
+    <Compile Include="Commands\AddSynchronizationDestinationCommand.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
+    <Compile Include="Commands\NavigateToExternalUrlCommand.cs" />
     <Compile Include="Commands\NavigateToFileSystemModelCommand.cs" />
+    <Compile Include="Commands\RemoveReplicationDestinationCommand.cs" />
+    <Compile Include="Commands\RunSynchronizationCommand.cs" />
     <Compile Include="Commands\ShowErrorListWindowCommand.cs" />
     <Compile Include="Commands\ToggleOperationsPaneVisibilityCommand.cs" />
     <Compile Include="Commands\MoveFileCommand.cs" />
@@ -187,6 +194,16 @@
     <Compile Include="External\MultiBinding\MultiBinding.cs" />
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
     <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
+    <Compile Include="Features\Replication\ActiveSynchronizationTasksCollectionSource.cs" />
+    <Compile Include="Features\Replication\PendingSynchronizationTasksCollectionSource.cs" />
+    <Compile Include="Features\Replication\ReplicationRemotesView.xaml.cs">
+      <DependentUpon>ReplicationRemotesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Features\Replication\SynchronizationActivityModel.cs" />
+    <Compile Include="Features\Replication\SynchronizationActivityView.xaml.cs">
+      <DependentUpon>SynchronizationActivityView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Features\Replication\SynchronizationQueueCollectionSource.cs" />
     <Compile Include="Features\Search\ClauseBuilders\HasMetadataClauseModelView.xaml.cs">
       <DependentUpon>HasMetadataClauseModelView.xaml</DependentUpon>
     </Compile>
@@ -243,6 +260,7 @@
     <Compile Include="Infrastructure\ItemSelection`1.cs" />
     <Compile Include="Infrastructure\ItemsRealizedEventArgs.cs" />
     <Compile Include="Infrastructure\IVirtualCollectionSource.cs" />
+    <Compile Include="Infrastructure\KeysComparer.cs" />
     <Compile Include="Infrastructure\MostRecentUsedList.cs" />
     <Compile Include="Infrastructure\Navigation.cs" />
     <Compile Include="Infrastructure\PageModel.cs" />
@@ -304,10 +322,13 @@
     <Compile Include="Models\ConfigurationPageModel.cs" />
     <Compile Include="Models\SearchPageModel.cs" />
     <Compile Include="Models\StudioErrorListModel.cs" />
-    <Compile Include="Models\SynchronizationRemotesModel.cs" />
+    <Compile Include="Models\ReplicationRemotesModel.cs" />
     <Compile Include="Models\VirtualFoldersManager.cs" />
     <Compile Include="Views\AsyncOperationsView.xaml.cs">
       <DependentUpon>AsyncOperationsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Replication.xaml.cs">
+      <DependentUpon>Replication.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Search.xaml.cs">
       <DependentUpon>Search.xaml</DependentUpon>
@@ -362,6 +383,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Features\Replication\ReplicationRemotesView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Features\Replication\SynchronizationActivityView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Features\Search\ClauseBuilders\HasMetadataClauseModelView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -393,6 +422,10 @@
     <Page Include="Themes\Generic.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\Replication.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Search.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -483,6 +516,7 @@
     <Resource Include="Assets\Images\download.png" />
     <Resource Include="Assets\Images\error_small.png" />
     <Resource Include="Assets\Images\copy_to_clipboard_tiny.png" />
+    <Resource Include="Assets\Images\synchronize_tiny.png" />
     <Content Include="Impl\PopupPlacement\Credit.txt" />
     <Content Include="Impl\SplitButton\Credits.txt" />
     <Content Include="Impl\WatermarkedTextBox\Credits.txt" />

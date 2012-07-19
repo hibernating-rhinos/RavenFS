@@ -230,10 +230,10 @@ namespace RavenFS.Tests.Synchronization
 			                                                                                     	}).Wait();
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
-			var pedingSynchronizations = sourceClient.Synchronization.GetPendingAsync().Result;
+			var pendingSynchronizations = sourceClient.Synchronization.GetPendingAsync().Result;
 			
-			Assert.Equal(1, pedingSynchronizations.Count());
-			Assert.Equal(destinationClient.ServerUrl, pedingSynchronizations.ToArray()[0].DestinationUrl);
+			Assert.Equal(1, pendingSynchronizations.TotalCount);
+			Assert.Equal(destinationClient.ServerUrl, pendingSynchronizations.Items[0].DestinationUrl);
 		}
 
 		[Fact]

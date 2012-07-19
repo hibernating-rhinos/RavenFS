@@ -660,7 +660,7 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
             }
 
-            public Task<IEnumerable<SynchronizationDetails>> GetActiveAsync(int page = 0, int pageSize = 25)
+            public Task<ListPage<SynchronizationDetails>> GetActiveAsync(int page = 0, int pageSize = 25)
             {
                 var requestUriString = String.Format("{0}/synchronization/active?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
                 var request = (HttpWebRequest)WebRequest.Create(requestUriString);
@@ -670,14 +670,14 @@ namespace RavenFS.Client
                     {
                         using (var stream = task.Result.GetResponseStream())
                         {
-                            var preResult = new JsonSerializer().Deserialize<IEnumerable<SynchronizationDetails>>(new JsonTextReader(new StreamReader(stream)));
+                            var preResult = new JsonSerializer().Deserialize<ListPage<SynchronizationDetails>>(new JsonTextReader(new StreamReader(stream)));
                             return preResult;
                         }
                     })
 					.TryThrowBetterError();
             }
 
-			public Task<IEnumerable<SynchronizationDetails>> GetPendingAsync(int page = 0, int pageSize = 25)
+            public Task<ListPage<SynchronizationDetails>> GetPendingAsync(int page = 0, int pageSize = 25)
 			{
 				var requestUriString = String.Format("{0}/synchronization/pending?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
@@ -687,7 +687,7 @@ namespace RavenFS.Client
 					{
 						using (var stream = task.Result.GetResponseStream())
 						{
-							var preResult = new JsonSerializer().Deserialize<IEnumerable<SynchronizationDetails>>(new JsonTextReader(new StreamReader(stream)));
+                            var preResult = new JsonSerializer().Deserialize<ListPage<SynchronizationDetails>>(new JsonTextReader(new StreamReader(stream)));
 							return preResult;
 						}
 					})

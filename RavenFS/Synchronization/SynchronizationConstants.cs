@@ -1,4 +1,8 @@
-﻿namespace RavenFS.Synchronization
+﻿#if !CLIENT && !SILVERLIGHT
+namespace RavenFS.Synchronization
+#else
+namespace RavenFS.Client
+#endif
 {
     public static class SynchronizationConstants
     {

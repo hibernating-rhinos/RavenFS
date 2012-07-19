@@ -32,11 +32,13 @@ namespace RavenFS.Studio.Models
         {
             var editableCollection =
                 new EditableKeyValueCollection(
-                    settings.Select(key => new EditableKeyValue()
-                                                 {
-                                                     Key = key,
-                                                     Value = settings[key],
-                                                 }));
+                    settings.SelectMany(
+                        key => settings.GetValues(key).Select(
+                            value => new EditableKeyValue()
+                                         {
+                                             Key = key,
+                                             Value = value,
+                                         })));
 
             editableCollection.KeyValueChanged += delegate { OnChanged(EventArgs.Empty); };
             editableCollection.CollectionChanged += delegate { OnChanged(EventArgs.Empty); };
