@@ -55,13 +55,13 @@
       <HintPath>..\packages\Newtonsoft.Json.4.5.7\lib\sl4\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="SignalR.Client.Silverlight5">
-      <HintPath>..\SharedLibs\Silverlight\SignalR.Client.Silverlight5.dll</HintPath>
+      <HintPath>..\packages\SignalR.Client.Silverlight5.0.5.2\lib\sl50\SignalR.Client.Silverlight5.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive">
       <HintPath>..\packages\Rx-Main.1.0.11226\lib\SL5\System.Reactive.dll</HintPath>
     </Reference>
-    <Reference Include="System.Threading.Tasks.SL5, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Threading.Tasks.3.0\lib\sl50\System.Threading.Tasks.SL5.dll</HintPath>
+    <Reference Include="System.Threading.Tasks.SL5">
+      <HintPath>..\packages\System.Threading.Tasks.3.0.1\lib\sl50\System.Threading.Tasks.SL5.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows" />
     <Reference Include="system" />
