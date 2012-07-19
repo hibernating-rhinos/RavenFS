@@ -1,19 +1,24 @@
-using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
 using Newtonsoft.Json;
-using RavenFS.Notifications;
-using RavenFS.Util;
-using System.Linq;
 
 namespace RavenFS.Controllers
 {
+	using System.Web.Http;
+	using Client;
+	using NLog;
+	using ConfigChange = Notifications.ConfigChange;
+	using ConfigChangeAction = Notifications.ConfigChangeAction;
+	using NameValueCollectionJsonConverter = Util.NameValueCollectionJsonConverter;
+
 	public class ConfigController : RavenController
 	{
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		public string[] Get()
 		{
 			string[] names = null;
@@ -24,7 +29,7 @@ namespace RavenFS.Controllers
 			return names;
 		}
 
-		public HttpResponseMessage<NameValueCollection> Get(string name)
+		public HttpResponseMessage Get(string name)
 		{
 			try
 			{
@@ -33,11 +38,11 @@ namespace RavenFS.Controllers
 				{
 					nameValueCollection = accessor.GetConfig(name);
 				});
-				return new HttpResponseMessage<NameValueCollection>(nameValueCollection);
+				return Request.CreateResponse(HttpStatusCode.OK, nameValueCollection);
 			}
 			catch (FileNotFoundException)
 			{
-				return new HttpResponseMessage<NameValueCollection>(HttpStatusCode.NotFound);
+				return Request.CreateResponse(HttpStatusCode.NotFound);
 			}
 
 		}
@@ -54,17 +59,60 @@ namespace RavenFS.Controllers
 			return Request.Content.ReadAsStreamAsync()
 				.ContinueWith(task =>
 				{
-					var nameValueCollection = jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(task.Result)));
-					Storage.Batch(accessor => accessor.SetConfig(name, nameValueCollection));
-                    Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Set });
+					var nameValueCollection =
+						jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(task.Result)));
+
+					var shouldRetry = false;
+					var retries = 128;
+
+					do
+					{
+						try
+						{
+							Storage.Batch(accessor => accessor.SetConfig(name, nameValueCollection));
+						}
+						catch (ConcurrencyException ce)
+						{
+							if (retries-- > 0)
+							{
+								shouldRetry = true;
+								continue;
+							}
+							throw ConcurrencyResponseException(ce);
+						}
+					} while (shouldRetry);
+					Publisher.Publish(new ConfigChange() {Name = name, Action = ConfigChangeAction.Set});
+
+					log.Debug("Config '{0}' was inserted", name);
 				});
 
 		}
 
 		public HttpResponseMessage Delete(string name)
 		{
-			Storage.Batch(accessor => accessor.DeleteConfig(name));
-            Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Delete});
+			var shouldRetry = false;
+			var retries = 128;
+
+			do
+			{
+				try
+				{
+					Storage.Batch(accessor => accessor.DeleteConfig(name));
+				}
+				catch (ConcurrencyException ce)
+				{
+					if (retries-- > 0)
+					{
+						shouldRetry = true;
+						continue;
+					}
+					throw ConcurrencyResponseException(ce);
+				}
+			} while (shouldRetry);
+
+			Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Delete });
+
+			log.Debug("Config '{0}' was deleted", name);
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 	}

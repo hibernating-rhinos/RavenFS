@@ -11,10 +11,16 @@ namespace RavenFS.Tests
 	{
 		readonly Storage.TransactionalStorage storage;
 
+		private readonly NameValueCollection metadataWithEtag = new NameValueCollection()
+		                                               	{
+		                                               		{"ETag", "\"" + Guid.Empty +"\""}
+		                                               	};
+
+
 		public PagesTests()
 		{
 			IOExtensions.DeleteDirectory("test");
-			storage = new Storage.TransactionalStorage("test", new NameValueCollection());
+			storage = new Storage.TransactionalStorage("test", metadataWithEtag);
 			storage.Initialize();
 		}
 
@@ -29,7 +35,7 @@ namespace RavenFS.Tests
 		{
 			storage.Batch(accessor =>
 			{
-				accessor.PutFile("test.csv", 12, new NameValueCollection());
+				accessor.PutFile("test.csv", 12, metadataWithEtag);
 
 				var hashKey = accessor.InsertPage(new byte[] {1, 2, 3, 4, 5, 6}, 4);
 				accessor.AssociatePage("test.csv", hashKey,0, 4);
@@ -44,7 +50,7 @@ namespace RavenFS.Tests
 		{
 			storage.Batch(accessor =>
 			{
-				accessor.PutFile("test.csv", 16, new NameValueCollection());
+				accessor.PutFile("test.csv", 16, metadataWithEtag);
 
 				var hashKey = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 4);
 				accessor.AssociatePage("test.csv", hashKey, 0, 4);
@@ -70,7 +76,7 @@ namespace RavenFS.Tests
 		{
 			storage.Batch(accessor =>
 			{
-				accessor.PutFile("test.csv", 16, new NameValueCollection());
+				accessor.PutFile("test.csv", 16, metadataWithEtag);
 
 				var hashKey = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 4);
 				accessor.AssociatePage("test.csv", hashKey, 0, 4);
@@ -94,10 +100,8 @@ namespace RavenFS.Tests
 		[Fact]
 		public void CanReadMetadata()
 		{
-			storage.Batch(accessor => accessor.PutFile("test.csv", 16, new NameValueCollection
-			{
-				{"test", "abc"}
-			}));
+			metadataWithEtag["test"] = "abc";
+			storage.Batch(accessor => accessor.PutFile("test.csv", 16, metadataWithEtag));
 
 
 			storage.Batch(accessor =>
@@ -113,7 +117,7 @@ namespace RavenFS.Tests
 		{
 			storage.Batch(accessor =>
 			{
-				accessor.PutFile("test.csv", 16, new NameValueCollection());
+				accessor.PutFile("test.csv", 16, metadataWithEtag);
 
 				var hashKey = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 4);
 				accessor.AssociatePage("test.csv", hashKey, 0, 4);

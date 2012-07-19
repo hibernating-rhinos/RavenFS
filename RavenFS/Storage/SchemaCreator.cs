@@ -247,6 +247,13 @@ namespace RavenFS.Storage
 				grbit = ColumndefGrbit.ColumnNotNULL
 			}, null, 0, out columnid);
 
+			Api.JetAddColumn(session, tableid, "etag", new JET_COLUMNDEF
+			{
+				cbMax = 16,
+				coltyp = JET_coltyp.Binary,
+				grbit = ColumndefGrbit.ColumnFixed | ColumndefGrbit.ColumnNotNULL,
+			}, null, 0, out columnid);
+
 			Api.JetAddColumn(session, tableid, "metadata", new JET_COLUMNDEF
 			{
 				cbMax = 1024*512,
@@ -276,6 +283,10 @@ namespace RavenFS.Storage
 			
 			indexDef = "+name\0\0";
 			Api.JetCreateIndex(session, tableid, "by_name", CreateIndexGrbit.IndexUnique, indexDef, indexDef.Length,
+							   80);
+
+			indexDef = "+etag\0\0";
+			Api.JetCreateIndex(session, tableid, "by_etag", CreateIndexGrbit.IndexDisallowNull, indexDef, indexDef.Length,
 							   80);
 		}
 

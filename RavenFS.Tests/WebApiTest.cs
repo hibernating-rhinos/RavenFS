@@ -9,7 +9,7 @@ using RavenFS.Tests.Tools;
 
 namespace RavenFS.Tests
 {
-	public class WebApiTest : IDisposable
+	public class WebApiTest : WithNLog, IDisposable
 	{
 		private HttpSelfHostConfiguration config;
 		private HttpSelfHostServer server;
@@ -67,8 +67,6 @@ namespace RavenFS.Tests
 		public void Dispose()
 		{
 			server.CloseAsync().Wait();
-			server.Dispose();
-			config.Dispose();
 			ravenFileSystem.Dispose();
 		}
 	}

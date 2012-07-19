@@ -11,9 +11,10 @@ namespace RavenFS.Controllers
 {
 	public class StaticController : ApiController
 	{
+		[AcceptVerbs("GET")]
 		public HttpResponseMessage ClientAccessPolicy()
 		{
-			var manifestResourceStream = typeof (StaticController).Assembly.GetManifestResourceStream("RavenFS.Static.ClientAccessPolicy.xml");
+			var manifestResourceStream = typeof(StaticController).Assembly.GetManifestResourceStream("RavenFS.Static.ClientAccessPolicy.xml");
 
 			return new HttpResponseMessage(HttpStatusCode.OK)
 			{
@@ -29,8 +30,8 @@ namespace RavenFS.Controllers
 
 		public Stream GetRavenStudioStream()
 		{
-			return (from path in RavenStudioPotentialPaths 
-					where File.Exists(path) 
+			return (from path in RavenStudioPotentialPaths
+					where File.Exists(path)
 					select File.OpenRead(path)).FirstOrDefault();
 		}
 
@@ -43,6 +44,7 @@ namespace RavenFS.Controllers
 			}
 		}
 
+		[AcceptVerbs("GET")]
 		public HttpResponseMessage RavenStudioXap()
 		{
 			var ravenStudioStream = GetRavenStudioStream();
@@ -62,11 +64,13 @@ namespace RavenFS.Controllers
 			};
 		}
 
+		[AcceptVerbs("GET")]
 		public HttpResponseMessage FavIcon()
 		{
 			return new HttpResponseMessage(HttpStatusCode.NotFound);
 		}
 
+		[AcceptVerbs("GET")]
 		public HttpResponseMessage Root()
 		{
 			var file = RavenStudioPotentialPaths.Any(File.Exists) ? "RavenFS.Studio.html" : "studio_not_found.html";
@@ -83,6 +87,14 @@ namespace RavenFS.Controllers
 					}
 				}
 			};
+		}
+
+		[AcceptVerbs("GET")]
+		public HttpResponseMessage Id()
+		{
+			var ravenFileSystem = (RavenFileSystem)ControllerContext.Configuration.DependencyResolver.GetService(typeof(RavenFileSystem));
+
+			return Request.CreateResponse(HttpStatusCode.OK, ravenFileSystem.Storage.Id);
 		}
 	}
 }

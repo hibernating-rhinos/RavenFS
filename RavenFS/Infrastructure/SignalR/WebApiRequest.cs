@@ -5,7 +5,11 @@ using SignalR.Hosting;
 
 namespace SignalR.AspNetWebApi
 {
-    internal class WebApiRequest : IRequest
+	using System.Security.Principal;
+	using System.Threading;
+	using System.Threading.Tasks;
+
+	internal class WebApiRequest : IRequest
     {
         private readonly HttpRequestMessage _httpRequestMessage;
         private readonly Lazy<IRequestCookieCollection> _cookies;
@@ -34,7 +38,17 @@ namespace SignalR.AspNetWebApi
             }
         }
 
-        public NameValueCollection Form
+		public IPrincipal User
+		{
+			get { return  Thread.CurrentPrincipal; }
+		}
+
+		public NameValueCollection ServerVariables
+		{
+			get { return new NameValueCollection();}
+		}
+
+		public NameValueCollection Form
         {
             get
             {
@@ -58,7 +72,12 @@ namespace SignalR.AspNetWebApi
             }
         }
 
-        public Uri Url
+    	public void AcceptWebSocketRequest(Func<IWebSocket, Task> callback)
+    	{
+    		throw new NotImplementedException();
+    	}
+
+		public Uri Url
         {
             get
             {

@@ -68,12 +68,12 @@
     <Reference Include="AsyncCtpLibrary">
       <HintPath>..\packages\AsyncCTP.0.3\lib\net40\AsyncCtpLibrary.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.0.8.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.4.5.7\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="SignalR.Client">
-      <HintPath>..\packages\SignalR.Client.0.4.0.2\lib\net40\SignalR.Client.dll</HintPath>
+    <Reference Include="SignalR.Client, Version=0.5.2.10625, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\SignalR.Client.0.5.2\lib\net40\SignalR.Client.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -87,9 +87,11 @@
       <Link>NameValueCollectionJsonConverter.cs</Link>
     </Compile>
     <Compile Include="AsyncExtensions.cs" />
+    <Compile Include="ConcurrencyException.cs" />
     <Compile Include="ConfigChange.cs" />
     <Compile Include="ConflictResolutionStrategy.cs" />
     <Compile Include="ConflictDetected.cs" />
+    <Compile Include="DestinationSyncResult.cs" />
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="FileChange.cs" />
     <Compile Include="FileInfo.cs" />
@@ -105,9 +107,15 @@
     <Compile Include="Signature.cs" />
     <Compile Include="SignatureManifest.cs" />
     <Compile Include="StringUtils.cs" />
+    <Compile Include="SynchronizationConfirmation.cs" />
+    <Compile Include="SynchronizationDetails.cs" />
     <Compile Include="SynchronizationException.cs" />
+    <Compile Include="SourceSynchronizationInformation.cs" />
     <Compile Include="SynchronizationReport.cs" />
     <Compile Include="NotificationJSonUtilities.cs" />
+    <Compile Include="FileStatus.cs" />
+    <Compile Include="SynchronizationType.cs" />
+    <Compile Include="SynchronizationUpdate.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

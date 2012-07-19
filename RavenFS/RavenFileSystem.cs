@@ -1,37 +1,40 @@
 using System;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Web.Http;
-using System.Web.Http.ModelBinding;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using RavenFS.Controllers;
 using RavenFS.Extensions;
 using RavenFS.Infrastructure;
-using RavenFS.Infrastructure.Workarounds;
 using RavenFS.Notifications;
-using RavenFS.Rdc;
-using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
 using RavenFS.Util;
-using SignalR.Infrastructure;
 
 namespace RavenFS
 {
+	using System.Linq;
+	using System.Web.Http;
+	using NLog;
+	using Synchronization;
+	using Synchronization.Conflictuality;
+	using Synchronization.Rdc.Wrapper;
+
 	public class RavenFileSystem : IDisposable
 	{
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		private readonly string path;
 		private readonly TransactionalStorage storage;
 		private readonly IndexStorage search;
-		private readonly ISignatureRepository signatureRepository;
 		private readonly SigGenerator sigGenerator;
-	    private readonly NotificationPublisher notificationPublisher;
-	    private readonly HistoryUpdater historyUpdater;
+		private readonly NotificationPublisher notificationPublisher;
+		private readonly HistoryUpdater historyUpdater;
 		private readonly FileLockManager fileLockManager;
+		private readonly SynchronizationTask synchronizationTask;
+		private readonly ConflictActifactManager conflictActifactManager;
+		private readonly ConflictDetector conflictDetector;
+		private readonly ConflictResolver conflictResolver;
 
-	    public TransactionalStorage Storage
+		public TransactionalStorage Storage
 		{
 			get { return storage; }
 		}
@@ -48,14 +51,20 @@ namespace RavenFS
 			this.path = path.ToFullPath();
 			storage = new TransactionalStorage(this.path, new NameValueCollection());
 			search = new IndexStorage(this.path, new NameValueCollection());
-            signatureRepository = new StorageSignatureRepository(storage);
-			sigGenerator = new SigGenerator(signatureRepository);
-            historyUpdater = new HistoryUpdater(storage, new ReplicationHiLo(storage));
-            notificationPublisher = new NotificationPublisher();
-			fileLockManager = new FileLockManager(storage);
+			sigGenerator = new SigGenerator();
+			var replicationHiLo = new ReplicationHiLo(storage);
+			var sequenceActions = new SequenceActions(storage);
+			notificationPublisher = new NotificationPublisher();
+			fileLockManager = new FileLockManager();
 			storage.Initialize();
 			search.Initialize();
+			var uuidGenerator = new UuidGenerator(sequenceActions);
+			historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
+			conflictActifactManager = new ConflictActifactManager(storage);
+			conflictDetector = new ConflictDetector();
+			conflictResolver = new ConflictResolver();
+			synchronizationTask = new SynchronizationTask(storage, sigGenerator, notificationPublisher);
 
 			AppDomain.CurrentDomain.ProcessExit += ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload += ShouldDispose;
@@ -76,15 +85,10 @@ namespace RavenFS
 			AppDomain.CurrentDomain.ProcessExit -= ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload -= ShouldDispose;
 
-            signatureRepository.Dispose();
 			storage.Dispose();
 			search.Dispose();
 			sigGenerator.Dispose();
-		}
-
-		public ISignatureRepository SignatureRepository
-		{
-			get { return signatureRepository; }
+			BufferPool.Dispose();
 		}
 
 		public SigGenerator SigGenerator
@@ -92,54 +96,67 @@ namespace RavenFS
 			get { return sigGenerator; }
 		}
 
-	    public NotificationPublisher Publisher
-	    {
-	        get { return notificationPublisher; }
-	    }
+		public NotificationPublisher Publisher
+		{
+			get { return notificationPublisher; }
+		}
 
-	    public HistoryUpdater HistoryUpdater
-	    {
-	        get { return historyUpdater; }
-	    }
+		public HistoryUpdater HistoryUpdater
+		{
+			get { return historyUpdater; }
+		}
 
 		public FileLockManager FileLockManager
 		{
 			get { return fileLockManager; }
 		}
 
-	    [MethodImpl(MethodImplOptions.Synchronized)]
+		public SynchronizationTask SynchronizationTask
+		{
+			get { return synchronizationTask; }
+		}
+
+		public ConflictActifactManager ConflictActifactManager
+		{
+			get { return conflictActifactManager; }
+		}
+
+		public ConflictDetector ConflictDetector
+		{
+			get { return conflictDetector; }
+		}
+
+		public ConflictResolver ConflictResolver
+		{
+			get { return conflictResolver; }
+		}
+
+		[MethodImpl(MethodImplOptions.Synchronized)]
 		public void Start(HttpConfiguration config)
 		{
-			config.ServiceResolver.SetResolver(type =>
+			config.DependencyResolver = new DelegateDependencyResolver(type =>
 			{
-				if(type == typeof(RavenFileSystem))
+				if (type == typeof(RavenFileSystem))
 					return this;
 				return null;
 			}, type =>
 			{
 				if (type == typeof(RavenFileSystem))
-					return new[] {this};
+					return new[] { this };
 				return Enumerable.Empty<object>();
 			});
 
 			// we don't like XML, let us remove support for it.
 			config.Formatters.XmlFormatter.SupportedMediaTypes.Clear();
 
-			// Workaround for an issue with paraemters and body not mixing properly
-			config.ServiceResolver.SetService(typeof(IRequestContentReadPolicy), new ReadAsSingleObjectPolicy());
-
+			config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new IsoDateTimeConverter());
 			// the default json parser can't handle NameValueCollection
-			var serializerSettings = new JsonSerializerSettings();
-			serializerSettings.Converters.Add(new IsoDateTimeConverter());
-			serializerSettings.Converters.Add(new NameValueCollectionJsonConverter());
-			var indexOfJson = config.Formatters.IndexOf(config.Formatters.JsonFormatter);
-			config.Formatters[indexOfJson] = new JsonNetFormatter(serializerSettings);
-
-
+			config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new NameValueCollectionJsonConverter());
+			
 			config.Routes.MapHttpRoute(
 				name: "ClientAccessPolicy.xml",
 				routeTemplate: "ClientAccessPolicy.xml",
-				defaults: new {controller = "static", action = "ClientAccessPolicy"});
+				defaults: new { controller = "static", action = "ClientAccessPolicy" });
 
 			config.Routes.MapHttpRoute(
 			name: "favicon.ico",
@@ -150,6 +167,11 @@ namespace RavenFS
 				name: "RavenFS.Studio.xap",
 				routeTemplate: "RavenFS.Studio.xap",
 				defaults: new { controller = "static", action = "RavenStudioXap" });
+
+			config.Routes.MapHttpRoute(
+				name: "Id",
+				routeTemplate: "id",
+				defaults: new { controller = "static", action = "Id" });
 
 			config.Routes.MapHttpRoute(
 				name: "Empty",
@@ -163,12 +185,11 @@ namespace RavenFS
 				defaults: new { controller = "rdc", filename = RouteParameter.Optional }
 				);
 
-	        config.Routes.MapHttpRoute(
-                name: "synchronization",
-                routeTemplate: "synchronization/{action}/{filename}",
-                defaults: new { controller = "synchronization" }
-                );
-
+			config.Routes.MapHttpRoute(
+				name: "synchronizationWithFile",
+				routeTemplate: "synchronization/{action}/{*filename}",
+				defaults: new { controller = "synchronization", filename = RouteParameter.Optional }
+				);
 
 			config.Routes.MapHttpRoute(
 				name: "folders",
@@ -183,15 +204,21 @@ namespace RavenFS
 				);
 
 			config.Routes.MapHttpRoute(
+				name: "logs",
+				routeTemplate: "search/{action}/{*type}",
+				defaults: new { controller = "logs", action = "get", type = RouteParameter.Optional }
+				);
+
+			config.Routes.MapHttpRoute(
 				name: "Default",
 				routeTemplate: "{controller}/{*name}",
 				defaults: new { controller = "files", name = RouteParameter.Optional }
 				);
 
-            config.Routes.MapHttpRoute(
-                "Notifications", 
-                routeTemplate: "notifications/{*path}", 
-                defaults: new {controller = "notifications"});
+			config.Routes.MapHttpRoute(
+				"Notifications",
+				routeTemplate: "notifications/{*path}",
+				defaults: new { controller = "notifications" });
 
 		}
 	}

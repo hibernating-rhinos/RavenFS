@@ -21,12 +21,17 @@ using RavenFS.Client;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using RavenFS.Storage;
+using System.Net;
 #endif
 
 namespace RavenFS.Extensions
 {
-    
-    /// <summary>
+	using System.IO;
+	using System.Linq;
+	using System.Text.RegularExpressions;
+	using Newtonsoft.Json;
+
+	/// <summary>
     /// Extensions for handling metadata
     /// </summary>
     public static class MetadataExtensions
@@ -48,8 +53,14 @@ namespace RavenFS.Extensions
                 {
                     foreach (var value in values)
                     {
-
-                        context.Content.Headers.Add(key, value);
+                    	if (key == "Last-Modified")
+                    	{
+							context.Content.Headers.Add(key, new Regex("\\.\\d{5}").Replace(value, string.Empty)); // HTTP does not provide milliseconds, so remove it
+                    	}
+                        else
+                    	{
+                    		context.Content.Headers.Add(key, value);
+                    	}
                     }
                 }
 			}
@@ -76,6 +87,26 @@ namespace RavenFS.Extensions
 				}
 			}
 			return metadata;
+		}
+
+		public static T Value<T>(this HttpRequestHeaders self, string name)
+		{
+			var value = self.GetValues(name).First();
+			return new JsonSerializer().Deserialize<T>(new JsonTextReader(new StringReader(value)));
+		}
+
+		public static void AddHeaders(this HttpWebRequest request, NameValueCollection metadata)
+		{
+			foreach (var key in metadata.AllKeys)
+			{
+				var values = metadata.GetValues(key);
+				if (values == null)
+					continue;
+				foreach (var value in values)
+				{
+					request.Headers[key] = value;
+				}
+			}
 		}
 #endif
 
@@ -198,14 +229,11 @@ namespace RavenFS.Extensions
         	return metadata;
         }
 
-
-
-        public static NameValueCollection UpdateLastModified(this NameValueCollection self)
+		public static T Value<T>(this NameValueCollection self, string key)
         {
-            self["Last-Modified"] = DateTime.UtcNow.ToString("d MMM yyyy H:m:s 'GMT'",CultureInfo.InvariantCulture);
-            self["ETag"] = "\"" + Guid.NewGuid() + "\"";
-            return self;
+			return new JsonSerializer().Deserialize<T>(new JsonTextReader(new StringReader(self[key])));
         }
+		
 
         private static string CaptureHeaderName(string header)
         {

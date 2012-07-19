@@ -3,15 +3,19 @@
 //     Copyright (c) Hibernating Rhinos LTD. All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
-using System;
-using System.Collections.Specialized;
-using System.IO;
-using Microsoft.Isam.Esent.Interop;
 
 namespace RavenFS.Storage
 {
+	using System;
+	using System.Collections.Specialized;
+	using System.IO;
+	using Microsoft.Isam.Esent.Interop;
+	using NLog;
+
 	public class StorageConfigurator
 	{
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		public const int MaxSessions = 256;
 
 		private readonly NameValueCollection settings;
@@ -25,7 +29,7 @@ namespace RavenFS.Storage
 		public void ConfigureInstance(JET_INSTANCE jetInstance, string path)
 		{
 			path = Path.GetFullPath(path);
-			new InstanceParameters(jetInstance)
+			var instanceParameters = new InstanceParameters(jetInstance)
 			{
 				CircularLog = true,
 				Recovery = true,
@@ -44,6 +48,11 @@ namespace RavenFS.Storage
 				DbExtensionSize = TranslateToSizeInDatabasePages(GetValueFromConfiguration("Raven/Esent/DbExtensionSize", 16)),
 				AlternateDatabaseRecoveryDirectory = path
 			};
+
+			log.Info(@"Esent Settings:
+  MaxVerPages      = {0}
+  CacheSizeMax     = {1}
+  DatabasePageSize = {2}", instanceParameters.MaxVerPages, SystemParameters.CacheSizeMax, SystemParameters.DatabasePageSize);
 		}
 
 		public void LimitSystemCache()

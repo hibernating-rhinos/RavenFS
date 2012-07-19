@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
@@ -8,7 +9,6 @@ using System.Net.Browser;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using RavenFS.Client;
 using System.Linq;
 
 namespace RavenFS.Client
@@ -51,7 +51,7 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<ServerStats>(new JsonTextReader(new StreamReader(stream)));
 					}
 				})
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task DeleteAsync(string filename)
@@ -61,7 +61,7 @@ namespace RavenFS.Client
 			request.Method = "DELETE";
 			return request.GetResponseAsync()
 				.ContinueWith(task => task.Result.Close())
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task RenameAsync(string filename, string rename)
@@ -71,7 +71,7 @@ namespace RavenFS.Client
 			request.Method = "PATCH";
 			return request.GetResponseAsync()
 				.ContinueWith(task => task.Result.Close())
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task<FileInfo[]> BrowseAsync(int start = 0, int pageSize = 25)
@@ -93,7 +93,7 @@ namespace RavenFS.Client
 						}.Deserialize<FileInfo[]>(jsonTextReader);
 					}
 				})
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
         public Task<string[]> GetSearchFieldsAsync(int start = 0, int pageSize = 25)
@@ -108,7 +108,7 @@ namespace RavenFS.Client
                         return new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(stream)));
                     }
                 })
-                .TryThrowBetteError();
+				.TryThrowBetterError();
         }
 
 		public Task<SearchResults> SearchAsync(string query, string[] sortFields = null, int start = 0, int pageSize = 25)
@@ -145,7 +145,7 @@ namespace RavenFS.Client
 						}.Deserialize<SearchResults>(jsonTextReader);
 					}
 				})
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task<NameValueCollection> GetMetadataForAsync(string filename)
@@ -153,8 +153,27 @@ namespace RavenFS.Client
 			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename);
 			request.Method = "HEAD";
 			return request.GetResponseAsync()
-				.ContinueWith(task => new NameValueCollection(task.Result.Headers))
-				.TryThrowBetteError();
+				.ContinueWith(task =>
+				              	{
+				              		try
+				              		{
+				              			var response = task.Result;
+				              			return new NameValueCollection(response.Headers);
+				              		}
+				              		catch (AggregateException e)
+				              		{
+				              			var we = e.ExtractSingleInnerException() as WebException;
+				              			if (we == null)
+				              				throw;
+				              			var httpWebResponse = we.Response as HttpWebResponse;
+				              			if (httpWebResponse == null)
+				              				throw;
+				              			if (httpWebResponse.StatusCode == HttpStatusCode.NotFound)
+				              				return null;
+				              			throw;
+				              		}
+				              	}
+				).TryThrowBetterError();
 		}
 
 		public Task<NameValueCollection> DownloadAsync(string filename, Stream destination, long? from = null, long? to = null)
@@ -213,7 +232,7 @@ namespace RavenFS.Client
 						});
 				})
 				.Unwrap()
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task UpdateMetadataAsync(string filename, NameValueCollection metadata)
@@ -225,7 +244,7 @@ namespace RavenFS.Client
 			AddHeaders(metadata, request);
 			return request
 				.GetResponseAsync()
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task UploadAsync(string filename, Stream source)
@@ -248,7 +267,16 @@ namespace RavenFS.Client
 #if !SILVERLIGHT
 			request.SendChunked = true;
 			request.AllowWriteStreamBuffering = false;
+#else
+			if (source.CanSeek)
+			{
+				request.ContentLength = source.Length;
+				request.AllowWriteStreamBuffering = false;
+			}
 #endif
+			request.ContentLength = source.Length;
+			request.AllowWriteStreamBuffering = false;
+
 			AddHeaders(metadata, request);
 			return request.GetRequestStreamAsync()
 				.ContinueWith(
@@ -269,7 +297,7 @@ namespace RavenFS.Client
 				})
 				.Unwrap()
 				.ContinueWith(task => task.Result.Close())
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 
@@ -326,7 +354,7 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(stream)));
 					}
 				})
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 
 		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int start = 0, int pageSize = 25)
@@ -340,6 +368,21 @@ namespace RavenFS.Client
 		    var fileNameQueryPart = GetFileNameQueryPart(fileNameSearchPattern);
 
 		    return SearchAsync(folderQueryPart + fileNameQueryPart, GetSortFields(options), start, pageSize);
+		}
+
+		public Task<Guid> GetServerId()
+		{
+			var requestUriString = ServerUrl + "/id";
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+			return request.GetResponseAsync()
+				.ContinueWith(task =>
+				{
+					using (var stream = task.Result.GetResponseStream())
+					{
+						return new JsonSerializer().Deserialize<Guid>(new JsonTextReader(new StreamReader(stream)));
+					}
+				})
+				.TryThrowBetterError();
 		}
 
 	    private static string GetFileNameQueryPart(string fileNameSearchPattern)
@@ -434,12 +477,12 @@ namespace RavenFS.Client
 							return jsonSerializer.Deserialize<string[]>(new JsonTextReader(new StreamReader(responseStream)));
 						}
 					})
-					.TryThrowBetteError();
+					.TryThrowBetterError();
 			}
 
 			public Task SetConfig(string name, NameValueCollection data)
 			{
-				var requestUriString = ravenFileSystemClient.ServerUrl + "/config/" + StringUtils.UrlEncode(name);
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/config?name=" + StringUtils.UrlEncode(name);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 				request.Method = "PUT";
 				return request.GetRequestStreamAsync()
@@ -457,7 +500,7 @@ namespace RavenFS.Client
 
 			public Task DeleteConfig(string name)
 			{
-				var requestUriString = ravenFileSystemClient.ServerUrl + "/config/" + StringUtils.UrlEncode(name);
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/config?name=" + StringUtils.UrlEncode(name);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 				request.Method = "DELETE";
 				return request.GetResponseAsync();
@@ -465,7 +508,7 @@ namespace RavenFS.Client
 
 			public Task<NameValueCollection> GetConfig(string name)
 			{
-				var requestUriString = ravenFileSystemClient.ServerUrl + "/config/" + StringUtils.UrlEncode(name);
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/config?name=" + StringUtils.UrlEncode(name);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
 				
 				return request.GetResponseAsync()
@@ -475,6 +518,7 @@ namespace RavenFS.Client
 						try
 						{
 							webResponse = task.Result;
+							return jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(webResponse.GetResponseStream())));
 						}
 						catch (AggregateException e)
 						{
@@ -488,7 +532,6 @@ namespace RavenFS.Client
 								return null;
 							throw;
 						}
-						return jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(webResponse.GetResponseStream())));
 					});
 			}
 		}
@@ -514,19 +557,42 @@ namespace RavenFS.Client
 							return new JsonSerializer().Deserialize<SignatureManifest>(new JsonTextReader(new StreamReader(stream)));
 						}
 					})
-					.TryThrowBetteError();
+					.TryThrowBetterError();
 			}
 
-            public Task StartSynchronizationAsync(string sourceServerUrl, string fileName)
-            {
-                var requestUriString = String.Format("{0}/synchronization/proceed/{1}?sourceServerUrl={2}", ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(sourceServerUrl));
-                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
-                request.Method = "POST";
-                request.ContentLength = 0;
-                return request.GetResponseAsync()
-                    .ContinueWith(task => task.Result.Close())
-                    .TryThrowBetteError();
-            }
+			public Task<IEnumerable<DestinationSyncResult>> SynchronizeDestinationsAsync()
+			{
+				var requestUriString = String.Format("{0}/synchronization/ToDestinations", ravenFileSystemClient.ServerUrl);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				request.Method = "POST";
+				request.ContentLength = 0;
+				return request.GetResponseAsync()
+					.ContinueWith(task =>
+					{
+						using (var stream = task.Result.GetResponseStream())
+						{
+							return new JsonSerializer().Deserialize<IEnumerable<DestinationSyncResult>>(new JsonTextReader(new StreamReader(stream)));
+						}
+					})
+					.TryThrowBetterError();
+			}
+
+			public Task<SynchronizationReport> StartSynchronizationToAsync(string fileName, string destinationServerUrl)
+			{
+				var requestUriString = String.Format("{0}/synchronization/start/{1}?destinationServerUrl={2}", ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(destinationServerUrl));
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				request.Method = "POST";
+				request.ContentLength = 0;
+				return request.GetResponseAsync()
+					.ContinueWith(task =>
+					{
+						using (var stream = task.Result.GetResponseStream())
+						{
+							return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
+						}
+					})
+					.TryThrowBetterError();
+			}
 
             public Task<SynchronizationReport> GetSynchronizationStatusAsync(string fileName)
             {
@@ -541,7 +607,7 @@ namespace RavenFS.Client
                             return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
                         }
                     })
-                    .TryThrowBetteError();
+					.TryThrowBetterError();
             }
 
             public Task ResolveConflictAsync(string sourceServerUrl, string filename, ConflictResolutionStrategy strategy)
@@ -552,19 +618,136 @@ namespace RavenFS.Client
                 request.Method = "PATCH";
                 return request.GetResponseAsync()
                     .ContinueWith(task => task.Result.Close())
-                    .TryThrowBetteError();
+					.TryThrowBetterError();
             }
 
-            public Task ApplyConflictAsync(string filename, long theirVersion, string theirServerId)
+            public Task ApplyConflictAsync(string filename, long remoteVersion, string remoteServerId)
             {
-                var requestUriString = String.Format("{0}/synchronization/applyConflict/{1}?theirVersion={2}&theirServerId={3}",
-                    ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), theirVersion, Uri.EscapeDataString(theirServerId));
+                var requestUriString = String.Format("{0}/synchronization/applyConflict/{1}?remoteVersion={2}&remoteServerId={3}",
+                    ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), remoteVersion, Uri.EscapeDataString(remoteServerId));
                 var request = (HttpWebRequest)WebRequest.Create(requestUriString);
                 request.Method = "PATCH";
                 return request.GetResponseAsync()
                     .ContinueWith(task => task.Result.Close())
-                    .TryThrowBetteError();
+					.TryThrowBetterError();
             }
+
+			public Task ResolveConflictInFavorOfDestAsync(string filename, long remoteVersion, string remoteServerId)
+			{
+				var requestUriString = String.Format("{0}/synchronization/resolveConflictInFavorOfDest/{1}?remoteVersion={2}&remoteServerId={3}",
+					ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), remoteVersion, Uri.EscapeDataString(remoteServerId));
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				request.Method = "PATCH";
+				return request.GetResponseAsync()
+					.ContinueWith(task => task.Result.Close())
+					.TryThrowBetterError();
+			}
+
+            public Task<IEnumerable<SynchronizationReport>> GetFinishedAsync(int page = 0, int pageSize = 25)
+            {
+                var requestUriString = String.Format("{0}/synchronization/finished?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
+                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+                request.ContentLength = 0;
+                return request.GetResponseAsync()
+                    .ContinueWith(task =>
+                    {
+                        using (var stream = task.Result.GetResponseStream())
+                        {
+                            var preResult = new JsonSerializer().Deserialize<IEnumerable<SynchronizationReport>>(new JsonTextReader(new StreamReader(stream)));
+                            return preResult;
+                        }
+                    })
+					.TryThrowBetterError();
+            }
+
+            public Task<IEnumerable<SynchronizationDetails>> GetActiveAsync(int page = 0, int pageSize = 25)
+            {
+                var requestUriString = String.Format("{0}/synchronization/active?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
+                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+                request.ContentLength = 0;
+                return request.GetResponseAsync()
+                    .ContinueWith(task =>
+                    {
+                        using (var stream = task.Result.GetResponseStream())
+                        {
+                            var preResult = new JsonSerializer().Deserialize<IEnumerable<SynchronizationDetails>>(new JsonTextReader(new StreamReader(stream)));
+                            return preResult;
+                        }
+                    })
+					.TryThrowBetterError();
+            }
+
+			public Task<IEnumerable<SynchronizationDetails>> GetPendingAsync(int page = 0, int pageSize = 25)
+			{
+				var requestUriString = String.Format("{0}/synchronization/pending?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				request.ContentLength = 0;
+				return request.GetResponseAsync()
+					.ContinueWith(task =>
+					{
+						using (var stream = task.Result.GetResponseStream())
+						{
+							var preResult = new JsonSerializer().Deserialize<IEnumerable<SynchronizationDetails>>(new JsonTextReader(new StreamReader(stream)));
+							return preResult;
+						}
+					})
+					.TryThrowBetterError();
+			}
+
+			public Task<SourceSynchronizationInformation> GetLastSynchronizationFromAsync(Guid serverId)
+			{
+				var requestUriString = String.Format("{0}/synchronization/LastSynchronization?from={1}", ravenFileSystemClient.ServerUrl, serverId);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				request.ContentLength = 0;
+				return request.GetResponseAsync()
+					.ContinueWith(task =>
+					{
+						using (var stream = task.Result.GetResponseStream())
+						{
+							var preResult = new JsonSerializer().Deserialize<SourceSynchronizationInformation>(new JsonTextReader(new StreamReader(stream)));
+							return preResult;
+						}
+					})
+					.TryThrowBetterError();
+			}
+
+			public Task<IEnumerable<SynchronizationConfirmation>> ConfirmFilesAsync(IEnumerable<string> sentFiles)
+			{
+				var requestUriString = String.Format("{0}/synchronization/Confirm", ravenFileSystemClient.ServerUrl);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				request.ContentType = "application/json";
+				request.Method = "POST";
+
+				return request.GetRequestStreamAsync()
+					.ContinueWith(
+						task =>
+							{
+								var sb = new StringBuilder();
+								var jw = new JsonTextWriter(new StringWriter(sb));
+								new JsonSerializer().Serialize(jw, sentFiles);
+								var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+
+								return task.Result.WriteAsync(bytes, 0, bytes.Length)
+									.ContinueWith(t => task.Result.Close())
+									.ContinueWith(t =>
+									              	{
+									              		t.Wait();
+									              		return request.GetResponseAsync();
+									              	})
+									.Unwrap()
+									.ContinueWith(t =>
+									              	{
+									              		using (var stream = t.Result.GetResponseStream())
+									              		{
+									              			return
+									              				new JsonSerializer().Deserialize<IEnumerable<SynchronizationConfirmation>>(
+									              					new JsonTextReader(new StreamReader(stream)));
+									              		}
+									              	});
+							})
+					.Unwrap()
+					.TryThrowBetterError();
+			}
 		}
 
 		public Task<RdcStats> GetRdcStatsAsync()
@@ -579,7 +762,7 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<RdcStats>(new JsonTextReader(new StreamReader(stream)));
 					}
 				})
-				.TryThrowBetteError();
+				.TryThrowBetterError();
 		}
 	}
 }

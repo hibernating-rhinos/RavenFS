@@ -250,5 +250,19 @@ namespace RavenFS.Tests
 			Assert.Equal(new[] { "/test", "/why" }, strings);
 		}
 
+		[Fact]
+		public void Should_not_see_already_deleted_files()
+		{
+			var client = NewClient();
+			var ms = new MemoryStream();
+			client.UploadAsync("visible.bin", ms).Wait();
+			client.UploadAsync("toDelete.bin", ms).Wait();
+
+			client.DeleteAsync("toDelete.bin").Wait();
+
+			var fileNames =
+				client.GetFilesAsync("/").Result.Files.Select(x => x.Name).ToArray();
+			Assert.Equal(new[] { "visible.bin" }, fileNames);
+		}
 	}
 }

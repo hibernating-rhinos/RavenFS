@@ -9,18 +9,24 @@ using System.Web;
 using System.Web.Http;
 using RavenFS.Infrastructure;
 using RavenFS.Notifications;
-using RavenFS.Rdc.Wrapper;
 using RavenFS.Search;
 using RavenFS.Storage;
 using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
+	using System.Diagnostics;
 	using System.Net;
-	using Rdc;
+	using Client;
+	using NLog;
+	using Synchronization;
+	using Synchronization.Conflictuality;
+	using Synchronization.Rdc.Wrapper;
 
 	public abstract class RavenController : ApiController
 	{
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		protected class PagingInfo
 		{
 			public int Start;
@@ -32,20 +38,20 @@ namespace RavenFS.Controllers
 
 		private RavenFileSystem ravenFileSystem;
 
-		public RavenFileSystem  RavenFileSystem
+		public RavenFileSystem RavenFileSystem
 		{
 			get
 			{
 				if (ravenFileSystem == null)
-					ravenFileSystem = (RavenFileSystem) ControllerContext.Configuration.ServiceResolver.GetService(typeof (RavenFileSystem));
+					ravenFileSystem = (RavenFileSystem)ControllerContext.Configuration.DependencyResolver.GetService(typeof(RavenFileSystem));
 				return ravenFileSystem;
 			}
 		}
 
-	    public NotificationPublisher Publisher
-	    {
-	        get { return ravenFileSystem.Publisher; }
-	    }
+		public NotificationPublisher Publisher
+		{
+			get { return ravenFileSystem.Publisher; }
+		}
 
 		protected Task<T> Result<T>(T result)
 		{
@@ -59,20 +65,15 @@ namespace RavenFS.Controllers
 			get { return RavenFileSystem.BufferPool; }
 		}
 
-		public ISignatureRepository SignatureRepository
-		{
-			get { return RavenFileSystem.SignatureRepository; }
-		}
-
 		public SigGenerator SigGenerator
 		{
 			get { return RavenFileSystem.SigGenerator; }
 		}
 
-	    public HistoryUpdater HistoryUpdater
-	    {
-            get { return RavenFileSystem.HistoryUpdater;  }
-	    }
+		public HistoryUpdater HistoryUpdater
+		{
+			get { return RavenFileSystem.HistoryUpdater; }
+		}
 
 		private NameValueCollection QueryString
 		{
@@ -92,6 +93,26 @@ namespace RavenFS.Controllers
 		protected FileLockManager FileLockManager
 		{
 			get { return RavenFileSystem.FileLockManager; }
+		}
+
+		protected ConflictActifactManager ConflictActifactManager
+		{
+			get { return RavenFileSystem.ConflictActifactManager; }
+		}
+
+		protected ConflictDetector ConflictDetector
+		{
+			get { return RavenFileSystem.ConflictDetector; }
+		}
+
+		protected ConflictResolver ConflictResolver
+		{
+			get { return RavenFileSystem.ConflictResolver; }
+		}
+
+		protected SynchronizationTask SynchronizationTask
+		{
+			get { return RavenFileSystem.SynchronizationTask; }
 		}
 
 		protected PagingInfo Paging
@@ -140,18 +161,18 @@ namespace RavenFS.Controllers
 
 				length = (to - from);
 
-                // "to" in Content-Range points on the last byte. In other words the set is: <from..to>  not <from..to)
-                if (from < to)
-                {
-                    contentRange = new ContentRangeHeaderValue(from, to - 1, resultContent.Length);
-                    resultContent = new LimitedStream(resultContent, from, to);
-                }
-                else
-                {
-                    contentRange = new ContentRangeHeaderValue(0);
-                    resultContent = Stream.Null;
-                }
-			    
+				// "to" in Content-Range points on the last byte. In other words the set is: <from..to>  not <from..to)
+				if (from < to)
+				{
+					contentRange = new ContentRangeHeaderValue(from, to - 1, resultContent.Length);
+					resultContent = new LimitedStream(resultContent, from, to);
+				}
+				else
+				{
+					contentRange = new ContentRangeHeaderValue(0);
+					resultContent = Stream.Null;
+				}
+
 			}
 			else
 			{
@@ -174,19 +195,24 @@ namespace RavenFS.Controllers
 			return response;
 		}
 
-		protected void AssertFileIsNotBeingSynced(string fileName)
+		protected void AssertFileIsNotBeingSynced(string fileName, StorageActionsAccessor accessor)
 		{
-			if(FileLockManager.IsFileBeingLocked(fileName))
+			if (FileLockManager.TimeoutExceeded(fileName, accessor))
 			{
-				if(FileLockManager.TimeoutExceeded(fileName))
-				{
-					FileLockManager.UnlockByDeletingSyncConfiguration(fileName);
-				}
-				else
-				{
-					throw new HttpResponseException(string.Format("File {0} is being synced", fileName), HttpStatusCode.PreconditionFailed);
-				}
+				FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
 			}
+			else
+			{
+				log.Debug("Cannot execute operation because file '{0}' is being synced",  fileName);
+				throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.PreconditionFailed,
+																			new SynchronizationException(
+																				string.Format("File {0} is being synced", fileName))));
+			}
+		}
+
+		protected HttpResponseException ConcurrencyResponseException(ConcurrencyException concurrencyException)
+		{
+			return new HttpResponseException(Request.CreateResponse(HttpStatusCode.MethodNotAllowed, concurrencyException));
 		}
 	}
 }

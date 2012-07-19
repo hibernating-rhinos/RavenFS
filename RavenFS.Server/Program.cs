@@ -9,10 +9,17 @@ using RavenFS.Extensions;
 
 namespace RavenFS.Server
 {
+	using System.IO;
+	using System.Xml;
+	using NLog.Config;
+	using Util;
+
 	class Program
 	{
 		static void Main(string[] args)
 		{
+			HttpEndpointRegistration.RegisterHttpEndpointTarget();
+
 			var options = new RavenFileSystemConfiguration
 			{
 				Port = 9090,
@@ -48,6 +55,9 @@ namespace RavenFS.Server
 			{
 				Configuration = options
 			};
+
+			ConfigureLogging();
+
 			if(Environment.UserInteractive)
 			{
 				hostingService.Start();
@@ -122,6 +132,19 @@ Command line ptions:",
 			Console.WriteLine(@"
 Enjoy...
 ");
+		}
+
+		private static void ConfigureLogging()
+		{
+			var nlogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "NLog.config");
+			if (File.Exists(nlogPath))
+				return;// that overrides the default config
+
+			using (var stream = typeof(Program).Assembly.GetManifestResourceStream("RavenFS.Server.DefaultLogging.config"))
+			using (var reader = XmlReader.Create(stream))
+			{
+				NLog.LogManager.Configuration = new XmlLoggingConfiguration(reader, "default-config");
+			}
 		}
 	}
 

@@ -9,13 +9,18 @@ namespace RavenFS.Tests.Bugs
 {
     public class FileRenaming : StorageTest
     {
+		private readonly NameValueCollection metadataWithEtag = new NameValueCollection()
+		                                               	{
+		                                               		{"ETag", "\"" + Guid.Empty +"\""}
+		                                               	};
+
         [Fact]
         public void Should_rename_file_and_content()
         {
             transactionalStorage.Batch(
                 accessor =>
                 {
-                    accessor.PutFile("test.bin", 3, new NameValueCollection());
+					accessor.PutFile("test.bin", 3, metadataWithEtag);
                     var pageId = accessor.InsertPage(new byte[] { 1, 2, 3 }, 3);
                     accessor.AssociatePage("test.bin", pageId, 0, 3);
                     accessor.CompleteFileUpload("test.bin");
@@ -42,7 +47,7 @@ namespace RavenFS.Tests.Bugs
             transactionalStorage.Batch(
                 accessor =>
                     {
-                        accessor.PutFile("test0.bin", 3, new NameValueCollection());
+						accessor.PutFile("test0.bin", 3, metadataWithEtag);
                         var pageId = accessor.InsertPage(new byte[] { 1, 2, 3 }, 3);
                         accessor.AssociatePage("test0.bin", pageId, 0, 3);
                         accessor.CompleteFileUpload("test0.bin");
@@ -51,7 +56,7 @@ namespace RavenFS.Tests.Bugs
             transactionalStorage.Batch(
                 accessor =>
                     {
-                        accessor.PutFile("test1.bin", 3, new NameValueCollection());
+						accessor.PutFile("test1.bin", 3, metadataWithEtag);
                         var pageId = accessor.InsertPage(new byte[] { 4, 5, 6 }, 3);
                         accessor.AssociatePage("test1.bin", pageId, 0, 3);
                         accessor.CompleteFileUpload("test1.bin");

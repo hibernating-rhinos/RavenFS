@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 
 namespace RavenFS.Client
 {
+	using Newtonsoft.Json;
+
 	///<summary>
 	/// Extension methods to handle common scenarios
 	///</summary>
 	public static class ExceptionExtensions
 	{
-        // TODO: Fix this name (BetteR)
-		public static Task TryThrowBetteError(this Task self)
+		public static Task TryThrowBetterError(this Task self)
 		{
 			return self.ContinueWith(task =>
 			{
@@ -22,6 +23,25 @@ namespace RavenFS.Client
 				var webException = task.Exception.ExtractSingleInnerException() as WebException;
 				if (webException == null || webException.Response == null)
 					return task;
+
+				var httpWebResponse = webException.Response as HttpWebResponse;
+				if (httpWebResponse != null)
+				{
+					if (httpWebResponse.StatusCode == HttpStatusCode.PreconditionFailed)
+					{
+						using (var stream = webException.Response.GetResponseStream())
+						{
+							throw new JsonSerializer().Deserialize<SynchronizationException>(new JsonTextReader(new StreamReader(stream)));
+						}
+					}
+					else if (httpWebResponse.StatusCode == HttpStatusCode.MethodNotAllowed)
+					{
+						using (var stream = webException.Response.GetResponseStream())
+						{
+							throw new JsonSerializer().Deserialize<ConcurrencyException>(new JsonTextReader(new StreamReader(stream)));
+						}
+					}
+				}
 
 				using (var stream = webException.Response.GetResponseStream())
 				using (var reader = new StreamReader(stream))
@@ -36,7 +56,7 @@ namespace RavenFS.Client
 			.Unwrap();
 		}
 
-		public static Task<T> TryThrowBetteError<T>(this Task<T> self)
+		public static Task<T> TryThrowBetterError<T>(this Task<T> self)
 		{
 			return self.ContinueWith(task =>
 			{
@@ -46,6 +66,18 @@ namespace RavenFS.Client
 				var webException = task.Exception.ExtractSingleInnerException() as WebException;
 				if (webException == null || webException.Response == null)
 					return task;
+
+				var httpWebResponse = webException.Response as HttpWebResponse;
+				if (httpWebResponse != null)
+				{
+					if (httpWebResponse.StatusCode == HttpStatusCode.PreconditionFailed)
+					{
+						using (var stream = webException.Response.GetResponseStream())
+						{
+							throw new JsonSerializer().Deserialize<SynchronizationException>(new JsonTextReader(new StreamReader(stream)));
+						}
+					}
+				}
 
 				using (var stream = webException.Response.GetResponseStream())
 				using (var reader = new StreamReader(stream))
