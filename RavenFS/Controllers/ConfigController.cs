@@ -47,7 +47,7 @@ namespace RavenFS.Controllers
 
 		}
 
-		public Task Put(string name)
+		public Task<HttpResponseMessage> Put(string name)
 		{
 			var jsonSerializer = new JsonSerializer
 			{
@@ -84,6 +84,8 @@ namespace RavenFS.Controllers
 					Publisher.Publish(new ConfigChange() {Name = name, Action = ConfigChangeAction.Set});
 
 					log.Debug("Config '{0}' was inserted", name);
+
+					return new HttpResponseMessage(HttpStatusCode.Created);
 				});
 
 		}
