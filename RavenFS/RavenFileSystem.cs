@@ -146,6 +146,8 @@ namespace RavenFS
 				return Enumerable.Empty<object>();
 			});
 
+			config.MessageHandlers.Add(new CachePreventingHandler());
+
 			// we don't like XML, let us remove support for it.
 			config.Formatters.XmlFormatter.SupportedMediaTypes.Clear();
 

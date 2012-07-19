@@ -157,6 +157,7 @@
     <Compile Include="Extensions\ConfigurationExtension.cs" />
     <Compile Include="Extensions\GuidExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Infrastructure\CachePreventingHandler.cs" />
     <Compile Include="Infrastructure\HistoryUpdater.cs" />
     <Compile Include="Infrastructure\TempDirectoryTools.cs" />
     <Compile Include="Notifications\ConfigChange.cs" />
