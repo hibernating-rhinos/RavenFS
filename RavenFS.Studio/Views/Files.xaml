@@ -57,10 +57,10 @@
         </Border>
 
         <Border Grid.Row="1" Style="{StaticResource Style_Border_Toolbar}">
-            <toolkit:DockPanel Margin="0,6" LastChildFill="False">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,6" >
                     <Button VerticalAlignment="Center"
-				            Command="{Binding Upload}">
+				            Command="{Binding Upload}"
+                            Style="{StaticResource Style_Button_MouseOverChrome}">
 
                       <Button.Content>
                             <StackPanel Orientation="Horizontal">
@@ -70,7 +70,8 @@
                         </Button.Content>
                     </Button>
                     <Button VerticalAlignment="Center"
-                            Command="{Binding AddFolder}" Margin="5,0,0,0">
+                            Command="{Binding AddFolder}" Margin="5,0,0,0"
+                            Style="{StaticResource Style_Button_MouseOverChrome}">
                         <Button.Content>
                             <StackPanel Orientation="Horizontal">
                                 <Image Source="{StaticResource Image_Add_Tiny}" Stretch="None" Margin="0,0,2,0" VerticalAlignment="Center"/>
@@ -123,7 +124,6 @@
                         </Grid>
                     </Button>
                 </StackPanel>
-            </toolkit:DockPanel>
         </Border>
 
         <Border x:Name="SearchBar" Grid.Row="2" Style="{StaticResource Style_Border_SearchBar}" Height="0">

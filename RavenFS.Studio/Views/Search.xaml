@@ -47,7 +47,7 @@
         <Border Grid.Row="1" 
                 Grid.ColumnSpan="2"
                 Style="{StaticResource Style_Border_Toolbar}">
-            <Grid Margin="0,6">
+            <Grid Margin="6,6">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
