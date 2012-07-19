@@ -14,7 +14,7 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Views
 {
-    public partial class Search : View
+    public partial class Search : PageView
     {
         public Search()
         {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,11 +8,12 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using RavenFS.Studio.Infrastructure;
 
-namespace RavenFS.Studio.Infrastructure
+namespace RavenFS.Studio.Models
 {
-    public abstract class PageModel : ViewModel
+    public class SynchronizationRemotesModel : ViewModel
     {
-        public IDictionary<string, string> QueryParameters { get; set; }
+
     }
 }

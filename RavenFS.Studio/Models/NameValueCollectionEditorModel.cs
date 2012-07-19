@@ -16,7 +16,7 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Models
 {
-    public class NameValueCollectionEditorModel : Model
+    public class NameValueCollectionEditorModel : ViewModel
     {
         private EditableKeyValue emptyItem;
         private ICommand deleteCommand;

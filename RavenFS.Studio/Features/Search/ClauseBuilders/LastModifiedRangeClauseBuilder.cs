@@ -23,12 +23,12 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             Description = "Last Modified...";
         }
 
-        public override Model GetInputModel()
+        public override ViewModel GetInputModel()
         {
             return new LastModifiedRangeClauseModel();
         }
 
-        public override string GetSearchClauseFromModel(Model model)
+        public override string GetSearchClauseFromModel(ViewModel model)
         {
             var rangeModel = model as LastModifiedRangeClauseModel;
             Debug.Assert(rangeModel != null);

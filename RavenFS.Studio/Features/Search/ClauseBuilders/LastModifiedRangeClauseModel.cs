@@ -14,7 +14,7 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Features.Search.ClauseBuilders
 {
-    public class LastModifiedRangeClauseModel : Model
+    public class LastModifiedRangeClauseModel : ViewModel
     {
         string lowerLimit;
         string upperLimit;

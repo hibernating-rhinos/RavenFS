@@ -11,12 +11,12 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             Description = "File Name Ends With...";
         }
 
-        public override Model GetInputModel()
+        public override ViewModel GetInputModel()
         {
             return new SingleInputSearchClauseModel() {InputName = "Ends With:", Input = ""};
         }
 
-        public override string GetSearchClauseFromModel(Model model)
+        public override string GetSearchClauseFromModel(ViewModel model)
         {
             var singleInputModel = model as SingleInputSearchClauseModel;
             if (singleInputModel == null)

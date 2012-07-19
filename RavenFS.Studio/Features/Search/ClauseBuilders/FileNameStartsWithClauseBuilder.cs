@@ -10,12 +10,12 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             Description = "File Name Starts With...";
         }
 
-        public override Model GetInputModel()
+        public override ViewModel GetInputModel()
         {
             return new SingleInputSearchClauseModel() {InputName = "Starts With:"};
         }
 
-        public override string GetSearchClauseFromModel(Model model)
+        public override string GetSearchClauseFromModel(ViewModel model)
         {
             var singleInputModel = model as SingleInputSearchClauseModel;
             if (singleInputModel == null)

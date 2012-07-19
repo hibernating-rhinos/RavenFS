@@ -21,7 +21,7 @@ namespace RavenFS.Studio.Infrastructure
         }
     }
 
-    public class DialogModel : Model
+    public class DialogModel : ViewModel
     {
         public event EventHandler<CloseRequestedEventArgs> CloseRequested;
 

@@ -17,7 +17,7 @@ using RavenFS.Studio.Extensions;
 
 namespace RavenFS.Studio.Features.Search.ClauseBuilders
 {
-    public class HasMetadataClauseModel : Model
+    public class HasMetadataClauseModel : ViewModel
     {
         private static readonly HashSet<string> ExcludedTerms = new HashSet<string>() { "Content-Length", "Last-Modified" };
  

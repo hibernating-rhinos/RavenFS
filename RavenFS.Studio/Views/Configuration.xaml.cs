@@ -14,7 +14,7 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Views
 {
-    public partial class Configuration : View
+    public partial class Configuration : PageView
     {
         public Configuration()
         {

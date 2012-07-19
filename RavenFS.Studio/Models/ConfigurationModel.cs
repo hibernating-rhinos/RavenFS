@@ -12,7 +12,7 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Models
 {
-    public class ConfigurationModel : Model
+    public class ConfigurationModel : ViewModel
     {
         bool isModified;
 

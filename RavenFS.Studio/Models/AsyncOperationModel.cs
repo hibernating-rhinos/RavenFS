@@ -14,7 +14,7 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Models
 {
-    public class AsyncOperationModel : Model
+    public class AsyncOperationModel : ViewModel
     {
         string progressText;
         string description;

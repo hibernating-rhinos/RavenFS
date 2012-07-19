@@ -21,12 +21,12 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             Description = "In Folder...";
         }
 
-        public override Model GetInputModel()
+        public override ViewModel GetInputModel()
         {
             return new SingleInputSearchClauseModel() {InputName = "Folder Path", Example = "E.g. /folder/subfolder"};
         }
 
-        public override string GetSearchClauseFromModel(Model model)
+        public override string GetSearchClauseFromModel(ViewModel model)
         {
             var inputModel = model as SingleInputSearchClauseModel;
             Debug.Assert(inputModel != null);

@@ -25,12 +25,12 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             Description = "File Size...";
         }
 
-        public override Model GetInputModel()
+        public override ViewModel GetInputModel()
         {
             return new FileSizeRangeClauseModel();
         }
 
-        public override string GetSearchClauseFromModel(Model model)
+        public override string GetSearchClauseFromModel(ViewModel model)
         {
             var rangeModel = model as FileSizeRangeClauseModel;
             Debug.Assert(rangeModel != null);

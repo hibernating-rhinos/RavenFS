@@ -21,12 +21,12 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             Description = "Has Metadata...";
         }
 
-        public override Model GetInputModel()
+        public override ViewModel GetInputModel()
         {
             return new HasMetadataClauseModel();
         }
 
-        public override string GetSearchClauseFromModel(Model model)
+        public override string GetSearchClauseFromModel(ViewModel model)
         {
             var metadataModel = model as HasMetadataClauseModel;
             Debug.Assert(metadataModel != null);

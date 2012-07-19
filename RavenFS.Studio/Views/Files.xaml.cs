@@ -3,7 +3,7 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Views
 {
-    public partial class Files : View
+    public partial class Files : PageView
     {
         public Files()
         {

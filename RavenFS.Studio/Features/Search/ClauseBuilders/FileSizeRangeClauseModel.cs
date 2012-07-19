@@ -12,7 +12,7 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Features.Search.ClauseBuilders
 {
-    public class FileSizeRangeClauseModel : Model
+    public class FileSizeRangeClauseModel : ViewModel
     {
         string lowerLimit;
         string upperLimit;

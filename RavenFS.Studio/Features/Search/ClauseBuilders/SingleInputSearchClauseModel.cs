@@ -2,7 +2,7 @@
 
 namespace RavenFS.Studio.Features.Search.ClauseBuilders
 {
-    public class SingleInputSearchClauseModel : Model
+    public class SingleInputSearchClauseModel : ViewModel
     {
         string input;
 

@@ -250,6 +250,7 @@
     <Compile Include="Infrastructure\RefreshMode.cs" />
     <Compile Include="Infrastructure\Schedulers.cs" />
     <Compile Include="Infrastructure\Validation.cs" />
+    <Compile Include="Infrastructure\View.cs" />
     <Compile Include="Infrastructure\VirtualCollection.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\StaticExtension.cs" />
     <Compile Include="Infrastructure\MarkupExtensions\TypeExtension.cs" />
@@ -276,7 +277,7 @@
       <DependentUpon>InputWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\InvocationExtensions.cs" />
-    <Compile Include="Infrastructure\View.cs" />
+    <Compile Include="Infrastructure\PageView.cs" />
     <Compile Include="Models\ApplicationState.cs" />
     <Compile Include="Models\AsyncOperationModel.cs" />
     <Compile Include="Models\AsyncOperationsModel.cs" />
@@ -292,7 +293,7 @@
     <Compile Include="Models\EditableKeyValueCollection.cs" />
     <Compile Include="Models\FileModel.cs" />
     <Compile Include="Models\FilePropertiesDialogModel.cs" />
-    <Compile Include="Infrastructure\Model.cs" />
+    <Compile Include="Infrastructure\ViewModel.cs" />
     <Compile Include="Infrastructure\ModelResolver.cs" />
     <Compile Include="Infrastructure\NotifyPropertyChangedBase.cs" />
     <Compile Include="Models\FilesCollectionSource.cs" />
@@ -303,6 +304,7 @@
     <Compile Include="Models\ConfigurationPageModel.cs" />
     <Compile Include="Models\SearchPageModel.cs" />
     <Compile Include="Models\StudioErrorListModel.cs" />
+    <Compile Include="Models\SynchronizationRemotesModel.cs" />
     <Compile Include="Models\VirtualFoldersManager.cs" />
     <Compile Include="Views\AsyncOperationsView.xaml.cs">
       <DependentUpon>AsyncOperationsView.xaml</DependentUpon>

@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace RavenFS.Studio.Models
 {
-    public class ApplicationModel : Model
+    public class ApplicationModel : ViewModel
 	{
         public static readonly ApplicationModel Current = new ApplicationModel();
 

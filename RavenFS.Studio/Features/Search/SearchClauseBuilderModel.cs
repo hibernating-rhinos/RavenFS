@@ -15,7 +15,7 @@ using RavenFS.Studio.Extensions;
 
 namespace RavenFS.Studio.Features.Search
 {
-    public class SearchClauseBuilderModel : Model
+    public class SearchClauseBuilderModel : ViewModel
     {
         public static string DisplayPopupMessage = "DisplayPopup";
 
@@ -24,7 +24,7 @@ namespace RavenFS.Studio.Features.Search
         private ICommand displayCommand;
         private object inputView;
         bool isViewOpen;
-        private Model inputModel;
+        private ViewModel inputModel;
         private ICommand completeCommand;
 
         public SearchClauseBuilderModel(SearchClauseBuilder builder, Action<string> addSearchClause)
@@ -45,7 +45,7 @@ namespace RavenFS.Studio.Features.Search
             OnUIMessage(new UIMessageEventArgs(DisplayPopupMessage));
         }
 
-        private FrameworkElement GetInputViewForModel(Model inputModel)
+        private FrameworkElement GetInputViewForModel(ViewModel inputModel)
         {
             var inputModelType = inputModel.GetType();
             var viewTypeName = inputModelType.Namespace + "." + inputModelType.Name + "View";

@@ -6,8 +6,8 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
     {
         public string Description { get; protected set; }
 
-        public abstract Model GetInputModel();
+        public abstract ViewModel GetInputModel();
 
-        public abstract string GetSearchClauseFromModel(Model model);
+        public abstract string GetSearchClauseFromModel(ViewModel model);
     }
 }
