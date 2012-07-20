@@ -207,7 +207,6 @@
     <Compile Include="Synchronization\Multipart\MultipartSyncStreamProvider.cs" />
     <Compile Include="Synchronization\Multipart\SeedFilePart.cs" />
     <Compile Include="Synchronization\Multipart\SourceFilePart.cs" />
-    <Compile Include="Synchronization\Multipart\SynchronizationMultipartProcessor.cs" />
     <Compile Include="Synchronization\Multipart\SynchronizationMultipartRequest.cs" />
     <Compile Include="Synchronization\Multipart\SyncingMultipartConstants.cs" />
     <Compile Include="Synchronization\RenameWorkItem.cs" />
