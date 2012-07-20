@@ -117,6 +117,7 @@
     <Compile Include="FileStatus.cs" />
     <Compile Include="SynchronizationType.cs" />
     <Compile Include="SynchronizationUpdate.cs" />
+    <Compile Include="UrlExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

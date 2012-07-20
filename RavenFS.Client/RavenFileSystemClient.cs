@@ -42,7 +42,7 @@ namespace RavenFS.Client
 		public Task<ServerStats> StatsAsync()
 		{
 			var requestUriString = ServerUrl + "/stats";
-			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -76,7 +76,7 @@ namespace RavenFS.Client
 
 		public Task<FileInfo[]> BrowseAsync(int start = 0, int pageSize = 25)
 		{
-			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files?start=" + start + "&pageSize=" + pageSize);
+			var request = (HttpWebRequest)WebRequest.Create((ServerUrl + "/files?start=" + start + "&pageSize=" + pageSize).NoCache());
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -98,7 +98,7 @@ namespace RavenFS.Client
 
         public Task<string[]> GetSearchFieldsAsync(int start = 0, int pageSize = 25)
         {
-            var requestUriString = string.Format("{0}/search/terms?start={1}&pageSize={2}", ServerUrl, start, pageSize);
+            var requestUriString = string.Format("{0}/search/terms?start={1}&pageSize={2}", ServerUrl, start, pageSize).NoCache();
             var request = (HttpWebRequest)WebRequest.Create(requestUriString);
             return request.GetResponseAsync()
                 .ContinueWith(task =>
@@ -128,7 +128,7 @@ namespace RavenFS.Client
 					requestUriBuilder.Append("&sort=").Append(sortField);
 				}
 			}
-			var request = (HttpWebRequest)WebRequest.Create(requestUriBuilder.ToString());
+			var request = (HttpWebRequest)WebRequest.Create(requestUriBuilder.ToString().NoCache());
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -345,7 +345,7 @@ namespace RavenFS.Client
 
 			string requestUriString = ServerUrl + "/folders/subdirectories/" + Uri.EscapeUriString(path) + "?pageSize=" +
 			                          pageSize + "&start=" + start;
-			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -468,7 +468,7 @@ namespace RavenFS.Client
 			public Task<string[]> GetConfigNames(int start = 0, int pageSize= 25)
 			{
 				var requestUriString = ravenFileSystemClient.ServerUrl + "/config?start=" + start + "&pageSize=" + pageSize;
-				var request = (HttpWebRequest) WebRequest.Create(requestUriString);
+				var request = (HttpWebRequest) WebRequest.Create(requestUriString.NoCache());
 				return request.GetResponseAsync()
 					.ContinueWith(task =>
 					{
@@ -509,7 +509,7 @@ namespace RavenFS.Client
 			public Task<NameValueCollection> GetConfig(string name)
 			{
 				var requestUriString = ravenFileSystemClient.ServerUrl + "/config?name=" + StringUtils.UrlEncode(name);
-				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
 				
 				return request.GetResponseAsync()
 					.ContinueWith(task =>
@@ -597,7 +597,7 @@ namespace RavenFS.Client
             public Task<SynchronizationReport> GetSynchronizationStatusAsync(string fileName)
             {
                 var requestUriString = String.Format("{0}/synchronization/status/{1}", ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(fileName));
-                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+                var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
                 request.ContentLength = 0;
                 return request.GetResponseAsync()
                     .ContinueWith(task =>
@@ -646,7 +646,7 @@ namespace RavenFS.Client
             public Task<IEnumerable<SynchronizationReport>> GetFinishedAsync(int page = 0, int pageSize = 25)
             {
                 var requestUriString = String.Format("{0}/synchronization/finished?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
-                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+                var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
                 request.ContentLength = 0;
                 return request.GetResponseAsync()
                     .ContinueWith(task =>
@@ -663,7 +663,7 @@ namespace RavenFS.Client
             public Task<ListPage<SynchronizationDetails>> GetActiveAsync(int page = 0, int pageSize = 25)
             {
                 var requestUriString = String.Format("{0}/synchronization/active?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
-                var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+                var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
                 request.ContentLength = 0;
                 return request.GetResponseAsync()
                     .ContinueWith(task =>
@@ -680,7 +680,7 @@ namespace RavenFS.Client
             public Task<ListPage<SynchronizationDetails>> GetPendingAsync(int page = 0, int pageSize = 25)
 			{
 				var requestUriString = String.Format("{0}/synchronization/pending?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
-				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
 				request.ContentLength = 0;
 				return request.GetResponseAsync()
 					.ContinueWith(task =>
@@ -697,7 +697,7 @@ namespace RavenFS.Client
 			public Task<SourceSynchronizationInformation> GetLastSynchronizationFromAsync(Guid serverId)
 			{
 				var requestUriString = String.Format("{0}/synchronization/LastSynchronization?from={1}", ravenFileSystemClient.ServerUrl, serverId);
-				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
 				request.ContentLength = 0;
 				return request.GetResponseAsync()
 					.ContinueWith(task =>
@@ -753,7 +753,7 @@ namespace RavenFS.Client
 		public Task<RdcStats> GetRdcStatsAsync()
 		{
 			var requestUriString = ServerUrl + "/rdc/stats";
-			var request = (HttpWebRequest)WebRequest.Create(requestUriString);
+			var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{

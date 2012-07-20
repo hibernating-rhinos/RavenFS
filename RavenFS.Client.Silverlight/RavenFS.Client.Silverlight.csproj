@@ -158,6 +158,9 @@
     <Compile Include="..\RavenFS.Client\SynchronizationUpdate.cs">
       <Link>SynchronizationUpdate.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\UrlExtensions.cs">
+      <Link>UrlExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS\Extensions\MetadataExtensions.cs">
       <Link>Imports\MetadataExtensions.cs</Link>
     </Compile>
