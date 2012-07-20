@@ -78,7 +78,7 @@
 			StorageStream synchronizingFile = null;
 
 			bool isConflictResolved = false;
-
+		    bool isNewFile = false;
 			var sourceMetadata = Request.Headers.FilterHeaders();
 
 			return Request.Content.ReadAsMultipartAsync()
@@ -86,6 +86,7 @@
 				{
 					var localMetadata = GetLocalMetadata(fileName);
 
+				    isNewFile = localMetadata == null;
 					if (localMetadata != null)
 					{
 						AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, out isConflictResolved);
@@ -191,13 +192,14 @@
 								}
 							});
 
+					    PublishFileNotification(fileName, isNewFile ? Notifications.FileChangeAction.Add : Notifications.FileChangeAction.Update);
 						PublishSynchronizationFinishedNotification(fileName, sourceServerId, report.Type);
 
 						return Request.CreateResponse(HttpStatusCode.OK, report);
 					});
 		}
 
-		private void AssertConflictDetection(string fileName, NameValueCollection destinationMetadata, NameValueCollection sourceMetadata, Guid sourceServerId, out bool isConflictResolved)
+	    private void AssertConflictDetection(string fileName, NameValueCollection destinationMetadata, NameValueCollection sourceMetadata, Guid sourceServerId, out bool isConflictResolved)
 		{
 			var conflict = ConflictDetector.Check(destinationMetadata, sourceMetadata);
 			isConflictResolved = ConflictResolver.IsResolved(destinationMetadata, conflict);
@@ -270,6 +272,8 @@
 				{
 					ConflictActifactManager.RemoveArtifact(fileName);
 				}
+
+                PublishFileNotification(fileName, Notifications.FileChangeAction.Update);
 			}
 			catch (Exception ex)
 			{
@@ -325,6 +329,8 @@
 				Storage.Batch(accessor => accessor.Delete(fileName));
 
 				Search.Delete(fileName);
+
+                PublishFileNotification(fileName, Notifications.FileChangeAction.Delete);
 			}
 			catch (Exception ex)
 			{
@@ -394,6 +400,9 @@
 
 				Search.Delete(fileName);
 				Search.Index(rename, fileAndPages.Metadata);
+
+                PublishFileNotification(fileName, Notifications.FileChangeAction.Renaming);
+                PublishFileNotification(rename, Notifications.FileChangeAction.Renamed);
 			}
 			catch (Exception ex)
 			{
@@ -564,7 +573,16 @@
 			return Request.CreateResponse(HttpStatusCode.OK, lastEtag);
 		}
 
-		private void PublishSynchronizationFinishedNotification(string fileName, Guid sourceServerId, SynchronizationType type)
+	    private void PublishFileNotification(string fileName, Notifications.FileChangeAction action)
+	    {
+	        Publisher.Publish(new Notifications.FileChange()
+	                              {
+	                                  File = fileName,
+	                                  Action = action
+	                              });
+	    }
+
+	    private void PublishSynchronizationFinishedNotification(string fileName, Guid sourceServerId, SynchronizationType type)
 		{
 			Publisher.Publish(new SynchronizationUpdate
 			{
