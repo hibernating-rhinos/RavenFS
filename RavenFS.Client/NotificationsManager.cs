@@ -76,9 +76,13 @@ namespace RavenFS.Client
             {
                 currentObservers--;
 
-                if (currentObservers == 0)
+                if (currentObservers == 0 && notificationClient != null)
                 {
-                    GetOrCreateConnection().Stop();
+                    // Connection.Stop seems to hang if called on the UI thread
+                    var capturedClient = notificationClient;
+                    Task.Factory.StartNew(capturedClient.Stop);
+
+                    notificationClient = null;
                 }
             }
         }
