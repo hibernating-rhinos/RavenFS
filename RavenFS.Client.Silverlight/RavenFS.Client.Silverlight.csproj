@@ -54,14 +54,16 @@
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.4.5.7\lib\sl4\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="SignalR.Client.Silverlight5">
+    <Reference Include="SignalR.Client.Silverlight5, Version=0.5.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SharedLibs\Silverlight\SignalR.Client.Silverlight5.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive">
       <HintPath>..\packages\Rx-Main.1.0.11226\lib\SL5\System.Reactive.dll</HintPath>
     </Reference>
-    <Reference Include="System.Threading.Tasks.SL5, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Threading.Tasks.3.0\lib\sl50\System.Threading.Tasks.SL5.dll</HintPath>
+    <Reference Include="System.Threading.Tasks.SL5, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\SharedLibs\Silverlight\System.Threading.Tasks.SL5.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows" />
     <Reference Include="system" />
