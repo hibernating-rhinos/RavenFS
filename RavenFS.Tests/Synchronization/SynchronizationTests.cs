@@ -504,7 +504,7 @@
 			}
 
 			var result = destinationClient.Synchronization.GetFinishedAsync().Result;
-			Assert.Equal(files.Length, result.Count());
+			Assert.Equal(files.Length, result.TotalCount);
 		}
 
 		[Fact]
@@ -707,7 +707,7 @@
 			var httpWebResponse = webRequest.MakeRequest();
 			Assert.Equal(HttpStatusCode.OK, httpWebResponse.StatusCode);
 
-			var finishedSynchronizations = destinationClient.Synchronization.GetFinishedAsync().Result.ToList();
+			var finishedSynchronizations = destinationClient.Synchronization.GetFinishedAsync().Result.Items;
 
 			Assert.Equal(1, finishedSynchronizations.Count);
 			Assert.Equal("test.bin", finishedSynchronizations[0].FileName);

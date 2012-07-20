@@ -461,7 +461,7 @@
 		[AcceptVerbs("GET")]
 		public HttpResponseMessage Finished()
 		{
-			IList<SynchronizationReport> configObjects = null;
+			ListPage<SynchronizationReport> page = null;
 			Storage.Batch(
 				accessor =>
 				{
@@ -469,11 +469,14 @@
 						from item in accessor.GetConfigNames()
 						where SynchronizationHelper.IsSyncResultName(item)
 						select item;
-					configObjects =
-						(from item in configKeys.Skip(Paging.PageSize * Paging.Start).Take(Paging.PageSize)
-						 select accessor.GetConfigurationValue<SynchronizationReport>(item)).ToList();
+
+					var configObjects =
+						from item in configKeys.Skip(Paging.PageSize * Paging.Start).Take(Paging.PageSize)
+						 select accessor.GetConfigurationValue<SynchronizationReport>(item);
+
+				    page = new ListPage<SynchronizationReport>(configObjects, configKeys.Count());
 				});
-			return Request.CreateResponse(HttpStatusCode.OK, configObjects);
+			return Request.CreateResponse(HttpStatusCode.OK, page);
 		}
 
 		[AcceptVerbs("GET")]

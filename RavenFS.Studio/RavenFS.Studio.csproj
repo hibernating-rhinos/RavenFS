@@ -195,15 +195,17 @@
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
     <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
     <Compile Include="Features\Replication\ActiveSynchronizationTasksCollectionSource.cs" />
+    <Compile Include="Features\Replication\IncomingCompletedSynchronizationTasksCollectionSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Features\Replication\PendingSynchronizationTasksCollectionSource.cs" />
     <Compile Include="Features\Replication\ReplicationRemotesView.xaml.cs">
       <DependentUpon>ReplicationRemotesView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Features\Replication\SynchronizationActivityModel.cs" />
     <Compile Include="Features\Replication\SynchronizationActivityView.xaml.cs">
       <DependentUpon>SynchronizationActivityView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Features\Replication\SynchronizationQueueCollectionSource.cs" />
+    <Compile Include="Features\Replication\OutgoingSynchronizationQueueCollectionSource.cs" />
     <Compile Include="Features\Search\ClauseBuilders\HasMetadataClauseModelView.xaml.cs">
       <DependentUpon>HasMetadataClauseModelView.xaml</DependentUpon>
     </Compile>
@@ -323,6 +325,7 @@
     <Compile Include="Models\SearchPageModel.cs" />
     <Compile Include="Models\StudioErrorListModel.cs" />
     <Compile Include="Models\ReplicationRemotesModel.cs" />
+    <Compile Include="Models\SynchronizationActivityModel.cs" />
     <Compile Include="Models\VirtualFoldersManager.cs" />
     <Compile Include="Views\AsyncOperationsView.xaml.cs">
       <DependentUpon>AsyncOperationsView.xaml</DependentUpon>

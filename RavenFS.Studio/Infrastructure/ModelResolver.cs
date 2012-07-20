@@ -16,9 +16,10 @@ namespace RavenFS.Studio.Infrastructure
 
 			view.Loaded += (sender, eventArgs) =>
 			{
-				var modelType = Type.GetType("RavenFS.Studio.Models." + args.NewValue);
+			    var typeName = "RavenFS.Studio.Models." + args.NewValue;
+			    var modelType = Type.GetType(typeName);
 				if (modelType == null)
-					return;
+					throw new ArgumentException(string.Format("Model type {0} was not found.", typeName));
 
 				var model = Activator.CreateInstance(modelType);
 				view.DataContext = model;

@@ -13,9 +13,9 @@ using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Features.Replication
 {
-    public class SynchronizationQueueCollectionSource : CompositeVirtualCollectionSource<SynchronizationDetails>
+    public class OutgoingSynchronizationQueueCollectionSource : CompositeVirtualCollectionSource<SynchronizationDetails>
     {
-        public SynchronizationQueueCollectionSource() : base(new ActiveSynchronizationTasksCollectionSource(), new PendingSynchronizationTasksCollectionSource())
+        public OutgoingSynchronizationQueueCollectionSource() : base(new ActiveSynchronizationTasksCollectionSource(), new PendingSynchronizationTasksCollectionSource())
         {
         }
     }
