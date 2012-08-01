@@ -33,7 +33,7 @@ namespace RavenFS.Studio.Features.Replication
         {
             return ApplicationModel.Current.Client.Synchronization
                 .GetFinishedAsync(start, pageSize)
-                .Catch();
+                .Catch("Could not fetch completed tasks from server");
         } 
     }
 }

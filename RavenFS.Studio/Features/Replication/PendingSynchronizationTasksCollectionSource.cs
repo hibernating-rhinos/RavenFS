@@ -33,7 +33,7 @@ namespace RavenFS.Studio.Features.Replication
         {
             return ApplicationModel.Current.Client.Synchronization
                 .GetPendingAsync(start, pageSize)
-                .Catch();
+                .Catch("Could not get pending tasks from server");
         } 
     }
 }

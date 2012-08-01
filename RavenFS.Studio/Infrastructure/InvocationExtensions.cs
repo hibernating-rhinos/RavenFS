@@ -132,12 +132,12 @@ namespace RavenFS.Studio.Infrastructure
 			return task;
 		}
 
-        public static Task<TResult> Catch<TResult>(this Task<TResult> parent)
+        public static Task<TResult> Catch<TResult>(this Task<TResult> parent, string message = null)
         {
-            return parent.Catch(e => { });
+            return parent.Catch(e => { }, message);
         }
 
-        public static Task<TResult> Catch<TResult>(this Task<TResult> parent, Action<AggregateException> action)
+        public static Task<TResult> Catch<TResult>(this Task<TResult> parent, Action<AggregateException> action, string message = null)
         {
             var stackTrace = new StackTrace();
             return parent.ContinueWith(task =>
@@ -146,19 +146,19 @@ namespace RavenFS.Studio.Infrastructure
                     return task;
 
                 var ex = task.Exception.ExtractSingleInnerException();
-                Execute.OnTheUI(() => ApplicationModel.Current.AddErrorNotification(ex, null, stackTrace))
+                Execute.OnTheUI(() => ApplicationModel.Current.AddErrorNotification(ex, message, stackTrace))
                     .ContinueWith(_ => action(task.Exception));
                 return task;
             }).Unwrap();
         }
 
-		public static Task Catch(this Task parent)
+		public static Task Catch(this Task parent, string message = null)
 		{
-			return parent.Catch(e => { });
+			return parent.Catch(e => { }, message);
 		}
 
 
-		public static Task Catch(this Task parent, Action<AggregateException> action)
+        public static Task Catch(this Task parent, Action<AggregateException> action, string message = null)
 		{
             var stackTrace = new StackTrace();
             return parent.ContinueWith(task =>
@@ -167,7 +167,7 @@ namespace RavenFS.Studio.Infrastructure
                     return task;
 
                 var ex = task.Exception.ExtractSingleInnerException();
-                Execute.OnTheUI(() => ApplicationModel.Current.AddErrorNotification(ex, null, stackTrace))
+                Execute.OnTheUI(() => ApplicationModel.Current.AddErrorNotification(ex, message, stackTrace))
                     .ContinueWith(_ => action(task.Exception));
                 return task;
             }).Unwrap();

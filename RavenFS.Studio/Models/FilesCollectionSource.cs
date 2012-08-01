@@ -75,7 +75,7 @@ namespace RavenFS.Studio.Models
         {
             return ApplicationModel.Current.Client
                 .GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), fileNameSearchPattern:searchPattern, start: start, pageSize: pageSize)
-                .Catch();
+                .Catch("Could not fetch files from server");
         }
 
         private FilesSortOptions MapSortDescription(IList<SortDescription> sortDescriptions)
