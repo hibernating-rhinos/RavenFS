@@ -83,7 +83,7 @@ namespace RavenFS.Studio.Models
 		    var documentUri = HtmlPage.Document.DocumentUri;
 		    if (documentUri.Scheme == "file")
 			{
-				return "http://localhost";
+				return "http://localhost:9090";
 			}
 		    var path = documentUri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
             var lastIndexOfUI = path.LastIndexOf("ui");

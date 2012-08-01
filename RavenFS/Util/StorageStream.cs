@@ -42,7 +42,7 @@ namespace RavenFS.Util
             return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.CreateAndWrite, metadata, indexStorage);
         }
 
-        private StorageStream(TransactionalStorage transactionalStorage, string fileName, StorageStreamAccess storageStreamAccess,
+    	protected StorageStream(TransactionalStorage transactionalStorage, string fileName, StorageStreamAccess storageStreamAccess,
             NameValueCollection metadata, Search.IndexStorage indexStorage)
         {
             TransactionalStorage = transactionalStorage;

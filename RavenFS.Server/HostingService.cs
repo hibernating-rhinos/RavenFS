@@ -29,7 +29,9 @@ namespace RavenFS.Server
 			config = new HttpSelfHostConfiguration(Configuration.Url)
 			{
 				MaxReceivedMessageSize = Int64.MaxValue,
-				TransferMode = TransferMode.Streamed
+				TransferMode = TransferMode.Streamed,
+				ReceiveTimeout = TimeSpan.MaxValue,
+				SendTimeout = TimeSpan.MaxValue,
 			};
 			ravenFileSystem.Start(config);
 			server = new HttpSelfHostServer(config);

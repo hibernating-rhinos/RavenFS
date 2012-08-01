@@ -50,7 +50,7 @@ namespace RavenFS.Controllers
 
 		public NotificationPublisher Publisher
 		{
-			get { return ravenFileSystem.Publisher; }
+			get { return RavenFileSystem.Publisher; }
 		}
 
 		protected Task<T> Result<T>(T result)
