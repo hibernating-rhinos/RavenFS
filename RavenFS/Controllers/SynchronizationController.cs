@@ -93,6 +93,10 @@
 				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, out isConflictResolved);
 				localFile = StorageStream.Reading(Storage, fileName);
 			}
+            else
+			{
+			    isNewFile = true;
+			}
 
 			HistoryUpdater.UpdateLastModified(sourceMetadata);
 
