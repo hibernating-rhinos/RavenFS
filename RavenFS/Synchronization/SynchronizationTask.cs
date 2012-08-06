@@ -400,7 +400,8 @@ namespace RavenFS.Synchronization
 					accessor =>
 					candidatesToSynchronization =
 					accessor.GetFilesAfter(destinationsSynchronizationInformationForSource.LastSourceFileEtag, take)
-						.Where(x => x.Metadata[SynchronizationConstants.RavenSynchronizationSource] != destinationId)); // prevent synchronization back to source
+						.Where(x => x.Metadata[SynchronizationConstants.RavenSynchronizationSource] != destinationId // prevent synchronization back to source
+									&& x.TotalSize != null && x.TotalSize == x.UploadedSize)); // do not synchronize files that are being uploaded
 
 				foreach (var file in candidatesToSynchronization)
 				{
