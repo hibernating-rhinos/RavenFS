@@ -14,7 +14,6 @@
 	{
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
-		private readonly Guid serverId;
 
 		protected SynchronizationWorkItem(string fileName, TransactionalStorage storage)
 		{
@@ -37,7 +36,7 @@
 
 		protected NameValueCollection FileMetadata { get; set; }
 
-		protected Guid SourceServerId { get { return Storage != null ? Storage.Id : serverId; } }
+		protected Guid SourceServerId { get { return Storage.Id; } }
 
 		public abstract SynchronizationType SynchronizationType { get; }
 
