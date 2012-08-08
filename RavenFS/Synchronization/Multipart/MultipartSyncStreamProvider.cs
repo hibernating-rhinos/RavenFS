@@ -8,11 +8,14 @@ namespace RavenFS.Synchronization.Multipart
 	using System.Net.Http.Headers;
 	using System.Threading.Tasks;
 	using Client;
+	using NLog;
 	using Storage;
 	using Util;
 
 	public class MultipartSyncStreamProvider : MultipartStreamProvider
 	{
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
 		private class BodyPartInfo
 		{
 			public string Type { get; set; }
@@ -101,6 +104,10 @@ namespace RavenFS.Synchronization.Multipart
 		{
 			return Task.Factory.StartNew(() =>
 			{
+				log.Info(
+					"Multipart synchronization request of a file '{0}' has been parsed. Starting to copy local file chunks and associate pages",
+					synchronizingFile.Name);
+
 				RetrieveLastWrittenPages("source");
 
 				int writtingPagePosition = 0;
@@ -136,6 +143,8 @@ namespace RavenFS.Synchronization.Multipart
 						}
 					}	
 				}
+
+				log.Info("Operation of copy and pages association for a file '{0}' has finished", synchronizingFile.Name);
 			});
 		}
 
