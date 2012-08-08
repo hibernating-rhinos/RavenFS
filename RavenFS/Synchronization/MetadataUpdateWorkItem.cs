@@ -76,7 +76,7 @@ namespace RavenFS.Synchronization
 
 									if (report.Exception == null)
 									{
-										log.Debug("Metadata synchronization of a file '{0}' to {1} has finished with an exception", FileName,
+										log.Debug("Metadata synchronization of a file '{0}' to {1} has succeeded", FileName,
 										          destination);
 									}
 									else
