@@ -521,7 +521,7 @@
 
 			var synchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
 
-			Assert.Equal("The limit of active synchronizations to " + destinationClient.ServerUrl + " server has been achieved.", synchronizationReport.Exception.Message);
+			Assert.Equal("The limit of active synchronizations to " + destinationClient.ServerUrl + " server has been achieved. Cannot process a file 'test.bin'.", synchronizationReport.Exception.Message);
 		}
 
 		[Fact]

@@ -334,13 +334,15 @@ namespace RavenFS.Synchronization
 
 			if (!CanSynchronizeTo(destinationUrl))
 			{
-				log.Debug("The limit of active synchronizations to {0} server has been achieved.", destinationUrl);
+				log.Debug("The limit of active synchronizations to {0} server has been achieved. Cannot process a file '{1}'.", destinationUrl, work.FileName);
+
+				synchronizationQueue.EnqueueSynchronization(destinationUrl, work);
 
 				return
 					SynchronizationUtils.SynchronizationExceptionReport(work.FileName,
-					                                                    string.Format(
-					                                                    	"The limit of active synchronizations to {0} server has been achieved.",
-					                                                    	destinationUrl));
+																		string.Format(
+																			"The limit of active synchronizations to {0} server has been achieved. Cannot process a file '{1}'.",
+																			destinationUrl, work.FileName));
 			}
 
 			var fileName = work.FileName;
