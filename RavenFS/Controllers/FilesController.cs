@@ -221,6 +221,9 @@ namespace RavenFS.Controllers
 			Publisher.Publish(new FileChange { File = rename, Action = FileChangeAction.Renamed });
 
 			log.Debug("File '{0}' was renamed to '{1}'", name, rename);
+
+			SynchronizationTask.SynchronizeDestinationsAsync();
+
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
