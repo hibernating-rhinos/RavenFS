@@ -72,13 +72,15 @@
 				FileName = fileName,
 				Type = SynchronizationType.ContentUpdate
 			};
-
+			
 			Storage.Batch(accessor =>
 			{
 				AssertFileIsNotBeingSynced(fileName, accessor);
 				StartupProceed(fileName, accessor);
 				FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
 			});
+
+			PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
 
 			bool isConflictResolved = false;
 		    bool isNewFile = false;
@@ -189,7 +191,7 @@
 							});
 
 					    PublishFileNotification(fileName, isNewFile ? Notifications.FileChangeAction.Add : Notifications.FileChangeAction.Update);
-						PublishSynchronizationFinishedNotification(fileName, sourceServerId, report.Type);
+						PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
 
 						return Request.CreateResponse(HttpStatusCode.OK, report);
 					});
@@ -241,13 +243,14 @@
 			             		Type = SynchronizationType.MetadataUpdate
 			             	};
 
-			
 			Storage.Batch(accessor =>
 			{
 				AssertFileIsNotBeingSynced(fileName, accessor);
 				StartupProceed(fileName, accessor);
 				FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
 			});
+			
+			PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
 
 			try
 			{
@@ -293,7 +296,7 @@
 					}
 				});
 
-				PublishSynchronizationFinishedNotification(fileName, sourceServerId, report.Type);
+				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -321,6 +324,8 @@
 					StartupProceed(fileName, accessor);
 					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
 				});
+				
+				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
 
 				Storage.Batch(accessor => accessor.Delete(fileName));
 
@@ -350,7 +355,7 @@
 					}
 				});
 
-				PublishSynchronizationFinishedNotification(fileName, sourceServerId, report.Type);
+				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -371,13 +376,14 @@
 				Type = SynchronizationType.Rename
 			};
 
-			
 			Storage.Batch(accessor =>
 			{
 				AssertFileIsNotBeingSynced(fileName, accessor);
 				StartupProceed(fileName, accessor);
 				FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
 			});
+
+			PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
 
 			try
 			{
@@ -422,7 +428,7 @@
 					}
 				});
 
-				PublishSynchronizationFinishedNotification(fileName, sourceServerId, report.Type);
+				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -581,14 +587,14 @@
 	                              });
 	    }
 
-	    private void PublishSynchronizationFinishedNotification(string fileName, Guid sourceServerId, SynchronizationType type)
+	    private void PublishSynchronizationNotification(string fileName, Guid sourceServerId, SynchronizationType type, SynchronizationAction action)
 		{
 			Publisher.Publish(new SynchronizationUpdate
 			{
 				FileName = fileName,
 				SourceServerId = sourceServerId,
 				Type = type,
-				Action = SynchronizationAction.Finish,
+				Action = action,
 				SynchronizationDirection = SynchronizationDirection.Incoming
 			});
 		}
