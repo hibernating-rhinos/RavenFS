@@ -182,7 +182,7 @@
 			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerId, fileName, sourceMetadata,
 																	   sourceFileStream, needList);
 
-			log.Debug("Synchronizing a file '{0}' to {1} by using multipart request. Need list length is {2}", fileName, destinationServerUrl, needList.Count);
+			log.Debug("Synchronizing a file '{0}' (ETag {1}) to {2} by using multipart request. Need list length is {3}. ", fileName, FileETag, destinationServerUrl, needList.Count);
 
 			return multipartRequest.PushChangesAsync()
 				.ContinueWith(t =>

@@ -282,6 +282,7 @@ namespace RavenFS.Controllers
 
 							HistoryUpdater.UpdateLastModified(headers); // update with the final file size
 
+							log.Debug("File '{0}' was uploaded. Starting to update file medatata and indexes", name);
 							using (var stream = StorageStream.Reading(Storage, name))
 							{
 								headers["Content-MD5"] = stream.GetMD5Hash();
@@ -292,7 +293,7 @@ namespace RavenFS.Controllers
 							Search.Index(name, headers);
 							Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });
 
-							log.Debug("File '{0}' was uploaded its new ETag is {1}", name, headers.Value<Guid>("ETag"));
+							log.Debug("Updates of '{0}' metadata and indexes were finished. New file ETag is {1}", name, headers.Value<Guid>("ETag"));
 
 							SynchronizationTask.SynchronizeDestinationsAsync();
 							return readingTask;

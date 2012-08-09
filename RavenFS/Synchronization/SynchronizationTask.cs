@@ -192,9 +192,12 @@ namespace RavenFS.Synchronization
 					              		                              	? t.Result.Reports.Where(x => x.Exception != null).Count()
 					              		                              	: 0;
 
-					              		log.Debug(
-					              			"Synchronization to a destination {0} has completed. {1} file(s) were synchronized successfully, {2} synchonization(s) were failed",
-					              			destinationUrl, successfullSynchronizationsCount, failedSynchronizationsCount);
+					              		if (successfullSynchronizationsCount > 0 || failedSynchronizationsCount > 0)
+					              		{
+					              			log.Debug(
+					              				"Synchronization to a destination {0} has completed. {1} file(s) were synchronized successfully, {2} synchonization(s) were failed",
+					              				destinationUrl, successfullSynchronizationsCount, failedSynchronizationsCount);
+					              		}
 
 					              		return t.Result;
 					              	});
@@ -403,7 +406,9 @@ namespace RavenFS.Synchronization
 					candidatesToSynchronization =
 					accessor.GetFilesAfter(destinationsSynchronizationInformationForSource.LastSourceFileEtag, take)
 						.Where(x => x.Metadata[SynchronizationConstants.RavenSynchronizationSource] != destinationId // prevent synchronization back to source
-									&& x.TotalSize != null && x.TotalSize == x.UploadedSize)); // do not synchronize files that are being uploaded
+									&& x.TotalSize != null && x.TotalSize == x.UploadedSize // do not synchronize files that are being uploaded
+									&& x.Metadata["Content-MD5"] != null)); // even if the file is uploaded make sure file has Content-MD5
+																			// it's necessary to determine synchronization type and ensures right ETag
 
 				foreach (var file in candidatesToSynchronization)
 				{
@@ -423,7 +428,10 @@ namespace RavenFS.Synchronization
 				log.WarnException(string.Format("Could not get files to synchronize after: " + destinationsSynchronizationInformationForSource.LastSourceFileEtag), e);
 			}
 
-			log.Debug("There were {0} files that needed synchronization", filesToSynchronization.Count);
+			log.Debug("There were {0} file(s) that needed synchronization ({1})", filesToSynchronization.Count,
+			          string.Join(",",
+			                      filesToSynchronization.Select(
+			                      	x => string.Format("{0} (ETag {1})", x.Name, x.Metadata.Value<Guid>("ETag")))));
 
 			return filesToSynchronization;
 		}

@@ -112,6 +112,8 @@ namespace RavenFS.Synchronization.Multipart
 
 				int writtingPagePosition = 0;
 
+				uint numberOfCopiedLocalFileParts = 0;
+
 				foreach (var body in bodyParts)
 				{
 					if(body.Type == "seed") // copy part from local file
@@ -123,6 +125,8 @@ namespace RavenFS.Synchronization.Multipart
 
 						var limitedStream = new NarrowedStream(localFile, body.From, body.To);
 						limitedStream.CopyTo(synchronizingFile);
+
+						numberOfCopiedLocalFileParts++;
 
 						RetrieveLastWrittenPages("seed");
 					}
@@ -144,7 +148,7 @@ namespace RavenFS.Synchronization.Multipart
 					}	
 				}
 
-				log.Info("Operation of copy and pages association for a file '{0}' has finished", synchronizingFile.Name);
+				log.Info("Operation of copy {0} local file chunks and pages association for a file '{1}' has finished", numberOfCopiedLocalFileParts, synchronizingFile.Name);
 			});
 		}
 

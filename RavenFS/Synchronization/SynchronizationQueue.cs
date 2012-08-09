@@ -151,7 +151,11 @@ namespace RavenFS.Synchronization
 				ConcurrentQueue<SynchronizationWorkItem> pendingForDestination;
 				if (pendingSynchronizations.TryGetValue(destination, out pendingForDestination) == false)
 				{
-					log.Warn("Could not get a pending synchronization queue for {0}", destination);
+					if (pendingForDestination.Count > 0)
+					{
+						log.Warn("Could not get a pending synchronization queue for {0}", destination);
+					}
+					
 					workItem = null;
 					return false;
 				}
@@ -194,7 +198,10 @@ namespace RavenFS.Synchronization
 
 			if (activeSynchronizations.TryGetValue(destination, out activeDestinationTasks) == false)
 			{
-				log.Warn("Could not get an active synchronization queue for {0}", destination);
+				if(activeSynchronizations.Count > 0)
+				{
+					log.Warn("Could not get an active synchronization queue for {0}", destination);
+				}
 				return;
 			}
 			
