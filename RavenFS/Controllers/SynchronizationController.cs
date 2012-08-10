@@ -573,7 +573,7 @@
 			SourceSynchronizationInformation lastEtag = null;
 			Storage.Batch(accessor => lastEtag = GetLastSynchronization(from, accessor));
 
-			log.Debug("Got synchronization last etag request from {0}: [{1}]", from, lastEtag);
+			log.Debug("Got synchronization last ETag request from {0}: [{1}]", from, lastEtag);
 
 			return Request.CreateResponse(HttpStatusCode.OK, lastEtag);
 		}

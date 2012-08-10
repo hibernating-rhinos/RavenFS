@@ -432,7 +432,7 @@ namespace RavenFS.Synchronization
 			log.Debug("There were {0} file(s) that needed synchronization ({1})", filesToSynchronization.Count,
 			          string.Join(",",
 			                      filesToSynchronization.Select(
-			                      	x => string.Format("{0} (ETag {1})", x.Name, x.Metadata.Value<Guid>("ETag")))));
+			                      	x => string.Format("{0} [ETag {1}]", x.Name, x.Metadata.Value<Guid>("ETag")))));
 
 			return filesToSynchronization;
 		}

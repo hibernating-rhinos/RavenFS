@@ -112,7 +112,11 @@
 							var destinationRdcManager = new RemoteRdcManager(destinationRavenFileSystemClient, signatureRepository,
 							                                                 remoteSignatureCache);
 
+							log.Debug("Starting to retrieve signatures of a local file '{0}'.", FileName);
+							// first we need to create a local file signatures before we synchronize with remote ones
 							var sourceSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
+
+							log.Debug("Number of a local file '{0}' signatures was {1}.", FileName, sourceSignatureManifest.Signatures.Count);
 
 							return destinationRdcManager.SynchronizeSignaturesAsync(localFileDataInfo)
 								.ContinueWith(
@@ -182,7 +186,11 @@
 			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerId, fileName, sourceMetadata,
 																	   sourceFileStream, needList);
 
-			log.Debug("Synchronizing a file '{0}' (ETag {1}) to {2} by using multipart request. Need list length is {3}. ", fileName, FileETag, destinationServerUrl, needList.Count);
+			var bytesToTransferCount = needList.Where(x => x.BlockType == RdcNeedType.Source).Sum(x => (double) x.BlockLength);
+			
+			log.Debug(
+				"Synchronizing a file '{0}' (ETag {1}) to {2} by using multipart request. Need list length is {3}. Number of bytes that needs to be transfered is {4}",
+				fileName, FileETag, destinationServerUrl, needList.Count, bytesToTransferCount);
 
 			return multipartRequest.PushChangesAsync()
 				.ContinueWith(t =>
