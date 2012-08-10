@@ -113,61 +113,67 @@ namespace RavenFS.Synchronization
 					{
 						etagTask.AssertNotFaulted();
 
-						return EnqueueMissingUpdates(etagTask.Result, destinationClient)
-							.ContinueWith(enqueueTask =>
-						{
-							var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
+						var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
 
-							return ConfirmPushedFiles(filesNeedConfirmation, destinationClient)
-								.ContinueWith(confirmationTask =>
+						return ConfirmPushedFiles(filesNeedConfirmation, destinationClient)
+							.ContinueWith(confirmationTask =>
+											{
+												confirmationTask.AssertNotFaulted();
+
+												var needSyncingAgain = new List<FileHeader>();
+
+												foreach (var confirmation in confirmationTask.Result)
 												{
-													confirmationTask.AssertNotFaulted();
-
-													foreach (var confirmation in confirmationTask.Result)
+													if (confirmation.Status == FileStatus.Safe)
 													{
-														if (confirmation.Status == FileStatus.Safe)
-														{
-															RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
-															log.Debug("Destination server {0} said that file '{1}' is safe", destinationUrl, confirmation.FileName);
-														}
-														else
-														{
-															synchronizationQueue.EnqueueSynchronization(destinationUrl,
-															                        new ContentUpdateWorkItem(confirmation.FileName, storage,
-															                                                    sigGenerator));
-															log.Debug(
-																"Destination server {0} said that file '{1}' is {2}. File was added to a synchronization queue again.",
-																destinationUrl, confirmation.FileName, confirmation.Status);
-
-														}
+														RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
+														log.Debug("Destination server {0} said that file '{1}' is safe", destinationUrl, confirmation.FileName);
 													}
-												})
-								.ContinueWith(t =>
-												{
-													t.AssertNotFaulted();
-													return SynchronizePendingFiles(destinationUrl, forceSyncingContinuation);
-												})
-								.ContinueWith(
-									syncingDestTask =>
+													else
+													{
+														storage.Batch(accessor =>
+														{
+															var fileHeader = accessor.ReadFile(confirmation.FileName);
+															if (FileIsNotBeingUploaded(fileHeader))
+															{
+																needSyncingAgain.Add(fileHeader);
+															}
+														});
+
+														log.Debug(
+															"Destination server {0} said that file '{1}' is {2}. File will be added to a synchronization queue again.",
+															destinationUrl, confirmation.FileName, confirmation.Status);
+
+													}
+												}
+
+												return EnqueueMissingUpdates(destinationClient, etagTask.Result, needSyncingAgain)
+													.ContinueWith(t =>
+													{
+														t.AssertNotFaulted();
+														return SynchronizePendingFiles(destinationUrl, forceSyncingContinuation);
+													});
+											}).Unwrap()
+							.ContinueWith(
+								syncingDestTask =>
+									{
+										var tasks = syncingDestTask.Result.ToArray();
+
+										if(tasks.Length > 0)
 										{
-											var tasks = syncingDestTask.Result.ToArray();
+											return Task.Factory.ContinueWhenAll(tasks, t => new DestinationSyncResult
+																				{
+																					DestinationServer = destinationUrl,
+																					Reports = t.Select(syncingTask => syncingTask.Result)
+																				});
+										}
 
-											if(tasks.Length > 0)
-											{
-												return Task.Factory.ContinueWhenAll(tasks, t => new DestinationSyncResult
-																					{
-																						DestinationServer = destinationUrl,
-																						Reports = t.Select(syncingTask => syncingTask.Result)
-																					});
-											}
-
-											return new CompletedTask<DestinationSyncResult>(new DestinationSyncResult
-											{
-												DestinationServer = destinationUrl
-											});
-										})
-								.Unwrap();
-						}).Unwrap();
+										return new CompletedTask<DestinationSyncResult>(new DestinationSyncResult
+										{
+											DestinationServer = destinationUrl
+										});
+									})
+							.Unwrap();
 					}).Unwrap()
 					.ContinueWith(t =>
 					              	{
@@ -204,14 +210,16 @@ namespace RavenFS.Synchronization
 			}
 		}
 
-		private Task EnqueueMissingUpdates(SourceSynchronizationInformation lastEtag, RavenFileSystemClient destinationClient)
+		private Task EnqueueMissingUpdates(RavenFileSystemClient destinationClient, SourceSynchronizationInformation lastEtag, IEnumerable<FileHeader> needSyncingAgain)
 		{
 			var tcs = new TaskCompletionSource<object>();
 
 			string destinationUrl = destinationClient.ServerUrl;
-			var filesToSynchronization = GetFilesToSynchronization(lastEtag, 100).ToArray();
+			List<FileHeader> filesToSynchronization = GetFilesToSynchronization(lastEtag, 100);
 
-			if (filesToSynchronization.Length == 0)
+			filesToSynchronization.AddRange(needSyncingAgain);
+
+			if (filesToSynchronization.Count == 0)
 			{
 				tcs.SetResult(null);
 				return tcs.Task;
@@ -219,7 +227,7 @@ namespace RavenFS.Synchronization
 
 			var determineWorkTasks = new List<Task>();
 
-			for (var i = 0; i < filesToSynchronization.Length; i++)
+			for (var i = 0; i < filesToSynchronization.Count; i++)
 			{
 				var file = filesToSynchronization[i].Name;
 				var localMetadata = GetLocalMetadata(file);
@@ -388,7 +396,7 @@ namespace RavenFS.Synchronization
 				              	});
 		}
 
-		private IEnumerable<FileHeader> GetFilesToSynchronization(SourceSynchronizationInformation destinationsSynchronizationInformationForSource, int take)
+		private List<FileHeader> GetFilesToSynchronization(SourceSynchronizationInformation destinationsSynchronizationInformationForSource, int take)
 		{
 			var filesToSynchronization = new List<FileHeader>();
 
@@ -406,10 +414,7 @@ namespace RavenFS.Synchronization
 					candidatesToSynchronization =
 					accessor.GetFilesAfter(destinationsSynchronizationInformationForSource.LastSourceFileEtag, take)
 						.Where(x => x.Metadata[SynchronizationConstants.RavenSynchronizationSource] != destinationId // prevent synchronization back to source
-									&& x.TotalSize != null && x.TotalSize == x.UploadedSize // do not synchronize files that are being uploaded
-									&& (x.Metadata[SynchronizationConstants.RavenDeleteMarker] == null ? x.Metadata["Content-MD5"] != null : true))); 
-										// even if the file is uploaded make sure file has Content-MD5
-										// it's necessary to determine synchronization type and ensures right ETag
+									&& FileIsNotBeingUploaded(x)));
 				
 				foreach (var file in candidatesToSynchronization)
 				{
@@ -582,6 +587,14 @@ namespace RavenFS.Synchronization
 				limit = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenSynchronizationLimit, out configuredLimit));
 
 			return limit ? configuredLimit : DefaultLimitOfConcurrentSynchronizations;
+		}
+
+		private static bool FileIsNotBeingUploaded(FileHeader header)
+		{			// do not synchronize files that are being uploaded
+			return header.TotalSize != null && header.TotalSize == header.UploadedSize
+				// even if the file is uploaded make sure file has Content-MD5 (which calculation that might take some time)
+				// it's necessary to determine synchronization type and ensures right ETag
+				   && (header.Metadata[SynchronizationConstants.RavenDeleteMarker] == null ? header.Metadata["Content-MD5"] != null : true);
 		}
 	}
 }
