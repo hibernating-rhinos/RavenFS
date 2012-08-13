@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
-using System.Web;
 using RavenFS.Search;
 using RavenFS.Storage;
-using System.Security.AccessControl;
 
 namespace RavenFS.Util
 {
@@ -20,7 +17,6 @@ namespace RavenFS.Util
 
         public NameValueCollection Metadata { get; private set; }
 
-        public const int MaxPageSize = 64 * 1024;
         private const int PagesBatchSize = 64;
         private FileAndPages fileAndPages;
         private long currentOffset;
@@ -126,7 +122,7 @@ namespace RavenFS.Util
             {
                 return 0;
             }
-            var innerBuffer = new byte[MaxPageSize];
+			var innerBuffer = new byte[StorageConstants.MaxPageSize];
             var pageOffset = currentPageFrameOffset;
             var length = 0L;
             var startingOffset = currentOffset;
@@ -157,10 +153,10 @@ namespace RavenFS.Util
         public override void Write(byte[] buffer, int offset, int count)
         {
             var innerOffset = 0;
-            var innerBuffer = new byte[MaxPageSize];
+			var innerBuffer = new byte[StorageConstants.MaxPageSize];
             while (innerOffset < count)
             {
-                var toCopy = Math.Min(MaxPageSize, count - innerOffset);
+				var toCopy = Math.Min(StorageConstants.MaxPageSize, count - innerOffset);
                 if (toCopy == 0)
                 {
                     throw new Exception("Impossible");

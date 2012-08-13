@@ -34,10 +34,10 @@ namespace RavenFS.Util
 		public override void Write(byte[] buffer, int offset, int count)
 		{
 			var innerOffset = 0;
-			var innerBuffer = new byte[MaxPageSize];
+			var innerBuffer = new byte[StorageConstants.MaxPageSize];
 			while (innerOffset < count)
 			{
-				var toCopy = Math.Min(MaxPageSize, count - innerOffset);
+				var toCopy = Math.Min(StorageConstants.MaxPageSize, count - innerOffset);
 				if (toCopy == 0)
 				{
 					throw new Exception("Impossible");
