@@ -43,7 +43,7 @@
         public override int Read(byte[] buffer, int offset, int count)
         {
             var result = _source.Read(buffer, offset, count);
-            if (_random.NextDouble() < _probability * result)
+            if (_random.NextDouble() < _probability)
             {
                 var oneByte = new byte[1];
                 _random.NextBytes(oneByte);
