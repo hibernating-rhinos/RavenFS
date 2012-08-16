@@ -298,11 +298,13 @@ namespace RavenFS.Storage
 					if (result.Start == null && position > startByte)
 					{
 						result.Start = page;
+						result.StartByte = position - (ulong)page.Size;
 					}
 
 				} while (Api.TryMoveNext(session, Usage) && position <= endByte);
 
 				result.End = page;
+				result.EndByte = position - 1;
 
 				return result;
 			}
@@ -339,6 +341,7 @@ namespace RavenFS.Storage
 				PageInformation lastEntirePage;
 
 				ulong position = 0;
+				ulong lastEntirePagePosition = 0;
 
 				do
 				{
@@ -353,6 +356,7 @@ namespace RavenFS.Storage
 					if (result.Start == null && position >= startByte && position + (ulong) page.Size - 1 <= endByte)
 					{
 						result.Start = page;
+						result.StartByte = position;
 					}
 
 					position += (ulong)page.Size;
@@ -362,11 +366,17 @@ namespace RavenFS.Storage
 				if (position - 1 == endByte)
 				{
 					lastEntirePage = page;
+					lastEntirePagePosition = endByte;
+				}
+				else
+				{
+					lastEntirePagePosition = position - (ulong) page.Size - 1;
 				}
 
 				if (result.Start != null)
 				{
 					result.End = lastEntirePage;
+					result.EndByte = lastEntirePagePosition;
 
 					return result;
 				}
