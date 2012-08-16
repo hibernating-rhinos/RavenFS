@@ -111,7 +111,7 @@
 				{
 					if (synchronizingFile != null)
 					{
-						synchronizingFile.PreventDispose = false;
+						synchronizingFile.PreventUploadComplete = false;
 						synchronizingFile.Dispose();
 					}
 
