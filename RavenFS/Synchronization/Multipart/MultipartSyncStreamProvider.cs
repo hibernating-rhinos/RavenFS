@@ -63,30 +63,40 @@ namespace RavenFS.Synchronization.Multipart
 			var parameters = headers.ContentDisposition.Parameters.ToDictionary(t => t.Name);
 
 			var needType = parameters[SyncingMultipartConstants.NeedType].Value;
-			var from = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeFrom].Value);
-			var to = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeTo].Value);
 
 			NumberOfFileParts++;
 
 			if (needType == "source")
 			{
-				var length = (to - from + 1);
+				var pageFrom = Convert.ToInt64(parameters[SyncingMultipartConstants.PageRangeFrom].Value);
+				var pageTo = Convert.ToInt64(parameters[SyncingMultipartConstants.PageRangeTo].Value);
 
-				if (length <= 0) // it might happen that synchronized file is empty, so there will have no pages
-				{
-					bodyParts.Add(new BodyPartInfo { Type = "source", UnassignedPages = new List<PageInformation>(), From = from, To = to});
-				}
-				else
-				{
-					bodyParts.Add(new BodyPartInfo { Type = "source", From = from, To = to});
-				}
+				//if (length <= 0) // it might happen that synchronized file is empty, so there will have no pages
+				//{
+				//    bodyParts.Add(new BodyPartInfo { Type = "source", UnassignedPages = new List<PageInformation>(), From = from, To = to });
+				//}
+				//else
+				//{
+				//	bodyParts.Add(new BodyPartInfo { Type = "source", From = from, To = to });
+				//}
+
+				bodyParts.Add(new BodyPartInfo { Type = "source" });
 
 				return synchronizingFile;
 			}
 
 			if (needType == "seed")
 			{
-				bodyParts.Add(new BodyPartInfo { Type = "seed", From = from, To = to});
+				var from = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeFrom].Value);
+				var to = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeTo].Value);
+
+				PageRange pageRange = null;
+
+				storage.Batch(accessor => pageRange = accessor.GetPageRangeBetweenBytes(localFile.Name, from, to));
+				if (pageRange != null)
+				{
+					bodyParts.Add(new BodyPartInfo { Type = "seed", From = pageRange.StartByte, To = pageRange.EndByte});
+				}
 
 				RetrieveLastWrittenPages("source");
 

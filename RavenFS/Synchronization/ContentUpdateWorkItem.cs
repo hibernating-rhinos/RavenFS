@@ -184,7 +184,7 @@
 		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, string fileName, NameValueCollection sourceMetadata, Stream sourceFileStream, IList<RdcNeed> needList, params IDisposable[] disposables)
 		{
 			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerId, fileName, sourceMetadata,
-																	   sourceFileStream, needList);
+																	   sourceFileStream, needList, Storage);
 
 			var bytesToTransferCount = needList.Where(x => x.BlockType == RdcNeedType.Source).Sum(x => (double) x.BlockLength);
 			

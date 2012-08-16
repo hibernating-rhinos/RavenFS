@@ -263,7 +263,7 @@ namespace RavenFS.Storage
 		/// <param name="startByte">Start byte of byte range</param>
 		/// <param name="endByte">End byte of byte range</param>
 		/// <returns>Page range where bytes are contained</returns>
-		public PageRange GetPageRangeContainingBytes(string filename, ulong startByte, ulong endByte)
+		public PageRange GetPageRangeContainingBytes(string filename, long startByte, long endByte)
 		{
 			Api.JetSetCurrentIndex(session, Files, "by_name");
 			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
@@ -283,7 +283,7 @@ namespace RavenFS.Storage
 
 				PageInformation page;
 
-				ulong position = 0;
+				long position = 0;
 
 				do
 				{
@@ -293,12 +293,12 @@ namespace RavenFS.Storage
 						Id = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value
 					};
 
-					position += (ulong)page.Size;
+					position += page.Size;
 
 					if (result.Start == null && position > startByte)
 					{
 						result.Start = page;
-						result.StartByte = position - (ulong)page.Size;
+						result.StartByte = position - page.Size;
 					}
 
 				} while (Api.TryMoveNext(session, Usage) && position <= endByte);
@@ -319,7 +319,7 @@ namespace RavenFS.Storage
 		/// <param name="startByte">Start byte of byte range</param>
 		/// <param name="endByte">End byte of byte range</param>
 		/// <returns>Page range inside byte range or null if does not exists any</returns>
-		public PageRange GetPageRangeBetweenBytes(string filename, ulong startByte, ulong endByte)
+		public PageRange GetPageRangeBetweenBytes(string filename, long startByte, long endByte)
 		{
 			Api.JetSetCurrentIndex(session, Files, "by_name");
 			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
@@ -340,8 +340,8 @@ namespace RavenFS.Storage
 				PageInformation page = null;
 				PageInformation lastEntirePage;
 
-				ulong position = 0;
-				ulong lastEntirePagePosition = 0;
+				long position = 0;
+				long lastEntirePagePosition = 0;
 
 				do
 				{
@@ -353,13 +353,13 @@ namespace RavenFS.Storage
 						Id = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value
 					};
 
-					if (result.Start == null && position >= startByte && position + (ulong) page.Size - 1 <= endByte)
+					if (result.Start == null && position >= startByte && position + page.Size - 1 <= endByte)
 					{
 						result.Start = page;
 						result.StartByte = position;
 					}
 
-					position += (ulong)page.Size;
+					position += page.Size;
 
 				} while (Api.TryMoveNext(session, Usage) && position <= endByte);
 
@@ -370,7 +370,7 @@ namespace RavenFS.Storage
 				}
 				else
 				{
-					lastEntirePagePosition = position - (ulong) page.Size - 1;
+					lastEntirePagePosition = position - (long) page.Size - 1;
 				}
 
 				if (result.Start != null)
