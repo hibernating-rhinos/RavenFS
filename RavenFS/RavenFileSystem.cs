@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Newtonsoft.Json.Converters;
 using RavenFS.Extensions;
 using RavenFS.Infrastructure;
+using RavenFS.Infrastructure.Connections;
 using RavenFS.Notifications;
 using RavenFS.Search;
 using RavenFS.Storage;
@@ -33,6 +34,7 @@ namespace RavenFS
 		private readonly ConflictActifactManager conflictActifactManager;
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
+	    private readonly TransportState transportState;
 
 		public TransactionalStorage Storage
 		{
@@ -54,8 +56,9 @@ namespace RavenFS
 			sigGenerator = new SigGenerator();
 			var replicationHiLo = new ReplicationHiLo(storage);
 			var sequenceActions = new SequenceActions(storage);
-			notificationPublisher = new NotificationPublisher();
-			fileLockManager = new FileLockManager();
+		    transportState = new TransportState();
+		    notificationPublisher = new NotificationPublisher(transportState);
+		    fileLockManager = new FileLockManager();
 			storage.Initialize();
 			search.Initialize();
 			var uuidGenerator = new UuidGenerator(sequenceActions);
@@ -131,7 +134,12 @@ namespace RavenFS
 			get { return conflictResolver; }
 		}
 
-		[MethodImpl(MethodImplOptions.Synchronized)]
+	    public TransportState TransportState
+	    {
+	        get { return transportState; }
+	    }
+
+	    [MethodImpl(MethodImplOptions.Synchronized)]
 		public void Start(HttpConfiguration config)
 		{
 			config.DependencyResolver = new DelegateDependencyResolver(type =>

@@ -152,6 +152,7 @@
     <Content Include="WebUI\Studio.html" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\ChangesController.cs" />
     <Compile Include="Controllers\ConfigController.cs" />
     <Compile Include="Controllers\FilesController.cs" />
     <Compile Include="Controllers\FoldersController.cs" />
@@ -162,6 +163,10 @@
     <Compile Include="Extensions\GuidExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Infrastructure\CachePreventingHandler.cs" />
+    <Compile Include="Infrastructure\Connections\ConnectionState.cs" />
+    <Compile Include="Infrastructure\Connections\EventsTransport.cs" />
+    <Compile Include="Infrastructure\Connections\TimeSensitiveStore.cs" />
+    <Compile Include="Infrastructure\Connections\TransportState.cs" />
     <Compile Include="Infrastructure\HistoryUpdater.cs" />
     <Compile Include="Infrastructure\TempDirectoryTools.cs" />
     <Compile Include="Notifications\ConfigChange.cs" />
@@ -308,6 +313,7 @@
     <Compile Include="Storage\TableColumnsCache.cs" />
     <Compile Include="Util\BoundedMemoryTarget.cs" />
     <Compile Include="Util\CombinedStream.cs" />
+    <Compile Include="Util\ConcurrentSet.cs" />
     <Compile Include="Util\DispsableAction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\BufferPool.cs" />
