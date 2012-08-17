@@ -6,7 +6,7 @@ namespace RavenFS.Infrastructure.Connections
 {
 	public class ConnectionState
 	{
-		private readonly ConcurrentQueue<object> pendingMessages = new ConcurrentQueue<object>();
+		private readonly ConcurrentQueue<Notification> pendingMessages = new ConcurrentQueue<Notification>();
 
 		private EventsTransport eventsTransport;
 
@@ -22,7 +22,7 @@ namespace RavenFS.Infrastructure.Connections
             Enqueue(notification);
 		}
 
-		private void Enqueue(object msg)
+		private void Enqueue(Notification msg)
 		{
 			if (eventsTransport == null || eventsTransport.Connected == false)
 			{
@@ -42,8 +42,8 @@ namespace RavenFS.Infrastructure.Connections
 		public void Reconnect(EventsTransport transport)
 		{
 			eventsTransport = transport;
-			var items = new List<object>();
-			object result;
+			var items = new List<Notification>();
+			Notification result;
 			while (pendingMessages.TryDequeue(out result))
 			{
 				items.Add(result);

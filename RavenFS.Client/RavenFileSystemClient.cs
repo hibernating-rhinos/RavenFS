@@ -10,12 +10,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Linq;
+using RavenFS.Client.Changes;
 
 namespace RavenFS.Client
 {
-	public class RavenFileSystemClient
+	public class RavenFileSystemClient : IDisposable
 	{
 		private readonly string baseUrl;
+	    private ServerNotifications notifications;
 
 #if SILVERLIGHT
 		static RavenFileSystemClient()
@@ -31,7 +33,7 @@ namespace RavenFS.Client
 			if (this.ServerUrl.EndsWith("/"))
 				this.baseUrl = this.ServerUrl.Substring(0, this.ServerUrl.Length - 1);
 
-            Notifications = new NotificationsManager(this);
+            notifications = new ServerNotifications(baseUrl);
 		}
 
 		public string ServerUrl
@@ -315,8 +317,10 @@ namespace RavenFS.Client
 			get { return new ConfigurationClient(this);}
 		}
 
-        public NotificationsManager Notifications { get; private set; }
-
+        public IServerNotifications Notifications
+        {
+            get { return notifications; }
+        }
 
 	    public Task DownloadSignatureAsync(string sigName, Stream destination, long? from = null, long? to = null)
 		{
@@ -764,5 +768,10 @@ namespace RavenFS.Client
 				})
 				.TryThrowBetterError();
 		}
+
+	    public void Dispose()
+	    {
+	        notifications.Dispose();
+	    }
 	}
 }

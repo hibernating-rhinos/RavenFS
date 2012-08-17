@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -14,6 +15,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Newtonsoft.Json;
+using RavenFS.Notifications;
+using RavenFS.Util;
 
 namespace RavenFS.Infrastructure.Connections
 {
@@ -24,74 +27,149 @@ namespace RavenFS.Infrastructure.Connections
 		private readonly Logger log = LogManager.GetCurrentClassLogger();
 		
 		public string Id { get; private set; }
-		public bool Connected { get; set; }
 
-		public event Action Disconnected = delegate { };
+	    public event Action Disconnected = delegate { };
 
-		private Task InitTask;
-        private TaskCompletionSource<Stream> streamAvailableTcs;
+	    private static JsonSerializerSettings settings;
+	    private AwaitableQueue<Tuple<string, TaskCompletionSource<bool>>> messageQueue = new AwaitableQueue<Tuple<string, TaskCompletionSource<bool>>>();
+	    private volatile bool connected;
 
-		public EventsTransport(string id)
+	    static EventsTransport()
+        {
+            settings = new JsonSerializerSettings()
+            {
+                Binder = new TypeHidingBinder(),
+                TypeNameHandling = TypeNameHandling.All,
+            };
+        }
+
+	    public EventsTransport(string id)
 		{
-			Connected = true;
+			connected = true;
 		    Id = id;
 			if (string.IsNullOrEmpty(Id))
 				throw new ArgumentException("Id is mandatory");
 
 			heartbeat = new Timer(Heartbeat);
-
-		    streamAvailableTcs = new TaskCompletionSource<Stream>();
 		}
 
-		public HttpResponseMessage GetResponse()
+	    public HttpResponseMessage GetResponse()
 		{
 		    var response = new HttpResponseMessage();
             response.Content = new PushStreamContent(HandleStreamAvailable, "text/event-stream");
 
-			InitTask = SendAsync(new { Type = "Initialized" });
-			Thread.MemoryBarrier();
-			heartbeat.Change(TimeSpan.Zero, TimeSpan.FromSeconds(5));
+			SendAsync(new Heartbeat());
 
 			return response;
-
 		}
 
 	    private void HandleStreamAvailable(Stream stream, HttpContent content, TransportContext context)
 	    {
-	        streamAvailableTcs.SetResult(stream);
+            heartbeat.Change(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+	        ProcessMessageQueue(stream);
 	    }
+
+	    public bool Connected
+	    {
+	        get { return connected; }
+	    }
+
+	    private async void ProcessMessageQueue(Stream stream)
+	    {
+            try
+            {
+                // if Disconnect() is called DequeueOrWaitAsync will throw OperationCancelledException, 
+                var messageWithTask = await messageQueue.DequeueOrWaitAsync();
+
+                while (Connected)
+                {
+                    var taskCompletionSource = messageWithTask.Item2;
+                    var messageContent = messageWithTask.Item1;
+
+                    try
+                    {
+                        await WriteContentToStreamAsync(stream, messageContent);
+                        taskCompletionSource.SetResult(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        taskCompletionSource.SetException(ex);
+                        Disconnect();
+                        SignalErrorToQueuedTasks(ex);
+                        break;
+                    }
+
+                    messageWithTask = await messageQueue.DequeueOrWaitAsync();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                SignalCancelledToQueuedTasks();
+            }
+            finally
+            {
+                heartbeat.Dispose();
+                Disconnected();
+                CloseTransport(stream);
+            }
+	    }
+
+	    private void SignalErrorToQueuedTasks(Exception ex)
+	    {
+	        Tuple<string, TaskCompletionSource<bool>> messageWithTask;
+
+	        while (messageQueue.TryDequeue(out messageWithTask))
+	        {
+	            messageWithTask.Item2.SetException(ex);
+	        }
+	    }
+
+        private void SignalCancelledToQueuedTasks()
+        {
+            Tuple<string, TaskCompletionSource<bool>> messageWithTask;
+
+            while (messageQueue.TryDequeue(out messageWithTask))
+            {
+                messageWithTask.Item2.SetCanceled();
+            }
+        }
 
 	    private void Heartbeat(object _)
 		{
-			SendAsync(new { Type = "Heartbeat" });
+			SendAsync(new Heartbeat());
 		}
 
-		public async Task SendAsync(object data)
+		public Task SendAsync(Notification data)
 		{
-		    var content = "data: " + JsonConvert.SerializeObject(data, Formatting.None) + "\r\n\r\n";
+            var content = "data: " + JsonConvert.SerializeObject(data, Formatting.None, settings) + "\r\n\r\n";
 
-		    await WriteContentToStreamAsync(content);
+		    return Enqueue(content);
 		}
 
-	    private async Task WriteContentToStreamAsync(string content)
+        private Task Enqueue(string message)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            
+            if (!messageQueue.TryEnqueue(Tuple.Create(message, tcs)))
+            {
+                tcs.SetCanceled();
+            }
+
+            return tcs.Task;
+        }
+
+	    private async Task WriteContentToStreamAsync(Stream stream, string content)
 	    {
-	        if (InitTask != null) // may be the very first time? 
-	            await InitTask;
-
-	        var stream = await streamAvailableTcs.Task;
-
 	        var buffer = Encoding.UTF8.GetBytes(content);
             try
             {
                 await stream.WriteAsync(buffer, 0, buffer.Length);
+                await stream.FlushAsync();
             }
             catch (Exception ex)
             {
                 log.DebugException("Error when using events transport", ex);
-                Connected = false;
-                Disconnected();
-
-                CloseTransport(stream);
+                throw;
             }
 	    }
 
@@ -109,29 +187,25 @@ namespace RavenFS.Infrastructure.Connections
 	        }
 	    }
 
-	    public Task SendManyAsync(IEnumerable<object> data)
+	    public Task SendManyAsync(IEnumerable<Notification> data)
 		{
 			var sb = new StringBuilder();
 
 			foreach (var o in data)
 			{
 				sb.Append("data: ")
-					.Append(JsonConvert.SerializeObject(o))
+                    .Append(JsonConvert.SerializeObject(o, Formatting.None, settings))
 					.Append("\r\n\r\n");
 			}
 	        var content = sb.ToString();
 
-	        return WriteContentToStreamAsync(content);
+	        return Enqueue(content);
 		}
 
-		public async void Disconnect()
-		{
-			if (heartbeat != null)
-				heartbeat.Dispose();
-			
-			Connected = false;
-			Disconnected();
-			CloseTransport(await streamAvailableTcs.Task);
+		public void Disconnect()
+		{	
+			connected = false;
+            messageQueue.SignalCompletion();
 		}
 	}
 }

@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace RavenFS.Studio.Models
 {
-    public class ApplicationModel : ViewModel
+    public class ApplicationModel : ViewModel, IDisposable
 	{
         public static readonly ApplicationModel Current = new ApplicationModel();
 
@@ -101,5 +101,10 @@ namespace RavenFS.Studio.Models
 		{
 			return new Uri(Client.ServerUrl+"/files/"+fileName);
 		}
+
+        public void Dispose()
+        {
+            Client.Dispose();
+        }
 	}
 }

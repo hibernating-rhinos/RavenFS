@@ -21,8 +21,13 @@ namespace RavenFS.Studio
         {
             this.Startup += this.Application_Startup;
             this.UnhandledException += this.Application_UnhandledException;
-
+            this.Exit += Application_Exit;
             InitializeComponent();
+        }
+
+        private void Application_Exit(object sender, EventArgs e)
+        {
+            ApplicationModel.Current.Dispose();
         }
 
         private void Application_Startup(object sender, StartupEventArgs e)

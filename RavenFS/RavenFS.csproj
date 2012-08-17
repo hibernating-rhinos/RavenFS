@@ -171,6 +171,7 @@
     <Compile Include="Infrastructure\TempDirectoryTools.cs" />
     <Compile Include="Notifications\ConfigChange.cs" />
     <Compile Include="Notifications\ConflictDetected.cs" />
+    <Compile Include="Notifications\Heartbeat.cs" />
     <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Notifications\NotificationEndpoint.cs" />
     <Compile Include="Controllers\RavenController.cs" />
@@ -311,6 +312,7 @@
     <Compile Include="Storage\StorageActionsAccessor.cs" />
     <Compile Include="Storage\StorageConfigurator.cs" />
     <Compile Include="Storage\TableColumnsCache.cs" />
+    <Compile Include="Util\AwaitableQueue.cs" />
     <Compile Include="Util\BoundedMemoryTarget.cs" />
     <Compile Include="Util\CombinedStream.cs" />
     <Compile Include="Util\ConcurrentSet.cs" />

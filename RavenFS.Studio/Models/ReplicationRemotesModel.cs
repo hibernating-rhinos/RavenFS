@@ -39,7 +39,7 @@ namespace RavenFS.Studio.Models
             BeginDestinationServersUpdate();
 
             ApplicationModel.Current.Client.Notifications
-                .ConfigChanges()
+                .ConfigurationChanges()
                 .TakeUntil(Unloaded)
                 .ObserveOnDispatcher()
                 .Subscribe(change => HandleConfigChange(change));
