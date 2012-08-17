@@ -22,16 +22,14 @@ namespace RavenFS.Synchronization.Multipart
 
 			public List<PageInformation> UnassignedPages { get; set; }
 
-			public long From { get; set; }
-
-			public long To { get; set; }
+			public PageRange PageRange { get; set; }
 		}
 
 		private readonly SynchronizingFileStream synchronizingFile;
 		private readonly StorageStream localFile;
 		private readonly TransactionalStorage storage;
 
-		private readonly List<BodyPartInfo> bodyParts = new List<BodyPartInfo>();
+		private readonly List<BodyPartInfo> bodies = new List<BodyPartInfo>();
 
 		public long BytesTransfered { get; private set; }
 		public long BytesCopied { get; private set; }
@@ -68,20 +66,21 @@ namespace RavenFS.Synchronization.Multipart
 
 			if (needType == "source")
 			{
-				var pageFrom = Convert.ToInt64(parameters[SyncingMultipartConstants.PageRangeFrom].Value);
-				var pageTo = Convert.ToInt64(parameters[SyncingMultipartConstants.PageRangeTo].Value);
+				var byteFrom = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeFrom].Value);
+				var byteTo = Convert.ToInt64(parameters[SyncingMultipartConstants.RangeFrom].Value);
+				var pageFrom = Convert.ToInt32(parameters[SyncingMultipartConstants.PageRangeFrom].Value);
+				var pageTo = Convert.ToInt32(parameters[SyncingMultipartConstants.PageRangeTo].Value);
 
-				//if (length <= 0) // it might happen that synchronized file is empty, so there will have no pages
-				//{
-				//    bodyParts.Add(new BodyPartInfo { Type = "source", UnassignedPages = new List<PageInformation>(), From = from, To = to });
-				//}
-				//else
-				//{
-				//	bodyParts.Add(new BodyPartInfo { Type = "source", From = from, To = to });
-				//}
+				var pageRange = new PageRange
+				                	{
+				                		Start = new PageInformation {Id = pageFrom},
+				                		End = new PageInformation {Id = pageTo},
+				                		StartByte = byteFrom,
+				                		EndByte = byteTo
+				                	};
 
-				bodyParts.Add(new BodyPartInfo { Type = "source" });
-
+				bodies.Add(new BodyPartInfo { Type = "source", PageRange = pageRange});
+				RetrieveLastWrittenPages("source");
 				return synchronizingFile;
 			}
 
@@ -95,7 +94,7 @@ namespace RavenFS.Synchronization.Multipart
 				storage.Batch(accessor => pageRange = accessor.GetPageRangeBetweenBytes(localFile.Name, from, to));
 				if (pageRange != null)
 				{
-					bodyParts.Add(new BodyPartInfo { Type = "seed", From = pageRange.StartByte, To = pageRange.EndByte});
+					bodies.Add(new BodyPartInfo { Type = "seed", PageRange = pageRange});
 				}
 
 				RetrieveLastWrittenPages("source");
@@ -106,10 +105,6 @@ namespace RavenFS.Synchronization.Multipart
 			throw new ArgumentException(string.Format("Invalid need type: '{0}'", needType));
 		}
 
-		/// <summary>
-		/// Copies local file chunks ('seed' parts) and associate pages to right order
-		/// </summary>
-		/// <returns>Task representing copy and association operations</returns>
 		public override Task ExecutePostProcessingAsync()
 		{
 			return Task.Factory.StartNew(() =>
@@ -124,22 +119,22 @@ namespace RavenFS.Synchronization.Multipart
 
 				uint numberOfCopiedLocalFileParts = 0;
 
-				foreach (var body in bodyParts)
+				foreach (var body in bodies)
 				{
 					if(body.Type == "seed") // copy part from local file
 					{
-						if (localFile == null)
+						if (body.PageRange != null)
 						{
-							throw new SynchronizationException("Cannot copy a chunk of the local file because its stream is uninitialized");
+							FileAndPages fileAndPages = null;
+
+							var start = body.PageRange.Start.Id - 1;
+							var pagesToLoad = body.PageRange.End.Id - body.PageRange.Start.Id + 1;
+
+							storage.Batch(accessor => fileAndPages = accessor.GetFile(localFile.Name, start, pagesToLoad));
+							body.UnassignedPages = fileAndPages.Pages;
 						}
 
-						var limitedStream = new NarrowedStream(localFile, body.From, body.To);
-						limitedStream.CopyTo(synchronizingFile);
-						synchronizingFile.Dispose();
-
 						numberOfCopiedLocalFileParts++;
-
-						RetrieveLastWrittenPages("seed");
 					}
 
 					foreach (var page in body.UnassignedPages) // assign pages
@@ -150,6 +145,7 @@ namespace RavenFS.Synchronization.Multipart
 						// calculate transferred and copied bytes
 						if(body.Type == "seed")
 						{
+							storage.Batch(accessor => accessor.IncreasePageUsageCount(page.Id));
 							BytesCopied += page.Size;
 						}
 						else if (body.Type == "source")
@@ -165,7 +161,7 @@ namespace RavenFS.Synchronization.Multipart
 
 		private void RetrieveLastWrittenPages(string type)
 		{
-			var firstUnassignedPage = bodyParts.FirstOrDefault(x => x.Type == type && x.UnassignedPages == null);
+			var firstUnassignedPage = bodies.FirstOrDefault(x => x.Type == type && x.UnassignedPages == null);
 
 			if (firstUnassignedPage != null && synchronizingFile.LastWrittenPages.Count > 0)
 			{

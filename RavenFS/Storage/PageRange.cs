@@ -18,6 +18,7 @@ namespace RavenFS.Storage
 		public void Add(PageRange pageRange)
 		{
 			End = pageRange.End;
+			EndByte = pageRange.EndByte;
 		}
 	}
 }

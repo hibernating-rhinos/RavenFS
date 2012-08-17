@@ -20,6 +20,8 @@ namespace RavenFS.Synchronization.Multipart
 
 			Headers.ContentDisposition = new ContentDispositionHeaderValue("file");
 			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.NeedType, SyncingNeedType));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeFrom, pageRange.StartByte.ToString()));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeTo, pageRange.EndByte.ToString()));
 			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.PageRangeFrom, pageRange.Start.Id.ToString()));
 			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.PageRangeTo, pageRange.End.Id.ToString()));
 

@@ -21,19 +21,17 @@ namespace RavenFS.Synchronization.Multipart
 		private readonly string fileName;
 		private readonly NameValueCollection sourceMetadata;
 		private readonly Stream sourceStream;
-		private readonly IList<RdcNeed> needList;
-		private readonly TransactionalStorage storage;
+		private readonly IList<PageRange> pageRanges;
 		private readonly string syncingBoundary;
 
-		public SynchronizationMultipartRequest(string destinationUrl, Guid sourceId, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList, TransactionalStorage storage)
+		public SynchronizationMultipartRequest(string destinationUrl, Guid sourceId, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<PageRange> pageRanges)
 		{
 			this.destinationUrl = destinationUrl;
 			this.sourceId = sourceId;
 			this.fileName = fileName;
 			this.sourceMetadata = sourceMetadata;
 			this.sourceStream = sourceStream;
-			this.needList = needList;
-			this.storage = storage;
+			this.pageRanges = pageRanges;
 			this.syncingBoundary = "syncing";
 		}
 
@@ -81,26 +79,35 @@ namespace RavenFS.Synchronization.Multipart
 		{
 			var content = new MultipartContent("form-data", syncingBoundary);
 
-			foreach (var item in needList)
+			foreach (var pageRange in pageRanges)
 			{
-				long @from = Convert.ToInt64(item.FileOffset);
-				long length = Convert.ToInt64(item.BlockLength);
-				long to = from + length - 1;
-
-				switch (item.BlockType)
+				if (pageRange.Start != null && pageRange.End != null)
 				{
-					case RdcNeedType.Source:
-						PageRange pageRange = null;
-
-						storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes(fileName, @from, to));
-						content.Add(new SourceFilePart(new NarrowedStream(sourceStream, pageRange.StartByte, pageRange.EndByte), pageRange));
-						break;
-					case RdcNeedType.Seed:
-						content.Add(new SeedFilePart(@from, to));
-						break;
-					default:
-						throw new NotSupportedException();
+					content.Add(new SourceFilePart(new NarrowedStream(sourceStream, pageRange.StartByte, pageRange.EndByte), pageRange));      
 				}
+				else
+				{
+					content.Add(new SeedFilePart(pageRange.StartByte, pageRange.EndByte));
+				}
+
+				//long @from = Convert.ToInt64(item.FileOffset);
+				//long length = Convert.ToInt64(item.BlockLength);
+				//long to = from + length - 1;
+
+				//switch (item.BlockType)
+				//{
+				//    case RdcNeedType.Source:
+				//        PageRange pageRange = null;
+
+				//        storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes(fileName, @from, to));
+				//        content.Add(new SourceFilePart(new NarrowedStream(sourceStream, pageRange.StartByte, pageRange.EndByte), pageRange));
+				//        break;
+				//    case RdcNeedType.Seed:
+				//        content.Add(new SeedFilePart(@from, to));
+				//        break;
+				//    default:
+				//        throw new NotSupportedException();
+				//}
 			}
 
 			return content;

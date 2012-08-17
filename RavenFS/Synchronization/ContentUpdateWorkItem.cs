@@ -183,8 +183,10 @@
 
 		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, string fileName, NameValueCollection sourceMetadata, Stream sourceFileStream, IList<RdcNeed> needList, params IDisposable[] disposables)
 		{
+			var pageRanges = TransformToPageRangeParts(needList);
+
 			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerId, fileName, sourceMetadata,
-																	   sourceFileStream, needList, Storage);
+																	   sourceFileStream, pageRanges);
 
 			var bytesToTransferCount = needList.Where(x => x.BlockType == RdcNeedType.Source).Sum(x => (double) x.BlockLength);
 			
@@ -204,6 +206,49 @@
 
 					return t.Result;
 				});
+		}
+
+		private List<PageRange> TransformToPageRangeParts(IEnumerable<RdcNeed> needList)
+		{
+			var overlapingPageRanges = new List<PageRange>();
+
+			foreach (var need in needList)
+			{
+				long @from = Convert.ToInt64(need.FileOffset);
+				long length = Convert.ToInt64(need.BlockLength);
+				long to = from + length - 1;
+
+				PageRange pageRange = null;
+
+				if (need.BlockType == RdcNeedType.Source)
+				{
+					Storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes(FileName, from, to));
+				}
+				else if (need.BlockType == RdcNeedType.Seed)
+				{
+					pageRange = new PageRange {StartByte = @from, EndByte = to};
+				}
+
+				overlapingPageRanges.Add(pageRange);
+			}
+
+			var finalPageRanges = new List<PageRange>();
+
+			foreach (var overlapingPageRange in overlapingPageRanges)
+			{
+				var lastPageRange = finalPageRanges.LastOrDefault(x => x.Start != null);
+
+				if (overlapingPageRange.Start == null || finalPageRanges.Count == 0 || lastPageRange == null || !lastPageRange.IsOverlaping(overlapingPageRange))
+				{
+					finalPageRanges.Add(overlapingPageRange);
+				}
+				else
+				{
+					lastPageRange.Add(overlapingPageRange);
+				}
+			}
+
+			return finalPageRanges;
 		}
 
 		private NameValueCollection GetLocalMetadata(string fileName)
