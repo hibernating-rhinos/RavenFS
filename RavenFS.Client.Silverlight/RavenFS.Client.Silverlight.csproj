@@ -54,9 +54,6 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.5.7\lib\sl4\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="SignalR.Client.Silverlight5">
-      <HintPath>..\packages\SignalR.Client.Silverlight5.0.5.2\lib\sl50\SignalR.Client.Silverlight5.dll</HintPath>
-    </Reference>
     <Reference Include="System.Reactive">
       <HintPath>..\packages\Rx-Main.1.0.11226\lib\SL5\System.Reactive.dll</HintPath>
     </Reference>
@@ -149,9 +146,6 @@
     </Compile>
     <Compile Include="..\RavenFS.Client\NotificationJSonUtilities.cs">
       <Link>NotificationJSonUtilities.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\NotificationsManager.cs">
-      <Link>NotificationsManager.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\RavenFileSystemClient.cs">
       <Link>RavenFileSystemClient.cs</Link>

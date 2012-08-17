@@ -1,4 +1,6 @@
-﻿namespace RavenFS.Tests.Synchronization
+﻿using RavenFS.Notifications;
+
+namespace RavenFS.Tests.Synchronization
 {
 	using System;
 	using System.Collections.Generic;
@@ -8,7 +10,6 @@
 	using Newtonsoft.Json;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
-	using RavenFS.Notifications;
 	using RavenFS.Synchronization;
 	using RavenFS.Synchronization.Conflictuality;
 	using RavenFS.Synchronization.Multipart;

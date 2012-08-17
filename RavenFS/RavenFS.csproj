@@ -97,15 +97,6 @@
     <Reference Include="NLog">
       <HintPath>..\packages\NLog.2.0.0.2000\lib\net40\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="SignalR">
-      <HintPath>..\packages\SignalR.Server.0.5.2\lib\net40\SignalR.dll</HintPath>
-    </Reference>
-    <Reference Include="SignalR.Hosting.AspNet">
-      <HintPath>..\packages\SignalR.Hosting.AspNet.0.5.2\lib\net40\SignalR.Hosting.AspNet.dll</HintPath>
-    </Reference>
-    <Reference Include="SignalR.Hosting.Common">
-      <HintPath>..\packages\SignalR.Hosting.Common.0.5.2\lib\net40\SignalR.Hosting.Common.dll</HintPath>
-    </Reference>
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Net.Http, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Net.Http.2.0.20710.0\lib\net40\System.Net.Http.dll</HintPath>
@@ -157,7 +148,6 @@
     <Compile Include="Controllers\FilesController.cs" />
     <Compile Include="Controllers\FoldersController.cs" />
     <Compile Include="Controllers\LogsController.cs" />
-    <Compile Include="Controllers\NotificationsController.cs" />
     <Compile Include="Extensions\Buffers.cs" />
     <Compile Include="Extensions\ConfigurationExtension.cs" />
     <Compile Include="Extensions\GuidExtensions.cs" />
@@ -173,7 +163,6 @@
     <Compile Include="Notifications\ConflictDetected.cs" />
     <Compile Include="Notifications\Heartbeat.cs" />
     <Compile Include="Notifications\Notification.cs" />
-    <Compile Include="Notifications\NotificationEndpoint.cs" />
     <Compile Include="Controllers\RavenController.cs" />
     <Compile Include="Controllers\RdcController.cs" />
     <Compile Include="Controllers\SearchController.cs" />
@@ -188,17 +177,11 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Infrastructure\ConnectionController.cs" />
     <Compile Include="Infrastructure\ErrorLoggingConcurrentMergeScheduler.cs" />
     <Compile Include="Infrastructure\LimitedStream.cs" />
     <Compile Include="Infrastructure\RedirectHandler.cs" />
     <Compile Include="Infrastructure\RedirectRouteHandler.cs" />
     <Compile Include="Infrastructure\TaskExtensions.cs" />
-    <Compile Include="Infrastructure\SignalR\CookieCollection.cs" />
-    <Compile Include="Infrastructure\SignalR\HttpContentExtensions.cs" />
-    <Compile Include="Infrastructure\SignalR\HttpRequestHeadersExtensions.cs" />
-    <Compile Include="Infrastructure\SignalR\WebApiRequest.cs" />
-    <Compile Include="Infrastructure\SignalR\WebApiResponse.cs" />
     <Compile Include="NonAdminHttp.cs" />
     <Compile Include="Notifications\NotificationPublisher.cs" />
     <Compile Include="Notifications\SynchronizationUpdate.cs" />

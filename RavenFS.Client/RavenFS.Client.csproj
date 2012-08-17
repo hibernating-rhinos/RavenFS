@@ -71,10 +71,6 @@
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.4.5.7\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="SignalR.Client, Version=0.5.2.10625, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\SignalR.Client.0.5.2\lib\net40\SignalR.Client.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Reactive">
@@ -110,7 +106,6 @@
     <Compile Include="ListenableStream.cs" />
     <Compile Include="MultiPartParser.cs" />
     <Compile Include="Notification.cs" />
-    <Compile Include="NotificationsManager.cs" />
     <Compile Include="ListPage.cs" />
     <Compile Include="RavenFileSystemClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

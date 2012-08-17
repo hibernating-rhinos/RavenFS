@@ -5,11 +5,10 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Web;
 using Newtonsoft.Json;
-using SignalR;
 
 namespace RavenFS.Notifications
 {
-    public class TypeHidingJsonSerializer : IJsonSerializer
+    public class TypeHidingJsonSerializer 
     {
         private static JsonSerializerSettings settings;
 
