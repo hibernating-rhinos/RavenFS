@@ -229,7 +229,10 @@
 					pageRange = new PageRange {StartByte = @from, EndByte = to};
 				}
 
-				overlapingPageRanges.Add(pageRange);
+				if (pageRange != null)
+				{
+					overlapingPageRanges.Add(pageRange);
+				}
 			}
 
 			var finalPageRanges = new List<PageRange>();
