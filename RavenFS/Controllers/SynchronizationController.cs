@@ -111,7 +111,7 @@
 				{
 					if (synchronizingFile != null)
 					{
-						synchronizingFile.PreventDispose = false;
+						synchronizingFile.PreventUploadComplete = false;
 						synchronizingFile.Dispose();
 					}
 
@@ -128,6 +128,8 @@
 					{
 						sourceMetadata["Content-MD5"] = stream.GetMD5Hash();
 						Storage.Batch(accesor => accesor.UpdateFileMetadata(tempFileName, sourceMetadata));
+
+						log.Debug("MD5 hash of '{0}' was calculated", fileName);
 					}
 
 					Storage.Batch(
@@ -139,6 +141,8 @@
 							Search.Delete(tempFileName);
 							Search.Index(fileName, sourceMetadata);
 						});
+
+					log.Debug("Old file '{0}' was deleted. Indexes was updated", fileName);
 
 					if (isConflictResolved)
 					{

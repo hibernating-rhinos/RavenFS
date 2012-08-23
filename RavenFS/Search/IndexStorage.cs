@@ -95,7 +95,7 @@ namespace RavenFS.Search
 			return topDocs;
 		}
 
-		public void Index(string key, NameValueCollection metadata)
+		public virtual void Index(string key, NameValueCollection metadata)
 		{
 			lock (writerLock)
 			{

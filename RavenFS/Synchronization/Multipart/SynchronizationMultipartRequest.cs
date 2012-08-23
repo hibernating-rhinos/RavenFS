@@ -12,6 +12,7 @@ namespace RavenFS.Synchronization.Multipart
 	using Newtonsoft.Json;
 	using RavenFS.Util;
 	using Rdc.Wrapper;
+	using Storage;
 
 	public class SynchronizationMultipartRequest
 	{
@@ -21,9 +22,10 @@ namespace RavenFS.Synchronization.Multipart
 		private readonly NameValueCollection sourceMetadata;
 		private readonly Stream sourceStream;
 		private readonly IList<RdcNeed> needList;
+		private readonly TransactionalStorage storage;
 		private readonly string syncingBoundary;
 
-		public SynchronizationMultipartRequest(string destinationUrl, Guid sourceId, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList)
+		public SynchronizationMultipartRequest(string destinationUrl, Guid sourceId, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList, TransactionalStorage storage)
 		{
 			this.destinationUrl = destinationUrl;
 			this.sourceId = sourceId;
@@ -31,6 +33,7 @@ namespace RavenFS.Synchronization.Multipart
 			this.sourceMetadata = sourceMetadata;
 			this.sourceStream = sourceStream;
 			this.needList = needList;
+			this.storage = storage;
 			this.syncingBoundary = "syncing";
 		}
 
@@ -87,7 +90,10 @@ namespace RavenFS.Synchronization.Multipart
 				switch (item.BlockType)
 				{
 					case RdcNeedType.Source:
-						content.Add(new SourceFilePart(new NarrowedStream(sourceStream, from, to)));
+						PageRange pageRange = null;
+
+						storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes(fileName, @from, to));
+						content.Add(new SourceFilePart(new NarrowedStream(sourceStream, pageRange.StartByte, pageRange.EndByte), pageRange));
 						break;
 					case RdcNeedType.Seed:
 						content.Add(new SeedFilePart(@from, to));

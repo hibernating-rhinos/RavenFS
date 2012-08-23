@@ -13,11 +13,16 @@ namespace RavenFS.Util
 			LastWrittenPages = new List<PageInformation>();
 		}
 
-		public bool PreventDispose { get; set; }
+		public bool PreventUploadComplete { get; set; }
 
 		protected override void Dispose(bool disposing)
 		{
-			if (!PreventDispose)
+			if (innerBuffer != null && innerBufferOffset > 0)
+			{
+				WriteToStorage();
+			}
+
+			if (!PreventUploadComplete)
 			{
 				base.Dispose(disposing);
 			}
@@ -26,7 +31,7 @@ namespace RavenFS.Util
 		public static SynchronizingFileStream CreatingOrOpeningAndWritting(TransactionalStorage storage, IndexStorage search, string fileName, NameValueCollection metadata)
 		{
 			return new SynchronizingFileStream(storage, fileName, StorageStreamAccess.CreateAndWrite, metadata, search)
-			       	{ PreventDispose = true };
+			       	{ PreventUploadComplete = true };
 		}
 
 		public List<PageInformation> LastWrittenPages { get; set; }
@@ -34,29 +39,48 @@ namespace RavenFS.Util
 		public override void Write(byte[] buffer, int offset, int count)
 		{
 			var innerOffset = 0;
-			var innerBuffer = new byte[MaxPageSize];
+
 			while (innerOffset < count)
 			{
-				var toCopy = Math.Min(MaxPageSize, count - innerOffset);
+				if (innerBuffer == null)
+				{
+					innerBuffer = new byte[StorageConstants.MaxPageSize];
+				}
+
+				var toCopy = Math.Min(StorageConstants.MaxPageSize - innerBufferOffset, count - innerOffset);
 				if (toCopy == 0)
 				{
 					throw new Exception("Impossible");
 				}
 
-				Array.Copy(buffer, offset + innerOffset, innerBuffer, 0, toCopy);
-				TransactionalStorage.Batch(
-					accessor =>
-					{
-						var hashKey = accessor.InsertPage(innerBuffer, toCopy); // just insert - will associate later
+				Array.Copy(buffer, offset + innerOffset, innerBuffer, innerBufferOffset, toCopy);
+				innerBufferOffset += toCopy;
 
-						LastWrittenPages.Add(new PageInformation
-						                     	{
-						                     		Id = hashKey,
-													Size = toCopy
-						                     	});
-					});
+				if (innerBufferOffset == StorageConstants.MaxPageSize)
+				{
+					WriteToStorage();
+				}
+
 				innerOffset += toCopy;
 			}
+		}
+
+		protected override void WriteToStorage()
+		{
+			TransactionalStorage.Batch(
+				accessor =>
+				{
+					var hashKey = accessor.InsertPage(innerBuffer, innerBufferOffset); // just insert - will associate later
+
+					LastWrittenPages.Add(new PageInformation
+					                     	{
+					                     		Id = hashKey,
+												Size = innerBufferOffset
+					                     	});
+				});
+
+			innerBuffer = null;
+			innerBufferOffset = 0;
 		}
 	}
 }

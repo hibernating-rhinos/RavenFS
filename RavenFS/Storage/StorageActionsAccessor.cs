@@ -256,6 +256,137 @@ namespace RavenFS.Storage
 			return size;
 		}
 
+		/// <summary>
+		/// Gets pages that contain byte range
+		/// </summary>
+		/// <param name="filename">File name</param>
+		/// <param name="startByte">Start byte of byte range</param>
+		/// <param name="endByte">End byte of byte range</param>
+		/// <returns>Page range where bytes are contained</returns>
+		public PageRange GetPageRangeContainingBytes(string filename, long startByte, long endByte)
+		{
+			Api.JetSetCurrentIndex(session, Files, "by_name");
+			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
+				throw new FileNotFoundException("Could not find file: " + filename);
+
+			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
+			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			Api.MakeKey(session, Usage, 0, MakeKeyGrbit.None);
+
+			if (Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
+			{
+				Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+				Api.JetSetIndexRange(session, Usage, SetIndexRangeGrbit.RangeInclusive);
+
+				var result = new PageRange();
+
+				PageInformation page;
+
+				long position = 0;
+
+				do
+				{
+					page = new PageInformation
+					{
+						Size = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_size"]).Value,
+						Id = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value
+					};
+
+					position += page.Size;
+
+					if (result.Start == null && position > startByte)
+					{
+						result.Start = page;
+						result.StartByte = position - page.Size;
+					}
+
+				} while (Api.TryMoveNext(session, Usage) && position <= endByte);
+
+				result.End = page;
+				result.EndByte = position - 1;
+
+				return result;
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Gets entire pages between byte range if any exists. Otherwise null is returned
+		/// </summary>
+		/// <param name="filename">File name</param>
+		/// <param name="startByte">Start byte of byte range</param>
+		/// <param name="endByte">End byte of byte range</param>
+		/// <returns>Page range inside byte range or null if does not exists any</returns>
+		public PageRange GetPageRangeBetweenBytes(string filename, long startByte, long endByte)
+		{
+			Api.JetSetCurrentIndex(session, Files, "by_name");
+			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
+				throw new FileNotFoundException("Could not find file: " + filename);
+
+			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
+			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			Api.MakeKey(session, Usage, 0, MakeKeyGrbit.None);
+
+			if (Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
+			{
+				Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+				Api.JetSetIndexRange(session, Usage, SetIndexRangeGrbit.RangeInclusive);
+
+				var result = new PageRange();
+
+				PageInformation page = null;
+				PageInformation lastEntirePage;
+
+				long position = 0;
+				long lastEntirePagePosition = 0;
+
+				do
+				{
+					lastEntirePage = page;
+
+					page = new PageInformation
+					{
+						Size = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_size"]).Value,
+						Id = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value
+					};
+
+					if (result.Start == null && position >= startByte && position + page.Size - 1 <= endByte)
+					{
+						result.Start = page;
+						result.StartByte = position;
+					}
+
+					position += page.Size;
+
+				} while (Api.TryMoveNext(session, Usage) && position <= endByte);
+
+				if (position - 1 == endByte)
+				{
+					lastEntirePage = page;
+					lastEntirePagePosition = endByte;
+				}
+				else
+				{
+					lastEntirePagePosition = position - (long) page.Size - 1;
+				}
+
+				if (result.Start != null)
+				{
+					result.End = lastEntirePage;
+					result.EndByte = lastEntirePagePosition;
+
+					return result;
+				}
+
+				return null;
+			}
+
+			return null;
+		}
+
 		public FileHeader ReadFile(string filename)
 		{
 			Api.JetSetCurrentIndex(session, Files, "by_name");

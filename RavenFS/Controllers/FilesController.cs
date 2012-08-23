@@ -341,7 +341,7 @@ namespace RavenFS.Controllers
 				this.inputStream = inputStream;
 				this.storage = storage;
 				this.filename = filename;
-				buffer = bufferPool.TakeBuffer(64 * 1024);
+				buffer = bufferPool.TakeBuffer(StorageConstants.MaxPageSize);
 			}
 
 			public Task Execute()

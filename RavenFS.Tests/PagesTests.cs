@@ -7,6 +7,8 @@ using Xunit;
 
 namespace RavenFS.Tests
 {
+	using Storage;
+
 	public class PagesTests : IDisposable
 	{
 		readonly Storage.TransactionalStorage storage;
@@ -160,6 +162,145 @@ namespace RavenFS.Tests
 				Assert.Equal(4, accessor.ReadPage(key, buffer));
 				Assert.Equal(new byte[] { 1, 2, 3, 4 }, buffer);
 			});
+		}
+
+		[Fact]
+		public void CanGetPageRangeContainingBytes()
+		{
+			storage.Batch(accessor =>
+			{
+				accessor.PutFile("file", 16, metadataWithEtag);
+
+				var hashKey = accessor.InsertPage(new byte[] { 1, 2, 3, 4 }, 4);
+				accessor.AssociatePage("file", hashKey, 0, 4);
+
+				hashKey = accessor.InsertPage(new byte[] { 5, 6, 7 }, 3);
+				accessor.AssociatePage("file", hashKey, 1, 3);
+
+				hashKey = accessor.InsertPage(new byte[] { 8, 9, 10, 11 }, 4);
+				accessor.AssociatePage("file", hashKey, 2, 4);
+
+				hashKey = accessor.InsertPage(new byte[] { 12, 13, 14, 15 }, 4);
+				accessor.AssociatePage("file", hashKey, 3, 4);
+			});
+
+			PageRange pageRange = null;
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes("file", 0, 3));
+
+			Assert.Equal(1, pageRange.Start.Id);
+			Assert.Equal(1, pageRange.End.Id);
+			Assert.Equal(0L, pageRange.StartByte);
+			Assert.Equal(3L, pageRange.EndByte);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes("file", 2, 3));
+
+			Assert.Equal(1, pageRange.Start.Id);
+			Assert.Equal(1, pageRange.End.Id);
+			Assert.Equal(0L, pageRange.StartByte);
+			Assert.Equal(3L, pageRange.EndByte);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes("file", 3, 4));
+
+			Assert.Equal(1, pageRange.Start.Id);
+			Assert.Equal(2, pageRange.End.Id);
+			Assert.Equal(0L, pageRange.StartByte);
+			Assert.Equal(6L, pageRange.EndByte);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes("file", 3, 5));
+
+			Assert.Equal(1, pageRange.Start.Id);
+			Assert.Equal(2, pageRange.End.Id);
+			Assert.Equal(0L, pageRange.StartByte);
+			Assert.Equal(6L, pageRange.EndByte);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes("file", 5, 9));
+
+			Assert.Equal(2, pageRange.Start.Id);
+			Assert.Equal(3, pageRange.End.Id);
+			Assert.Equal(4L, pageRange.StartByte);
+			Assert.Equal(10L, pageRange.EndByte);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes("file", 1, 12));
+
+			Assert.Equal(1, pageRange.Start.Id);
+			Assert.Equal(4, pageRange.End.Id);
+			Assert.Equal(0L, pageRange.StartByte);
+			Assert.Equal(14L, pageRange.EndByte);
+		}
+
+		[Fact]
+		public void CanGetPageRangeBetweenBytes()
+		{
+			storage.Batch(accessor =>
+			{
+				accessor.PutFile("file", 16, metadataWithEtag);
+
+				var hashKey = accessor.InsertPage(new byte[] {1, 2, 3, 4}, 4);
+				accessor.AssociatePage("file", hashKey, 0, 4);
+
+				hashKey = accessor.InsertPage(new byte[] {5, 6, 7}, 3);
+				accessor.AssociatePage("file", hashKey, 1, 3);
+
+				hashKey = accessor.InsertPage(new byte[] {8, 9, 10, 11}, 4);
+				accessor.AssociatePage("file", hashKey, 2, 4);
+
+				hashKey = accessor.InsertPage(new byte[] {12, 13, 14, 15}, 4);
+				accessor.AssociatePage("file", hashKey, 3, 4);
+			});
+
+			PageRange pageRange = null;
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeBetweenBytes("file", 1, 3));
+
+			Assert.Null(pageRange);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeBetweenBytes("file", 6, 7));
+
+			Assert.Null(pageRange);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeBetweenBytes("file", 11, 13));
+
+			Assert.Null(pageRange);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeBetweenBytes("file", 13, 14));
+
+			Assert.Null(pageRange);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeBetweenBytes("file", 3, 8));
+
+			Assert.Equal(2, pageRange.Start.Id);
+			Assert.Equal(2, pageRange.End.Id);
+			Assert.Equal(4L, pageRange.StartByte);
+			Assert.Equal(6L, pageRange.EndByte);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeBetweenBytes("file", 3, 11));
+
+			Assert.Equal(2, pageRange.Start.Id);
+			Assert.Equal(3, pageRange.End.Id);
+			Assert.Equal(4L, pageRange.StartByte);
+			Assert.Equal(10L, pageRange.EndByte);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeBetweenBytes("file", 4, 10));
+
+			Assert.Equal(2, pageRange.Start.Id);
+			Assert.Equal(3, pageRange.End.Id);
+			Assert.Equal(4L, pageRange.StartByte);
+			Assert.Equal(10L, pageRange.EndByte);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeBetweenBytes("file", 9, 14));
+
+			Assert.Equal(4, pageRange.Start.Id);
+			Assert.Equal(4, pageRange.End.Id);
+			Assert.Equal(11L, pageRange.StartByte);
+			Assert.Equal(14L, pageRange.EndByte);
+
+			storage.Batch(accessor => pageRange = accessor.GetPageRangeBetweenBytes("file", 0, 14));
+
+			Assert.Equal(1, pageRange.Start.Id);
+			Assert.Equal(4, pageRange.End.Id);
+			Assert.Equal(0L, pageRange.StartByte);
+			Assert.Equal(14L, pageRange.EndByte);
 		}
 
 		public void Dispose()

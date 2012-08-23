@@ -189,6 +189,7 @@
     <Compile Include="Infrastructure\DelegateDependencyResolver.cs" />
     <Compile Include="RavenFileSystem.cs" />
     <Compile Include="Infrastructure\CompletedTask.cs" />
+    <Compile Include="Storage\PageRange.cs" />
     <Compile Include="Synchronization\Conflictuality\ConflictActifactManager.cs" />
     <Compile Include="Synchronization\Conflictuality\ConflictDetector.cs" />
     <Compile Include="Synchronization\Conflictuality\ConflictItem.cs" />
@@ -308,7 +309,9 @@
     <Compile Include="Util\JsonSerializerFactory.cs" />
     <Compile Include="Util\NameValueCollectionJsonConverter.cs" />
     <Compile Include="Util\NarrowedStream.cs" />
+    <Compile Include="Util\PagedStorageStream.cs" />
     <Compile Include="Util\RabinKarpHasher.cs" />
+    <Compile Include="Storage\StorageConstants.cs" />
     <Compile Include="Util\SynchronizationHelper.cs" />
     <Compile Include="Util\StorageStream.cs" />
     <Compile Include="Util\StorageStreamAccess.cs" />
