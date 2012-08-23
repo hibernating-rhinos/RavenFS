@@ -1,6 +1,10 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using RavenFS.Notifications;
+using RavenFS.Util;
 
 namespace RavenFS.Infrastructure.Connections
 {
@@ -11,6 +15,11 @@ namespace RavenFS.Infrastructure.Connections
 		private EventsTransport eventsTransport;
 
 
+	    private int watchConfig;
+	    private int watchConflicts;
+	    private int watchSync;
+        private ConcurrentSet<string> matchingFolders = new ConcurrentSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
 		public ConnectionState(EventsTransport eventsTransport)
 		{
 			this.eventsTransport = eventsTransport;
@@ -19,10 +28,38 @@ namespace RavenFS.Infrastructure.Connections
 		
 		public void Send(Notification notification)
 		{
-            Enqueue(notification);
+            if (ShouldSend(notification))
+            {
+                Enqueue(notification);
+            }
 		}
 
-		private void Enqueue(Notification msg)
+	    private bool ShouldSend(Notification notification)
+	    {
+	        if (notification is FileChange && matchingFolders.Any(f => ((FileChange)notification).File.StartsWith(f, StringComparison.InvariantCultureIgnoreCase)))
+	        {
+	            return true;
+	        }
+            
+            if (notification is ConfigChange && watchConfig > 0)
+            {
+                return true;
+            }
+
+            if (notification is ConflictDetected && watchConflicts > 0)
+            {
+                return true;
+            }
+
+            if (notification is SynchronizationUpdate && watchSync > 0)
+            {
+                return true;
+            }
+
+	        return false;
+	    }
+
+	    private void Enqueue(Notification msg)
 		{
 			if (eventsTransport == null || eventsTransport.Connected == false)
 			{
@@ -60,6 +97,46 @@ namespace RavenFS.Infrastructure.Connections
 									}
 								});
 		}
+
+        public void WatchConflicts()
+        {
+            Interlocked.Increment(ref watchConflicts);
+        }
+
+        public void UnwatchConflicts()
+        {
+            Interlocked.Decrement(ref watchConflicts);
+        }
+
+        public void WatchConfig()
+        {
+            Interlocked.Increment(ref watchConfig);
+        }
+
+        public void UnwatchConfig()
+        {
+            Interlocked.Decrement(ref watchConfig);
+        }
+
+        public void WatchSync()
+        {
+            Interlocked.Increment(ref watchSync);
+        }
+
+        public void UnwatchSync()
+        {
+            Interlocked.Decrement(ref watchSync);
+        }
+
+        public void WatchFolder(string folder)
+        {
+            matchingFolders.TryAdd(folder);
+        }
+
+        public void UnwatchFolder(string folder)
+        {
+            matchingFolders.TryRemove(folder);
+        }
 
 		public void Disconnect()
 		{

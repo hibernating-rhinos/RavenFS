@@ -21,10 +21,8 @@ namespace RavenFS.Controllers
         }
 
         [AcceptVerbs("GET")]
-        public HttpResponseMessage Config(string id, string command)
+        public HttpResponseMessage Config(string id, string command, string value = "")
         {
-            var response = new HttpResponseMessage();
-
             if (string.IsNullOrEmpty(id))
             {
                 throw BadRequestException("id query string parameter is mandatory when using changes/config endpoint");
@@ -35,6 +33,38 @@ namespace RavenFS.Controllers
             if (Match(command, "disconnect"))
             {
                 RavenFileSystem.TransportState.Disconnect(id);
+            }
+            else if (Match(command, "watch-config"))
+            {
+                connectionState.WatchConfig();
+            }
+            else if (Match(command, "unwatch-config"))
+            {
+                connectionState.UnwatchConfig();
+            }
+            else if (Match(command, "watch-conflicts"))
+            {
+                connectionState.WatchConflicts();
+            }
+            else if (Match(command, "unwatch-conflicts"))
+            {
+                connectionState.UnwatchConflicts();
+            }
+            else if (Match(command, "watch-sync"))
+            {
+                connectionState.WatchSync();
+            }
+            else if (Match(command, "unwatch-sync"))
+            {
+                connectionState.UnwatchSync();
+            }
+            else if (Match(command, "watch-folder"))
+            {
+                connectionState.WatchFolder(value);
+            }
+            else if (Match(command, "unwatch-folder"))
+            {
+                connectionState.UnwatchFolder(value);
             }
             else
             {

@@ -23,6 +23,7 @@ namespace RavenFS.Tests
 
                 var notificationTask =
                     client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
                 client.UploadAsync("abc.txt", new MemoryStream()).Wait();
 
@@ -39,10 +40,11 @@ namespace RavenFS.Tests
             using (var client = NewClient())
             {
                 client.UploadAsync("abc.txt", new MemoryStream()).Wait();
-                client.Notifications.ConnectionTask.Wait();
+
 
                 var notificationTask =
                     client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
                 client.DeleteAsync("abc.txt").Wait();
 
@@ -59,10 +61,10 @@ namespace RavenFS.Tests
             using (var client = NewClient())
             {
                 client.UploadAsync("abc.txt", new MemoryStream()).Wait();
-                client.Notifications.ConnectionTask.Wait();
 
                 var notificationTask =
                     client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
                 client.UpdateMetadataAsync("abc.txt", new NameValueCollection() {{"MyMetadata", "MyValue"}}).Wait();
 
@@ -79,10 +81,10 @@ namespace RavenFS.Tests
             using (var client = NewClient())
             {
                 client.UploadAsync("abc.txt", new MemoryStream()).Wait();
-                client.Notifications.ConnectionTask.Wait();
 
                 var notificationTask =
                     client.Notifications.FolderChanges("/").Buffer(TimeSpan.FromSeconds(5)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
                 client.RenameAsync("abc.txt", "newName.txt").Wait();
 
@@ -100,10 +102,9 @@ namespace RavenFS.Tests
         {
             using (var client = NewClient())
             {
-                client.Notifications.ConnectionTask.Wait();
-
                 var notificationTask =
                     client.Notifications.FolderChanges("/Folder").Buffer(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
                 client.UploadAsync("AnotherFolder/abc.txt", new MemoryStream()).Wait();
 
@@ -118,10 +119,9 @@ namespace RavenFS.Tests
         {
             using (var client = NewClient())
             {
-                client.Notifications.ConnectionTask.Wait();
-
                 var notificationTask =
                     client.Notifications.ConfigurationChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
                 client.Config.SetConfig("Test", new NameValueCollection()).Wait();
 
@@ -137,10 +137,9 @@ namespace RavenFS.Tests
         {
             using (var client = NewClient())
             {
-                client.Notifications.ConnectionTask.Wait();
-
                 var notificationTask =
                     client.Notifications.ConfigurationChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
                 client.Config.DeleteConfig("Test").Wait();
 

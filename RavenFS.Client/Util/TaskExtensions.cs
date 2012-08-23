@@ -20,5 +20,10 @@ namespace RavenFS.Client.Util
             taskCompletionSource.SetException(ex);
             return taskCompletionSource.Task;
         }
+
+        public static Task FromException(Exception ex)
+        {
+            return FromException<bool>(ex);
+        }
     }
 }

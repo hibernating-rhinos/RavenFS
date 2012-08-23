@@ -73,9 +73,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Reactive">
-      <HintPath>..\packages\Rx-Main.1.0.11226\lib\Net4\System.Reactive.dll</HintPath>
-    </Reference>
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
@@ -84,8 +81,10 @@
     </Compile>
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Changes\Base62Util.cs" />
+    <Compile Include="Changes\ImmutableList.cs" />
     <Compile Include="Changes\IServerNotifications.cs" />
     <Compile Include="Changes\LocalConnectionState.cs" />
+    <Compile Include="Changes\NotificationObservable.cs" />
     <Compile Include="Changes\ServerNotifications.cs" />
     <Compile Include="Changes\TaskedObservable.cs" />
     <Compile Include="Changes\TaskErrorExtensions.cs" />

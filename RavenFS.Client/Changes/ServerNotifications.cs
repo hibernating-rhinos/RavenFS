@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using RavenFS.Client.Connections;
@@ -11,7 +10,8 @@ namespace RavenFS.Client.Changes
 	public class ServerNotifications : IServerNotifications, IObserver<string>, IDisposable
 	{
 		private readonly string url;
-		private readonly AtomicDictionary<LocalConnectionState> counters = new AtomicDictionary<LocalConnectionState>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly AtomicDictionary<NotificationSubject> subjects = new AtomicDictionary<NotificationSubject>(StringComparer.InvariantCultureIgnoreCase);
+        private readonly ConcurrentSet<Task> pendingConnectionTasks = new ConcurrentSet<Task>();
 		private int reconnectAttemptsRemaining;
 		private IDisposable connection;
 
@@ -87,59 +87,41 @@ namespace RavenFS.Client.Changes
 			.Unwrap();
 		}
 
-		public IObservableWithTask<Notification> All()
-		{
-            EnsureConnectionInitiated();
-
-			var counter = counters.GetOrAdd("all", s =>
-			{
-				var subscriptionTask = AfterConnection(() => TaskEx.FromResult(true));
-
-				return new LocalConnectionState(
-					() =>
-					{
-						counters.Remove("all");
-					},
-					subscriptionTask);
-			});
-			counter.Inc();
-			var taskedObservable = new TaskedObservable<Notification>(
-				counter,
-				notification => !(notification is Heartbeat));
-
-			counter.OnNotification += taskedObservable.Send;
-			counter.OnError = taskedObservable.Error;
-
-			var disposableTask = counter.Task.ContinueWith(task =>
-			{
-				if (task.IsFaulted)
-					return null;
-				return (IDisposable)new DisposableAction(() =>
-															{
-																try
-																{
-																	connection.Dispose();
-																}
-																catch (Exception)
-																{
-																	// nothing to do here
-																}
-															});
-			});
-
-			counter.Add(disposableTask);
-			return taskedObservable;
-
-		}
+	    public Task WhenSubscriptionsActive()
+	    {
+	        return TaskEx.WhenAll(pendingConnectionTasks);
+	    }
 
         public IObservable<ConfigChange> ConfigurationChanges()
         {
-            return All().OfType<ConfigChange>();
+            EnsureConnectionInitiated();
+
+            var observable = subjects.GetOrAdd("config", s => new NotificationSubject<ConfigChange>(
+                                                               () => ConfigureConnection("watch-config"), 
+                                                               () => ConfigureConnection("unwatch-config"), 
+                                                               item => true));
+
+            return (IObservable<ConfigChange>)observable;
         }
 
-        public IObservable<ConflictDetected> ConflictDetected()
+	    private void ConfigureConnection(string command, string value = "")
+	    {
+	        var task = AfterConnection(() => Send(command, value));
+
+            pendingConnectionTasks.Add(task);
+	        task.ContinueWith(_ => pendingConnectionTasks.TryRemove(task));
+	    }
+
+	    public IObservable<ConflictDetected> ConflictDetected()
         {
-            return All().OfType<ConflictDetected>();
+            EnsureConnectionInitiated();
+
+            var observable = subjects.GetOrAdd("conflicts", s => new NotificationSubject<ConflictDetected>(
+                                                               () => ConfigureConnection("watch-conflicts"), 
+                                                               () => ConfigureConnection("unwatch-conflicts"), 
+                                                               item => true));
+
+            return (IObservable<ConflictDetected>)observable;
         }
 
         public IObservable<FileChange> FolderChanges(string folder)
@@ -151,14 +133,26 @@ namespace RavenFS.Client.Changes
 
             var canonicalisedFolder = folder.TrimStart('/');
 
-            return All()
-                .OfType<FileChange>()
-                .Where(f => f.File.StartsWith(canonicalisedFolder, StringComparison.InvariantCultureIgnoreCase));
+            EnsureConnectionInitiated();
+
+            var observable = subjects.GetOrAdd("folder/" + canonicalisedFolder, s => new NotificationSubject<FileChange>(
+                                                               () => ConfigureConnection("watch-folder", canonicalisedFolder), 
+                                                               () => ConfigureConnection("unwatch-folder", canonicalisedFolder), 
+                                                               f => f.File.StartsWith(canonicalisedFolder, StringComparison.InvariantCultureIgnoreCase)));
+
+            return (IObservable<FileChange>)observable;
         }
 
-        public IObservable<SynchronizationUpdate> SynchronizationUpdates(SynchronizationDirection synchronizationDirection)
+        public IObservable<SynchronizationUpdate> SynchronizationUpdates()
         {
-            return All().OfType<SynchronizationUpdate>().Where(x => x.SynchronizationDirection == synchronizationDirection);
+            EnsureConnectionInitiated();
+
+            var observable = subjects.GetOrAdd("sync", s => new NotificationSubject<SynchronizationUpdate>(
+                                                               () => ConfigureConnection("watch-sync"),
+                                                               () => ConfigureConnection("unwatch-sync"),
+                                                               x => true));
+
+            return (IObservable<SynchronizationUpdate>)observable;
         }
 
 		private Task Send(string command, string value)
@@ -169,13 +163,13 @@ namespace RavenFS.Client.Changes
 				if (string.IsNullOrEmpty(value) == false)
 					sendUrl += "&value=" + Uri.EscapeUriString(value);
 
-                var request = (HttpWebRequest)WebRequest.Create(url + "/changes/events?id=" + id);
+                var request = (HttpWebRequest)WebRequest.Create(sendUrl);
                 request.Method = "GET";
 				return request.GetResponseAsync().ObserveException();
 			}
 			catch (Exception e)
 			{
-				return Util.TaskExtensions.FromException<bool>(e).ObserveException();
+				return Util.TaskExtensions.FromException(e).ObserveException();
 			}
 		}
 
@@ -194,14 +188,16 @@ namespace RavenFS.Client.Changes
 				return TaskEx.FromResult(true);
 			disposed = true;
 			reconnectAttemptsRemaining = 0;
-			foreach (var keyValuePair in counters)
-			{
-				keyValuePair.Value.Dispose();
-			}
+
 			if (connection == null)
 			{
                 return TaskEx.FromResult(true);
 			}
+
+            foreach (var subject in subjects)
+            {
+                subject.Value.OnCompleted();
+            }
 
 			return Send("disconnect", null).
 				ContinueWith(_ =>
@@ -220,9 +216,14 @@ namespace RavenFS.Client.Changes
         {
             var notification = NotificationJSonUtilities.Parse<Notification>(dataFromConnection);
 
-            foreach (var counter in counters)
+            if (notification is Heartbeat)
             {
-                counter.Value.Send(notification);
+                return;
+            }
+
+            foreach (var subject in subjects)
+            {
+                subject.Value.OnNext(notification);
             }
 
         }
@@ -239,11 +240,11 @@ namespace RavenFS.Client.Changes
 									if (task.IsFaulted == false)
 										return;
 
-									foreach (var keyValuePair in counters)
-									{
-										keyValuePair.Value.Error(task.Exception);
-									}
-									counters.Clear();
+                                    foreach (var subject in subjects)
+                                    {
+                                        subject.Value.OnError(task.Exception);
+                                    }
+                                    subjects.Clear();
 								});
 		}
 

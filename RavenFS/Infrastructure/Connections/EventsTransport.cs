@@ -20,6 +20,13 @@ using RavenFS.Util;
 
 namespace RavenFS.Infrastructure.Connections
 {
+    /// <summary>
+    /// Repsonsible for streaming events to an individual client
+    /// </summary>
+    /// <remarks>
+    /// We use a queue to serialize the writing of individual messages to the stream because we were encountering concurrency exceptions when
+    /// a heartbeat and a message where being written to the stream at the same time
+    /// </remarks>
 	public class EventsTransport
 	{
 		private readonly Timer heartbeat;

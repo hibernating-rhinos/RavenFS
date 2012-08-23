@@ -72,11 +72,17 @@
     <Compile Include="..\RavenFS.Client\Changes\Base62Util.cs">
       <Link>Changes\Base62Util.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\Changes\ImmutableList.cs">
+      <Link>Changes\ImmutableList.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\Changes\IServerNotifications.cs">
       <Link>Changes\IServerNotifications.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\Changes\LocalConnectionState.cs">
       <Link>Changes\LocalConnectionState.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Changes\NotificationObservable.cs">
+      <Link>Changes\NotificationObservable.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\Changes\ServerNotifications.cs">
       <Link>Changes\ServerNotifications.cs</Link>
