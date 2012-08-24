@@ -80,4 +80,8 @@
     <BitmapImage x:Key="Image_Synchronize_Tiny" UriSource="synchronize_tiny.png"/>
     <BitmapImage x:Key="Image_Tick_Small" UriSource="tick_small.png"/>
     <BitmapImage x:Key="Image_Tick_Tiny" UriSource="tick_tiny.png"/>
+    <BitmapImage x:Key="Image_Sync_Tiny" UriSource="sync_tiny.png"/>
+    <BitmapImage x:Key="Image_AddReplicationTarget_Tiny" UriSource="add_replication_target_tiny.png"/>
+    <BitmapImage x:Key="Image_ReplicationTarget_Tiny" UriSource="replication_target_tiny.png"/>
+    <BitmapImage x:Key="Image_FileConflict_Tiny" UriSource="file_conflict_tiny.png"/>
 </ResourceDictionary>

@@ -17,7 +17,7 @@
                     Margin="0,0,0,0"
                         Style="{StaticResource Style_Button_MouseOverChrome}">
                     <StackPanel Orientation="Horizontal">
-                        <Image Source="{StaticResource Image_Synchronize_Tiny}" Stretch="None"/>
+                        <Image Source="{StaticResource Image_AddReplicationTarget_Tiny}" Stretch="None"/>
                         <TextBlock Margin="2,0,0,0">Add Destination</TextBlock>
                     </StackPanel>
                 </Button>
@@ -26,7 +26,7 @@
                     Margin="0,0,0,0"
                         Style="{StaticResource Style_Button_MouseOverChrome}">
                     <StackPanel Orientation="Horizontal">
-                        <Image  Stretch="None"/>
+                        <Image Source="{StaticResource Image_Sync_Tiny}" Stretch="None"/>
                         <TextBlock Margin="2,0,0,0">Sync Now</TextBlock>
                     </StackPanel>
                 </Button>
@@ -38,6 +38,7 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <toolkit:DockPanel Margin="0,3">
+                        <Image Source="{StaticResource Image_ReplicationTarget_Tiny}" Stretch="None" toolkit:DockPanel.Dock="Left"/>
                         <Button Command="{StaticResource RemoveReplicationDestinationCommand}" 
                                 CommandParameter="{Binding}" ToolTipService.ToolTip="Remove"
                                 Style="{StaticResource Style_Button_MouseOverChrome}"
@@ -45,7 +46,7 @@
                                 VerticalAlignment="Center">
                                 <Image Source="{StaticResource Image_Remove_Tiny}" Stretch="None"/>
                         </Button>
-                        <HyperlinkButton Content="{Binding}" Command="{StaticResource NavigateToExternalUrl}" CommandParameter="{Binding}" Margin="0,0,5,0"
+                        <HyperlinkButton Content="{Binding}" Command="{StaticResource NavigateToExternalUrl}" CommandParameter="{Binding}" Margin="3,0,5,0"
                                          VerticalAlignment="Center"/>
                     </toolkit:DockPanel>
                 </DataTemplate>
