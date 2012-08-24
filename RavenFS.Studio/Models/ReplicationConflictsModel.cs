@@ -15,17 +15,18 @@ namespace RavenFS.Studio.Models
 {
     public class ReplicationConflictsModel : ViewModel
     {
-        public VirtualCollectionSource<FileSystemModel> ConflictedFiles { get; private set; }
+        public VirtualCollection<FileSystemModel> ConflictedFiles { get; private set; }
 
         public ReplicationConflictsModel()
         {
-            ConflictedFiles = new SearchResultsCollectionSource()
-                {SearchPattern = "Raven-Synchronization-Conflict:True"};
+            ConflictedFiles =
+                new VirtualCollection<FileSystemModel>(
+                    new SearchResultsCollectionSource() {SearchPattern = "Raven-Synchronization-Conflict:True"}, 30, 30);
         }
 
         protected override void OnViewLoaded()
         {
-            ConflictedFiles.Refresh(RefreshMode.ClearStaleData);
+            ConflictedFiles.Refresh();
 
             ApplicationModel.Current.Client.Notifications.ConflictDetected()
                 .Throttle(TimeSpan.FromSeconds(1))
