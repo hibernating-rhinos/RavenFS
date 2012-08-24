@@ -10,6 +10,7 @@
                  xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
                  xmlns:b="clr-namespace:RavenFS.Studio.Behaviors"
                  xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+                                   xmlns:controls="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls"
                  xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
                      xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
                     xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
@@ -22,13 +23,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-
         <Border Style="{StaticResource Style_Border_Header}"
-                Grid.ColumnSpan="2">
+                Grid.ColumnSpan="3">
             <toolkit:DockPanel Margin="4" LastChildFill="False">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Configuration" Style="{StaticResource Style_TextBlock_Breadcrumb}"/>
@@ -42,7 +38,7 @@
         </Border>
 
         <Border Grid.Row="1" 
-                Grid.ColumnSpan="2"
+                Grid.ColumnSpan="3"
                 Style="{StaticResource Style_Border_Toolbar}">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6">
                 <Button ToolTipService.ToolTip="Save Configuration"
@@ -77,11 +73,21 @@
             
         </Border>
 
-        <toolkit:DockPanel Grid.Row="2" Grid.Column="0">
-            <TextBlock Text="Configurations" Foreground="{StaticResource Brush_HeaderText}" Margin="5,4"
-                       toolkit:DockPanel.Dock="Top"/>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="4*"/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Row="2" Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Text="Configurations" Foreground="{StaticResource Brush_HeaderText}" Margin="5,4" Grid.Row="0"/>
             <ListBox ItemsSource="{Binding AvailableConfigurations}"
-                     SelectedItem="{Binding SelectedConfiguration.Value, Mode=TwoWay}">
+                     SelectedItem="{Binding SelectedConfiguration.Value, Mode=TwoWay}"
+                     Grid.Row="1">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock x:Name="TextBlock">
@@ -101,11 +107,15 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </toolkit:DockPanel>
+        </Grid>
 
-        <Grid Grid.Row="2"
+        <controls:GridSplitter Grid.Row="0"
               Grid.Column="1"
-              Margin="10,0,0,0">
+              VerticalAlignment="Stretch" Width="10" HorizontalAlignment="Center"/>
+        
+        <Grid Grid.Row="2"
+              Grid.Column="2"
+              Margin="0,0,0,0">
             <Border Background="White">
                 <RichTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="15">
                     <Paragraph>
@@ -185,6 +195,6 @@
                 </sdk:DataGrid.Columns>
             </sdk:DataGrid>
         </Grid>
-      
+        </Grid>
     </Grid>
 </Infrastructure:PageView>
