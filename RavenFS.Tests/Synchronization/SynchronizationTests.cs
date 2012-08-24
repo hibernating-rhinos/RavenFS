@@ -715,5 +715,20 @@ namespace RavenFS.Tests.Synchronization
 			Assert.Equal(SynchronizationType.MetadataUpdate, finishedSynchronizations[0].Type);
 			Assert.Equal("File test.bin is conflicted", finishedSynchronizations[0].Exception.Message);
 		}
+
+        [Fact]
+        public void Files_should_be_reindexed_when_conflict_is_applied()
+        {
+            var client = NewClient(0);
+
+            client.UploadAsync("conflict.test", new MemoryStream(1)).Wait();
+            client.Synchronization.ApplyConflictAsync("conflict.test", 1, "blah").Wait();
+
+            var results = client.SearchAsync("Raven-Synchronization-Conflict:true").Result;
+        
+            Assert.Equal(1, results.FileCount);
+            Assert.Equal("conflict.test", results.Files[0].Name);
+        }
+
 	}
 }

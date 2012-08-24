@@ -64,7 +64,7 @@ namespace RavenFS
 			var uuidGenerator = new UuidGenerator(sequenceActions);
 			historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
-			conflictActifactManager = new ConflictActifactManager(storage);
+			conflictActifactManager = new ConflictActifactManager(storage,search);
 			conflictDetector = new ConflictDetector();
 			conflictResolver = new ConflictResolver();
 			synchronizationTask = new SynchronizationTask(storage, sigGenerator, notificationPublisher);
