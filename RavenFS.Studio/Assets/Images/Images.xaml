@@ -78,4 +78,6 @@
     <BitmapImage x:Key="Image_CopyToClipboard_Tiny" UriSource="copy_to_clipboard_tiny.png"/>
     <BitmapImage x:Key="Image_Error_Small" UriSource="error_small.png"/>
     <BitmapImage x:Key="Image_Synchronize_Tiny" UriSource="synchronize_tiny.png"/>
+    <BitmapImage x:Key="Image_Tick_Small" UriSource="tick_small.png"/>
+    <BitmapImage x:Key="Image_Tick_Tiny" UriSource="tick_tiny.png"/>
 </ResourceDictionary>

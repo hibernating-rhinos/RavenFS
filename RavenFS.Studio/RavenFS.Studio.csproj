@@ -199,6 +199,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Features\Replication\PendingSynchronizationTasksCollectionSource.cs" />
+    <Compile Include="Features\Replication\ReplicationConflictsView.xaml.cs">
+      <DependentUpon>ReplicationConflictsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Features\Replication\ReplicationRemotesView.xaml.cs">
       <DependentUpon>ReplicationRemotesView.xaml</DependentUpon>
     </Compile>
@@ -306,6 +309,7 @@
     <Compile Include="Models\ConfigurationModel.cs" />
     <Compile Include="Models\Notification.cs" />
     <Compile Include="Models\NotificationLevel.cs" />
+    <Compile Include="Models\ReplicationConflictsModel.cs" />
     <Compile Include="Models\SearchResultsCollectionSource.cs" />
     <Compile Include="Models\NameValueCollectionEditorModel.cs" />
     <Compile Include="Models\DirectoryModel.cs" />
@@ -385,6 +389,10 @@
     <Page Include="Controls\NotificationArea.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Features\Replication\ReplicationConflictsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Features\Replication\ReplicationRemotesView.xaml">
       <SubType>Designer</SubType>
@@ -520,6 +528,8 @@
     <Resource Include="Assets\Images\error_small.png" />
     <Resource Include="Assets\Images\copy_to_clipboard_tiny.png" />
     <Resource Include="Assets\Images\synchronize_tiny.png" />
+    <Resource Include="Assets\Images\tick_small.png" />
+    <Resource Include="Assets\Images\tick_tiny.png" />
     <Content Include="Impl\PopupPlacement\Credit.txt" />
     <Content Include="Impl\SplitButton\Credits.txt" />
     <Content Include="Impl\WatermarkedTextBox\Credits.txt" />

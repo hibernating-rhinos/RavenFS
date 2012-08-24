@@ -13,6 +13,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Border Style="{StaticResource Style_Border_Header}">
             <toolkit:DockPanel Margin="4" LastChildFill="False">
@@ -27,6 +28,7 @@
             </toolkit:DockPanel>
         </Border>
         <Replication:ReplicationRemotesView Grid.Row="1"/>
-        <Replication:SynchronizationActivityView Grid.Row="2"/>
+        <Replication:ReplicationConflictsView Grid.Row="2"/>
+        <Replication:SynchronizationActivityView Grid.Row="3"/>
     </Grid>
 </sdk:Page>
