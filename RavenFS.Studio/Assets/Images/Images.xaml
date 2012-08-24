@@ -15,6 +15,10 @@
                  UriSource="document.png" />
     <BitmapImage x:Key="Image_Folder_Tiny"
                  UriSource="folder.png" />
+    <BitmapImage x:Key="Image_Folder_Open_Tiny"
+                 UriSource="folder_open_tiny.png" />
+    <BitmapImage x:Key="Image_Add_Folder_Tiny"
+                 UriSource="add_folder_tiny.png" />
     <BitmapImage x:Key="Image_VirtualFolder_Tiny"
                  UriSource="VirtualFolder.png" />
     <BitmapImage x:Key="Image_Add_Tiny"

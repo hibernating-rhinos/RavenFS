@@ -67,7 +67,7 @@
                             VerticalAlignment="Center"
                             Command="{Binding DeleteConfiguration}" Margin="5,0,0,0"
                             Style="{StaticResource Style_Button_MouseOverChrome}">
-                    <Image Source="{StaticResource Image_Delete_Tiny}" Stretch="None"/>
+                    <Image Source="{StaticResource Image_Remove_Tiny}" Stretch="None"/>
                 </Button>
             </StackPanel>
             

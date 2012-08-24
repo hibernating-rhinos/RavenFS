@@ -548,6 +548,8 @@
     <Resource Include="Assets\Images\add_replication_target_tiny.png" />
     <Resource Include="Assets\Images\replication_target_tiny.png" />
     <Resource Include="Assets\Images\file_conflict_tiny.png" />
+    <Resource Include="Assets\Images\add_folder_tiny.png" />
+    <Resource Include="Assets\Images\folder_open_tiny.png" />
     <Content Include="Impl\PopupPlacement\Credit.txt" />
     <Content Include="Impl\SplitButton\Credits.txt" />
     <Content Include="Impl\WatermarkedTextBox\Credits.txt" />
