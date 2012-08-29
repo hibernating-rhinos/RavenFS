@@ -27,8 +27,7 @@ namespace RavenFS.Studio.Models
             OutgoingQueue.Refresh();
             IncomingItems.Refresh();
 
-            ApplicationModel.Current.Client.Notifications.Notifications()
-                .OfType<SynchronizationUpdate>()
+            ApplicationModel.Current.Client.Notifications.SynchronizationUpdates()
                 .Throttle(TimeSpan.FromSeconds(1))
                 .TakeUntil(Unloaded)
                 .ObserveOnDispatcher()

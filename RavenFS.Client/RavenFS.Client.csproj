@@ -65,21 +65,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AsyncCtpLibrary">
-      <HintPath>..\packages\AsyncCTP.0.3\lib\net40\AsyncCtpLibrary.dll</HintPath>
+    <Reference Include="Microsoft.CompilerServices.AsyncTargetingPack.Net4">
+      <HintPath>..\packages\Microsoft.CompilerServices.AsyncTargetingPack.1.0.0\lib\net40\Microsoft.CompilerServices.AsyncTargetingPack.Net4.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.4.5.7\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="SignalR.Client, Version=0.5.2.10625, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\SignalR.Client.0.5.2\lib\net40\SignalR.Client.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Reactive">
-      <HintPath>..\packages\Rx-Main.1.0.11226\lib\Net4\System.Reactive.dll</HintPath>
-    </Reference>
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
@@ -87,19 +80,31 @@
       <Link>NameValueCollectionJsonConverter.cs</Link>
     </Compile>
     <Compile Include="AsyncExtensions.cs" />
+    <Compile Include="Changes\Base62Util.cs" />
+    <Compile Include="Changes\ImmutableList.cs" />
+    <Compile Include="Changes\IServerNotifications.cs" />
+    <Compile Include="Changes\LocalConnectionState.cs" />
+    <Compile Include="Changes\NotificationObservable.cs" />
+    <Compile Include="Changes\ServerNotifications.cs" />
+    <Compile Include="Changes\TaskedObservable.cs" />
+    <Compile Include="Changes\TaskErrorExtensions.cs" />
+    <Compile Include="Changes\TaskObservable.cs" />
     <Compile Include="ConcurrencyException.cs" />
     <Compile Include="ConfigChange.cs" />
     <Compile Include="ConflictResolutionStrategy.cs" />
     <Compile Include="ConflictDetected.cs" />
+    <Compile Include="Connections\HttpWebRequestExtensions.cs" />
+    <Compile Include="Connections\ObservableLineStream.cs" />
+    <Compile Include="Connections\WebResponseExtensions.cs" />
     <Compile Include="DestinationSyncResult.cs" />
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="FileChange.cs" />
     <Compile Include="FileInfo.cs" />
     <Compile Include="FilesSortOptions.cs" />
+    <Compile Include="Heartbeat.cs" />
     <Compile Include="ListenableStream.cs" />
     <Compile Include="MultiPartParser.cs" />
     <Compile Include="Notification.cs" />
-    <Compile Include="NotificationsManager.cs" />
     <Compile Include="ListPage.cs" />
     <Compile Include="RavenFileSystemClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -118,6 +123,10 @@
     <Compile Include="SynchronizationType.cs" />
     <Compile Include="SynchronizationUpdate.cs" />
     <Compile Include="UrlExtensions.cs" />
+    <Compile Include="Util\AtomicDictionary.cs" />
+    <Compile Include="Util\ConcurrentSet.cs" />
+    <Compile Include="Util\DisposableAction.cs" />
+    <Compile Include="Util\TaskExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

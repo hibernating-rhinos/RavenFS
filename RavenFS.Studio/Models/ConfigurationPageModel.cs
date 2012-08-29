@@ -203,7 +203,7 @@ namespace RavenFS.Studio.Models
         {
             BeginLoadConfigurations();
             ApplicationModel.Current.Client.Notifications
-                .ConfigChanges()
+                .ConfigurationChanges()
                 .Throttle(TimeSpan.FromSeconds(1))
                 .TakeUntil(Unloaded)
                 .ObserveOn(DispatcherScheduler.Instance)

@@ -1,11 +1,12 @@
+using RavenFS.Notifications;
+
 namespace RavenFS.Synchronization.Conflictuality
 {
 	using System;
 	using System.Collections.Specialized;
 	using RavenFS.Client;
-	using RavenFS.Notifications;
 
-	public class ConflictResolver
+    public class ConflictResolver
 	{
 		public bool IsResolved(NameValueCollection destinationMetadata, ConflictItem conflict)
 		{

@@ -1,0 +1,72 @@
+﻿<Infrastructure:View x:Class="RavenFS.Studio.Features.Replication.ReplicationConflictsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+          xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
+                     xmlns:Models="clr-namespace:RavenFS.Studio.Models"
+                     xmlns:Replication="clr-namespace:RavenFS.Studio.Features.Replication"
+                     xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
+                     xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors" mc:Ignorable="d"
+    d:DesignHeight="300" d:DesignWidth="400"
+    Infrastructure:ModelResolver.AttachModel="ReplicationConflictsModel" d:DataContext="{d:DesignInstance Models:ReplicationConflictsModel}">
+
+    <Grid x:Name="LayoutRoot" >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" MinHeight="30"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Conflicts"  Style="{StaticResource Style_TextBlock_PagePartHeader}" Grid.Row="0" Margin="0,10"/>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Top">
+            <Image Source="{StaticResource Image_Tick_Tiny}" Stretch="None" VerticalAlignment="Center"/>
+            <TextBlock Text="There are no conflicts" Margin="5,0,0,0" FontSize="12" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <ListBox ItemsSource="{Binding ConflictedFiles}"
+                 Grid.Row="1"
+                 Visibility="{Binding ConflictedFiles.Count, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        
+        <sdk:DataGrid ItemsSource="{Binding ConflictedFiles}" IsReadOnly="True" RowHeight="25" AutoGenerateColumns="False" 
+                              Grid.Row="1"
+                              Visibility="{Binding ConflictedFiles.Count, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}">
+                    <sdk:DataGrid.Columns>
+                <sdk:DataGridTemplateColumn CanUserReorder="False" CanUserResize="False" CanUserSort="False">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Image Stretch="None" Source="{StaticResource Image_FileConflict_Tiny}" Margin="2,0"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Header="File Name">
+                            <sdk:DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Item.Name}" 
+                                       Behaviors:FadeTrimming.IsEnabled="True" 
+                                       Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                                </DataTemplate>
+                            </sdk:DataGridTemplateColumn.CellTemplate>
+                        </sdk:DataGridTemplateColumn>
+                <sdk:DataGridTemplateColumn Header="Folder">
+                    <sdk:DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Item.Folder}" 
+                                       Behaviors:FadeTrimming.IsEnabled="True" 
+                                       Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                        </DataTemplate>
+                    </sdk:DataGridTemplateColumn.CellTemplate>
+                </sdk:DataGridTemplateColumn>
+            </sdk:DataGrid.Columns>
+                </sdk:DataGrid>
+ </Grid>
+</Infrastructure:View>

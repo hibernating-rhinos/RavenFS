@@ -49,6 +49,7 @@
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -59,10 +60,11 @@
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AsyncCtpLibrary_Silverlight5">
-      <HintPath>..\packages\AsyncCTP.0.3\lib\sl50\AsyncCtpLibrary_Silverlight5.dll</HintPath>
+    <Reference Include="Microsoft.CompilerServices.AsyncTargetingPack.Silverlight5">
+      <HintPath>..\packages\Microsoft.CompilerServices.AsyncTargetingPack.1.0.0\lib\sl50\Microsoft.CompilerServices.AsyncTargetingPack.Silverlight5.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Expression.Interactions">
       <HintPath>..\SharedLibs\Silverlight\Microsoft.Expression.Interactions.dll</HintPath>
@@ -75,7 +77,10 @@
     <Reference Include="NLog">
       <HintPath>..\packages\NLog.2.0.0.2000\lib\sl4\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="System.ComponentModel.DataAnnotations, Version=5.0.5.0, Culture=neutral, PublicKeyToken=ddd0da4d3e678217, processorArchitecture=MSIL" />
+    <Reference Include="System.ComponentModel.DataAnnotations, Version=5.0.5.0, Culture=neutral, PublicKeyToken=ddd0da4d3e678217, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Libraries\Client\System.ComponentModel.DataAnnotations.dll</HintPath>
+    </Reference>
     <Reference Include="System.Reactive, Version=1.0.10621.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Rx-Main.1.0.11226\lib\SL5\System.Reactive.dll</HintPath>
     </Reference>
@@ -90,15 +95,24 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Libraries\Client\System.Windows.Controls.dll</HintPath>
     </Reference>
-    <Reference Include="System.Windows.Controls.Data, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
-    <Reference Include="System.Windows.Controls.Input, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Windows.Controls.Data, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Libraries\Client\System.Windows.Controls.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Controls.Input, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Libraries\Client\System.Windows.Controls.Input.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Controls.Input.Toolkit, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Windows.Controls.Navigation, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Libraries\Client\System.Windows.Controls.Navigation.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows.Controls.Toolkit, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
-    <Reference Include="System.Windows.Data, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.Windows.Data, Version=5.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Libraries\Client\System.Windows.Data.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Interactivity">
       <HintPath>..\SharedLibs\Silverlight\System.Windows.Interactivity.dll</HintPath>
     </Reference>
@@ -199,6 +213,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Features\Replication\PendingSynchronizationTasksCollectionSource.cs" />
+    <Compile Include="Features\Replication\ReplicationConflictsView.xaml.cs">
+      <DependentUpon>ReplicationConflictsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Features\Replication\ReplicationRemotesView.xaml.cs">
       <DependentUpon>ReplicationRemotesView.xaml</DependentUpon>
     </Compile>
@@ -306,6 +323,7 @@
     <Compile Include="Models\ConfigurationModel.cs" />
     <Compile Include="Models\Notification.cs" />
     <Compile Include="Models\NotificationLevel.cs" />
+    <Compile Include="Models\ReplicationConflictsModel.cs" />
     <Compile Include="Models\SearchResultsCollectionSource.cs" />
     <Compile Include="Models\NameValueCollectionEditorModel.cs" />
     <Compile Include="Models\DirectoryModel.cs" />
@@ -385,6 +403,10 @@
     <Page Include="Controls\NotificationArea.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Features\Replication\ReplicationConflictsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Features\Replication\ReplicationRemotesView.xaml">
       <SubType>Designer</SubType>
@@ -520,6 +542,14 @@
     <Resource Include="Assets\Images\error_small.png" />
     <Resource Include="Assets\Images\copy_to_clipboard_tiny.png" />
     <Resource Include="Assets\Images\synchronize_tiny.png" />
+    <Resource Include="Assets\Images\tick_small.png" />
+    <Resource Include="Assets\Images\tick_tiny.png" />
+    <Resource Include="Assets\Images\sync_tiny.png" />
+    <Resource Include="Assets\Images\add_replication_target_tiny.png" />
+    <Resource Include="Assets\Images\replication_target_tiny.png" />
+    <Resource Include="Assets\Images\file_conflict_tiny.png" />
+    <Resource Include="Assets\Images\add_folder_tiny.png" />
+    <Resource Include="Assets\Images\folder_open_tiny.png" />
     <Content Include="Impl\PopupPlacement\Credit.txt" />
     <Content Include="Impl\SplitButton\Credits.txt" />
     <Content Include="Impl\WatermarkedTextBox\Credits.txt" />

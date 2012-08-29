@@ -1,31 +1,19 @@
-﻿using SignalR;
+﻿using RavenFS.Infrastructure.Connections;
 
 namespace RavenFS.Notifications
 {
     public class NotificationPublisher
     {
-        private readonly IDependencyResolver dependencyResolver;
-        private readonly IConnection connection ;
+        private readonly TransportState transportState;
 
-        public NotificationPublisher()
+        public NotificationPublisher(TransportState transportState)
         {
-            dependencyResolver = new DefaultDependencyResolver();
-
-            var serializer = new TypeHidingJsonSerializer();
-            dependencyResolver.Register(typeof(IJsonSerializer), () => serializer);
-
-        	connection =
-        		dependencyResolver.Resolve<IConnectionManager>().GetConnectionContext<NotificationEndpoint>().Connection;
-        }
-
-        public IDependencyResolver SignalRDependencyResolver
-        {
-            get { return dependencyResolver; }
+            this.transportState = transportState;
         }
 
         public void Publish(Notification change)
         {
-            connection.Broadcast(change);
+            transportState.Send(change);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace RavenFS.Client
             settings = new JsonSerializerSettings()
                            {
                                Binder = new TypeHidingBinder(),
-                               TypeNameHandling = TypeNameHandling.Auto,
+                               TypeNameHandling = TypeNameHandling.Auto
                            };
         }
 

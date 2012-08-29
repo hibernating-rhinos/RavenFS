@@ -210,6 +210,11 @@ namespace RavenFS.Controllers
 			}
 		}
 
+        protected HttpResponseException BadRequestException(string message)
+        {
+            return new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest) { Content = new StringContent(message) });
+        }
+
 		protected HttpResponseException ConcurrencyResponseException(ConcurrencyException concurrencyException)
 		{
 			return new HttpResponseException(Request.CreateResponse(HttpStatusCode.MethodNotAllowed, concurrencyException));

@@ -47,15 +47,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AsyncCtpLibrary_Silverlight5">
-      <HintPath>..\packages\AsyncCTP.0.3\lib\sl50\AsyncCtpLibrary_Silverlight5.dll</HintPath>
+    <Reference Include="Microsoft.CompilerServices.AsyncTargetingPack.Silverlight5">
+      <HintPath>..\packages\Microsoft.CompilerServices.AsyncTargetingPack.1.0.0\lib\sl50\Microsoft.CompilerServices.AsyncTargetingPack.Silverlight5.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.5.7\lib\sl4\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="SignalR.Client.Silverlight5">
-      <HintPath>..\packages\SignalR.Client.Silverlight5.0.5.2\lib\sl50\SignalR.Client.Silverlight5.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive">
       <HintPath>..\packages\Rx-Main.1.0.11226\lib\SL5\System.Reactive.dll</HintPath>
@@ -72,6 +69,33 @@
     <Compile Include="..\RavenFS.Client\AsyncExtensions.cs">
       <Link>AsyncExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\Changes\Base62Util.cs">
+      <Link>Changes\Base62Util.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Changes\ImmutableList.cs">
+      <Link>Changes\ImmutableList.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Changes\IServerNotifications.cs">
+      <Link>Changes\IServerNotifications.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Changes\LocalConnectionState.cs">
+      <Link>Changes\LocalConnectionState.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Changes\NotificationObservable.cs">
+      <Link>Changes\NotificationObservable.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Changes\ServerNotifications.cs">
+      <Link>Changes\ServerNotifications.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Changes\TaskedObservable.cs">
+      <Link>Changes\TaskedObservable.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Changes\TaskErrorExtensions.cs">
+      <Link>Changes\TaskErrorExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Changes\TaskObservable.cs">
+      <Link>Changes\TaskObservable.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\ConcurrencyException.cs">
       <Link>ConcurrencyException.cs</Link>
     </Compile>
@@ -83,6 +107,15 @@
     </Compile>
     <Compile Include="..\RavenFS.Client\ConflictDetected.cs">
       <Link>ConflictDetected.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Connections\HttpWebRequestExtensions.cs">
+      <Link>Connection\HttpWebRequestExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Connections\ObservableLineStream.cs">
+      <Link>Connection\ObservableLineStream.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Connections\WebResponseExtensions.cs">
+      <Link>Connection\WebResponseExtensions.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\DestinationSyncResult.cs">
       <Link>DestinationSyncResult.cs</Link>
@@ -102,6 +135,9 @@
     <Compile Include="..\RavenFS.Client\FileStatus.cs">
       <Link>FileStatus.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\Heartbeat.cs">
+      <Link>Heartbeat.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\ListenableStream.cs">
       <Link>ListenableStream.cs</Link>
     </Compile>
@@ -116,9 +152,6 @@
     </Compile>
     <Compile Include="..\RavenFS.Client\NotificationJSonUtilities.cs">
       <Link>NotificationJSonUtilities.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\NotificationsManager.cs">
-      <Link>NotificationsManager.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\RavenFileSystemClient.cs">
       <Link>RavenFileSystemClient.cs</Link>
@@ -159,12 +192,53 @@
     <Compile Include="..\RavenFS.Client\UrlExtensions.cs">
       <Link>UrlExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\Util\AtomicDictionary.cs">
+      <Link>Util\AtomicDictionary.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Util\ConcurrentSet.cs">
+      <Link>Util\ConcurrentSet.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Util\DisposableAction.cs">
+      <Link>Util\DisposableAction.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Util\TaskExtensions.cs">
+      <Link>Util\TaskExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS\Extensions\MetadataExtensions.cs">
       <Link>Imports\MetadataExtensions.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS\Util\NameValueCollectionJsonConverter.cs">
       <Link>NameValueCollectionJsonConverter.cs</Link>
     </Compile>
+    <Compile Include="DotNetZip\Adler.cs" />
+    <Compile Include="DotNetZip\BlockState.cs" />
+    <Compile Include="DotNetZip\CompressionLevel.cs" />
+    <Compile Include="DotNetZip\CompressionMode.cs" />
+    <Compile Include="DotNetZip\CompressionStrategy.cs" />
+    <Compile Include="DotNetZip\Crc32.cs" />
+    <Compile Include="DotNetZip\CrcCalculatorStream.cs" />
+    <Compile Include="DotNetZip\DeflateFlavor.cs" />
+    <Compile Include="DotNetZip\DeflateManager.cs" />
+    <Compile Include="DotNetZip\DeflateStream.cs" />
+    <Compile Include="DotNetZip\FlushType.cs" />
+    <Compile Include="DotNetZip\GZipStream.cs" />
+    <Compile Include="DotNetZip\InflateBlocks.cs" />
+    <Compile Include="DotNetZip\InflateCodes.cs" />
+    <Compile Include="DotNetZip\InflateManager.cs" />
+    <Compile Include="DotNetZip\InfTree.cs" />
+    <Compile Include="DotNetZip\InternalConstants.cs" />
+    <Compile Include="DotNetZip\InternalInflateConstants.cs" />
+    <Compile Include="DotNetZip\ParallelDeflateOutputStream.cs" />
+    <Compile Include="DotNetZip\SharedUtils.cs" />
+    <Compile Include="DotNetZip\StaticTree.cs" />
+    <Compile Include="DotNetZip\Tree.cs" />
+    <Compile Include="DotNetZip\WorkItem.cs" />
+    <Compile Include="DotNetZip\ZlibBaseStream.cs" />
+    <Compile Include="DotNetZip\ZlibCodec.cs" />
+    <Compile Include="DotNetZip\ZlibConstants.cs" />
+    <Compile Include="DotNetZip\ZlibException.cs" />
+    <Compile Include="DotNetZip\ZlibStream.cs" />
+    <Compile Include="DotNetZip\ZlibStreamFlavor.cs" />
     <Compile Include="NameValueCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringUtils.cs" />

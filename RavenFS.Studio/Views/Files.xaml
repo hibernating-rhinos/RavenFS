@@ -74,7 +74,7 @@
                             Style="{StaticResource Style_Button_MouseOverChrome}">
                         <Button.Content>
                             <StackPanel Orientation="Horizontal">
-                                <Image Source="{StaticResource Image_Add_Tiny}" Stretch="None" Margin="0,0,2,0" VerticalAlignment="Center"/>
+                                <Image Source="{StaticResource Image_Add_Folder_Tiny}" Stretch="None" Margin="0,0,2,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Add Folder" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button.Content>
@@ -90,7 +90,7 @@
                           <toolkit:MenuItem Header="Delete"
                                     Command="{Binding Delete}">
                                 <toolkit:MenuItem.Icon>
-                                    <Image Source="{StaticResource Image_Delete_Tiny}"/>
+                                    <Image Source="{StaticResource Image_Remove_Tiny}"/>
                                 </toolkit:MenuItem.Icon>
                             </toolkit:MenuItem>
                           <toolkit:MenuItem Header="Rename"
@@ -180,7 +180,7 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text=">" Margin="2,0" VerticalAlignment="Center"/>
-                                <Image Source="{StaticResource Image_Folder_Tiny}" Width="14" Stretch="Uniform" Margin="3,0" VerticalAlignment="Center"/>
+                                <Image Source="{StaticResource Image_Folder_Open_Tiny}" Width="14" Stretch="Uniform" Margin="3,0" VerticalAlignment="Center"/>
                                 <HyperlinkButton Style="{StaticResource Style_Link_Breadcrumb}" 
                                     Command="{StaticResource NavigateToCommand}"
                                     CommandParameter="{Binding FullPath, StringFormat='/files{0}'}"
@@ -228,7 +228,7 @@
                     <toolkit:MenuItem Header="Delete"
                                     Command="{Binding Delete}">
                         <toolkit:MenuItem.Icon>
-                            <Image Source="{StaticResource Image_Delete_Tiny}"/>
+                            <Image Source="{StaticResource Image_Remove_Tiny}"/>
                         </toolkit:MenuItem.Icon>
                     </toolkit:MenuItem>
                     <toolkit:MenuItem Header="Rename"

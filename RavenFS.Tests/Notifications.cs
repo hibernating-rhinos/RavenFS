@@ -14,120 +14,140 @@ namespace RavenFS.Tests
 {
     public class Notifications : WebApiTest
     {
-		[Fact(Skip = "When running the build script from command line notification tests cause the crash")]
+		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
         public void NotificationReceivedWhenFileAdded()
         {
-            var client = NewClient();
-            client.Notifications.Connect().Wait();
+            using(var client = NewClient())
+            {
+                client.Notifications.ConnectionTask.Wait();
 
-            var notificationTask = client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                var notificationTask =
+                    client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
-            client.UploadAsync("abc.txt", new MemoryStream()).Wait();
+                client.UploadAsync("abc.txt", new MemoryStream()).Wait();
 
-            var fileChange = notificationTask.Result;
+                var fileChange = notificationTask.Result;
 
-            Assert.Equal("abc.txt", fileChange.File);
-            Assert.Equal(FileChangeAction.Add, fileChange.Action);
+                Assert.Equal("abc.txt", fileChange.File);
+                Assert.Equal(FileChangeAction.Add, fileChange.Action);
+            }
         }
 
-		[Fact(Skip = "When running the build script from command line notification tests cause the crash")]
+		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
 		public void NotificationReceivedWhenFileDeleted()
         {
-            var client = NewClient();
-            client.UploadAsync("abc.txt", new MemoryStream()).Wait();
-            client.Notifications.Connect().Wait();
+            using (var client = NewClient())
+            {
+                client.UploadAsync("abc.txt", new MemoryStream()).Wait();
 
-            var notificationTask = client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
 
-            client.DeleteAsync("abc.txt").Wait();
+                var notificationTask =
+                    client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
-            var fileChange = notificationTask.Result;
+                client.DeleteAsync("abc.txt").Wait();
 
-            Assert.Equal("abc.txt", fileChange.File);
-            Assert.Equal(FileChangeAction.Delete, fileChange.Action);
+                var fileChange = notificationTask.Result;
+
+                Assert.Equal("abc.txt", fileChange.File);
+                Assert.Equal(FileChangeAction.Delete, fileChange.Action);
+            }
         }
 
-		[Fact(Skip = "When running the build script from command line notification tests cause the crash")]
+		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
 		public void NotificationReceivedWhenFileUpdated()
         {
-            var client = NewClient();
-            client.UploadAsync("abc.txt", new MemoryStream()).Wait();
-            client.Notifications.Connect().Wait();
+            using (var client = NewClient())
+            {
+                client.UploadAsync("abc.txt", new MemoryStream()).Wait();
 
-            var notificationTask = client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                var notificationTask =
+                    client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
-            client.UpdateMetadataAsync("abc.txt", new NameValueCollection() { {"MyMetadata", "MyValue"}}).Wait();
+                client.UpdateMetadataAsync("abc.txt", new NameValueCollection() {{"MyMetadata", "MyValue"}}).Wait();
 
-            var fileChange = notificationTask.Result;
+                var fileChange = notificationTask.Result;
 
-            Assert.Equal("abc.txt", fileChange.File);
-            Assert.Equal(FileChangeAction.Update, fileChange.Action);
+                Assert.Equal("abc.txt", fileChange.File);
+                Assert.Equal(FileChangeAction.Update, fileChange.Action);
+            }
         }
 
-		[Fact(Skip = "When running the build script from command line notification tests cause the crash")]
+		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
 		public void NotificationsReceivedWhenFileRenamed()
         {
-            var client = NewClient();
-            client.UploadAsync("abc.txt", new MemoryStream()).Wait();
-            client.Notifications.Connect().Wait();
+            using (var client = NewClient())
+            {
+                client.UploadAsync("abc.txt", new MemoryStream()).Wait();
 
-            var notificationTask = client.Notifications.FolderChanges("/").Buffer(TimeSpan.FromSeconds(5)).Take(1).ToTask();
+                var notificationTask =
+                    client.Notifications.FolderChanges("/").Buffer(TimeSpan.FromSeconds(5)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
-            client.RenameAsync("abc.txt", "newName.txt").Wait();
+                client.RenameAsync("abc.txt", "newName.txt").Wait();
 
-            var fileChanges = notificationTask.Result;
+                var fileChanges = notificationTask.Result;
 
-            Assert.Equal("abc.txt", fileChanges[0].File);
-            Assert.Equal(FileChangeAction.Renaming, fileChanges[0].Action);
-            Assert.Equal("newName.txt", fileChanges[1].File);
-            Assert.Equal(FileChangeAction.Renamed, fileChanges[1].Action);
+                Assert.Equal("abc.txt", fileChanges[0].File);
+                Assert.Equal(FileChangeAction.Renaming, fileChanges[0].Action);
+                Assert.Equal("newName.txt", fileChanges[1].File);
+                Assert.Equal(FileChangeAction.Renamed, fileChanges[1].Action);
+            }
         }
 
-		[Fact(Skip = "When running the build script from command line notification tests cause the crash")]
+		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
 		public void NotificationsAreOnlyReceivedForFilesInGivenFolder()
         {
-            var client = NewClient();
-            client.Notifications.Connect().Wait();
+            using (var client = NewClient())
+            {
+                var notificationTask =
+                    client.Notifications.FolderChanges("/Folder").Buffer(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
-            var notificationTask = client.Notifications.FolderChanges("/Folder").Buffer(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.UploadAsync("AnotherFolder/abc.txt", new MemoryStream()).Wait();
 
-            client.UploadAsync("AnotherFolder/abc.txt", new MemoryStream()).Wait();
+                var notifications = notificationTask.Result;
 
-            var notifications = notificationTask.Result;
-
-            Assert.Equal(0, notifications.Count);
+                Assert.Equal(0, notifications.Count);
+            }
         }
 
-		[Fact(Skip = "When running the build script from command line notification tests cause the crash")]
+		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
 		public void NotificationsIsReceivedWhenConfigIsUpdated()
         {
-            var client = NewClient();
-            client.Notifications.Connect().Wait();
+            using (var client = NewClient())
+            {
+                var notificationTask =
+                    client.Notifications.ConfigurationChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
-            var notificationTask = client.Notifications.ConfigChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Config.SetConfig("Test", new NameValueCollection()).Wait();
 
-            client.Config.SetConfig("Test", new NameValueCollection()).Wait();
+                var configChange = notificationTask.Result;
 
-            var configChange = notificationTask.Result;
-
-            Assert.Equal("Test", configChange.Name);
-            Assert.Equal(ConfigChangeAction.Set, configChange.Action);
+                Assert.Equal("Test", configChange.Name);
+                Assert.Equal(ConfigChangeAction.Set, configChange.Action);
+            }
         }
 
-		[Fact(Skip = "When running the build script from command line notification tests cause the crash")]
+		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
 		public void NotificationsIsReceivedWhenConfigIsDeleted()
         {
-            var client = NewClient();
-            client.Notifications.Connect().Wait();
+            using (var client = NewClient())
+            {
+                var notificationTask =
+                    client.Notifications.ConfigurationChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Notifications.WhenSubscriptionsActive().Wait();
 
-            var notificationTask = client.Notifications.ConfigChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
+                client.Config.DeleteConfig("Test").Wait();
 
-            client.Config.DeleteConfig("Test").Wait();
+                var configChange = notificationTask.Result;
 
-            var configChange = notificationTask.Result;
-
-            Assert.Equal("Test", configChange.Name);
-            Assert.Equal(ConfigChangeAction.Delete, configChange.Action);
+                Assert.Equal("Test", configChange.Name);
+                Assert.Equal(ConfigChangeAction.Delete, configChange.Action);
+            }
         }
     }
 }
