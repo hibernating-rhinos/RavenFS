@@ -5,25 +5,20 @@ namespace RavenFS.Synchronization.Multipart
 	using System.Net.Http.Headers;
 	using System.Threading.Tasks;
 	using RavenFS.Util;
-	using Storage;
 
 	public class SourceFilePart : StreamContent
 	{
 		private readonly NarrowedStream sourceChunk;
-		private readonly PageRange pageRange;
 
-		public SourceFilePart(NarrowedStream sourceChunk, PageRange pageRange)
+		public SourceFilePart(NarrowedStream sourceChunk)
 			: base(sourceChunk)
 		{
 			this.sourceChunk = sourceChunk;
-			this.pageRange = pageRange;
 
 			Headers.ContentDisposition = new ContentDispositionHeaderValue("file");
 			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.NeedType, SyncingNeedType));
-			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeFrom, pageRange.StartByte.ToString()));
-			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeTo, pageRange.EndByte.ToString()));
-			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.PageRangeFrom, pageRange.Start.Id.ToString()));
-			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.PageRangeTo, pageRange.End.Id.ToString()));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeFrom, sourceChunk.From.ToString()));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeTo, sourceChunk.To.ToString()));
 
 			Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
 		}

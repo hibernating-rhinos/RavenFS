@@ -205,11 +205,14 @@
     <Compile Include="Synchronization\DataInfo.cs" />
     <Compile Include="Synchronization\DeleteWorkItem.cs" />
     <Compile Include="Synchronization\MetadataUpdateWorkItem.cs" />
+    <Compile Include="Synchronization\Multipart\MultipartByteSyncStreamProvider.cs" />
+    <Compile Include="Synchronization\Multipart\MultipartPageSyncStreamProvider.cs" />
     <Compile Include="Synchronization\Multipart\MultipartSyncStreamProvider.cs" />
     <Compile Include="Synchronization\Multipart\SeedFilePart.cs" />
     <Compile Include="Synchronization\Multipart\SourceFilePart.cs" />
     <Compile Include="Synchronization\Multipart\SynchronizationMultipartRequest.cs" />
     <Compile Include="Synchronization\Multipart\SyncingMultipartConstants.cs" />
+    <Compile Include="Synchronization\Multipart\TransferredChangesType.cs" />
     <Compile Include="Synchronization\RenameWorkItem.cs" />
     <Compile Include="Synchronization\SynchronizationLock.cs" />
     <Compile Include="Synchronization\SynchronizationTask.cs" />

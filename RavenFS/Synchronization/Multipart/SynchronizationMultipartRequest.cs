@@ -4,6 +4,7 @@ namespace RavenFS.Synchronization.Multipart
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
+	using System.Linq;
 	using System.Net;
 	using System.Net.Http;
 	using System.Threading.Tasks;
@@ -16,23 +17,33 @@ namespace RavenFS.Synchronization.Multipart
 
 	public class SynchronizationMultipartRequest
 	{
+		private readonly TransactionalStorage storage;
 		private readonly string destinationUrl;
 		private readonly Guid sourceId;
 		private readonly string fileName;
 		private readonly NameValueCollection sourceMetadata;
 		private readonly Stream sourceStream;
-		private readonly IList<PageRange> pageRanges;
+		private readonly IList<RdcNeed> needList;
+		private readonly TransferredChangesType transferredChangesType;
 		private readonly string syncingBoundary;
+		private readonly List<PageRange> pageRanges;
 
-		public SynchronizationMultipartRequest(string destinationUrl, Guid sourceId, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<PageRange> pageRanges)
+		public SynchronizationMultipartRequest(TransactionalStorage storage, string destinationUrl, Guid sourceId, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList, TransferredChangesType transferredChangesType)
 		{
+			this.storage = storage;
 			this.destinationUrl = destinationUrl;
 			this.sourceId = sourceId;
 			this.fileName = fileName;
 			this.sourceMetadata = sourceMetadata;
 			this.sourceStream = sourceStream;
-			this.pageRanges = pageRanges;
+			this.needList = needList;
+			this.transferredChangesType = transferredChangesType;
 			this.syncingBoundary = "syncing";
+
+			if (transferredChangesType == TransferredChangesType.Pages)
+			{
+				pageRanges = TransformToPageRangeParts(needList);
+			}
 		}
 
 		public Task<SynchronizationReport> PushChangesAsync()
@@ -54,6 +65,7 @@ namespace RavenFS.Synchronization.Multipart
 
 			request.Headers[SyncingMultipartConstants.FileName] = fileName;
 			request.Headers[SyncingMultipartConstants.SourceServerId] = sourceId.ToString();
+			request.Headers[SyncingMultipartConstants.TransferredChanges] = transferredChangesType.ToString();
 
 			return request.GetRequestStreamAsync()
 				.ContinueWith(task => PrepareMultipartContent().CopyToAsync(task.Result)
@@ -79,38 +91,89 @@ namespace RavenFS.Synchronization.Multipart
 		{
 			var content = new MultipartContent("form-data", syncingBoundary);
 
-			foreach (var pageRange in pageRanges)
+			if (transferredChangesType == TransferredChangesType.Bytes)
 			{
-				if (pageRange.Start != null && pageRange.End != null)
+				foreach (var item in needList)
 				{
-					content.Add(new SourceFilePart(new NarrowedStream(sourceStream, pageRange.StartByte, pageRange.EndByte), pageRange));      
+					long @from = Convert.ToInt64(item.FileOffset);
+					long length = Convert.ToInt64(item.BlockLength);
+					long to = from + length - 1;
+
+					switch (item.BlockType)
+					{
+						case RdcNeedType.Source:
+							content.Add(new SourceFilePart(new NarrowedStream(sourceStream, from, to)));
+							break;
+						case RdcNeedType.Seed:
+							content.Add(new SeedFilePart(@from, to));
+							break;
+						default:
+							throw new NotSupportedException();
+					}
 				}
-				else
+			}
+			else if (transferredChangesType == TransferredChangesType.Pages)
+			{
+				foreach (var item in pageRanges)
 				{
-					content.Add(new SeedFilePart(pageRange.StartByte, pageRange.EndByte));
+					if (item.OrderedPages.FirstOrDefault() != null && item.OrderedPages.LastOrDefault() != null)
+					{
+						content.Add(new SourceFilePart(new NarrowedStream(sourceStream, item.StartByte, item.EndByte)));
+					}
+					else
+					{
+						content.Add(new SeedFilePart(item.StartByte, item.EndByte));
+					}
 				}
-
-				//long @from = Convert.ToInt64(item.FileOffset);
-				//long length = Convert.ToInt64(item.BlockLength);
-				//long to = from + length - 1;
-
-				//switch (item.BlockType)
-				//{
-				//    case RdcNeedType.Source:
-				//        PageRange pageRange = null;
-
-				//        storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes(fileName, @from, to));
-				//        content.Add(new SourceFilePart(new NarrowedStream(sourceStream, pageRange.StartByte, pageRange.EndByte), pageRange));
-				//        break;
-				//    case RdcNeedType.Seed:
-				//        content.Add(new SeedFilePart(@from, to));
-				//        break;
-				//    default:
-				//        throw new NotSupportedException();
-				//}
 			}
 
 			return content;
+		}
+
+		private List<PageRange> TransformToPageRangeParts(IEnumerable<RdcNeed> needs)
+		{
+			var overlapingPageRanges = new List<PageRange>();
+
+			foreach (var need in needs)
+			{
+				long @from = Convert.ToInt64(need.FileOffset);
+				long length = Convert.ToInt64(need.BlockLength);
+				long to = from + length - 1;
+
+				PageRange pageRange = null;
+
+				if (need.BlockType == RdcNeedType.Source)
+				{
+					storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes(fileName, from, to));
+				}
+				else if (need.BlockType == RdcNeedType.Seed)
+				{
+					pageRange = new PageRange { StartByte = @from, EndByte = to };
+				}
+
+				if (pageRange != null)
+				{
+					overlapingPageRanges.Add(pageRange);
+				}
+			}
+
+			var finalPageRanges = new List<PageRange>();
+
+			foreach (var overlapingPageRange in overlapingPageRanges)
+			{
+				var lastPageRange = finalPageRanges.LastOrDefault(x => x.OrderedPages.FirstOrDefault() != null);
+
+				if (overlapingPageRange.OrderedPages.FirstOrDefault() == null || finalPageRanges.Count == 0 || lastPageRange == null || !lastPageRange.IsOverlaping(overlapingPageRange))
+				{
+					finalPageRanges.Add(overlapingPageRange);
+				}
+				else
+				{
+					lastPageRange.Add(overlapingPageRange);
+				}
+			}
+
+			return finalPageRanges;
 		}
 	}
 }

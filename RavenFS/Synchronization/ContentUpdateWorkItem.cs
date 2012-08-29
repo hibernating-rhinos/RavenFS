@@ -6,6 +6,7 @@
 	using System.IO;
 	using System.Linq;
 	using System.Threading.Tasks;
+	using Extensions;
 	using Multipart;
 	using NLog;
 	using RavenFS.Client;
@@ -14,12 +15,14 @@
 	using RavenFS.Util;
 	using Rdc;
 	using Rdc.Wrapper;
+	using FileInfo = Client.FileInfo;
 
 	public class ContentUpdateWorkItem : SynchronizationWorkItem
 	{
 		private readonly Logger log = LogManager.GetCurrentClassLogger();
 
 		private readonly SigGenerator sigGenerator;
+		private DataInfo fileDataInfo;
 		
 		public ContentUpdateWorkItem(string file, TransactionalStorage storage, SigGenerator sigGenerator)
 			: base(file, storage)
@@ -32,13 +35,17 @@
 			get { return SynchronizationType.ContentUpdate; }
 		}
 
+		private DataInfo FileDataInfo
+		{
+			get { return fileDataInfo ?? (fileDataInfo = GetLocalFileDataInfo(FileName)); }
+		}
+
 		public override Task<SynchronizationReport> Perform(string destination)
 		{
 			return Task.Factory.StartNew(() =>
 			{
-				var localMetadata = GetLocalMetadata(FileName);
-				AssertLocalFileExistsAndIsNotConflicted(localMetadata);
-			    return StartSyncingToAsync(destination, localMetadata);
+				AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
+			    return StartSyncingToAsync(destination);
 			}, TaskCreationOptions.LongRunning)
 			.Unwrap()
 			.ContinueWith(task =>
@@ -81,7 +88,7 @@
 			});
 		}
 
-		private Task<SynchronizationReport> StartSyncingToAsync(string destination, NameValueCollection sourceMetadata)
+		private Task<SynchronizationReport> StartSyncingToAsync(string destination)
 		{
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 
@@ -94,17 +101,15 @@
 							if (destinationMetadata == null)
 							{
 								// if file doesn't exist on destination server - upload it there
-								return UploadTo(destination, FileName, sourceMetadata);
+								return UploadTo(destination);
 							}
 
-							var conflict = CheckConflictWithDestination(sourceMetadata, destinationMetadata);
+							var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata);
 
 							if(conflict != null)
 							{
 								return ApplyConflictOnDestination(conflict, destination, log);
 							}
-
-							var localFileDataInfo = GetLocalFileDataInfo(FileName);
 
 							var signatureRepository = new StorageSignatureRepository(Storage, FileName);
 							var remoteSignatureCache = new VolatileSignatureRepository(FileName);
@@ -114,11 +119,11 @@
 
 							log.Debug("Starting to retrieve signatures of a local file '{0}'.", FileName);
 							// first we need to create a local file signatures before we synchronize with remote ones
-							var sourceSignatureManifest = localRdcManager.GetSignatureManifest(localFileDataInfo);
+							var sourceSignatureManifest = localRdcManager.GetSignatureManifest(FileDataInfo);
 
 							log.Debug("Number of a local file '{0}' signatures was {1}.", FileName, sourceSignatureManifest.Signatures.Count);
 
-							return destinationRdcManager.SynchronizeSignaturesAsync(localFileDataInfo)
+							return destinationRdcManager.SynchronizeSignaturesAsync(FileDataInfo)
 								.ContinueWith(
 									task =>
 										{
@@ -126,12 +131,13 @@
 
 											if (destinationSignatureManifest.Signatures.Count > 0)
 											{
-												return SynchronizeTo(remoteSignatureCache, destination,
-												                     FileName,
-												                     sourceSignatureManifest,
-												                     sourceMetadata);
+												return destinationRavenFileSystemClient.SearchAsync(string.Format("__fileName:{0}", FileName), pageSize: 1)
+													.ContinueWith(t =>
+													{
+														return SynchronizeTo(remoteSignatureCache, destination, sourceSignatureManifest, t.Result.Files[0], destinationMetadata);
+													}).Unwrap();
 											}
-											return UploadTo(destination, FileName, sourceMetadata);
+											return UploadTo(destination);
 										})
 								.Unwrap()
 								.ContinueWith(
@@ -146,26 +152,26 @@
 				.Unwrap();
 		}
 
-		private Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, string fileName, SignatureManifest sourceSignatureManifest, NameValueCollection sourceMetadata)
+		private Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, SignatureManifest sourceSignatureManifest, FileInfo destinationFileInfo, NameValueCollection destinationMetadata)
 		{
 			var seedSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
 			var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
 
-			var localFile = StorageStream.Reading(Storage, fileName);
+			var localFile = StorageStream.Reading(Storage, FileName);
 
 			IList<RdcNeed> needList;
-			using (var signatureRepository = new StorageSignatureRepository(Storage, fileName))
+			using (var signatureRepository = new StorageSignatureRepository(Storage, FileName))
 			using (var needListGenerator = new NeedListGenerator(remoteSignatureRepository, signatureRepository))
 			{
 				needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 			}
 
-			return PushByUsingMultipartRequest(destinationServerUrl, fileName, sourceMetadata, localFile, needList, localFile);
+			return PushByUsingMultipartRequest(destinationServerUrl, destinationFileInfo, destinationMetadata, localFile, needList, localFile);
 		}
 
-		private Task<SynchronizationReport> UploadTo(string destinationServerUrl, string fileName, NameValueCollection localMetadata)
+		private Task<SynchronizationReport> UploadTo(string destinationServerUrl)
 		{
-			var sourceFileStream = StorageStream.Reading(Storage, fileName);
+			var sourceFileStream = StorageStream.Reading(Storage, FileName);
 			var fileSize = sourceFileStream.Length;
 
 			var onlySourceNeed = new List<RdcNeed>
@@ -178,21 +184,28 @@
 			               			}
 			               	};
 
-			return PushByUsingMultipartRequest(destinationServerUrl, fileName, localMetadata, sourceFileStream, onlySourceNeed, sourceFileStream);
+			return PushByUsingMultipartRequest(destinationServerUrl, null, null, sourceFileStream, onlySourceNeed, sourceFileStream);
 		}
 
-		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, string fileName, NameValueCollection sourceMetadata, Stream sourceFileStream, IList<RdcNeed> needList, params IDisposable[] disposables)
+		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, FileInfo destinationFileInfo, NameValueCollection destinationMetadata, Stream sourceFileStream, IList<RdcNeed> needList, params IDisposable[] disposables)
 		{
-			var pageRanges = TransformToPageRangeParts(needList);
+			var transferredChangesType = TransferredChangesType.Bytes;
 
-			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerId, fileName, sourceMetadata,
-																	   sourceFileStream, pageRanges);
+			if (destinationFileInfo != null && destinationFileInfo.TotalSize != null)
+			{
+				var sourceFileLength = FileDataInfo.Length;
+				transferredChangesType = DetermineChangesTransferType(sourceFileLength, destinationFileInfo.TotalSize.Value,
+				                                                      destinationMetadata["Content-MD5"]);
+			}
+
+			var multipartRequest = new SynchronizationMultipartRequest(Storage, destinationServerUrl, SourceServerId, FileName, FileMetadata,
+																	   sourceFileStream, needList, transferredChangesType);
 
 			var bytesToTransferCount = needList.Where(x => x.BlockType == RdcNeedType.Source).Sum(x => (double) x.BlockLength);
 			
 			log.Debug(
 				"Synchronizing a file '{0}' (ETag {1}) to {2} by using multipart request. Need list length is {3}. Number of bytes that needs to be transfered is {4}",
-				fileName, FileETag, destinationServerUrl, needList.Count, bytesToTransferCount);
+				FileName, FileETag, destinationServerUrl, needList.Count, bytesToTransferCount);
 
 			return multipartRequest.PushChangesAsync()
 				.ContinueWith(t =>
@@ -208,68 +221,27 @@
 				});
 		}
 
-		private List<PageRange> TransformToPageRangeParts(IEnumerable<RdcNeed> needList)
+		private TransferredChangesType DetermineChangesTransferType(long sourceFileLength, long destinationFileLength, string destinationFileHash)
 		{
-			var overlapingPageRanges = new List<PageRange>();
-
-			foreach (var need in needList)
+			if (sourceFileLength == destinationFileLength) // if file length is the same we can work with entire pages
 			{
-				long @from = Convert.ToInt64(need.FileOffset);
-				long length = Convert.ToInt64(need.BlockLength);
-				long to = from + length - 1;
-
-				PageRange pageRange = null;
-
-				if (need.BlockType == RdcNeedType.Source)
-				{
-					Storage.Batch(accessor => pageRange = accessor.GetPageRangeContainingBytes(FileName, from, to));
-				}
-				else if (need.BlockType == RdcNeedType.Seed)
-				{
-					pageRange = new PageRange {StartByte = @from, EndByte = to};
-				}
-
-				if (pageRange != null)
-				{
-					overlapingPageRanges.Add(pageRange);
-				}
+				return TransferredChangesType.Pages;
 			}
-
-			var finalPageRanges = new List<PageRange>();
-
-			foreach (var overlapingPageRange in overlapingPageRanges)
+			else if (sourceFileLength > destinationFileLength) // need to check if data has been appended
 			{
-				var lastPageRange = finalPageRanges.LastOrDefault(x => x.Start != null);
-
-				if (overlapingPageRange.Start == null || finalPageRanges.Count == 0 || lastPageRange == null || !lastPageRange.IsOverlaping(overlapingPageRange))
+				using (var stream  = StorageStream.Reading(Storage, FileName))
 				{
-					finalPageRanges.Add(overlapingPageRange);
-				}
-				else
-				{
-					lastPageRange.Add(overlapingPageRange);
-				}
-			}
+					var fileBeginningStream = new NarrowedStream(stream, 0, destinationFileLength - 1);
+					var hashOfTheBeginning = fileBeginningStream.GetMD5Hash();
 
-			return finalPageRanges;
-		}
-
-		private NameValueCollection GetLocalMetadata(string fileName)
-		{
-			NameValueCollection result = null;
-			try
-			{
-				Storage.Batch(
-					accessor =>
+					if (hashOfTheBeginning == destinationFileHash) // 
 					{
-						result = accessor.GetFile(fileName, 0, 0).Metadata;
-					});
+						return TransferredChangesType.Pages;
+					}
+				}
 			}
-			catch (FileNotFoundException)
-			{
-				return null;
-			}
-			return result;
+
+			return TransferredChangesType.Bytes;
 		}
 
 		private DataInfo GetLocalFileDataInfo(string fileName)

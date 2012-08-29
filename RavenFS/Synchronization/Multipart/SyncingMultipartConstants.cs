@@ -8,12 +8,10 @@ namespace RavenFS.Synchronization.Multipart
 
 		public static string RangeTo = "Syncing-range-to";
 
-		public static string PageRangeFrom = "Syncing-page-range-from";
-
-		public static string PageRangeTo = "Syncing-page-range-to";
-
 		public static string FileName = "Temp-Syncing-file-name";
 
 		public static string SourceServerId = "Temp-Syncing-source-server-url";
+
+		public static string TransferredChanges = "Temp-Transferred-Changes";
 	}
 }

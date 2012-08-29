@@ -1,23 +1,45 @@
 namespace RavenFS.Storage
 {
+	using System.Collections.Generic;
+	using System.IO;
+	using System.Linq;
+
 	public class PageRange
 	{
-		public PageInformation Start { get; set; }
+		public PageRange()
+		{
+			OrderedPages = new List<PageInformation>();
+		}
 
-		public PageInformation End { get; set; }
+		public List<PageInformation> OrderedPages { get; set; }
 
 		public long StartByte { get; set; }
 
 		public long EndByte { get; set; }
 
-		public bool IsOverlaping(PageRange pageRange)
+		public bool IsOverlaping(PageRange compared)
 		{
-			return pageRange.Start.Id <= Start.Id;
+			var start = OrderedPages.FirstOrDefault();
+			var comparedStart = compared.OrderedPages.FirstOrDefault();
+
+			var end = OrderedPages.LastOrDefault();
+			var comparedEnd = compared.OrderedPages.LastOrDefault();
+
+			if (start == null || comparedStart == null || end == null || comparedEnd == null)
+			{
+				throw new InvalidDataException("Page range should contain ordered list of pages");
+			}
+
+			return comparedStart.Id <= start.Id;
 		}
 
 		public void Add(PageRange pageRange)
 		{
-			End = pageRange.End;
+			foreach (var page in pageRange.OrderedPages.Where(page => !OrderedPages.Contains(page)))
+			{
+				OrderedPages.Add(page);
+			}
+
 			EndByte = pageRange.EndByte;
 		}
 	}

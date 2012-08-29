@@ -307,15 +307,18 @@ namespace RavenFS.Storage
 
 					position += page.Size;
 
-					if (result.Start == null && position > startByte)
+					if (result.OrderedPages.FirstOrDefault() == null && position > startByte)
 					{
-						result.Start = page;
+						result.OrderedPages.Add(page);
 						result.StartByte = position - page.Size;
+					}
+					else if (result.OrderedPages.FirstOrDefault() != null)
+					{
+						result.OrderedPages.Add(page);
 					}
 
 				} while (Api.TryMoveNext(session, Usage) && position <= endByte);
 
-				result.End = page;
 				result.EndByte = position - 1;
 
 				return result;
@@ -359,15 +362,23 @@ namespace RavenFS.Storage
 				{
 					lastEntirePage = page;
 
+					if (result.OrderedPages.FirstOrDefault() != null && lastEntirePage != null)
+					{
+						if(!result.OrderedPages.Contains(lastEntirePage))
+						{
+							result.OrderedPages.Add(page);
+						}
+					}
+
 					page = new PageInformation
 					{
 						Size = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_size"]).Value,
 						Id = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value
 					};
 
-					if (result.Start == null && position >= startByte && position + page.Size - 1 <= endByte)
+					if (result.OrderedPages.FirstOrDefault() == null && position >= startByte && position + page.Size - 1 <= endByte)
 					{
-						result.Start = page;
+						result.OrderedPages.Add(page);
 						result.StartByte = position;
 					}
 
@@ -375,19 +386,21 @@ namespace RavenFS.Storage
 
 				} while (Api.TryMoveNext(session, Usage) && position <= endByte);
 
-				if (position - 1 == endByte)
+				if (result.OrderedPages.FirstOrDefault() != null && position - 1 == endByte)
 				{
-					lastEntirePage = page;
+					if (!result.OrderedPages.Contains(page))
+					{
+						result.OrderedPages.Add(page);
+					}
 					lastEntirePagePosition = endByte;
 				}
 				else
 				{
-					lastEntirePagePosition = position - (long) page.Size - 1;
+					lastEntirePagePosition = position - page.Size - 1;
 				}
 
-				if (result.Start != null)
+				if (result.OrderedPages.FirstOrDefault() != null)
 				{
-					result.End = lastEntirePage;
 					result.EndByte = lastEntirePagePosition;
 
 					return result;

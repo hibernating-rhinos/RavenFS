@@ -65,6 +65,9 @@
 			var sourceServerId = new Guid(Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault());
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
+			TransferredChangesType transferredChangesType;
+			Enum.TryParse(Request.Headers.GetValues(SyncingMultipartConstants.TransferredChanges).FirstOrDefault(), out transferredChangesType);
+
 			log.Debug("Starting to process multipart synchronization request of a file '{0}' with ETag {1} from {2}", fileName, sourceFileETag, sourceServerId);
 
 			var report = new SynchronizationReport
@@ -104,7 +107,16 @@
 
 			var synchronizingFile = SynchronizingFileStream.CreatingOrOpeningAndWritting(Storage, Search, tempFileName, sourceMetadata);
 
-			var syncStreamProvider = new MultipartSyncStreamProvider(synchronizingFile, localFile, Storage);
+			MultipartSyncStreamProvider syncStreamProvider = null;
+
+			if (transferredChangesType == TransferredChangesType.Pages)
+			{
+				syncStreamProvider = new MultipartPageSyncStreamProvider(synchronizingFile, localFile, Storage);
+			}
+			else if (transferredChangesType == TransferredChangesType.Bytes)
+			{
+				syncStreamProvider = new MultipartByteSyncStreamProvider(synchronizingFile, localFile, Storage);
+			}
 
 			return Request.Content.ReadAsMultipartAsync(syncStreamProvider)
 				.ContinueWith(multipartReadTask =>
