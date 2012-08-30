@@ -13,7 +13,7 @@ namespace RavenFS.Tests
 	{
 		private HttpSelfHostConfiguration config;
 		private HttpSelfHostServer server;
-		private const string Url = "http://dell-i7860-1:19079";
+		private const string Url = "http://localhost:19079";
 		protected WebClient WebClient;
 		private RavenFileSystem ravenFileSystem;
 
