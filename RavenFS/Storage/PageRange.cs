@@ -30,7 +30,7 @@ namespace RavenFS.Storage
 				throw new InvalidDataException("Page range should contain ordered list of pages");
 			}
 
-			return comparedStart.Id <= start.Id;
+			return end.Id >= comparedStart.Id;
 		}
 
 		public void Add(PageRange pageRange)
