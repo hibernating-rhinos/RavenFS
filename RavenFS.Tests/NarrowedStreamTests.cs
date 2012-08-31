@@ -56,6 +56,37 @@ namespace RavenFS.Tests
             Assert.Equal(500000*6, result.Length);
         }
 
+		[Fact]
+		public void Should_throw_parameters_greater_than_source_length()
+		{
+			var ms = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+			ArgumentOutOfRangeException exceptionFrom = null;
+			ArgumentOutOfRangeException exceptionTo = null;
+
+			try
+			{
+				var tested = new NarrowedStream(ms, 10, 20);
+			}
+			catch (ArgumentOutOfRangeException ex)
+			{
+				exceptionFrom = ex;
+			}
+
+			try
+			{
+				var tested = new NarrowedStream(ms, 0, 20);
+			}
+			catch (ArgumentOutOfRangeException ex)
+			{
+				exceptionTo = ex;
+			}
+			
+			Assert.NotNull(exceptionFrom);
+			Assert.NotNull(exceptionTo);
+			Assert.Contains("from", exceptionFrom.Message);
+			Assert.Contains("to", exceptionTo.Message);
+		}
+
         private static MemoryStream PrepareSourceStream()
         {
             var ms = new MemoryStream();

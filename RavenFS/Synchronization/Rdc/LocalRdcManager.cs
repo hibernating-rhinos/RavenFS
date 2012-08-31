@@ -1,8 +1,10 @@
 ﻿namespace RavenFS.Synchronization.Rdc
 {
+	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.IO;
 	using System.Linq;
+	using System.Threading;
 	using RavenFS.Client;
 	using RavenFS.Storage;
 	using RavenFS.Util;
@@ -10,6 +12,8 @@
 
 	public class LocalRdcManager
     {
+		private static ConcurrentDictionary<string, ReaderWriterLockSlim> signatureBuidInProgress = new ConcurrentDictionary<string, ReaderWriterLockSlim>();
+
         private readonly ISignatureRepository _signatureRepository;
         private readonly TransactionalStorage _transactionalStorage;
         private readonly SigGenerator _sigGenerator;
@@ -23,16 +27,34 @@
 
         public SignatureManifest GetSignatureManifest(DataInfo dataInfo)
         {
-            var lastUpdate = _signatureRepository.GetLastUpdate();
-            IEnumerable<SignatureInfo> signatureInfos = null;
-            if (lastUpdate == null || lastUpdate < dataInfo.CreatedAt)
-            {
-                signatureInfos = PrepareSignatures(dataInfo.Name);
-            } 
-            else
-            {
-                signatureInfos = _signatureRepository.GetByFileName();
-            }
+			signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).EnterUpgradeableReadLock();
+			IEnumerable<SignatureInfo> signatureInfos = null;
+
+	        try
+	        {
+				var lastUpdate = _signatureRepository.GetLastUpdate();
+				
+				if (lastUpdate == null || lastUpdate < dataInfo.CreatedAt)
+				{
+					signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).EnterWriteLock();
+					try
+					{
+						signatureInfos = PrepareSignatures(dataInfo.Name);
+					}
+					finally
+					{
+						signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).ExitWriteLock();
+					}
+				}
+				else
+				{
+					signatureInfos = _signatureRepository.GetByFileName();
+				}
+	        }
+	        finally
+	        {
+				signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).ExitUpgradeableReadLock();
+	        }
 
             var result = new SignatureManifest
                              {

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Web;
 
 namespace RavenFS.Util
 {
@@ -22,6 +19,15 @@ namespace RavenFS.Util
             {
                 throw new ArgumentException("Source must be seekable", "source");
             }
+	        if (from > source.Length)
+	        {
+				throw new ArgumentOutOfRangeException("from");
+	        }
+	        if (to > source.Length)
+	        {
+				throw new ArgumentOutOfRangeException("to");
+	        }
+
             Source = source;
             From = from;
             To = to;
