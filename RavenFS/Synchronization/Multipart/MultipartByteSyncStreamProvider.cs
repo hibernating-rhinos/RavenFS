@@ -112,6 +112,7 @@ namespace RavenFS.Synchronization.Multipart
 
 						var limitedStream = new NarrowedStream(localFile, body.From, body.To);
 						limitedStream.CopyTo(synchronizingFile);
+						synchronizingFile.Dispose();
 
 						numberOfCopiedLocalFileParts++;
 
