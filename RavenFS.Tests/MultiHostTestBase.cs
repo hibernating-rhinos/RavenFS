@@ -71,8 +71,7 @@ namespace RavenFS.Tests
 				var httpSelfHostServer = disposable as HttpSelfHostServer;
 				if (httpSelfHostServer != null)
 					httpSelfHostServer.CloseAsync().Wait();
-				else
-					disposable.Dispose();
+				disposable.Dispose();
 			}
 		}
 

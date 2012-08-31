@@ -67,6 +67,7 @@ namespace RavenFS.Tests
 		public void Dispose()
 		{
 			server.CloseAsync().Wait();
+			server.Dispose();
 			ravenFileSystem.Dispose();
 		}
 	}
