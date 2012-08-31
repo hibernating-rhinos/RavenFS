@@ -34,7 +34,7 @@
             		var remoteSignatureManifest1 = task.Result;
             		if (remoteSignatureManifest1.Signatures.Count > 0)
             		{
-            			return InternalSynchronizeSignaturesAsync(dataInfo, remoteSignatureManifest1)
+            			return InternalSynchronizeSignaturesAsync(remoteSignatureManifest1)
             				.ContinueWith(task1 =>
             				{
             					task1.AssertNotFaulted();
@@ -45,9 +45,9 @@
             	}).Unwrap();
         }
 
-        private Task InternalSynchronizeSignaturesAsync(DataInfo dataInfo, SignatureManifest remoteSignatureManifest)
+        private Task InternalSynchronizeSignaturesAsync(SignatureManifest remoteSignatureManifest)
         {
-        	var sigPairs = PrepareSigPairs(dataInfo, remoteSignatureManifest);
+        	var sigPairs = PrepareSigPairs(remoteSignatureManifest);
 
         	var highestSigName = sigPairs.First().Remote;
         	var highestSigContent = _remoteCacheSignatureRepository.CreateContent(highestSigName);
@@ -85,7 +85,7 @@
             public string Remote { get; set; }
         }
 
-        private IList<LocalRemotePair> PrepareSigPairs(DataInfo dataInfo, SignatureManifest signatureManifest)
+        private IList<LocalRemotePair> PrepareSigPairs(SignatureManifest signatureManifest)
         {
             var remoteSignatures = signatureManifest.Signatures;
             var localSignatures = _localSignatureRepository.GetByFileName().ToList();
