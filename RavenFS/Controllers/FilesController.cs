@@ -15,6 +15,8 @@ using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
+	using System.Security.Cryptography;
+	using System.Text;
 	using Client;
 	using NLog;
 	using Synchronization;
@@ -283,10 +285,8 @@ namespace RavenFS.Controllers
 							HistoryUpdater.UpdateLastModified(headers); // update with the final file size
 
 							log.Debug("File '{0}' was uploaded. Starting to update file medatata and indexes", name);
-							using (var stream = StorageStream.Reading(Storage, name))
-							{
-								headers["Content-MD5"] = stream.GetMD5Hash();
-							}
+
+							headers["Content-MD5"] = readFileToDatabase.FileHash;
 
 							Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
 							headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
@@ -331,6 +331,7 @@ namespace RavenFS.Controllers
 			private readonly BufferPool bufferPool;
 			private readonly TransactionalStorage storage;
 			private readonly string filename;
+			private readonly MD5 md5Hasher;
 			private int pos;
 			readonly byte[] buffer;
 			private readonly Stream inputStream;
@@ -342,7 +343,10 @@ namespace RavenFS.Controllers
 				this.storage = storage;
 				this.filename = filename;
 				buffer = bufferPool.TakeBuffer(StorageConstants.MaxPageSize);
+				md5Hasher = new MD5CryptoServiceProvider();
 			}
+
+			public string FileHash { get; private set; }
 
 			public Task Execute()
 			{
@@ -354,6 +358,10 @@ namespace RavenFS.Controllers
 						if (task.Result == 0) // nothing left to read
 						{
 							storage.Batch(accessor => accessor.CompleteFileUpload(filename));
+							md5Hasher.TransformFinalBlock(new byte[0], 0, 0);
+
+							FileHash = ToStringHash(md5Hasher.Hash);
+
 							return task; // task is done
 						}
 
@@ -363,10 +371,23 @@ namespace RavenFS.Controllers
 							accessor.AssociatePage(filename, hashKey, pos, task.Result);
 						});
 
+						md5Hasher.TransformBlock(buffer, 0, task.Result, null, 0);
+
+
 						pos++;
 						return Execute();
 					})
 					.Unwrap();
+			}
+
+			private static string ToStringHash(byte[] hash)
+			{
+				var sb = new StringBuilder();
+				for (var i = 0; i < hash.Length; i++)
+				{
+					sb.Append(hash[i].ToString("x2"));
+				}
+				return sb.ToString();
 			}
 
 			public void Dispose()
