@@ -3,7 +3,9 @@
 	using System;
 	using System.Collections.Specialized;
 	using System.IO;
+	using System.Text;
 	using IO;
+	using Newtonsoft.Json;
 	using RavenFS.Client;
 	using RavenFS.Synchronization;
 	using RavenFS.Util;
@@ -182,9 +184,16 @@
 
 		private static NameValueCollection SynchronizationConfig(DateTime fileLockedDate)
 		{
+			var foo = new SynchronizationLock() { FileLockedAt = fileLockedDate };
+
+			var sb = new StringBuilder();
+			var jw = new JsonTextWriter(new StringWriter(sb));
+			new JsonSerializer().Serialize(jw, foo);
+			var value = sb.ToString();
+
 			return new NameValueCollection()
                                     {
-                                        {"value", "{\"SourceUrl\":\"http://localhost:19081\",\"FileLockedAt\":\"\\/Date(" + fileLockedDate.Ticks + ")\\/\"}"},
+                                        {"value", value},
                                     };
 		}
 
