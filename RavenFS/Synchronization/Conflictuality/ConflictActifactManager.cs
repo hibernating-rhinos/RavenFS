@@ -3,6 +3,7 @@ using RavenFS.Search;
 
 namespace RavenFS.Synchronization.Conflictuality
 {
+	using Client;
 	using RavenFS.Extensions;
 	using RavenFS.Storage;
 	using RavenFS.Util;

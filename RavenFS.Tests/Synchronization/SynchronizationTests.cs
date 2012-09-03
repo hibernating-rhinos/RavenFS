@@ -730,5 +730,34 @@ namespace RavenFS.Tests.Synchronization
             Assert.Equal("conflict.test", results.Files[0].Name);
         }
 
+
+		[Fact]
+		public void Should_be_able_to_get_conflicts()
+		{
+			var source = NewClient(0);
+			var destination = NewClient(1);
+
+			for (int i = 0; i < 25; i++)
+			{
+				var filename = string.Format("test{0}.bin", i);
+
+				source.UploadAsync(filename, new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
+				destination.UploadAsync(filename, new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
+
+				var result = source.Synchronization.StartSynchronizationToAsync(filename, destination.ServerUrl).Result;
+
+				// make sure that conflicts indeed are created
+				Assert.Equal(string.Format("File {0} is conflicted", filename), result.Exception.Message);
+			}
+
+			var pages = destination.Synchronization.GetConflicts().Result;
+			Assert.Equal(25, pages.TotalCount);
+
+			pages = destination.Synchronization.GetConflicts(1, 10).Result;
+			Assert.Equal(10, pages.TotalCount);
+
+			pages = destination.Synchronization.GetConflicts(2, 10).Result;
+			Assert.Equal(5, pages.TotalCount);
+		}
 	}
 }

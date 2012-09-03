@@ -2,11 +2,12 @@ namespace RavenFS.Synchronization.Conflictuality
 {
 	using System.Collections.Specialized;
 	using System.Linq;
+	using Client;
 	using RavenFS.Infrastructure;
 
 	public class ConflictDetector
 	{
-		public ConflictItem Check(NameValueCollection destinationMetadata, NameValueCollection sourceMetadata)
+		public ConflictItem Check(string fileName, NameValueCollection destinationMetadata, NameValueCollection sourceMetadata)
 		{
 			var sourceHistory = HistoryUpdater.DeserializeHistory(sourceMetadata);
 			var sourceVersion = long.Parse(sourceMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
@@ -23,7 +24,8 @@ namespace RavenFS.Synchronization.Conflictuality
 				new ConflictItem
 				{
 					Current = new HistoryItem { ServerId = destinationServerId, Version = destinationVersion },
-					Remote = new HistoryItem { ServerId = sourceServerId, Version = sourceVersion }
+					Remote = new HistoryItem { ServerId = sourceServerId, Version = sourceVersion },
+					FileName = fileName,
 				};
 		}
 	}

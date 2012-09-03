@@ -649,7 +649,7 @@ namespace RavenFS.Client
 
             public Task<ListPage<SynchronizationReport>> GetFinishedAsync(int page = 0, int pageSize = 25)
             {
-                var requestUriString = String.Format("{0}/synchronization/finished?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
+                var requestUriString = String.Format("{0}/synchronization/finished?start={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
                 var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
                 request.ContentLength = 0;
                 return request.GetResponseAsync()
@@ -666,7 +666,7 @@ namespace RavenFS.Client
 
             public Task<ListPage<SynchronizationDetails>> GetActiveAsync(int page = 0, int pageSize = 25)
             {
-                var requestUriString = String.Format("{0}/synchronization/active?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
+                var requestUriString = String.Format("{0}/synchronization/active?start={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
                 var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
                 request.ContentLength = 0;
                 return request.GetResponseAsync()
@@ -683,7 +683,7 @@ namespace RavenFS.Client
 
             public Task<ListPage<SynchronizationDetails>> GetPendingAsync(int page = 0, int pageSize = 25)
 			{
-				var requestUriString = String.Format("{0}/synchronization/pending?page={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
+				var requestUriString = String.Format("{0}/synchronization/pending?start={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
 				request.ContentLength = 0;
 				return request.GetResponseAsync()
@@ -750,6 +750,23 @@ namespace RavenFS.Client
 									              	});
 							})
 					.Unwrap()
+					.TryThrowBetterError();
+			}
+
+			public Task<ListPage<ConflictItem>> GetConflicts(int page = 0, int pageSize = 25)
+			{
+				var requestUriString = String.Format("{0}/synchronization/conflicts?start={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
+				request.ContentLength = 0;
+				return request.GetResponseAsync()
+					.ContinueWith(task =>
+					{
+						using (var stream = task.Result.GetResponseStream())
+						{
+							var preResult = new JsonSerializer().Deserialize<ListPage<ConflictItem>>(new JsonTextReader(new StreamReader(stream)));
+							return preResult;
+						}
+					})
 					.TryThrowBetterError();
 			}
 		}

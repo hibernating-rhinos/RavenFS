@@ -215,7 +215,7 @@
 
 	    private void AssertConflictDetection(string fileName, NameValueCollection destinationMetadata, NameValueCollection sourceMetadata, Guid sourceServerId, out bool isConflictResolved)
 		{
-			var conflict = ConflictDetector.Check(destinationMetadata, sourceMetadata);
+			var conflict = ConflictDetector.Check(fileName, destinationMetadata, sourceMetadata);
 			isConflictResolved = ConflictResolver.IsResolved(destinationMetadata, conflict);
 
 			if (conflict != null && !isConflictResolved)
@@ -516,6 +516,20 @@
                                             SynchronizationTask.Queue.GetTotalPendingTasks()));
 		}
 
+		[AcceptVerbs("GET")]
+		public HttpResponseMessage Conflicts()
+		{
+			ListPage<ConflictItem> page = null;
+
+			Storage.Batch(accessor =>
+			{
+				var conflicts = accessor.GetConflicts(Paging.PageSize*Paging.Start, Paging.PageSize);
+				page = new ListPage<ConflictItem>(conflicts, conflicts.Count);
+			});
+
+			return Request.CreateResponse(HttpStatusCode.OK, page);
+		}
+
 		[AcceptVerbs("PATCH")]
 		public Task<HttpResponseMessage> ResolveConflict(string fileName, ConflictResolutionStrategy strategy, string sourceServerUrl)
 		{
@@ -558,7 +572,8 @@
 				{
 					ServerId = remoteServerId,
 					Version = remoteVersion
-				}
+				},
+				FileName = filename
 			};
 
 			ConflictActifactManager.CreateArtifact(filename, conflict);

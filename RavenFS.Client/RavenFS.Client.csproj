@@ -91,6 +91,7 @@
     <Compile Include="Changes\TaskObservable.cs" />
     <Compile Include="ConcurrencyException.cs" />
     <Compile Include="ConfigChange.cs" />
+    <Compile Include="ConflictItem.cs" />
     <Compile Include="ConflictResolutionStrategy.cs" />
     <Compile Include="ConflictDetected.cs" />
     <Compile Include="Connections\HttpWebRequestExtensions.cs" />
@@ -102,6 +103,7 @@
     <Compile Include="FileInfo.cs" />
     <Compile Include="FilesSortOptions.cs" />
     <Compile Include="Heartbeat.cs" />
+    <Compile Include="HistoryItem.cs" />
     <Compile Include="ListenableStream.cs" />
     <Compile Include="MultiPartParser.cs" />
     <Compile Include="Notification.cs" />

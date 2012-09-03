@@ -16,7 +16,9 @@ using RavenFS.Util;
 namespace RavenFS.Storage
 {
 	using System.Linq;
+	using Client;
 	using Extensions;
+	using Newtonsoft.Json;
 
 	public class StorageActionsAccessor : IDisposable
 	{
@@ -815,6 +817,28 @@ namespace RavenFS.Storage
 			Api.JetSetCurrentIndex(session, Config, "by_name");
 			Api.MakeKey(session, Config, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			return Api.TrySeek(session, Config, SeekGrbit.SeekEQ);
+		}
+
+		public IList<ConflictItem> GetConflicts(int start, int take)
+		{
+			Api.JetSetCurrentIndex(session, Config, "by_name");
+			Api.MakeKey(session, Config, "Conflicted-", Encoding.Unicode, MakeKeyGrbit.NewKey | MakeKeyGrbit.PartialColumnEndLimit);
+			Api.JetMove(session, Config, start, MoveGrbit.MoveKeyNE);
+
+			var conflicts = new List<ConflictItem>();
+
+			if (Api.TrySetIndexRange(session, Config, SetIndexRangeGrbit.RangeInclusive | SetIndexRangeGrbit.RangeUpperLimit))
+			{
+				do
+				{
+					var metadata = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["metadata"], Encoding.Unicode);
+					var value = HttpUtility.ParseQueryString(metadata)["value"];
+					conflicts.Add(new JsonSerializer().Deserialize<ConflictItem>(new JsonTextReader(new StringReader(value))));
+				}
+				while (Api.TryMoveNext(session, Config) && conflicts.Count < take);
+			}
+
+			return conflicts;
 		}
 	}
 }

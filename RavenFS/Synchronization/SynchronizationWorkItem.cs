@@ -57,7 +57,7 @@
 
 		protected ConflictItem CheckConflictWithDestination(NameValueCollection sourceMetadata, NameValueCollection destinationMetadata)
 		{
-			var conflict = conflictDetector.Check(destinationMetadata, sourceMetadata);
+			var conflict = conflictDetector.Check(FileName, destinationMetadata, sourceMetadata);
 			var isConflictResolved = conflictResolver.IsResolved(destinationMetadata, conflict);
 
 			// optimization - conflict checking on source side before any changes pushed

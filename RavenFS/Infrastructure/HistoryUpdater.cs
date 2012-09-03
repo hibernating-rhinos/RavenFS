@@ -9,6 +9,7 @@ using RavenFS.Storage;
 
 namespace RavenFS.Infrastructure
 {
+	using Client;
 	using Synchronization;
 
 	public class HistoryUpdater

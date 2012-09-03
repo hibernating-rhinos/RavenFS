@@ -1,4 +1,4 @@
-﻿namespace RavenFS.Synchronization
+﻿namespace RavenFS.Client
 {
 	public class HistoryItem
     {

@@ -192,7 +192,6 @@
     <Compile Include="Storage\PageRange.cs" />
     <Compile Include="Synchronization\Conflictuality\ConflictActifactManager.cs" />
     <Compile Include="Synchronization\Conflictuality\ConflictDetector.cs" />
-    <Compile Include="Synchronization\Conflictuality\ConflictItem.cs" />
     <Compile Include="Synchronization\Conflictuality\ConflictResolution.cs" />
     <Compile Include="Synchronization\Conflictuality\ConflictResolver.cs" />
     <Compile Include="Synchronization\DataInfo.cs" />
@@ -211,7 +210,6 @@
     <Compile Include="Synchronization\SynchronizationTask.cs" />
     <Compile Include="Synchronization\SynchronizationQueue.cs" />
     <Compile Include="Infrastructure\SequenceActions.cs" />
-    <Compile Include="Synchronization\HistoryItem.cs" />
     <Compile Include="Synchronization\Rdc\IPartialDataAccess.cs" />
     <Compile Include="Synchronization\FileLockManager.cs" />
     <Compile Include="Synchronization\Rdc\RemoteRdcManager.cs" />
