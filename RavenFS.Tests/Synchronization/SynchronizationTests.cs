@@ -6,21 +6,19 @@ namespace RavenFS.Tests.Synchronization
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
+	using System.Net;
+	using System.Text;
+	using System.Threading.Tasks;
 	using IO;
 	using Newtonsoft.Json;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
 	using RavenFS.Synchronization;
-	using RavenFS.Synchronization.Conflictuality;
 	using RavenFS.Synchronization.Multipart;
+	using RavenFS.Tests.Tools;
 	using RavenFS.Util;
 	using Xunit;
 	using Xunit.Extensions;
-	using System.Linq;
-	using System.Net;
-	using System.Text;
-	using System.Threading.Tasks;
-	using RavenFS.Tests.Tools;
 
 	public class SynchronizationTests : MultiHostTestBase
 	{
@@ -89,18 +87,18 @@ namespace RavenFS.Tests.Synchronization
 
 			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
 
-			//Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
+			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
 			string resultMd5 = null;
 			using (var resultFileContent = new MemoryStream())
 			{
 				destinationClient.DownloadAsync("test.txt", resultFileContent).Wait();
 				resultFileContent.Position = 0;
-				resultMd5 = IOExtensions.GetMD5Hash(resultFileContent);
+				resultMd5 = resultFileContent.GetMD5Hash();
 			}
 
 			sourceContent.Position = 0;
-			var sourceMd5 = IOExtensions.GetMD5Hash(sourceContent);
+			var sourceMd5 = sourceContent.GetMD5Hash();
 
 			Assert.Equal(sourceMd5, resultMd5);
 		}
