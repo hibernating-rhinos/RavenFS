@@ -1,5 +1,6 @@
 namespace RavenFS.Synchronization
 {
+	using System;
 	using System.IO;
 	using System.Net;
 	using System.Threading.Tasks;
@@ -27,52 +28,40 @@ namespace RavenFS.Synchronization
 			get { return SynchronizationType.Rename; }
 		}
 
-		public override Task<SynchronizationReport> Perform(string destination)
+		public async override Task<SynchronizationReport> Perform(string destination)
 		{
-			return StartSyncingRenamingTo(destination)
-				.ContinueWith(task =>
-					{
-						SynchronizationReport report;
-						if (task.Status == TaskStatus.Faulted)
-						{
-							report =
-								new SynchronizationReport
-									{
-										FileName = FileName,
-										Exception = task.Exception.ExtractSingleInnerException(),
-										Type = SynchronizationType.Rename
-									};
+			SynchronizationReport report;
+			try
+			{
+				report = await StartSyncingRenamingTo(destination);
+			}
+			catch (Exception ex)
+			{
+				report = new SynchronizationReport
+					         {
+						         FileName = FileName,
+						         Exception = ex is AggregateException ? ((AggregateException) ex).ExtractSingleInnerException() : ex,
+						         Type = SynchronizationType.Rename
+					         };
+			}
 
-							log.WarnException(
-								string.Format(
-									"Failed to perform a synchronization of a renaming of a file '{0}' to '{1}' to destination {2} has finished with an exception",
-									FileName, rename, destination), report.Exception);
-						}
-						else
-						{
-							report = task.Result;
+			if (report.Exception == null)
+			{
+				log.Debug(
+					"Synchronization of a renaming of a file '{0}' to '{1}' to destination {2} has finished", FileName, rename, destination);
+			}
+			else
+			{
+				log.WarnException(
+					string.Format(
+						"Synchronization of a renaming of a file '{0}' to '{1}' to destination {2} has finished with an exception",
+						FileName, rename, destination), report.Exception);
+			}
 
-							if (report.Exception == null)
-							{
-								log.Debug(
-									"Synchronization of a renaming of a file '{0}' to '{1}' to destination {2} has finished", FileName, rename,
-									destination);
-							}
-							else
-							{
-								log.WarnException(
-									string.Format(
-										"Synchronization of a renaming of a file '{0}' to '{1}' to destination {2} has finished with an exception",
-										FileName, rename,
-										destination), report.Exception);
-							}
-						}
-
-						return report;
-					});
+			return report;
 		}
 
-		private Task<SynchronizationReport> StartSyncingRenamingTo(string destination)
+		private async Task<SynchronizationReport> StartSyncingRenamingTo(string destination)
 		{
 			log.Debug("Synchronizing a renaming of a file '{0}' to '{1}' to {2}", FileName, rename, destination);
 
@@ -87,16 +76,20 @@ namespace RavenFS.Synchronization
 
 			request.Headers[SyncingMultipartConstants.SourceServerId] = SourceServerId.ToString();
 
-			return request
-				.GetResponseAsync()
-				.ContinueWith(task =>
+			try
+			{
+				using (var response = await request.GetResponseAsync())
+				{
+					using (var stream = response.GetResponseStream())
 					{
-						using (var stream = task.Result.GetResponseStream())
-						{
-							return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
-						}
-					})
-				.TryThrowBetterError();
+						return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
+					}
+				}
+			}
+			catch (WebException exception)
+			{
+				throw exception.BetterWebExceptionError();
+			}
 		}
 
 		public override bool Equals(object obj)

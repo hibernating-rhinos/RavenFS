@@ -24,36 +24,39 @@ namespace RavenFS.Client
 				if (webException == null || webException.Response == null)
 					return task;
 
-				var httpWebResponse = webException.Response as HttpWebResponse;
-				if (httpWebResponse != null)
-				{
-					if (httpWebResponse.StatusCode == HttpStatusCode.PreconditionFailed)
-					{
-						using (var stream = webException.Response.GetResponseStream())
-						{
-							throw new JsonSerializer().Deserialize<SynchronizationException>(new JsonTextReader(new StreamReader(stream)));
-						}
-					}
-					else if (httpWebResponse.StatusCode == HttpStatusCode.MethodNotAllowed)
-					{
-						using (var stream = webException.Response.GetResponseStream())
-						{
-							throw new JsonSerializer().Deserialize<ConcurrencyException>(new JsonTextReader(new StreamReader(stream)));
-						}
-					}
-				}
-
-				using (var stream = webException.Response.GetResponseStream())
-				using (var reader = new StreamReader(stream))
-				{
-					var readToEnd = reader.ReadToEnd();
-					throw new InvalidOperationException(
-						webException.ToString() + 
-						Environment.NewLine +
-						readToEnd);
-				}
+				throw webException.BetterWebExceptionError();
 			})
 			.Unwrap();
+		}
+
+		public static Exception BetterWebExceptionError(this WebException webException)
+		{
+			var httpWebResponse = webException.Response as HttpWebResponse;
+			if (httpWebResponse != null)
+			{
+				if (httpWebResponse.StatusCode == HttpStatusCode.PreconditionFailed)
+				{
+					using (var stream = webException.Response.GetResponseStream())
+					{
+						return new JsonSerializer().Deserialize<SynchronizationException>(new JsonTextReader(new StreamReader(stream)));
+					}
+				}
+				else if (httpWebResponse.StatusCode == HttpStatusCode.MethodNotAllowed)
+				{
+					using (var stream = webException.Response.GetResponseStream())
+					{
+						return new JsonSerializer().Deserialize<ConcurrencyException>(new JsonTextReader(new StreamReader(stream)));
+					}
+				}
+			}
+
+			using (var stream = webException.Response.GetResponseStream())
+			using (var reader = new StreamReader(stream))
+			{
+				var readToEnd = reader.ReadToEnd();
+				return new InvalidOperationException(
+					webException + Environment.NewLine + readToEnd);
+			}
 		}
 
 		public static Task<T> TryThrowBetterError<T>(this Task<T> self)
@@ -67,23 +70,7 @@ namespace RavenFS.Client
 				if (webException == null || webException.Response == null)
 					return task;
 
-				var httpWebResponse = webException.Response as HttpWebResponse;
-				if (httpWebResponse != null)
-				{
-					if (httpWebResponse.StatusCode == HttpStatusCode.PreconditionFailed)
-					{
-						using (var stream = webException.Response.GetResponseStream())
-						{
-							throw new JsonSerializer().Deserialize<SynchronizationException>(new JsonTextReader(new StreamReader(stream)));
-						}
-					}
-				}
-
-				using (var stream = webException.Response.GetResponseStream())
-				using (var reader = new StreamReader(stream))
-				{
-					throw new InvalidOperationException(reader.ReadToEnd());
-				}
+				throw webException.BetterWebExceptionError();
 			})
 			.Unwrap();
 		}

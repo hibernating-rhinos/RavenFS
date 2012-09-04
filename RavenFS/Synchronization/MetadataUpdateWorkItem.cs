@@ -29,71 +29,49 @@ namespace RavenFS.Synchronization
 			get { return SynchronizationType.MetadataUpdate; }
 		}
 
-		public override Task<SynchronizationReport> Perform(string destination)
+		public async override Task<SynchronizationReport> Perform(string destination)
 		{
+			SynchronizationReport report;
 			try
 			{
 				AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
+				report = await StartSyncingMedatataTo(destination);
 			}
-			catch (SynchronizationException ex)
+			catch (Exception ex)
+			{
+				report = new SynchronizationReport
+										{
+											FileName = FileName,
+											Exception = ex is AggregateException ? ((AggregateException)ex).ExtractSingleInnerException() : ex,
+											Type = SynchronizationType.MetadataUpdate
+										};
+			}
+
+			if (report.Exception == null)
+			{
+				log.Debug("Metadata synchronization of a file '{0}' to {1} has succeeded", FileName,
+						  destination);
+			}
+			else
 			{
 				log.WarnException(
-					string.Format("Failed to perform a metadata synchronization of a file '{0}' to {1} has finished with an exception",
-					              FileName, destination), ex);
-
-				return SynchronizationUtils.SynchronizationExceptionReport(FileName, ex.Message);
+					string.Format("Metadata synchronization of a file '{0}' to {1} has finished with an exception",
+								  FileName, destination), report.Exception);
 			}
+
+			return report;
+		}
+
+		private async Task<SynchronizationReport> StartSyncingMedatataTo(string destination)
+		{
+			log.Debug("Synchronizing a metadata of a file '{0}' to {1}", FileName, destination);
 
 			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata);
 
 			if (conflict != null)
 			{
-				return ApplyConflictOnDestination(conflict, destination, log);
+				return await ApplyConflictOnDestination(conflict, destination, log);
 			}
-
-			return StartSyncingMedatataTo(destination)
-			.ContinueWith(task =>
-			              	{
-								SynchronizationReport report;
-								if (task.Status == TaskStatus.Faulted)
-								{
-									report =
-										new SynchronizationReport
-										{
-											FileName = FileName,
-											Exception = task.Exception.ExtractSingleInnerException(),
-											Type = SynchronizationType.MetadataUpdate
-										};
-
-									log.WarnException(
-										string.Format(
-											"Failed to perform a metadata synchronization of a file '{0}' to {1} has finished with an exception",
-											FileName, destination), report.Exception);
-								}
-								else
-								{
-									report = task.Result;
-
-									if (report.Exception == null)
-									{
-										log.Debug("Metadata synchronization of a file '{0}' to {1} has succeeded", FileName,
-										          destination);
-									}
-									else
-									{
-										log.WarnException(
-											string.Format("Metadata synchronization of a file '{0}' to {1} has finished with an exception",
-											              FileName, destination), report.Exception);
-									}
-								}
-
-			              		return report;
-			              	});
-		}
-
-		private Task<SynchronizationReport> StartSyncingMedatataTo(string destination)
-		{
-			log.Debug("Synchronizing a metadata of a file '{0}' to {1}", FileName, destination);
 
 			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/updatemetadata/" + FileName);
 
@@ -103,18 +81,20 @@ namespace RavenFS.Synchronization
 
 			request.Headers[SyncingMultipartConstants.SourceServerId] = SourceServerId.ToString();
 
-			return request
-				.GetResponseAsync()
-				.ContinueWith(task =>
+			try
+			{
+				using (var response = await request.GetResponseAsync())
 				{
-
-				    using (var stream = task.Result.GetResponseStream())
-				    {
-				        return
-				            new JsonSerializer().Deserialize<SynchronizationReport>(
-				              	new JsonTextReader(new StreamReader(stream)));
-				    }
-				}).TryThrowBetterError();
+					using (var stream = response.GetResponseStream())
+					{
+						return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
+					}
+				}
+			}
+			catch (WebException exception)
+			{
+				throw exception.BetterWebExceptionError();
+			}
 		}
 
 		public override bool Equals(object obj)

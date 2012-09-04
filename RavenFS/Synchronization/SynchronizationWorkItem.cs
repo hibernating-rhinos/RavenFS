@@ -46,7 +46,7 @@
 		{
 			if (sourceMetadata == null)
 			{
-				throw new SynchronizationException(string.Format("File {0} does not exists", FileName));
+				throw new SynchronizationException(string.Format("File {0} does not exist", FileName));
 			}
 
 			if (sourceMetadata.AllKeys.Contains(SynchronizationConstants.RavenSynchronizationConflict))
@@ -69,30 +69,26 @@
 			return null;
 		}
 
-		protected Task<SynchronizationReport> ApplyConflictOnDestination(ConflictItem conflict, string  destination, Logger log)
+		protected async Task<SynchronizationReport> ApplyConflictOnDestination(ConflictItem conflict, string  destination, Logger log)
 		{
 			log.Debug("File '{0}' is in conflict with destination version from {1}. Applying conflict on destination", FileName, destination);
 
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
-
-			return destinationRavenFileSystemClient.Synchronization
-			.ApplyConflictAsync(FileName, conflict.Current.Version, conflict.Remote.ServerId)
-			.ContinueWith(task =>
+			try
 			{
-				if (task.Exception != null)
-				{
-					log.WarnException(
-						string.Format("Failed to apply conflict on {0} for file '{1}'", destination, FileName),
-						task.Exception.ExtractSingleInnerException());
-				}
+				await destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(FileName, conflict.Current.Version, conflict.Remote.ServerId);
+			}
+			catch (Exception ex)
+			{
+				log.WarnException(string.Format("Failed to apply conflict on {0} for file '{1}'", destination, FileName), ex);
+			}
 
-				return new SynchronizationReport
-						{
-							FileName = FileName,
-							Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
-							Type = SynchronizationType
-						};
-			});
+			return new SynchronizationReport
+			{
+				FileName = FileName,
+				Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
+				Type = SynchronizationType
+			};
 		}
 
 		public void RefreshMetadata()

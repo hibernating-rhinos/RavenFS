@@ -78,7 +78,7 @@ namespace RavenFS.Synchronization
 					if(localMetadata == null)
 					{
 						log.Warn("Could not find local file '{0}' to syncronize");
-						return SynchronizationUtils.SynchronizationExceptionReport(fileName,"File does not exists locally");
+						return SynchronizationUtils.SynchronizationExceptionReport(fileName, "File does not exist locally");
 					}
 
 					var work = DetermineSynchronizationWork(fileName, localMetadata, t.Result);

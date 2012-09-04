@@ -1,5 +1,6 @@
 namespace RavenFS.Synchronization
 {
+	using System;
 	using System.IO;
 	using System.Net;
 	using System.Threading.Tasks;
@@ -23,50 +24,38 @@ namespace RavenFS.Synchronization
 			get { return SynchronizationType.Delete; }
 		}
 
-		public override Task<SynchronizationReport> Perform(string destination)
+		public async override Task<SynchronizationReport> Perform(string destination)
 		{
-			return StartDeleteFileOn(destination)
-				.ContinueWith(task =>
-				{
-					SynchronizationReport report;
-					if (task.Status == TaskStatus.Faulted)
-					{
-						report =
-							new SynchronizationReport
-							{
-								FileName = FileName,
-								Exception = task.Exception.ExtractSingleInnerException(),
-								Type = SynchronizationType.Rename
-							};
+			SynchronizationReport report;
+			try
+			{
+				report = await StartDeleteFileOn(destination);
+			}
+			catch (Exception ex)
+			{
+				report = new SynchronizationReport
+					         {
+						         FileName = FileName,
+						         Exception = ex is AggregateException ? ((AggregateException) ex).ExtractSingleInnerException() : ex,
+						         Type = SynchronizationType.Rename
+					         };
+			}
 
-						log.WarnException(
-							string.Format(
-								"Failed to perform a synchronization of a deleted file file '{0}' on destination {1}. It has finished with an exception",
-								FileName, destination), report.Exception);
-					}
-					else
-					{
-						report = task.Result;
+			if (report.Exception == null)
+			{
+				log.Debug("Synchronization of a deleted file '{0}' on destination {1} has finished", FileName, destination);
+			}
+			else
+			{
+				log.WarnException(
+					string.Format("Synchronization of a deleted file '{0}' on destination {1} has finished with an exception", FileName,
+					              destination), report.Exception);
+			}
 
-						if (report.Exception == null)
-						{
-							log.Debug(
-								"Synchronization of a deleted file '{0}' on destination {1} has finished", FileName, destination);
-						}
-						else
-						{
-							log.WarnException(
-								string.Format(
-									"Synchronization of a deleted file '{0}' on destination {1} has finished with an exception",
-									FileName, destination), report.Exception);
-						}
-					}
-
-					return report;
-				});
+			return report;
 		}
 
-		private Task<SynchronizationReport> StartDeleteFileOn(string destination)
+		private async Task<SynchronizationReport> StartDeleteFileOn(string destination)
 		{
 			log.Debug("Synchronizing a deletion of a file '{0}' to {1}", FileName, destination);
 
@@ -81,16 +70,20 @@ namespace RavenFS.Synchronization
 
 			request.Headers[SyncingMultipartConstants.SourceServerId] = SourceServerId.ToString();
 
-			return request
-				.GetResponseAsync()
-				.ContinueWith(task =>
+			try
+			{
+				using (var response = await request.GetResponseAsync())
 				{
-					using (var stream = task.Result.GetResponseStream())
+					using (var stream = response.GetResponseStream())
 					{
 						return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
 					}
-				})
-				.TryThrowBetterError();
+				}
+			}
+			catch (WebException exception)
+			{
+				throw exception.BetterWebExceptionError();
+			}
 		}
 
 		public override bool Equals(object obj)
