@@ -777,5 +777,16 @@ namespace RavenFS.Tests.Synchronization
 				Assert.Equal(0, ms.Length);
 			}
 		}
+
+		[Fact]
+		public void Should_throw_exception_if_synchronized_file_doesnt_exist()
+		{
+			var source = NewClient(0);
+			var destination = NewClient(1);
+
+			var result = source.Synchronization.StartSynchronizationToAsync("file_which_doesnt_exist", destination.ServerUrl).Result;
+
+			Assert.Equal("File does not exist locally", result.Exception.Message);
+		}
 	}
 }
