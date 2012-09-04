@@ -1,6 +1,5 @@
 namespace RavenFS.Synchronization
 {
-	using System;
 	using System.IO;
 	using System.Net;
 	using System.Threading.Tasks;
@@ -8,13 +7,10 @@ namespace RavenFS.Synchronization
 	using Extensions;
 	using Multipart;
 	using Newtonsoft.Json;
-	using NLog;
 	using Storage;
 
 	public class RenameWorkItem : SynchronizationWorkItem
 	{
-		private readonly Logger log = LogManager.GetCurrentClassLogger();
-
 		private readonly string rename;
 
 		public RenameWorkItem(string name, string rename, TransactionalStorage storage)
@@ -30,41 +26,6 @@ namespace RavenFS.Synchronization
 
 		public async override Task<SynchronizationReport> Perform(string destination)
 		{
-			SynchronizationReport report;
-			try
-			{
-				report = await StartSyncingRenamingTo(destination);
-			}
-			catch (Exception ex)
-			{
-				report = new SynchronizationReport
-					         {
-						         FileName = FileName,
-						         Exception = ex,
-						         Type = SynchronizationType.Rename
-					         };
-			}
-
-			if (report.Exception == null)
-			{
-				log.Debug(
-					"Synchronization of a renaming of a file '{0}' to '{1}' to destination {2} has finished", FileName, rename, destination);
-			}
-			else
-			{
-				log.WarnException(
-					string.Format(
-						"Synchronization of a renaming of a file '{0}' to '{1}' to destination {2} has finished with an exception",
-						FileName, rename, destination), report.Exception);
-			}
-
-			return report;
-		}
-
-		private async Task<SynchronizationReport> StartSyncingRenamingTo(string destination)
-		{
-			log.Debug("Synchronizing a renaming of a file '{0}' to '{1}' to {2}", FileName, rename, destination);
-
 			FileAndPages fileAndPages = null;
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));
 
@@ -110,6 +71,11 @@ namespace RavenFS.Synchronization
 		public override int GetHashCode()
 		{
 			return (FileName != null ? GetType().Name.GetHashCode() ^ FileName.GetHashCode() ^ FileETag.GetHashCode() : 0);
+		}
+
+		public override string ToString()
+		{
+			return string.Format("Synchronization of a renaming of a file '{0}' to '{1}'", FileName, rename);
 		}
 	}
 }

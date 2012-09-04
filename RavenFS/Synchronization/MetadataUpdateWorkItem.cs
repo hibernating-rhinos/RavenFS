@@ -1,6 +1,5 @@
 namespace RavenFS.Synchronization
 {
-	using System;
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Net;
@@ -31,40 +30,7 @@ namespace RavenFS.Synchronization
 
 		public async override Task<SynchronizationReport> Perform(string destination)
 		{
-			SynchronizationReport report;
-			try
-			{
-				AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
-				report = await StartSyncingMedatataTo(destination);
-			}
-			catch (Exception ex)
-			{
-				report = new SynchronizationReport
-										{
-											FileName = FileName,
-											Exception = ex,
-											Type = SynchronizationType.MetadataUpdate
-										};
-			}
-
-			if (report.Exception == null)
-			{
-				log.Debug("Metadata synchronization of a file '{0}' to {1} has succeeded", FileName,
-						  destination);
-			}
-			else
-			{
-				log.WarnException(
-					string.Format("Metadata synchronization of a file '{0}' to {1} has finished with an exception",
-								  FileName, destination), report.Exception);
-			}
-
-			return report;
-		}
-
-		private async Task<SynchronizationReport> StartSyncingMedatataTo(string destination)
-		{
-			log.Debug("Synchronizing a metadata of a file '{0}' to {1}", FileName, destination);
+			AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
 
 			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata);
 
@@ -115,6 +81,11 @@ namespace RavenFS.Synchronization
 		public override int GetHashCode()
 		{
 			return (FileName != null ? GetType().Name.GetHashCode() ^ FileName.GetHashCode() ^ FileETag.GetHashCode() : 0);
+		}
+
+		public override string ToString()
+		{
+			return string.Format("Metadata synchronization of a file '{0}'", FileName);
 		}
 	}
 }

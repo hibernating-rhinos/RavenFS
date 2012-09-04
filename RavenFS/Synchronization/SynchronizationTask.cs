@@ -59,37 +59,37 @@ namespace RavenFS.Synchronization
 			return Task.Factory.StartNew(() => SynchronizeDestinationsInternal(forceSyncingContinuation).ToArray());
 		}
 
-		public Task<SynchronizationReport> SynchronizeFileTo(string fileName, string destinationUrl)
+		public async Task<SynchronizationReport> SynchronizeFileTo(string fileName, string destinationUrl)
 		{
 			var destinationClient = new RavenFileSystemClient(destinationUrl);
+			NameValueCollection destinationMetadata;
 
-			return destinationClient.GetMetadataForAsync(fileName)
-				.ContinueWith(t =>
-				{
-				    if (t.Exception != null)
-				    {
-						log.WarnException("Could not get metadata details for " + fileName +" from " + destinationUrl, t.Exception);
-				    	return SynchronizationUtils.SynchronizationExceptionReport(fileName,
-				    	                                                           t.Exception.ExtractSingleInnerException().ToString());
-				    }
+			try
+			{
+				destinationMetadata = await destinationClient.GetMetadataForAsync(fileName);
+			}
+			catch (Exception ex)
+			{
+				log.WarnException("Could not get metadata details for " + fileName + " from " + destinationUrl, ex);
+				return SynchronizationUtils.SynchronizationExceptionReport(fileName, ex.ToString());
+			}
 
-				    var localMetadata = GetLocalMetadata(fileName);
+			var localMetadata = GetLocalMetadata(fileName);
 
-					if(localMetadata == null)
-					{
-						log.Warn("Could not find local file '{0}' to syncronize");
-						return SynchronizationUtils.SynchronizationExceptionReport(fileName, "File does not exist locally");
-					}
+			if (localMetadata == null)
+			{
+				log.Warn("Could not find local file '{0}' to syncronize");
+				return SynchronizationUtils.SynchronizationExceptionReport(fileName, "File does not exist locally");
+			}
 
-					var work = DetermineSynchronizationWork(fileName, localMetadata, t.Result);
+			var work = DetermineSynchronizationWork(fileName, localMetadata, destinationMetadata);
 
-					if (work == null)
-					{
-						return SynchronizationUtils.SynchronizationExceptionReport(fileName, "No synchronization work needed");
-					}
+			if (work == null)
+			{
+				return SynchronizationUtils.SynchronizationExceptionReport(fileName, "No synchronization work needed");
+			}
 
-				    return PerformSynchronization(destinationClient.ServerUrl, work);
-				}).Unwrap();
+			return await PerformSynchronization(destinationClient.ServerUrl, work);
 		}
 
 		private IEnumerable<Task<DestinationSyncResult>> SynchronizeDestinationsInternal(bool forceSyncingContinuation)
@@ -191,11 +191,11 @@ namespace RavenFS.Synchronization
 					              		}
 
 					              		var successfullSynchronizationsCount = t.Result.Reports != null
-					              		                              	? t.Result.Reports.Where(x => x.Exception == null).Count()
+					              		                              	? t.Result.Reports.Count(x => x.Exception == null)
 					              		                              	: 0;
 
 										var failedSynchronizationsCount = t.Result.Reports != null
-					              		                              	? t.Result.Reports.Where(x => x.Exception != null).Count()
+					              		                              	? t.Result.Reports.Count(x => x.Exception != null)
 					              		                              	: 0;
 
 					              		if (successfullSynchronizationsCount > 0 || failedSynchronizationsCount > 0)
@@ -338,7 +338,7 @@ namespace RavenFS.Synchronization
 			}
 		}
 
-		private Task<SynchronizationReport> PerformSynchronization(string destinationUrl, SynchronizationWorkItem work)
+		private async Task<SynchronizationReport> PerformSynchronization(string destinationUrl, SynchronizationWorkItem work)
 		{
 			log.Debug("Starting to perform {0} for a file '{1}' and a destination server {2}", work.GetType().Name, work.FileName,
 			          destinationUrl);
@@ -368,32 +368,54 @@ namespace RavenFS.Synchronization
 									SynchronizationDirection = SynchronizationDirection.Outgoing
 			                  	});
 
-			return work.Perform(destinationUrl)
-				.ContinueWith(t =>
-				              	{
-				              		Queue.SynchronizationFinished(work, destinationUrl);
-									CreateSyncingConfiguration(fileName, destinationUrl, work.SynchronizationType);
+			SynchronizationReport report;
+			
+			try
+			{
+				report = await work.Perform(destinationUrl);
+			}
+			catch (Exception ex)
+			{
+				report = new SynchronizationReport
+				{
+					FileName = work.FileName,
+					Exception = ex,
+					Type = work.SynchronizationType
+				};
+			}
 
-				              		if (t.Exception != null)
-				              		{
-				              			log.WarnException(
-				              				string.Format(
-				              					"An exception was thrown during {0} that was performed for a file '{1}' and a destination {2}",
-				              					work.GetType().Name, fileName, destinationUrl), t.Exception.ExtractSingleInnerException());
-				              		}
+			if (report.Exception == null)
+			{
+				var moreDetails = string.Empty;
 
-									publisher.Publish(new SynchronizationUpdate
-									{
-										FileName = work.FileName,
-										DestinationServer = destinationUrl,
-										SourceServerId = storage.Id,
-										Type = work.SynchronizationType,
-										Action = SynchronizationAction.Finish,
-										SynchronizationDirection = SynchronizationDirection.Outgoing
-									});
+				if (work.SynchronizationType == SynchronizationType.ContentUpdate)
+				{
+					moreDetails = string.Format(". {0} bytes were transfered and {1} bytes copied. Need list length was {2}",
+					                            report.BytesTransfered, report.BytesCopied, report.NeedListLength);
+				}
 
-				              		return t.Result;
-				              	});
+				log.Debug("{0} to {1} has finished successfully{2}", work.ToString(), destinationUrl, moreDetails);
+			}
+			else
+			{
+				log.WarnException(string.Format("{0} to {1} has finished with the exception", work, destinationUrl),
+				                  report.Exception);
+			}
+
+			Queue.SynchronizationFinished(work, destinationUrl);
+			CreateSyncingConfiguration(fileName, destinationUrl, work.SynchronizationType);
+
+			publisher.Publish(new SynchronizationUpdate
+			{
+				FileName = work.FileName,
+				DestinationServer = destinationUrl,
+				SourceServerId = storage.Id,
+				Type = work.SynchronizationType,
+				Action = SynchronizationAction.Finish,
+				SynchronizationDirection = SynchronizationDirection.Outgoing
+			});
+
+			return report;
 		}
 
 		private List<FileHeader> GetFilesToSynchronization(SourceSynchronizationInformation destinationsSynchronizationInformationForSource, int take)

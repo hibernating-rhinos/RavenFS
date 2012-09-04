@@ -41,42 +41,8 @@
 
 		public async override Task<SynchronizationReport> Perform(string destination)
 		{
-			SynchronizationReport report;
-			try
-			{
-				AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
-				report = await StartSyncingToAsync(destination);
-			}
-			catch (Exception ex)
-			{
-				report =
-					new SynchronizationReport
-						{
-							FileName = FileName,
-							Exception = ex,
-							Type = SynchronizationType.ContentUpdate
-						};
-			}
+			AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
 
-			if (report.Exception == null)
-			{
-				log.Debug(
-					"Synchronization of a file '{0}' to {1} has finished. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
-					FileName, destination, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
-			}
-			else
-			{
-				log.WarnException(
-					string.Format("Synchronization of a file '{0}' to {1} has finished with an exception",
-									FileName, destination),
-					report.Exception);
-			}
-
-			return report;
-		}
-
-		private async Task<SynchronizationReport> StartSyncingToAsync(string destination)
-		{
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 
 			var destinationMetadata = await destinationRavenFileSystemClient.GetMetadataForAsync(FileName);
@@ -245,6 +211,11 @@
 		public override int GetHashCode()
 		{
 			return (FileName != null ? GetType().Name.GetHashCode() ^ FileName.GetHashCode() ^ FileETag.GetHashCode() : 0);
+		}
+
+		public override string ToString()
+		{
+			return string.Format("Synchronization of a file content '{0}'", FileName);
 		}
 	}
 }
