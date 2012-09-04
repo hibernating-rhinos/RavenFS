@@ -42,7 +42,7 @@ namespace RavenFS.Synchronization
 				report = new SynchronizationReport
 										{
 											FileName = FileName,
-											Exception = ex is AggregateException ? ((AggregateException)ex).ExtractSingleInnerException() : ex,
+											Exception = ex,
 											Type = SynchronizationType.MetadataUpdate
 										};
 			}
