@@ -150,7 +150,19 @@ namespace RavenFS.Util
 
         public override void Flush()
         {
-            throw new NotImplementedException();
+			if (innerBuffer != null && innerBufferOffset > 0)
+			{
+				TransactionalStorage.Batch(
+					accessor =>
+					{
+						var hashKey = accessor.InsertPage(innerBuffer, innerBufferOffset);
+						accessor.AssociatePage(Name, hashKey, writtingPagePosition, innerBufferOffset);
+						writtingPagePosition++;
+					});
+
+				innerBuffer = null;
+				innerBufferOffset = 0;
+			}
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -175,7 +187,7 @@ namespace RavenFS.Util
 
 				if (innerBufferOffset == StorageConstants.MaxPageSize)
 				{
-					WriteToStorage();
+					Flush();
 				}
 
 				innerOffset += toCopy;
@@ -216,10 +228,7 @@ namespace RavenFS.Util
             {
                 if (disposing)
                 {
-					if (innerBuffer != null && innerBufferOffset > 0)
-					{
-						WriteToStorage();
-					}
+					Flush();
 
                     if (StorageStreamAccess == StorageStreamAccess.CreateAndWrite)
                     {
@@ -229,19 +238,5 @@ namespace RavenFS.Util
                 disposed = true;
             }
         }
-
-		protected virtual void WriteToStorage()
-		{
-			TransactionalStorage.Batch(
-				accessor =>
-				{
-					var hashKey = accessor.InsertPage(innerBuffer, innerBufferOffset);
-					accessor.AssociatePage(Name, hashKey, writtingPagePosition, innerBufferOffset);
-					writtingPagePosition++;
-				});
-
-			innerBuffer = null;
-			innerBufferOffset = 0;
-		}
     }
 }

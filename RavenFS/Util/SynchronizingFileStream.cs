@@ -15,12 +15,30 @@ namespace RavenFS.Util
 
 		public bool PreventUploadComplete { get; set; }
 
-		protected override void Dispose(bool disposing)
+		public override void Flush()
 		{
 			if (innerBuffer != null && innerBufferOffset > 0)
 			{
-				WriteToStorage();
+				TransactionalStorage.Batch(
+				accessor =>
+				{
+					var hashKey = accessor.InsertPage(innerBuffer, innerBufferOffset); // just insert - will associate later
+
+					LastWrittenPages.Add(new PageInformation
+					{
+						Id = hashKey,
+						Size = innerBufferOffset
+					});
+				});
+
+				innerBuffer = null;
+				innerBufferOffset = 0;
 			}
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			Flush();
 
 			if (!PreventUploadComplete)
 			{
@@ -58,29 +76,11 @@ namespace RavenFS.Util
 
 				if (innerBufferOffset == StorageConstants.MaxPageSize)
 				{
-					WriteToStorage();
+					Flush();
 				}
 
 				innerOffset += toCopy;
 			}
-		}
-
-		protected override void WriteToStorage()
-		{
-			TransactionalStorage.Batch(
-				accessor =>
-				{
-					var hashKey = accessor.InsertPage(innerBuffer, innerBufferOffset); // just insert - will associate later
-
-					LastWrittenPages.Add(new PageInformation
-					                     	{
-					                     		Id = hashKey,
-												Size = innerBufferOffset
-					                     	});
-				});
-
-			innerBuffer = null;
-			innerBufferOffset = 0;
 		}
 	}
 }
