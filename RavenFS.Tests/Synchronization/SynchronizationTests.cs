@@ -759,5 +759,25 @@ namespace RavenFS.Tests.Synchronization
 			pages = destination.Synchronization.GetConflicts(2, 10).Result;
 			Assert.Equal(5, pages.TotalCount);
 		}
+
+		[Fact]
+		public void Empty_file_should_be_synchronized_correctly()
+		{
+			var source = NewClient(0);
+			var destination = NewClient(1);
+
+			source.UploadAsync("empty.test", new NameValueCollection() { {"should-be-transferred", "true"} }, new MemoryStream()).Wait();
+			var result = source.Synchronization.StartSynchronizationToAsync("empty.test", destination.ServerUrl).Result;
+
+			Assert.Null(result.Exception);
+
+			using (var ms = new MemoryStream())
+			{
+				var metadata = destination.DownloadAsync("empty.test", ms).Result;
+
+				Assert.Equal("true", metadata["should-be-transferred"]);
+				Assert.Equal(0, ms.Length);
+			}
+		}
 	}
 }
