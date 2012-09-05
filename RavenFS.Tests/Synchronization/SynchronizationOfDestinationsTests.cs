@@ -483,5 +483,34 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Null(destinationSyncResults[0].Reports);
 		}
+
+		[Fact]
+		public void Should_not_fail_if_no_destinations_given()
+		{
+			var sourceClient = NewClient(0);
+
+			IEnumerable<DestinationSyncResult> results = null;
+
+			Assert.DoesNotThrow(() => results = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result);
+			Assert.Equal(0, results.Count());
+		}
+
+		[Fact]
+		public void Should_not_fail_if_there_is_no_file_to_synchronize()
+		{
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destinationClient.ServerUrl }
+			                                                                                     	}).Wait();
+
+			IEnumerable<DestinationSyncResult> results = null;
+
+			Assert.DoesNotThrow(() => results = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result);
+
+			Assert.Null(results.ToArray()[0].Reports);
+		}
 	}
 }

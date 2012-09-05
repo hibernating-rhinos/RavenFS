@@ -32,15 +32,7 @@
 		[AcceptVerbs("POST")]
 		public Task<IEnumerable<DestinationSyncResult>> ToDestinations()
 		{
-			var synchronizeDestinationTasks = SynchronizationTask.SynchronizeDestinationsAsync(forceSyncingContinuation:false).Result;
-
-			if (synchronizeDestinationTasks.Length > 0)
-			{
-				return Task.Factory.ContinueWhenAll(synchronizeDestinationTasks,
-				                                    t => t.Select(destinationTasks => destinationTasks.Result));
-			}
-
-			return new CompletedTask<IEnumerable<DestinationSyncResult>>(Enumerable.Empty<DestinationSyncResult>());
+			return SynchronizationTask.SynchronizeDestinationsAsync(forceSyncingContinuation: false);
 		}
 
 		[AcceptVerbs("POST")]
@@ -48,7 +40,7 @@
 		{
 			log.Debug("Starting to synchronize a file '{0}' to {1}", fileName, destinationServerUrl);
 
-			return SynchronizationTask.SynchronizeFileTo(fileName, destinationServerUrl);
+			return SynchronizationTask.SynchronizeFileToAsync(fileName, destinationServerUrl);
 		}
 
 		[AcceptVerbs("POST")]
