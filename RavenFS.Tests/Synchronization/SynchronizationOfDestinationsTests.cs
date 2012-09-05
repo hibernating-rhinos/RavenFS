@@ -159,6 +159,37 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
+		public void Make_sure_that_locks_are_released_after_synchronization_when_two_files_synchronized_simultaneously()
+		{
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
+
+			var source1Content = new RandomStream(10000);
+
+			sourceClient.UploadAsync("test1.bin", source1Content).Wait();
+
+			var source2Content = new RandomStream(10000);
+
+			sourceClient.UploadAsync("test2.bin", source2Content).Wait();
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destinationClient.ServerUrl }
+			                                                                                     	}).Wait();
+
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
+
+			var configs = destinationClient.Config.GetConfigNames().Result;
+
+			Assert.DoesNotContain("SyncingLock-test1.bin", configs);
+			Assert.DoesNotContain("SyncingLock-test2.bin", configs);
+
+			// also make sure that results exist
+			Assert.Contains("SyncResult-test1.bin", configs);
+			Assert.Contains("SyncResult-test2.bin", configs);
+		}
+
+		[Fact]
 		public void Source_should_save_configuration_record_after_synchronization()
 		{
 			var sourceClient = NewClient(0);

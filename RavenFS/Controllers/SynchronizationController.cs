@@ -1,12 +1,14 @@
 ﻿namespace RavenFS.Controllers
 {
 	using System;
+	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Linq;
 	using System.Net;
 	using System.Net.Http;
+	using System.Threading;
 	using System.Threading.Tasks;
 	using System.Web.Http;
 	using Newtonsoft.Json;
@@ -28,6 +30,8 @@
 	public class SynchronizationController : RavenController
 	{
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+
+		private static readonly ConcurrentDictionary<string, ReaderWriterLockSlim> synchronizationFinishLocks = new ConcurrentDictionary<string, ReaderWriterLockSlim>();
 
 		[AcceptVerbs("POST")]
 		public Task<IEnumerable<DestinationSyncResult>> ToDestinations()
@@ -186,17 +190,7 @@
 								              sourceServerId), report.Exception);
 						}
 
-						Storage.Batch(
-							accessor =>
-							{
-								SaveSynchronizationReport(fileName, accessor, report);
-								FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
-
-								if (task.Status != TaskStatus.Faulted)
-								{
-									SaveSynchronizationSourceInformation(sourceServerId, sourceFileETag, accessor);
-								}
-							});
+						FinishSynchronization(fileName, report, sourceServerId, sourceFileETag);
 
 					    PublishFileNotification(fileName, isNewFile ? Notifications.FileChangeAction.Add : Notifications.FileChangeAction.Update);
 						PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
@@ -205,7 +199,37 @@
 					});
 		}
 
-	    private void AssertConflictDetection(string fileName, NameValueCollection destinationMetadata, NameValueCollection sourceMetadata, Guid sourceServerId, out bool isConflictResolved)
+		private void FinishSynchronization(string fileName, SynchronizationReport report, Guid sourceServerId, Guid sourceFileETag)
+		{
+			try
+			{
+				// we want to execute those operation in a single batch but we also have to ensure that
+				// Raven/Synchronization/Sources/sourceServerId config is modified only by one finishing synchronization at the same time
+				synchronizationFinishLocks.GetOrAdd(sourceServerId.ToString(), new ReaderWriterLockSlim()).EnterWriteLock();
+
+				Storage.Batch(accessor =>
+				{
+					SaveSynchronizationReport(fileName, accessor, report);
+					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
+
+					if (report.Exception == null)
+					{
+						SaveSynchronizationSourceInformation(sourceServerId, sourceFileETag, accessor);
+					}
+				});
+			}
+			catch (Exception ex)
+			{
+				log.ErrorException(
+					string.Format("Failed to finish synchronization of a file '{0}' from {1}", fileName, sourceServerId), ex);
+			}
+			finally
+			{
+				synchronizationFinishLocks.GetOrAdd(sourceServerId.ToString(), new ReaderWriterLockSlim()).ExitWriteLock();
+			}
+		}
+
+		private void AssertConflictDetection(string fileName, NameValueCollection destinationMetadata, NameValueCollection sourceMetadata, Guid sourceServerId, out bool isConflictResolved)
 		{
 			var conflict = ConflictDetector.Check(fileName, destinationMetadata, sourceMetadata);
 			isConflictResolved = ConflictResolver.IsResolved(destinationMetadata, conflict);
@@ -291,20 +315,14 @@
 			}
 			finally
 			{
-				Storage.Batch(accessor =>
-				{
-					SaveSynchronizationReport(fileName, accessor, report);
-					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
-
-					if (report.Exception == null)
-					{
-						log.Debug("Metadata of file '{0}' was synchronized successfully from {1}", fileName, sourceServerId);	
-
-						SaveSynchronizationSourceInformation(sourceServerId, sourceFileETag, accessor);
-					}
-				});
+				FinishSynchronization(fileName, report, sourceServerId, sourceFileETag);
 
 				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
+			}
+
+			if (report.Exception == null)
+			{
+				log.Debug("Metadata of file '{0}' was synchronized successfully from {1}", fileName, sourceServerId);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -350,20 +368,14 @@
 			}
 			finally
 			{
-				Storage.Batch(accessor =>
-				{
-					SaveSynchronizationReport(fileName, accessor, report);
-					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
-
-					if (report.Exception == null)
-					{
-						log.Debug("File '{0}' was deleted during synchronization from {1}", fileName, sourceServerId);	
-
-						SaveSynchronizationSourceInformation(sourceServerId, sourceFileETag, accessor);
-					}
-				});
+				FinishSynchronization(fileName, report, sourceServerId, sourceFileETag);
 
 				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
+			}
+
+			if (report.Exception == null)
+			{
+				log.Debug("File '{0}' was deleted during synchronization from {1}", fileName, sourceServerId);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -423,20 +435,14 @@
 			}
 			finally
 			{
-				Storage.Batch(accessor =>
-				{
-					SaveSynchronizationReport(fileName, accessor, report);
-					FileLockManager.UnlockByDeletingSyncConfiguration(fileName, accessor);
-
-					if (report.Exception == null)
-					{
-						log.Debug("File '{0}' was renamed to '{1}' during synchronization from {2}", fileName, rename, sourceServerId);	
-
-						SaveSynchronizationSourceInformation(sourceServerId, sourceFileETag, accessor);
-					}
-				});
+				FinishSynchronization(fileName, report, sourceServerId, sourceFileETag);
 
 				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
+			}
+
+			if (report.Exception == null)
+			{
+				log.Debug("File '{0}' was renamed to '{1}' during synchronization from {2}", fileName, rename, sourceServerId);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
