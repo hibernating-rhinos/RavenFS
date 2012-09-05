@@ -16,9 +16,7 @@ using RavenFS.Util;
 namespace RavenFS.Storage
 {
 	using System.Linq;
-	using Client;
 	using Extensions;
-	using Newtonsoft.Json;
 
 	public class StorageActionsAccessor : IDisposable
 	{
@@ -819,26 +817,30 @@ namespace RavenFS.Storage
 			return Api.TrySeek(session, Config, SeekGrbit.SeekEQ);
 		}
 
-		public IList<ConflictItem> GetConflicts(int start, int take)
+		public IList<NameValueCollection> GetConfigsStartWithPrefix(string prefix, int start, int take)
 		{
 			Api.JetSetCurrentIndex(session, Config, "by_name");
-			Api.MakeKey(session, Config, "Conflicted-", Encoding.Unicode, MakeKeyGrbit.NewKey | MakeKeyGrbit.PartialColumnEndLimit);
+
+			Api.MakeKey(session, Config, prefix, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			Api.JetSeek(session, Config, SeekGrbit.SeekGE);
+			
+			Api.MakeKey(session, Config, prefix, Encoding.Unicode, MakeKeyGrbit.NewKey | MakeKeyGrbit.PartialColumnEndLimit);
 			Api.JetMove(session, Config, start, MoveGrbit.MoveKeyNE);
 
-			var conflicts = new List<ConflictItem>();
+			var configs = new List<NameValueCollection>();
 
 			if (Api.TrySetIndexRange(session, Config, SetIndexRangeGrbit.RangeInclusive | SetIndexRangeGrbit.RangeUpperLimit))
 			{
 				do
 				{
+					var name = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["name"], Encoding.Unicode);
 					var metadata = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["metadata"], Encoding.Unicode);
-					var value = HttpUtility.ParseQueryString(metadata)["value"];
-					conflicts.Add(new JsonSerializer().Deserialize<ConflictItem>(new JsonTextReader(new StringReader(value))));
+					configs.Add(HttpUtility.ParseQueryString(metadata));
 				}
-				while (Api.TryMoveNext(session, Config) && conflicts.Count < take);
+				while (Api.TryMoveNext(session, Config) && configs.Count < take);
 			}
 
-			return conflicts;
+			return configs;
 		}
 	}
 }

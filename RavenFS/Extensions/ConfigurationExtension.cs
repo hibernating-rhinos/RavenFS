@@ -58,5 +58,12 @@ namespace RavenFS.Extensions
 
         	} while (old == start);
         }
+
+		public static IList<T> GetConfigsStartWithPrefix<T>(this StorageActionsAccessor accessor, string prefix, int start, int take)
+		{
+			var configs = accessor.GetConfigsStartWithPrefix(prefix, start, take);
+
+			return configs.Select(config => new JsonSerializer().Deserialize<T>(new JsonTextReader(new StringReader(config["value"])))).ToList();
+		} 
     }
 }

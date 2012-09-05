@@ -744,6 +744,11 @@ namespace RavenFS.Tests.Synchronization
 
 				var result = source.Synchronization.StartSynchronizationToAsync(filename, destination.ServerUrl).Result;
 
+				if (i%3 == 0) // sometimes insert other configs
+				{
+					destination.Config.SetConfig("test" + i, new NameValueCollection() { { "foo", "bar" } }).Wait();
+				}
+
 				// make sure that conflicts indeed are created
 				Assert.Equal(string.Format("File {0} is conflicted", filename), result.Exception.Message);
 			}

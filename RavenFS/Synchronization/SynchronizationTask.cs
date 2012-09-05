@@ -448,13 +448,7 @@ namespace RavenFS.Synchronization
 				storage.Batch(
 					accessor =>
 						{
-							var configKeys =
-								from item in accessor.GetConfigNames()
-								where SynchronizationHelper.IsSyncName(item, destination)
-								select item;
-							configObjects =
-								(from item in configKeys
-								 select accessor.GetConfigurationValue<SynchronizationDetails>(item)).ToList();
+							configObjects = accessor.GetConfigsStartWithPrefix<SynchronizationDetails>(SynchronizationHelper.SyncNamePrefix, 0, 100);
 						});
 			}
 			catch (Exception e)

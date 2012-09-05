@@ -478,20 +478,13 @@
 		public HttpResponseMessage Finished()
 		{
 			ListPage<SynchronizationReport> page = null;
-			Storage.Batch(
-				accessor =>
-				{
-					var configKeys =
-						from item in accessor.GetConfigNames()
-						where SynchronizationHelper.IsSyncResultName(item)
-						select item;
 
-					var configObjects =
-						from item in configKeys.Skip(Paging.PageSize * Paging.Start).Take(Paging.PageSize)
-						 select accessor.GetConfigurationValue<SynchronizationReport>(item);
+			Storage.Batch(accessor =>
+			{
+				var reports = accessor.GetConfigsStartWithPrefix<SynchronizationReport>(SynchronizationHelper.SyncResultNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
+				page = new ListPage<SynchronizationReport>(reports, reports.Count);
+			});
 
-				    page = new ListPage<SynchronizationReport>(configObjects, configKeys.Count());
-				});
 			return Request.CreateResponse(HttpStatusCode.OK, page);
 		}
 
@@ -521,7 +514,7 @@
 
 			Storage.Batch(accessor =>
 			{
-				var conflicts = accessor.GetConflicts(Paging.PageSize*Paging.Start, Paging.PageSize);
+				var conflicts = accessor.GetConfigsStartWithPrefix<ConflictItem>(SynchronizationHelper.ConflictConfigNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
 				page = new ListPage<ConflictItem>(conflicts, conflicts.Count);
 			});
 
