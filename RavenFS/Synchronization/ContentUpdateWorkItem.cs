@@ -89,7 +89,7 @@
 			}
 		}
 
-		private Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, SignatureManifest sourceSignatureManifest, FileInfo destinationFileInfo, NameValueCollection destinationMetadata)
+		private async Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, SignatureManifest sourceSignatureManifest, FileInfo destinationFileInfo, NameValueCollection destinationMetadata)
 		{
 			var seedSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
 			var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
@@ -103,11 +103,11 @@
 					needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 				}
 
-				return PushByUsingMultipartRequest(destinationServerUrl, destinationFileInfo, destinationMetadata, localFile, needList);
+				return await PushByUsingMultipartRequest(destinationServerUrl, destinationFileInfo, destinationMetadata, localFile, needList);
 			}
 		}
 
-		private Task<SynchronizationReport> UploadToAsync(string destinationServerUrl)
+		private async Task<SynchronizationReport> UploadToAsync(string destinationServerUrl)
 		{
 			using (var sourceFileStream = StorageStream.Reading(Storage, FileName))
 			{
@@ -123,7 +123,7 @@
 							                     }
 					                     };
 
-				return PushByUsingMultipartRequest(destinationServerUrl, null, null, sourceFileStream, onlySourceNeed);
+				return await PushByUsingMultipartRequest(destinationServerUrl, null, null, sourceFileStream, onlySourceNeed);
 			}
 		}
 
