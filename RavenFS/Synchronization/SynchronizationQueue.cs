@@ -1,6 +1,5 @@
 namespace RavenFS.Synchronization
 {
-	using System;
 	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Linq;
@@ -19,7 +18,7 @@ namespace RavenFS.Synchronization
 		private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, SynchronizationWorkItem>> activeSynchronizations =
 			new ConcurrentDictionary<string, ConcurrentDictionary<string, SynchronizationWorkItem>>();
 
-		private ConcurrentDictionary<string, ReaderWriterLockSlim> pendingRemoveLocks = new ConcurrentDictionary<string, ReaderWriterLockSlim>();
+		private readonly ConcurrentDictionary<string, ReaderWriterLockSlim> pendingRemoveLocks = new ConcurrentDictionary<string, ReaderWriterLockSlim>();
 
 		public IEnumerable<SynchronizationDetails> Pending
 		{
@@ -151,11 +150,6 @@ namespace RavenFS.Synchronization
 				ConcurrentQueue<SynchronizationWorkItem> pendingForDestination;
 				if (pendingSynchronizations.TryGetValue(destination, out pendingForDestination) == false)
 				{
-					if (pendingForDestination != null && pendingForDestination.Count > 0)
-					{
-						log.Warn("Could not get a pending synchronization queue for {0}", destination);
-					}
-					
 					workItem = null;
 					return false;
 				}
