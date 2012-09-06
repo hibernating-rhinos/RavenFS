@@ -477,6 +477,10 @@ namespace RavenFS.Tests.Synchronization
 			var sourceClient = NewClient(1);
 			var files = new[] { "test1.bin", "test2.bin", "test3.bin" };
 
+			// make sure that returns empty list if there are no finished synchronizations yet
+			var result = destinationClient.Synchronization.GetFinishedAsync().Result;
+			Assert.Equal(0, result.TotalCount);
+
 			foreach (var item in files)
 			{
 				var sourceContent = new MemoryStream();
@@ -502,7 +506,7 @@ namespace RavenFS.Tests.Synchronization
 				SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, item);
 			}
 
-			var result = destinationClient.Synchronization.GetFinishedAsync().Result;
+			result = destinationClient.Synchronization.GetFinishedAsync().Result;
 			Assert.Equal(files.Length, result.TotalCount);
 		}
 
@@ -735,6 +739,10 @@ namespace RavenFS.Tests.Synchronization
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
+			// make sure that returns empty list if there are no conflicts yet
+			var pages = destination.Synchronization.GetConflicts().Result;
+			Assert.Equal(0, pages.TotalCount);
+
 			for (int i = 0; i < 25; i++)
 			{
 				var filename = string.Format("test{0}.bin", i);
@@ -753,7 +761,7 @@ namespace RavenFS.Tests.Synchronization
 				Assert.Equal(string.Format("File {0} is conflicted", filename), result.Exception.Message);
 			}
 
-			var pages = destination.Synchronization.GetConflicts().Result;
+			pages = destination.Synchronization.GetConflicts().Result;
 			Assert.Equal(25, pages.TotalCount);
 
 			pages = destination.Synchronization.GetConflicts(1, 10).Result;
@@ -761,6 +769,9 @@ namespace RavenFS.Tests.Synchronization
 
 			pages = destination.Synchronization.GetConflicts(2, 10).Result;
 			Assert.Equal(5, pages.TotalCount);
+
+			pages = destination.Synchronization.GetConflicts(10).Result;
+			Assert.Equal(0, pages.TotalCount);
 		}
 
 		[Fact]

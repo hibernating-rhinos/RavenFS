@@ -819,21 +819,30 @@ namespace RavenFS.Storage
 
 		public IList<NameValueCollection> GetConfigsStartWithPrefix(string prefix, int start, int take)
 		{
+			var configs = new List<NameValueCollection>();
+
 			Api.JetSetCurrentIndex(session, Config, "by_name");
 
 			Api.MakeKey(session, Config, prefix, Encoding.Unicode, MakeKeyGrbit.NewKey);
-			Api.JetSeek(session, Config, SeekGrbit.SeekGE);
-			
-			Api.MakeKey(session, Config, prefix, Encoding.Unicode, MakeKeyGrbit.NewKey | MakeKeyGrbit.PartialColumnEndLimit);
-			Api.JetMove(session, Config, start, MoveGrbit.MoveKeyNE);
+			if(Api.TrySeek(session, Config, SeekGrbit.SeekGE) == false)
+			{
+				return configs;
+			}
 
-			var configs = new List<NameValueCollection>();
+			Api.MakeKey(session, Config, prefix, Encoding.Unicode, MakeKeyGrbit.NewKey | MakeKeyGrbit.PartialColumnEndLimit);
+			try
+			{
+				Api.JetMove(session, Config, start, MoveGrbit.MoveKeyNE);
+			}
+			catch (EsentNoCurrentRecordException)
+			{
+				return configs;
+			}
 
 			if (Api.TrySetIndexRange(session, Config, SetIndexRangeGrbit.RangeInclusive | SetIndexRangeGrbit.RangeUpperLimit))
 			{
 				do
 				{
-					var name = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["name"], Encoding.Unicode);
 					var metadata = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["metadata"], Encoding.Unicode);
 					configs.Add(HttpUtility.ParseQueryString(metadata));
 				}
