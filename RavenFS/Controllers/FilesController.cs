@@ -229,7 +229,7 @@ namespace RavenFS.Controllers
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
-		public Task<HttpResponseMessage> Put(string name)
+		public async Task<HttpResponseMessage> Put(string name)
 		{
 			name = Uri.UnescapeDataString(name);
 
@@ -273,57 +273,45 @@ namespace RavenFS.Controllers
 
 			log.Debug("Inserted a new file '{0}' with ETag {1}", name, headers.Value<Guid>("ETag"));
 
-			return Request.Content.ReadAsStreamAsync()
-				.ContinueWith(task =>
+			var contentStream = await Request.Content.ReadAsStreamAsync();
+
+			using (var readFileToDatabase = new ReadFileToDatabase(BufferPool, Storage, contentStream, name))
+			{
+				try
 				{
-					var readFileToDatabase = new ReadFileToDatabase(BufferPool, Storage, task.Result, name);
-					return readFileToDatabase.Execute()
-						.ContinueWith(readingTask =>
-						{
-							readingTask.AssertNotFaulted();
+					await readFileToDatabase.Execute();
 
-							HistoryUpdater.UpdateLastModified(headers); // update with the final file size
+					HistoryUpdater.UpdateLastModified(headers); // update with the final file size
 
-							log.Debug("File '{0}' was uploaded. Starting to update file medatata and indexes", name);
+					log.Debug("File '{0}' was uploaded. Starting to update file medatata and indexes", name);
 
-							headers["Content-MD5"] = readFileToDatabase.FileHash;
+					headers["Content-MD5"] = readFileToDatabase.FileHash;
 
-							Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
-							headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
-							Search.Index(name, headers);
-							Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });
+					Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
+					headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
+					Search.Index(name, headers);
+					Publisher.Publish(new FileChange {Action = FileChangeAction.Add, File = name});
 
-							log.Debug("Updates of '{0}' metadata and indexes were finished. New file ETag is {1}", name, headers.Value<Guid>("ETag"));
+					log.Debug("Updates of '{0}' metadata and indexes were finished. New file ETag is {1}", name,
+					          headers.Value<Guid>("ETag"));
 
-							SynchronizationTask.SynchronizeDestinationsAsync();
-							return readingTask;
-						}).Unwrap()
-						.ContinueWith(t =>
-						{
-							readFileToDatabase.Dispose();
-							return t;
-						})
-						.Unwrap();
-				})
-				.Unwrap()
-				.ContinueWith(task =>
+					SynchronizationTask.SynchronizeDestinationsAsync();
+				}
+				catch (Exception ex)
 				{
-					if (task.Exception != null)
+					log.WarnException(string.Format("Failed to upload a file '{0}'", name), ex);
+
+					var concurrencyException = ex as ConcurrencyException;
+					if (concurrencyException != null)
 					{
-						var innerException = task.Exception.ExtractSingleInnerException();
-
-						log.WarnException(string.Format("Failed to upload a file '{0}'", name), innerException);
-
-						if (innerException is ConcurrencyException)
-						{
-							throw ConcurrencyResponseException((ConcurrencyException) innerException);
-						}
-
-						task.AssertNotFaulted();
+						throw ConcurrencyResponseException(concurrencyException);
 					}
 
-					return new HttpResponseMessage(HttpStatusCode.Created);
-				});
+					throw;
+				}
+			}
+
+			return new HttpResponseMessage(HttpStatusCode.Created);
 		}
 
 		private class ReadFileToDatabase : IDisposable

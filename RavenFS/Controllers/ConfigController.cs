@@ -47,7 +47,7 @@ namespace RavenFS.Controllers
 
 		}
 
-		public Task<HttpResponseMessage> Put(string name)
+		public async Task<HttpResponseMessage> Put(string name)
 		{
 			var jsonSerializer = new JsonSerializer
 			{
@@ -56,38 +56,35 @@ namespace RavenFS.Controllers
 							new NameValueCollectionJsonConverter()
 						}
 			};
-			return Request.Content.ReadAsStreamAsync()
-				.ContinueWith(task =>
+			var contentStream = await Request.Content.ReadAsStreamAsync();
+
+			var nameValueCollection =
+				jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(contentStream)));
+
+			var shouldRetry = false;
+			var retries = 128;
+
+			do
+			{
+				try
 				{
-					var nameValueCollection =
-						jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(task.Result)));
-
-					var shouldRetry = false;
-					var retries = 128;
-
-					do
+					Storage.Batch(accessor => accessor.SetConfig(name, nameValueCollection));
+				}
+				catch (ConcurrencyException ce)
+				{
+					if (retries-- > 0)
 					{
-						try
-						{
-							Storage.Batch(accessor => accessor.SetConfig(name, nameValueCollection));
-						}
-						catch (ConcurrencyException ce)
-						{
-							if (retries-- > 0)
-							{
-								shouldRetry = true;
-								continue;
-							}
-							throw ConcurrencyResponseException(ce);
-						}
-					} while (shouldRetry);
-					Publisher.Publish(new ConfigChange() {Name = name, Action = ConfigChangeAction.Set});
+						shouldRetry = true;
+						continue;
+					}
+					throw ConcurrencyResponseException(ce);
+				}
+			} while (shouldRetry);
+			Publisher.Publish(new ConfigChange() {Name = name, Action = ConfigChangeAction.Set});
 
-					log.Debug("Config '{0}' was inserted", name);
+			log.Debug("Config '{0}' was inserted", name);
 
-					return new HttpResponseMessage(HttpStatusCode.Created);
-				});
-
+			return new HttpResponseMessage(HttpStatusCode.Created);
 		}
 
 		public HttpResponseMessage Delete(string name)
