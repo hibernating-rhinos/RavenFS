@@ -28,7 +28,7 @@ namespace RavenFS.Synchronization
 			get { return SynchronizationType.MetadataUpdate; }
 		}
 
-		public async override Task<SynchronizationReport> Perform(string destination)
+		public async override Task<SynchronizationReport> PerformAsync(string destination)
 		{
 			AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
 
@@ -36,7 +36,7 @@ namespace RavenFS.Synchronization
 
 			if (conflict != null)
 			{
-				return await ApplyConflictOnDestination(conflict, destination, log);
+				return await ApplyConflictOnDestinationAsync(conflict, destination, log);
 			}
 
 			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/updatemetadata/" + FileName);

@@ -40,7 +40,7 @@
 
 		public abstract SynchronizationType SynchronizationType { get; }
 
-		public abstract Task<SynchronizationReport> Perform(string destination);
+		public abstract Task<SynchronizationReport> PerformAsync(string destination);
 
 		protected void AssertLocalFileExistsAndIsNotConflicted(NameValueCollection sourceMetadata)
 		{
@@ -69,7 +69,7 @@
 			return null;
 		}
 
-		protected async Task<SynchronizationReport> ApplyConflictOnDestination(ConflictItem conflict, string  destination, Logger log)
+		protected async Task<SynchronizationReport> ApplyConflictOnDestinationAsync(ConflictItem conflict, string  destination, Logger log)
 		{
 			log.Debug("File '{0}' is in conflict with destination version from {1}. Applying conflict on destination", FileName, destination);
 

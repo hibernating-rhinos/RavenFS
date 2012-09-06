@@ -39,7 +39,7 @@
 			get { return fileDataInfo ?? (fileDataInfo = GetLocalFileDataInfo(FileName)); }
 		}
 
-		public async override Task<SynchronizationReport> Perform(string destination)
+		public async override Task<SynchronizationReport> PerformAsync(string destination)
 		{
 			AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
 
@@ -57,7 +57,7 @@
 
 			if (conflict != null)
 			{
-				return await ApplyConflictOnDestination(conflict, destination, log);
+				return await ApplyConflictOnDestinationAsync(conflict, destination, log);
 			}
 
 			using (var signatureRepository = new StorageSignatureRepository(Storage, FileName))

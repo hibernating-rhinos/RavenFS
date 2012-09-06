@@ -20,7 +20,7 @@ namespace RavenFS.Synchronization
 			get { return SynchronizationType.Delete; }
 		}
 
-		public async override Task<SynchronizationReport> Perform(string destination)
+		public async override Task<SynchronizationReport> PerformAsync(string destination)
 		{
 			FileAndPages fileAndPages = null;
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));

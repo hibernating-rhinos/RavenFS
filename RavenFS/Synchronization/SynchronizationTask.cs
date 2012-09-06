@@ -106,7 +106,7 @@ namespace RavenFS.Synchronization
 				return SynchronizationUtils.SynchronizationExceptionReport(fileName, "No synchronization work needed");
 			}
 
-			return await PerformSynchronization(destinationClient.ServerUrl, work);
+			return await PerformSynchronizationAsync(destinationClient.ServerUrl, work);
 		}
 
 		private async Task<DestinationSyncResult> SynchronizeDestinationAsync(string destinationUrl, bool forceSyncingContinuation)
@@ -147,9 +147,9 @@ namespace RavenFS.Synchronization
 					}
 				}
 
-				await EnqueueMissingUpdates(destinationClient, lastETag, needSyncingAgain);
+				await EnqueueMissingUpdatesAsync(destinationClient, lastETag, needSyncingAgain);
 
-				var reports = await TaskEx.WhenAll(SynchronizePendingFiles(destinationUrl, forceSyncingContinuation));
+				var reports = await TaskEx.WhenAll(SynchronizePendingFilesAsync(destinationUrl, forceSyncingContinuation));
 
 				var desinationSyncResult = new DestinationSyncResult
 					                           {
@@ -186,7 +186,7 @@ namespace RavenFS.Synchronization
 			}
 		}
 
-		private async Task EnqueueMissingUpdates(RavenFileSystemClient destinationClient, SourceSynchronizationInformation lastEtag, IEnumerable<FileHeader> needSyncingAgain)
+		private async Task EnqueueMissingUpdatesAsync(RavenFileSystemClient destinationClient, SourceSynchronizationInformation lastEtag, IEnumerable<FileHeader> needSyncingAgain)
 		{
 			var destinationUrl = destinationClient.ServerUrl;
 			var filesToSynchronization = GetFilesToSynchronization(lastEtag, 100);
@@ -272,7 +272,7 @@ namespace RavenFS.Synchronization
 			return new ContentUpdateWorkItem(file, storage, sigGenerator);
 		}
 
-		private IEnumerable<Task<SynchronizationReport>> SynchronizePendingFiles(string destinationUrl, bool forceSyncingContinuation)
+		private IEnumerable<Task<SynchronizationReport>> SynchronizePendingFilesAsync(string destinationUrl, bool forceSyncingContinuation)
 		{
 			for (var i = 0; i < AvailableSynchronizationRequestsTo(destinationUrl); i++)
 			{
@@ -287,11 +287,11 @@ namespace RavenFS.Synchronization
 					}
 					else
 					{
-						var workTask = PerformSynchronization(destinationUrl, work);
+						var workTask = PerformSynchronizationAsync(destinationUrl, work);
 
 						if (forceSyncingContinuation)
 						{
-							workTask.ContinueWith(t => SynchronizePendingFiles(destinationUrl, true).ToArray());
+							workTask.ContinueWith(t => SynchronizePendingFilesAsync(destinationUrl, true).ToArray());
 						}
 						yield return workTask;
 					}
@@ -303,7 +303,7 @@ namespace RavenFS.Synchronization
 			}
 		}
 
-		private async Task<SynchronizationReport> PerformSynchronization(string destinationUrl, SynchronizationWorkItem work)
+		private async Task<SynchronizationReport> PerformSynchronizationAsync(string destinationUrl, SynchronizationWorkItem work)
 		{
 			log.Debug("Starting to perform {0} for a file '{1}' and a destination server {2}", work.GetType().Name, work.FileName,
 			          destinationUrl);
@@ -336,7 +336,7 @@ namespace RavenFS.Synchronization
 			
 			try
 			{
-				report = await work.Perform(destinationUrl);
+				report = await work.PerformAsync(destinationUrl);
 			}
 			catch (Exception ex)
 			{
