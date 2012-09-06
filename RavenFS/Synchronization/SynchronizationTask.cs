@@ -151,6 +151,11 @@ namespace RavenFS.Synchronization
 
 				var reports = await TaskEx.WhenAll(SynchronizePendingFiles(destinationUrl, forceSyncingContinuation));
 
+				var desinationSyncResult = new DestinationSyncResult
+					                           {
+						                           DestinationServer = destinationUrl
+					                           };
+
 				if (reports.Length > 0)
 				{
 					var successfullSynchronizationsCount = reports.Count(x => x.Exception == null);
@@ -164,17 +169,10 @@ namespace RavenFS.Synchronization
 							destinationUrl, successfullSynchronizationsCount, failedSynchronizationsCount);
 					}
 
-					return new DestinationSyncResult()
-						       {
-							       DestinationServer = destinationUrl,
-							       Reports = reports
-						       };
+					desinationSyncResult.Reports = reports;
 				}
 
-				return new DestinationSyncResult
-					       {
-						       DestinationServer = destinationUrl
-					       };
+				return desinationSyncResult;
 			}
 			catch (Exception ex)
 			{
@@ -574,9 +572,9 @@ namespace RavenFS.Synchronization
 		private static bool FileIsNotBeingUploaded(FileHeader header)
 		{			// do not synchronize files that are being uploaded
 			return header.TotalSize != null && header.TotalSize == header.UploadedSize
-				// even if the file is uploaded make sure file has Content-MD5 (which calculation that might take some time)
+				// even if the file is uploaded make sure file has Content-MD5
 				// it's necessary to determine synchronization type and ensures right ETag
-				   && (header.Metadata[SynchronizationConstants.RavenDeleteMarker] == null ? header.Metadata["Content-MD5"] != null : true);
+				   && (header.Metadata[SynchronizationConstants.RavenDeleteMarker] != null || header.Metadata["Content-MD5"] != null);
 		}
 	}
 }
