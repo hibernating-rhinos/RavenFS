@@ -46,7 +46,7 @@ namespace RavenFS.Synchronization.Multipart
 			}
 		}
 
-		public Task<SynchronizationReport> PushChangesAsync()
+		public async Task<SynchronizationReport> PushChangesAsync()
 		{
 			if (sourceStream.CanRead == false)
 			{
@@ -67,24 +67,25 @@ namespace RavenFS.Synchronization.Multipart
 			request.Headers[SyncingMultipartConstants.SourceServerId] = sourceId.ToString();
 			request.Headers[SyncingMultipartConstants.TransferredChanges] = transferredChangesType.ToString();
 
-			return request.GetRequestStreamAsync()
-				.ContinueWith(task => PrepareMultipartContent().CopyToAsync(task.Result)
-					.ContinueWith(t => task.Result.Close()))
-				.Unwrap()
-				.ContinueWith(task =>
-				              	{
-				              		task.Wait();
-									return request.GetResponseAsync();
-				              	})
-				.Unwrap()
-				.ContinueWith(task =>
-			                {
-			                    using (var stream = task.Result.GetResponseStream())
-			                    {
-			                        return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
-			                    }
-			                })
-				.TryThrowBetterError();
+			try
+			{
+				using (var requestStream = await request.GetRequestStreamAsync())
+				{
+					await PrepareMultipartContent().CopyToAsync(requestStream);
+
+					using (var respose = await request.GetResponseAsync())
+					{
+						using (var responseStream = respose.GetResponseStream())
+						{
+							return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(responseStream)));
+						}
+					}
+				}
+			}
+			catch (WebException exception)
+			{
+				throw exception.BetterWebExceptionError();
+			}
 		}
 
 		internal MultipartContent PrepareMultipartContent()
