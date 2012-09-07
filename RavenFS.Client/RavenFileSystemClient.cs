@@ -614,10 +614,10 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
             }
 
-            public Task ResolveConflictAsync(string sourceServerUrl, string filename, ConflictResolutionStrategy strategy)
+            public Task ResolveConflictAsync(string filename, ConflictResolutionStrategy strategy)
             {
-                var requestUriString = String.Format("{0}/synchronization/resolveConflict/{1}?strategy={2}&sourceServerUrl={3}",
-                    ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), Uri.EscapeDataString(strategy.ToString()), Uri.EscapeDataString(sourceServerUrl));
+                var requestUriString = String.Format("{0}/synchronization/resolveConflict/{1}?strategy={2}",
+                    ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), Uri.EscapeDataString(strategy.ToString()));
                 var request = (HttpWebRequest)WebRequest.Create(requestUriString);
                 request.Method = "PATCH";
                 return request.GetResponseAsync()
@@ -625,27 +625,35 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
             }
 
-            public Task ApplyConflictAsync(string filename, long remoteVersion, string remoteServerId)
+            public Task ApplyConflictAsync(string filename, long remoteVersion, string remoteServerId, IList<HistoryItem> remoteHistory)
             {
                 var requestUriString = String.Format("{0}/synchronization/applyConflict/{1}?remoteVersion={2}&remoteServerId={3}",
                     ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), remoteVersion, Uri.EscapeDataString(remoteServerId));
                 var request = (HttpWebRequest)WebRequest.Create(requestUriString);
                 request.Method = "PATCH";
-                return request.GetResponseAsync()
-                    .ContinueWith(task => task.Result.Close())
-					.TryThrowBetterError();
-            }
 
-			internal Task ResolveConflictInFavorOfDestAsync(string filename, long remoteVersion, string remoteServerId)
-			{
-				var requestUriString = String.Format("{0}/synchronization/resolveConflictInFavorOfDest/{1}?remoteVersion={2}&remoteServerId={3}",
-					ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), remoteVersion, Uri.EscapeDataString(remoteServerId));
-				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
-				request.Method = "PATCH";
-				return request.GetResponseAsync()
-					.ContinueWith(task => task.Result.Close())
-					.TryThrowBetterError();
-			}
+	            return request.GetRequestStreamAsync()
+		            .ContinueWith(
+			            task =>
+			            {
+				            var sb = new StringBuilder();
+				            var jw = new JsonTextWriter(new StringWriter(sb));
+				            new JsonSerializer().Serialize(jw, remoteHistory);
+				            var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+
+				            return task.Result.WriteAsync(bytes, 0, bytes.Length)
+					            .ContinueWith(t => task.Result.Close())
+					            .ContinueWith(t =>
+					            {
+						            t.Wait();
+						            return request.GetResponseAsync();
+					            })
+					            .Unwrap()
+					            .ContinueWith(t => t.Result.Close());
+			            })
+		            .Unwrap()
+		            .TryThrowBetterError();
+            }
 
             public Task<ListPage<SynchronizationReport>> GetFinishedAsync(int page = 0, int pageSize = 25)
             {

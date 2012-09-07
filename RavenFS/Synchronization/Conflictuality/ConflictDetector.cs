@@ -12,6 +12,7 @@ namespace RavenFS.Synchronization.Conflictuality
 			var sourceHistory = HistoryUpdater.DeserializeHistory(sourceMetadata);
 			var sourceVersion = long.Parse(sourceMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
 			var sourceServerId = sourceMetadata[SynchronizationConstants.RavenSynchronizationSource];
+			var destinationHistory = HistoryUpdater.DeserializeHistory(destinationMetadata);
 			var destinationVersion = long.Parse(destinationMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
 			var destinationServerId = destinationMetadata[SynchronizationConstants.RavenSynchronizationSource];
 			// if there are the same files or destination is direct child there are no conflicts
@@ -25,6 +26,8 @@ namespace RavenFS.Synchronization.Conflictuality
 				{
 					Current = new HistoryItem { ServerId = destinationServerId, Version = destinationVersion },
 					Remote = new HistoryItem { ServerId = sourceServerId, Version = sourceVersion },
+					CurrentHistory = destinationHistory,
+					RemoteHistory = sourceHistory,
 					FileName = fileName,
 				};
 		}

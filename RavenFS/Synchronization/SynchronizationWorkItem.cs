@@ -76,7 +76,9 @@
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 			try
 			{
-				await destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(FileName, conflict.Current.Version, conflict.Remote.ServerId);
+				await destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(FileName, conflict.Current.Version,
+				                                                                          conflict.Remote.ServerId,
+				                                                                          conflict.RemoteHistory);
 			}
 			catch (Exception ex)
 			{

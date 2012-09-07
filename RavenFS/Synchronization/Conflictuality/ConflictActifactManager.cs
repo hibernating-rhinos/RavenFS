@@ -3,6 +3,7 @@ using RavenFS.Search;
 
 namespace RavenFS.Synchronization.Conflictuality
 {
+	using System;
 	using Client;
 	using RavenFS.Extensions;
 	using RavenFS.Storage;
@@ -19,7 +20,7 @@ namespace RavenFS.Synchronization.Conflictuality
 		    this.index = index;
 		}
 
-	    public void CreateArtifact(string fileName, ConflictItem conflict)
+	    public void Create(string fileName, ConflictItem conflict)
 		{
 	        NameValueCollection metadata = null;
 
@@ -39,19 +40,27 @@ namespace RavenFS.Synchronization.Conflictuality
             }
 		}
 
-		public void RemoveArtifact(string fileName)
+		public void Delete(string fileName, StorageActionsAccessor actionsAccessor = null)
 		{
             NameValueCollection metadata = null;
 
-			storage.Batch(
-				accessor =>
-				{
-					accessor.DeleteConfig(SynchronizationHelper.ConflictConfigNameForFile(fileName));
-					metadata = accessor.GetFile(fileName, 0, 0).Metadata;
-					metadata.Remove(SynchronizationConstants.RavenSynchronizationConflict);
-					metadata.Remove(SynchronizationConstants.RavenSynchronizationConflictResolution);
-					accessor.UpdateFileMetadata(fileName, metadata);
-				});
+			Action<StorageActionsAccessor> delete = accessor =>
+			{
+				accessor.DeleteConfig(SynchronizationHelper.ConflictConfigNameForFile(fileName));
+				metadata = accessor.GetFile(fileName, 0, 0).Metadata;
+				metadata.Remove(SynchronizationConstants.RavenSynchronizationConflict);
+				metadata.Remove(SynchronizationConstants.RavenSynchronizationConflictResolution);
+				accessor.UpdateFileMetadata(fileName, metadata);
+			};
+
+			if (actionsAccessor != null)
+			{
+				delete(actionsAccessor);
+			}
+			else
+			{
+				storage.Batch(delete);
+			}
 
             if (metadata != null)
             {

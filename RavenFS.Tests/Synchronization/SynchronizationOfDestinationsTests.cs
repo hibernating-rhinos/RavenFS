@@ -58,10 +58,8 @@ namespace RavenFS.Tests.Synchronization
 			Assert.Equal("File test.bin is conflicted", destinationSyncResults[0].Reports.ToArray()[0].Exception.Message);
 			Assert.Equal("File test.bin is conflicted", destinationSyncResults[1].Reports.ToArray()[0].Exception.Message);
 
-			destination1Client.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.bin",
-			                                                       ConflictResolutionStrategy.RemoteVersion).Wait();
-			destination2Client.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.bin",
-																	ConflictResolutionStrategy.RemoteVersion).Wait();
+			destination1Client.Synchronization.ResolveConflictAsync("test.bin", ConflictResolutionStrategy.RemoteVersion).Wait();
+			destination2Client.Synchronization.ResolveConflictAsync("test.bin", ConflictResolutionStrategy.RemoteVersion).Wait();
 
 			destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
 

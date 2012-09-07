@@ -37,6 +37,12 @@ namespace RavenFS.Infrastructure
                 history = DeserializeHistory(metadata);
                 history.Add(new HistoryItem {ServerId = serverId, Version = currentVersion});
             }
+
+			if (history.Count > SynchronizationConstants.ChangeHistoryLength)
+			{
+				history.RemoveAt(0);
+			}
+
             nameValueCollection[SynchronizationConstants.RavenSynchronizationHistory] = SerializeHistory(history);
             nameValueCollection[SynchronizationConstants.RavenSynchronizationVersion] = replicationHiLo.NextId().ToString(CultureInfo.InvariantCulture);
             nameValueCollection[SynchronizationConstants.RavenSynchronizationSource] = storage.Id.ToString();
@@ -70,7 +76,7 @@ namespace RavenFS.Infrastructure
             return new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(serializedHistory)));
         }
 
-        private static string SerializeHistory(List<HistoryItem> history)
+        public static string SerializeHistory(List<HistoryItem> history)
         {
             var sb = new StringBuilder();
             var jw = new JsonTextWriter(new StringWriter(sb));

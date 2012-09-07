@@ -291,7 +291,7 @@ namespace RavenFS.Tests.Synchronization
 			var client = NewClient(1);
 			client.UploadAsync("test.bin", content).Wait();
 			var guid = Guid.NewGuid().ToString();
-			client.Synchronization.ApplyConflictAsync("test.bin", 8, guid).Wait();
+			client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem> { new HistoryItem() { ServerId = guid , Version = 3} }).Wait();
 			var resultFileMetadata = client.GetMetadataForAsync("test.bin").Result;
 			var conflictItemString = client.Config.GetConfig(SynchronizationHelper.ConflictConfigNameForFile("test.bin")).Result["value"];
 			var conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(conflictItemString);
@@ -300,6 +300,9 @@ namespace RavenFS.Tests.Synchronization
 			Assert.Equal(guid, conflict.Remote.ServerId);
 			Assert.Equal(8, conflict.Remote.Version);
 			Assert.Equal(1, conflict.Current.Version);
+			Assert.Equal(1, conflict.RemoteHistory.Count);
+			Assert.Equal(guid, conflict.RemoteHistory[0].ServerId);
+			Assert.Equal(3, conflict.RemoteHistory[0].Version);
 		}
 
 		[Fact]
@@ -308,7 +311,7 @@ namespace RavenFS.Tests.Synchronization
 			var client = NewClient(1);
 
 			var guid = Guid.NewGuid().ToString();
-			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => client.Synchronization.ApplyConflictAsync("test.bin", 8, guid).Wait());
+			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem>()).Wait());
 
 			Assert.IsType(typeof(InvalidOperationException), innerException);
 			Assert.Contains("404", innerException.Message);
@@ -448,7 +451,7 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal("File test.txt is conflicted", shouldBeConflict.Exception.Message);
 
-			destinationClient.Synchronization.ResolveConflictAsync(sourceClient.ServerUrl, "test.txt", ConflictResolutionStrategy.CurrentVersion).Wait();
+			destinationClient.Synchronization.ResolveConflictAsync("test.txt", ConflictResolutionStrategy.CurrentVersion).Wait();
 			var result = destinationClient.Synchronization.StartSynchronizationToAsync("test.txt", sourceClient.ServerUrl).Result;
 		    Assert.Equal(destinationContent.Length, result.BytesCopied + result.BytesTransfered);
 
@@ -724,7 +727,7 @@ namespace RavenFS.Tests.Synchronization
             var client = NewClient(0);
 
             client.UploadAsync("conflict.test", new MemoryStream(1)).Wait();
-            client.Synchronization.ApplyConflictAsync("conflict.test", 1, "blah").Wait();
+            client.Synchronization.ApplyConflictAsync("conflict.test", 1, "blah", new List<HistoryItem>()).Wait();
 
             var results = client.SearchAsync("Raven-Synchronization-Conflict:true").Result;
         

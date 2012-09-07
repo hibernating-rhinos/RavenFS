@@ -154,7 +154,7 @@
 
 				if (isConflictResolved)
 				{
-					ConflictActifactManager.RemoveArtifact(fileName);
+					ConflictActifactManager.Delete(fileName);
 				}
 			}
 			catch (Exception ex)
@@ -227,7 +227,7 @@
 
 			if (conflict != null && !isConflictResolved)
 			{
-				ConflictActifactManager.CreateArtifact(fileName, conflict);
+				ConflictActifactManager.Create(fileName, conflict);
 
 				Publisher.Publish(new ConflictDetected
 				                  	{
@@ -292,7 +292,7 @@
 
 				if (isConflictResolved)
 				{
-					ConflictActifactManager.RemoveArtifact(fileName);
+					ConflictActifactManager.Delete(fileName);
 				}
 
                 PublishFileNotification(fileName, Notifications.FileChangeAction.Update);
@@ -509,27 +509,24 @@
 		}
 
 		[AcceptVerbs("PATCH")]
-		public Task<HttpResponseMessage> ResolveConflict(string fileName, ConflictResolutionStrategy strategy, string sourceServerUrl)
+		public HttpResponseMessage ResolveConflict(string fileName, ConflictResolutionStrategy strategy)
 		{
-			log.Debug("Resolving conflict for file '{0}' with {1} version as using {1} strategy", fileName, sourceServerUrl,
-			          strategy);
+			log.Debug("Resolving conflict of a file '{0}' by using {1} strategy", fileName, strategy);
 
 			if (strategy == ConflictResolutionStrategy.CurrentVersion)
 			{
-				return StrategyAsGetCurrent(fileName, sourceServerUrl)
-					.ContinueWith(
-						task =>
-						{
-							task.AssertNotFaulted();
-							return new HttpResponseMessage();
-						});
+				StrategyAsGetCurrent(fileName);
 			}
-			StrategyAsGetRemote(fileName, sourceServerUrl);
-			return new CompletedTask<HttpResponseMessage>(new HttpResponseMessage());
+			else
+			{
+				StrategyAsGetRemote(fileName);
+			}
+
+			return new HttpResponseMessage(HttpStatusCode.OK);
 		}
 
 		[AcceptVerbs("PATCH")]
-		public HttpResponseMessage ApplyConflict(string filename, long remoteVersion, string remoteServerId)
+		public async Task<HttpResponseMessage> ApplyConflict(string filename, long remoteVersion, string remoteServerId)
 		{
 			var localMetadata = GetLocalMetadata(filename);
 
@@ -538,23 +535,28 @@
 				throw new HttpResponseException(HttpStatusCode.NotFound);
 			}
 
+			var contentStream = await Request.Content.ReadAsStreamAsync();
+
+			var remoteHistory = new JsonSerializer().Deserialize<IList<HistoryItem>>(new JsonTextReader(new StreamReader(contentStream)));
+
 			var conflict = new ConflictItem
 			{
 				Current = new HistoryItem
 				{
 					ServerId = Storage.Id.ToString(),
-					Version =
-						long.Parse(localMetadata[SynchronizationConstants.RavenSynchronizationVersion])
+					Version = long.Parse(localMetadata[SynchronizationConstants.RavenSynchronizationVersion])
 				},
 				Remote = new HistoryItem
 				{
 					ServerId = remoteServerId,
 					Version = remoteVersion
 				},
+				CurrentHistory = HistoryUpdater.DeserializeHistory(localMetadata),
+				RemoteHistory = remoteHistory,
 				FileName = filename
 			};
 
-			ConflictActifactManager.CreateArtifact(filename, conflict);
+			ConflictActifactManager.Create(filename, conflict);
 
 			Publisher.Publish(new ConflictDetected
 			{
@@ -566,14 +568,6 @@
 				"Conflict applied for a file '{0}' (remote version: {1}, remote server id: {2}).", filename, remoteVersion, remoteServerId);
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
-		}
-
-		[AcceptVerbs("PATCH")]
-		public Task<HttpResponseMessage> ResolveConflictInFavorOfDest(string filename, long remoteVersion, string remoteServerId)
-		{
-			ApplyConflict(filename, remoteVersion, remoteServerId);
-
-			return ResolveConflict(filename, ConflictResolutionStrategy.RemoteVersion, Request.GetServerUrl());
 		}
 
 		[AcceptVerbs("GET")]
@@ -608,17 +602,32 @@
 			});
 		}
 
-		private Task StrategyAsGetCurrent(string fileName, string sourceServerUrl)
+		private void StrategyAsGetCurrent(string fileName)
 		{
-			var sourceRavenFileSystemClient = new RavenFileSystemClient(sourceServerUrl);
-			ConflictActifactManager.RemoveArtifact(fileName);
-			var localMetadata = GetLocalMetadata(fileName);
-			var version = long.Parse(localMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
-			return sourceRavenFileSystemClient.Synchronization.ResolveConflictInFavorOfDestAsync(fileName, version,
-																								 Storage.Id.ToString());
+			Storage.Batch(accessor =>
+			{
+				var conflict =
+					accessor.GetConfigurationValue<ConflictItem>(SynchronizationHelper.ConflictConfigNameForFile(fileName));
+				var localMetadata = accessor.GetFile(fileName, 0, 0).Metadata;
+				var localHistory = HistoryUpdater.DeserializeHistory(localMetadata);
+
+				// incorporate remote version history into local
+				foreach (var remoteHistoryItem in conflict.RemoteHistory.Where(remoteHistoryItem => !localHistory.Contains(remoteHistoryItem)))
+				{
+					localHistory.Add(remoteHistoryItem);
+				}
+
+				localHistory.Add(conflict.Remote);
+
+				localMetadata[SynchronizationConstants.RavenSynchronizationHistory] = HistoryUpdater.SerializeHistory(localHistory);
+
+				accessor.UpdateFileMetadata(fileName, localMetadata);
+
+				ConflictActifactManager.Delete(fileName, accessor);
+			});
 		}
 
-		private void StrategyAsGetRemote(string fileName, string sourceServerUrl)
+		private void StrategyAsGetRemote(string fileName)
 		{
 			Storage.Batch(
 				accessor =>
@@ -631,10 +640,10 @@
 						new ConflictResolution
 						{
 							Strategy = ConflictResolutionStrategy.RemoteVersion,
-							RemoteServerUrl = sourceServerUrl,
 							RemoteServerId = conflictItem.Remote.ServerId,
 							Version = conflictItem.Remote.Version,
 						};
+
 					localMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] =
 						new TypeHidingJsonSerializer().Stringify(conflictResolution);
 					accessor.UpdateFileMetadata(fileName, localMetadata);
