@@ -8,7 +8,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using RavenFS.Extensions;
-using RavenFS.Infrastructure;
 using RavenFS.Storage;
 using System.Linq;
 using RavenFS.Util;
@@ -381,96 +380,6 @@ namespace RavenFS.Controllers
 			public void Dispose()
 			{
 				bufferPool.ReturnBuffer(buffer);
-			}
-		}
-
-		private class FileAccessTool
-		{
-			private readonly TransactionalStorage storage;
-			private readonly BufferPool bufferPool;
-			private const int PagesBatchSize = 64;
-
-			public FileAccessTool(TransactionalStorage storage, BufferPool bufferPool)
-			{
-				this.storage = storage;
-				this.bufferPool = bufferPool;
-			}
-
-			public Task<object> WriteFile(Stream output, string filename, int fromPage, long? maybeRange)
-			{
-				FileAndPages fileAndPages = null;
-				storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, fromPage, PagesBatchSize));
-				if (fileAndPages.Pages.Count == 0)
-				{
-					return Task.Factory.StartNew(() => new object());
-				}
-
-				var offset = 0;
-				var pageIndex = 0;
-				if (maybeRange != null)
-				{
-					var range = maybeRange.Value;
-					foreach (var page in fileAndPages.Pages)
-					{
-						if (page.Size > range)
-						{
-							offset = (int)range;
-							break;
-						}
-						range -= page.Size;
-						pageIndex++;
-					}
-
-					if (pageIndex >= fileAndPages.Pages.Count)
-					{
-						return WriteFile(output, filename, fromPage + fileAndPages.Pages.Count, range);
-					}
-				}
-
-				return WritePages(output, fileAndPages.Pages, pageIndex, offset)
-					.ContinueWith(task =>
-					{
-						task.AssertNotFaulted();
-
-						return WriteFile(output, filename, fromPage + fileAndPages.Pages.Count, null);
-					}).Unwrap();
-			}
-
-			private Task WritePages(Stream output, List<PageInformation> pages, int index, int offset)
-			{
-				return WritePage(output, pages[index], offset)
-					.ContinueWith(task =>
-					{
-						if (task.Exception != null)
-							return task;
-
-						if (index + 1 >= pages.Count)
-							return task;
-
-						return WritePages(output, pages, index + 1, 0);
-					})
-					.Unwrap();
-			}
-
-			private Task WritePage(Stream output, PageInformation information, int offset)
-			{
-				var buffer = bufferPool.TakeBuffer(information.Size);
-				try
-				{
-					storage.Batch(accessor => accessor.ReadPage(information.Id, buffer));
-					return output.WriteAsync(buffer, offset, information.Size - offset)
-						.ContinueWith(task =>
-						{
-							bufferPool.ReturnBuffer(buffer);
-							return task;
-						})
-						.Unwrap();
-				}
-				catch (Exception)
-				{
-					bufferPool.ReturnBuffer(buffer);
-					throw;
-				}
 			}
 		}
 	}
