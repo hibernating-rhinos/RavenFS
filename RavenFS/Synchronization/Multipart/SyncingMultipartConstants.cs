@@ -11,7 +11,5 @@ namespace RavenFS.Synchronization.Multipart
 		public static string FileName = "Temp-Syncing-file-name";
 
 		public static string SourceServerId = "Temp-Syncing-source-server-url";
-
-		public static string TransferredChanges = "Temp-Transferred-Changes";
 	}
 }

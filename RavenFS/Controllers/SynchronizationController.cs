@@ -70,10 +70,6 @@
 			log.Debug("Starting to process multipart synchronization request of a file '{0}' with ETag {1} from {2}", fileName,
 						sourceFileETag, sourceServerId);
 
-			TransferredChangesType transferredChangesType;
-			Enum.TryParse(Request.Headers.GetValues(SyncingMultipartConstants.TransferredChanges).FirstOrDefault(),
-				            out transferredChangesType);
-
 			StorageStream localFile = null;
 			var isNewFile = false;
 			var isConflictResolved = false;
@@ -107,19 +103,7 @@
 
 				var synchronizingFile = SynchronizingFileStream.CreatingOrOpeningAndWritting(Storage, Search, tempFileName, sourceMetadata);
 				
-				MultipartSyncStreamProvider provider;
-				if (transferredChangesType == TransferredChangesType.Pages)
-				{
-					provider = new MultipartPageSyncStreamProvider(synchronizingFile, localFile, Storage);
-				}
-				else if (transferredChangesType == TransferredChangesType.Bytes)
-				{
-					provider = new MultipartByteSyncStreamProvider(synchronizingFile, localFile, Storage);
-				}
-				else
-				{
-					throw new ArgumentException("Unknown transferred changes type");
-				}
+				var provider = new MultipartSyncStreamProvider(synchronizingFile, localFile, Storage);
 
 				await Request.Content.ReadAsMultipartAsync(provider);
 

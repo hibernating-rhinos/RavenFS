@@ -15,30 +15,30 @@ namespace RavenFS.Util
 
 		public bool PreventUploadComplete { get; set; }
 
-		public override void Flush()
-		{
-			if (innerBuffer != null && innerBufferOffset > 0)
-			{
-				TransactionalStorage.Batch(
-				accessor =>
-				{
-					var hashKey = accessor.InsertPage(innerBuffer, innerBufferOffset); // just insert - will associate later
+		//public override void Flush()
+		//{
+		//	if (innerBuffer != null && innerBufferOffset > 0)
+		//	{
+		//		TransactionalStorage.Batch(
+		//		accessor =>
+		//		{
+		//			var hashKey = accessor.InsertPage(innerBuffer, innerBufferOffset); // just insert - will associate later
 
-					LastWrittenPages.Add(new PageInformation
-					{
-						Id = hashKey,
-						Size = innerBufferOffset
-					});
-				});
+		//			LastWrittenPages.Add(new PageInformation
+		//			{
+		//				Id = hashKey,
+		//				Size = innerBufferOffset
+		//			});
+		//		});
 
-				innerBuffer = null;
-				innerBufferOffset = 0;
-			}
-		}
+		//		innerBuffer = null;
+		//		innerBufferOffset = 0;
+		//	}
+		//}
 
 		protected override void Dispose(bool disposing)
 		{
-			Flush();
+			//Flush();
 
 			if (!PreventUploadComplete)
 			{
@@ -54,33 +54,33 @@ namespace RavenFS.Util
 
 		public List<PageInformation> LastWrittenPages { get; set; }
 
-		public override void Write(byte[] buffer, int offset, int count)
-		{
-			var innerOffset = 0;
+		//public override void Write(byte[] buffer, int offset, int count)
+		//{
+		//	var innerOffset = 0;
 
-			while (innerOffset < count)
-			{
-				if (innerBuffer == null)
-				{
-					innerBuffer = new byte[StorageConstants.MaxPageSize];
-				}
+		//	while (innerOffset < count)
+		//	{
+		//		if (innerBuffer == null)
+		//		{
+		//			innerBuffer = new byte[StorageConstants.MaxPageSize];
+		//		}
 
-				var toCopy = Math.Min(StorageConstants.MaxPageSize - innerBufferOffset, count - innerOffset);
-				if (toCopy == 0)
-				{
-					throw new Exception("Impossible");
-				}
+		//		var toCopy = Math.Min(StorageConstants.MaxPageSize - innerBufferOffset, count - innerOffset);
+		//		if (toCopy == 0)
+		//		{
+		//			throw new Exception("Impossible");
+		//		}
 
-				Array.Copy(buffer, offset + innerOffset, innerBuffer, innerBufferOffset, toCopy);
-				innerBufferOffset += toCopy;
+		//		Array.Copy(buffer, offset + innerOffset, innerBuffer, innerBufferOffset, toCopy);
+		//		innerBufferOffset += toCopy;
 
-				if (innerBufferOffset == StorageConstants.MaxPageSize)
-				{
-					Flush();
-				}
+		//		if (innerBufferOffset == StorageConstants.MaxPageSize)
+		//		{
+		//			Flush();
+		//		}
 
-				innerOffset += toCopy;
-			}
-		}
+		//		innerOffset += toCopy;
+		//	}
+		//}
 	}
 }

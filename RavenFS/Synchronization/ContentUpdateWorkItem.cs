@@ -2,11 +2,9 @@
 {
 	using System;
 	using System.Collections.Generic;
-	using System.Collections.Specialized;
 	using System.IO;
 	using System.Linq;
 	using System.Threading.Tasks;
-	using Extensions;
 	using Multipart;
 	using NLog;
 	using RavenFS.Client;
@@ -14,7 +12,6 @@
 	using RavenFS.Util;
 	using Rdc;
 	using Rdc.Wrapper;
-	using FileInfo = Client.FileInfo;
 
 	public class ContentUpdateWorkItem : SynchronizationWorkItem
 	{
@@ -78,18 +75,14 @@
 
 				if (destinationSignatureManifest.Signatures.Count > 0)
 				{
-					var searchResult =
-						await destinationRavenFileSystemClient.SearchAsync(string.Format("__fileName:{0}", FileName), pageSize: 1);
-
-					return await SynchronizeTo(remoteSignatureCache, destination, sourceSignatureManifest, searchResult.Files[0],
-						              destinationMetadata);
+					return await SynchronizeTo(remoteSignatureCache, destination, sourceSignatureManifest);
 				}
 
 				return await UploadToAsync(destination);
 			}
 		}
 
-		private async Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, SignatureManifest sourceSignatureManifest, FileInfo destinationFileInfo, NameValueCollection destinationMetadata)
+		private async Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, SignatureManifest sourceSignatureManifest)
 		{
 			var seedSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
 			var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
@@ -103,7 +96,7 @@
 					needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 				}
 
-				return await PushByUsingMultipartRequest(destinationServerUrl, destinationFileInfo, destinationMetadata, localFile, needList);
+				return await PushByUsingMultipartRequest(destinationServerUrl, localFile, needList);
 			}
 		}
 
@@ -123,23 +116,14 @@
 							                     }
 					                     };
 
-				return await PushByUsingMultipartRequest(destinationServerUrl, null, null, sourceFileStream, onlySourceNeed);
+				return await PushByUsingMultipartRequest(destinationServerUrl, sourceFileStream, onlySourceNeed);
 			}
 		}
 
-		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, FileInfo destinationFileInfo, NameValueCollection destinationMetadata, Stream sourceFileStream, IList<RdcNeed> needList)
+		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, Stream sourceFileStream, IList<RdcNeed> needList)
 		{
-			var transferredChangesType = TransferredChangesType.Bytes;
-
-			if (destinationFileInfo != null && destinationFileInfo.TotalSize != null)
-			{
-				var sourceFileLength = FileDataInfo.Length;
-				transferredChangesType = DetermineChangesTransferType(sourceFileLength, destinationFileInfo.TotalSize.Value,
-				                                                      destinationMetadata["Content-MD5"]);
-			}
-
-			var multipartRequest = new SynchronizationMultipartRequest(Storage, destinationServerUrl, SourceServerId, FileName, FileMetadata,
-																	   sourceFileStream, needList, transferredChangesType);
+			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerId, FileName, FileMetadata,
+																	   sourceFileStream, needList);
 
 			var bytesToTransferCount = needList.Where(x => x.BlockType == RdcNeedType.Source).Sum(x => (double) x.BlockLength);
 			
@@ -148,29 +132,6 @@
 				FileName, FileETag, destinationServerUrl, needList.Count, bytesToTransferCount);
 
 			return multipartRequest.PushChangesAsync();
-		}
-
-		private TransferredChangesType DetermineChangesTransferType(long sourceFileLength, long destinationFileLength, string destinationFileHash)
-		{
-			if (sourceFileLength == destinationFileLength) // if file length is the same we can work with entire pages
-			{
-				return TransferredChangesType.Pages;
-			}
-			if (sourceFileLength > destinationFileLength) // need to check if data has been appended
-			{
-				using (var stream  = StorageStream.Reading(Storage, FileName))
-				{
-					var fileBeginningStream = new NarrowedStream(stream, 0, destinationFileLength - 1);
-					var hashOfTheBeginning = fileBeginningStream.GetMD5Hash();
-
-					if (hashOfTheBeginning == destinationFileHash) // 
-					{
-						return TransferredChangesType.Pages;
-					}
-				}
-			}
-
-			return TransferredChangesType.Bytes;
 		}
 
 		private DataInfo GetLocalFileDataInfo(string fileName)
