@@ -807,5 +807,40 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal("File does not exist locally", result.Exception.Message);
 		}
+
+		[Fact]
+		public void Should_detect_conflict_on_destination()
+		{
+			var destination = NewClient(1);
+
+			const string fileName = "test.txt";
+
+			destination.UploadAsync(fileName, new MemoryStream(new byte[] {1})).Wait();
+
+			var request = (HttpWebRequest)WebRequest.Create(destination.ServerUrl + "/synchronization/updatemetadata/" + fileName);
+
+			request.Method = "POST";
+			request.ContentLength = 0;
+
+			var conflictedMetadata  = new NameValueCollection()
+				{
+					{"ETag", "\"" + Guid.Empty + "\""},
+					{SynchronizationConstants.RavenSynchronizationVersion, "1"},
+					{SynchronizationConstants.RavenSynchronizationSource,Guid.Empty.ToString()},
+					{SynchronizationConstants.RavenSynchronizationHistory, "[]"}
+				};
+
+			request.AddHeaders(conflictedMetadata);
+
+			request.Headers[SyncingMultipartConstants.SourceServerId] = Guid.Empty.ToString();
+
+			var response = request.GetResponseAsync().Result;
+
+			using (var stream = response.GetResponseStream())
+			{
+				var report = new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
+				Assert.Equal("File test.txt is conflicted", report.Exception.Message);
+			}
+		}
 	}
 }
