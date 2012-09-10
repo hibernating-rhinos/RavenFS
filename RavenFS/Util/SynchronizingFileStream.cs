@@ -36,6 +36,7 @@ namespace RavenFS.Util
 
 				md5Hasher.TransformFinalBlock(new byte[0], 0, 0);
 				FileHash = md5Hasher.Hash.ToStringHash();
+				md5Hasher.Dispose();
 			}
 		}
 

@@ -370,6 +370,7 @@ namespace RavenFS.Controllers
 			public void Dispose()
 			{
 				bufferPool.ReturnBuffer(buffer);
+				md5Hasher.Dispose();
 			}
 		}
 	}
