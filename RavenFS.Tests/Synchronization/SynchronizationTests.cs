@@ -23,7 +23,7 @@ namespace RavenFS.Tests.Synchronization
 	public class SynchronizationTests : MultiHostTestBase
 	{
 		[Theory]
-		//[InlineData(1)]
+		[InlineData(1)]
 		[InlineData(5000)]
 		public void Synchronize_file_with_different_beginning(int size)
 		{
@@ -33,9 +33,9 @@ namespace RavenFS.Tests.Synchronization
 			sw.Write("Coconut is Stupid");
 			sw.Flush();
 
-			var sourceContent = new CombinedStream(SyncTestUtils.PrepareSourceStream(size), differenceChunk);
+			var sourceContent = SyncTestUtils.PrepareSourceStream(size);
 			sourceContent.Position = 0;
-			var destinationContent = SyncTestUtils.PrepareSourceStream(size);
+			var destinationContent = new CombinedStream(differenceChunk, sourceContent);
 			destinationContent.Position = 0;
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
@@ -54,7 +54,7 @@ namespace RavenFS.Tests.Synchronization
 
 			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
 
-			//Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
+			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
 			string resultMd5 = null;
 			using (var resultFileContent = new MemoryStream())
