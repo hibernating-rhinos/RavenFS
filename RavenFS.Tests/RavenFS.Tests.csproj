@@ -96,6 +96,7 @@
     <Compile Include="Synchronization\NeedListParserTest.cs" />
     <Compile Include="Synchronization\SynchronizationNotificationTests.cs" />
     <Compile Include="Synchronization\SynchronizationQueueTests.cs" />
+    <Compile Include="Synchronization\SynchronizationStorageTests.cs" />
     <Compile Include="Synchronization\SynchronizationTests.cs" />
     <Compile Include="Synchronization\IO\RandomlyModifiedStream.cs" />
     <Compile Include="Synchronization\IO\RandomStream.cs" />

@@ -3,6 +3,7 @@
 	using RavenFS.Client;
 	using System;
 	using System.IO;
+	using Storage;
 	using Xunit;
 
 	public class SyncTestUtils
@@ -47,6 +48,21 @@
 				writer.Write("\n");
 			}
 			writer.Flush();
+
+			return ms;
+		}
+
+		public static MemoryStream PreparePagesStream(int numberOfPages)
+		{
+			var ms = new MemoryStream();
+			var random = new Random();
+
+			for (var i = 1; i <= numberOfPages; i++)
+			{
+				var page = new byte[StorageConstants.MaxPageSize];
+				random.NextBytes(page);
+				ms.Write(page, 0, StorageConstants.MaxPageSize);
+			}
 
 			return ms;
 		}

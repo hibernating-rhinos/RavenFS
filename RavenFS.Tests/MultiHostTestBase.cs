@@ -10,6 +10,10 @@ using RavenFS.Tests.Tools;
 
 namespace RavenFS.Tests
 {
+	using System.Globalization;
+	using System.Linq;
+	using Storage;
+
 	public abstract class MultiHostTestBase : WithNLog, IDisposable
 	{
 		public static readonly int[] Ports = { 19079, 19081 };
@@ -60,6 +64,13 @@ namespace RavenFS.Tests
 		protected RavenFileSystemClient NewClient(int index)
 		{
 			return new RavenFileSystemClient(ServerAddress(Ports[index]));
+		}
+
+		protected RavenFileSystem GetRavenFileSystem(int index)
+		{
+			return
+				disposables.OfType<RavenFileSystem>().First(
+					x => x.Path.EndsWith(Ports[index].ToString(CultureInfo.InvariantCulture)));
 		}
 
 		#region IDisposable Members

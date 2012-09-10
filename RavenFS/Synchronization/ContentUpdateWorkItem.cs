@@ -100,7 +100,7 @@
 			}
 		}
 
-		private async Task<SynchronizationReport> UploadToAsync(string destinationServerUrl)
+		internal async Task<SynchronizationReport> UploadToAsync(string destinationServerUrl)
 		{
 			using (var sourceFileStream = StorageStream.Reading(Storage, FileName))
 			{
