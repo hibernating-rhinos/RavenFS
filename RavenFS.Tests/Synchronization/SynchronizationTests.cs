@@ -37,8 +37,8 @@ namespace RavenFS.Tests.Synchronization
 			sourceContent.Position = 0;
 			var destinationContent = new CombinedStream(differenceChunk, sourceContent);
 			destinationContent.Position = 0;
-			var destinationClient = NewClient(0);
-			var sourceClient = NewClient(1);
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
                                {
                                    {"SomeTest-metadata", "some-value"}
@@ -62,12 +62,53 @@ namespace RavenFS.Tests.Synchronization
 				var metadata = destinationClient.DownloadAsync("test.txt", resultFileContent).Result;
 				Assert.Equal("some-value", metadata["SomeTest-metadata"]);
 				resultFileContent.Position = 0;
-				resultMd5 = IOExtensions.GetMD5Hash(resultFileContent);
+				resultMd5 = resultFileContent.GetMD5Hash();
 				resultFileContent.Position = 0;
 			}
 
 			sourceContent.Position = 0;
-			var sourceMd5 = IOExtensions.GetMD5Hash(sourceContent);
+			var sourceMd5 = sourceContent.GetMD5Hash();
+
+			Assert.True(resultMd5 == sourceMd5);
+		}
+
+		[Theory]
+		[InlineData(1)]
+		[InlineData(5000)]
+		public void Synchronize_file_with_appended_data(int size)
+		{
+			var differenceChunk = new MemoryStream();
+			var sw = new StreamWriter(differenceChunk);
+
+			sw.Write("Coconut is Stupid");
+			sw.Flush();
+
+			var sourceContent = new CombinedStream(SyncTestUtils.PrepareSourceStream(size), differenceChunk);
+			sourceContent.Position = 0;
+			var destinationContent = SyncTestUtils.PrepareSourceStream(size);
+			destinationContent.Position = 0;
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
+
+			destinationClient.UploadAsync("test.txt", destinationContent).Wait();
+			sourceContent.Position = 0;
+			sourceClient.UploadAsync("test.txt", sourceContent).Wait();
+
+			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
+
+			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
+
+			string resultMd5;
+			using (var resultFileContent = new MemoryStream())
+			{
+				destinationClient.DownloadAsync("test.txt", resultFileContent).Wait();
+				resultFileContent.Position = 0;
+				resultMd5 = resultFileContent.GetMD5Hash();
+				resultFileContent.Position = 0;
+			}
+
+			sourceContent.Position = 0;
+			var sourceMd5 = sourceContent.GetMD5Hash();
 
 			Assert.True(resultMd5 == sourceMd5);
 		}
