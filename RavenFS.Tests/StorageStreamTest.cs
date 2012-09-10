@@ -1,7 +1,6 @@
 namespace RavenFS.Tests
 {
 	using System;
-	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using RavenFS.Search;
 	using Storage;
@@ -52,7 +51,6 @@ namespace RavenFS.Tests
 		[Fact]
 		public void SynchronizingFileStream_should_write_to_storage_by_64kB_pages()
 		{
-			List<PageInformation> lastWrittenPages;
 			using (var stream = SynchronizingFileStream.CreatingOrOpeningAndWritting(transactionalStorage, new MockIndexStorage(), "file", EmptyETagMetadata))
 			{
 				var buffer = new byte[StorageConstants.MaxPageSize];
@@ -64,12 +62,15 @@ namespace RavenFS.Tests
 				stream.Write(buffer, 0, 1);
 
 				stream.PreventUploadComplete = false;
-				lastWrittenPages = stream.LastWrittenPages;
 			}
 
-			Assert.Equal(2, lastWrittenPages.Count);
-			Assert.Equal(StorageConstants.MaxPageSize, lastWrittenPages[0].Size);
-			Assert.Equal(1, lastWrittenPages[1].Size);
+			FileAndPages fileAndPages = null;
+
+			transactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile("file", 0, 10));
+
+			Assert.Equal(2, fileAndPages.Pages.Count);
+			Assert.Equal(StorageConstants.MaxPageSize, fileAndPages.Pages[0].Size);
+			Assert.Equal(1, fileAndPages.Pages[1].Size);
 		}
 
 	}

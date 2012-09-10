@@ -103,7 +103,7 @@
 
 				var synchronizingFile = SynchronizingFileStream.CreatingOrOpeningAndWritting(Storage, Search, tempFileName, sourceMetadata);
 				
-				var provider = new MultipartSyncStreamProvider(synchronizingFile, localFile, Storage);
+				var provider = new MultipartSyncStreamProvider(synchronizingFile, localFile);
 
 				await Request.Content.ReadAsMultipartAsync(provider);
 
