@@ -111,19 +111,11 @@
 				report.BytesTransfered = provider.BytesTransfered;
 				report.NeedListLength = provider.NumberOfFileParts;
 
-				if (synchronizingFile != null)
-				{
-					synchronizingFile.PreventUploadComplete = false;
-					synchronizingFile.Dispose();
-				}
+				synchronizingFile.PreventUploadComplete = false;
+				synchronizingFile.Dispose();
+				sourceMetadata["Content-MD5"] = synchronizingFile.FileHash;
 
-				using (var stream = StorageStream.Reading(Storage, tempFileName))
-				{
-					sourceMetadata["Content-MD5"] = stream.GetMD5Hash();
-					Storage.Batch(accesor => accesor.UpdateFileMetadata(tempFileName, sourceMetadata));
-
-					log.Debug("MD5 hash of '{0}' was calculated", fileName);
-				}
+				Storage.Batch(accesor => accesor.UpdateFileMetadata(tempFileName, sourceMetadata));
 
 				Storage.Batch(accessor =>
 				{

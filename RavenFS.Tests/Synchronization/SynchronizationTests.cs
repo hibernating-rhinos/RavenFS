@@ -551,7 +551,7 @@ namespace RavenFS.Tests.Synchronization
 		[Fact]
 		public void Should_calculate_and_save_content_hash_after_synchronization()
 		{
-			var buffer = new byte[1024*1024*5];
+			var buffer = new byte[1024 * 1024 * 5 + 10];
 			new Random().NextBytes(buffer);
 
 			var sourceContent = new MemoryStream(buffer);

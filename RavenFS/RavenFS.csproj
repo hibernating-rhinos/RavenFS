@@ -158,6 +158,7 @@
     <Compile Include="Controllers\FoldersController.cs" />
     <Compile Include="Controllers\LogsController.cs" />
     <Compile Include="Extensions\Buffers.cs" />
+    <Compile Include="Extensions\ByteExtensions.cs" />
     <Compile Include="Extensions\ConfigurationExtension.cs" />
     <Compile Include="Extensions\GuidExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />

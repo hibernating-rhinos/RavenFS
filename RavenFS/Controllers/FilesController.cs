@@ -347,7 +347,7 @@ namespace RavenFS.Controllers
 							storage.Batch(accessor => accessor.CompleteFileUpload(filename));
 							md5Hasher.TransformFinalBlock(new byte[0], 0, 0);
 
-							FileHash = ToStringHash(md5Hasher.Hash);
+							FileHash = md5Hasher.Hash.ToStringHash();
 
 							return task; // task is done
 						}
@@ -365,16 +365,6 @@ namespace RavenFS.Controllers
 						return Execute();
 					})
 					.Unwrap();
-			}
-
-			private static string ToStringHash(byte[] hash)
-			{
-				var sb = new StringBuilder();
-				for (var i = 0; i < hash.Length; i++)
-				{
-					sb.Append(hash[i].ToString("x2"));
-				}
-				return sb.ToString();
 			}
 
 			public void Dispose()
