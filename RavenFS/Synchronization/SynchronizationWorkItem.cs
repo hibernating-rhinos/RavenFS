@@ -1,6 +1,7 @@
 ﻿namespace RavenFS.Synchronization
 {
 	using System;
+	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.Linq;
 	using System.Threading.Tasks;
@@ -57,7 +58,7 @@
 
 		protected ConflictItem CheckConflictWithDestination(NameValueCollection sourceMetadata, NameValueCollection destinationMetadata)
 		{
-			var conflict = conflictDetector.Check(FileName, destinationMetadata, sourceMetadata);
+			var conflict = conflictDetector.CheckOnSource(FileName, sourceMetadata, destinationMetadata);
 			var isConflictResolved = conflictResolver.IsResolved(destinationMetadata, conflict);
 
 			// optimization - conflict checking on source side before any changes pushed
@@ -76,9 +77,12 @@
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 			try
 			{
-				await destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(FileName, conflict.Current.Version,
-				                                                                          conflict.Remote.ServerId,
-				                                                                          conflict.RemoteHistory);
+				var version = conflict.RemoteHistory.Last().Version;
+				var serverId = conflict.RemoteHistory.Last().ServerId;
+				var history = new List<HistoryItem>(conflict.RemoteHistory);
+				history.RemoveAt(conflict.RemoteHistory.Count - 1);
+
+				await destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(FileName, version, serverId, history);
 			}
 			catch (Exception ex)
 			{

@@ -4,6 +4,7 @@ namespace RavenFS.Synchronization.Conflictuality
 {
 	using System;
 	using System.Collections.Specialized;
+	using System.Linq;
 	using RavenFS.Client;
 
     public class ConflictResolver
@@ -17,7 +18,7 @@ namespace RavenFS.Synchronization.Conflictuality
 			}
 			var conflictResolution = new TypeHidingJsonSerializer().Parse<ConflictResolution>(conflictResolutionString);
 			return conflictResolution.Strategy == ConflictResolutionStrategy.RemoteVersion
-				&& conflictResolution.RemoteServerId == conflict.Remote.ServerId;
+				&& conflictResolution.RemoteServerId == conflict.RemoteHistory.Last().ServerId;
 		}
 	}
 }

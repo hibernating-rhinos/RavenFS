@@ -7,29 +7,38 @@ namespace RavenFS.Synchronization.Conflictuality
 
 	public class ConflictDetector
 	{
-		public ConflictItem Check(string fileName, NameValueCollection destinationMetadata, NameValueCollection sourceMetadata)
+		public ConflictItem Check(string fileName, NameValueCollection localMetadata, NameValueCollection remoteMetadata)
 		{
-			var sourceHistory = HistoryUpdater.DeserializeHistory(sourceMetadata);
-			var sourceVersion = long.Parse(sourceMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
-			var sourceServerId = sourceMetadata[SynchronizationConstants.RavenSynchronizationSource];
-			var destinationHistory = HistoryUpdater.DeserializeHistory(destinationMetadata);
-			var destinationVersion = long.Parse(destinationMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
-			var destinationServerId = destinationMetadata[SynchronizationConstants.RavenSynchronizationSource];
+			var localVersion = long.Parse(localMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
+			var localServerId = localMetadata[SynchronizationConstants.RavenSynchronizationSource];
+			var localConflictHistory = HistoryUpdater.DeserializeHistory(localMetadata);
+			localConflictHistory.Add(new HistoryItem() { ServerId = localServerId, Version = localVersion });
+
+			var remoteVersion = long.Parse(remoteMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
+			var remoteServerId = remoteMetadata[SynchronizationConstants.RavenSynchronizationSource];
+			var remoteSourceHistory = HistoryUpdater.DeserializeHistory(remoteMetadata);
+			remoteSourceHistory.Add(new HistoryItem() {ServerId = remoteServerId, Version = remoteVersion});
+
 			// if there are the same files or destination is direct child there are no conflicts
-			if ((sourceServerId == destinationServerId && sourceVersion == destinationVersion)
-				|| sourceHistory.Any(item => item.ServerId == destinationServerId && item.Version == destinationVersion))
+			if ((remoteServerId == localServerId && remoteVersion == localVersion)
+				|| remoteSourceHistory.Any(item => item.ServerId == localServerId && item.Version == localVersion))
 			{
 				return null;
 			}
+
 			return
 				new ConflictItem
 				{
-					Current = new HistoryItem { ServerId = destinationServerId, Version = destinationVersion },
-					Remote = new HistoryItem { ServerId = sourceServerId, Version = sourceVersion },
-					CurrentHistory = destinationHistory,
-					RemoteHistory = sourceHistory,
+					CurrentHistory = localConflictHistory,
+					RemoteHistory = remoteSourceHistory,
 					FileName = fileName,
 				};
+		}
+
+		public ConflictItem CheckOnSource(string fileName, NameValueCollection localMetadata,
+		                                  NameValueCollection remoteMetadata)
+		{
+			return Check(fileName, remoteMetadata, localMetadata);
 		}
 	}
 }

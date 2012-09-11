@@ -196,10 +196,10 @@
 			}
 		}
 
-		private void AssertConflictDetection(string fileName, NameValueCollection destinationMetadata, NameValueCollection sourceMetadata, Guid sourceServerId, out bool isConflictResolved)
+		private void AssertConflictDetection(string fileName, NameValueCollection localMetadata, NameValueCollection sourceMetadata, Guid sourceServerId, out bool isConflictResolved)
 		{
-			var conflict = ConflictDetector.Check(fileName, destinationMetadata, sourceMetadata);
-			isConflictResolved = ConflictResolver.IsResolved(destinationMetadata, conflict);
+			var conflict = ConflictDetector.Check(fileName, localMetadata, sourceMetadata);
+			isConflictResolved = ConflictResolver.IsResolved(localMetadata, conflict);
 
 			if (conflict != null && !isConflictResolved)
 			{
@@ -513,22 +513,28 @@
 
 			var contentStream = await Request.Content.ReadAsStreamAsync();
 
-			var remoteHistory = new JsonSerializer().Deserialize<IList<HistoryItem>>(new JsonTextReader(new StreamReader(contentStream)));
+			var current = new HistoryItem
+				              {
+					              ServerId = Storage.Id.ToString(),
+					              Version = long.Parse(localMetadata[SynchronizationConstants.RavenSynchronizationVersion])
+				              };
+
+			var currentConflictHistory = HistoryUpdater.DeserializeHistory(localMetadata);
+			currentConflictHistory.Add(current);
+
+			var remote = new HistoryItem
+				             {
+					             ServerId = remoteServerId, Version = remoteVersion
+				             };
+
+			var remoteConflictHistory =
+				new JsonSerializer().Deserialize<IList<HistoryItem>>(new JsonTextReader(new StreamReader(contentStream)));
+			remoteConflictHistory.Add(remote);
 
 			var conflict = new ConflictItem
 			{
-				Current = new HistoryItem
-				{
-					ServerId = Storage.Id.ToString(),
-					Version = long.Parse(localMetadata[SynchronizationConstants.RavenSynchronizationVersion])
-				},
-				Remote = new HistoryItem
-				{
-					ServerId = remoteServerId,
-					Version = remoteVersion
-				},
-				CurrentHistory = HistoryUpdater.DeserializeHistory(localMetadata),
-				RemoteHistory = remoteHistory,
+				CurrentHistory = currentConflictHistory,
+				RemoteHistory = remoteConflictHistory,
 				FileName = filename
 			};
 
@@ -593,8 +599,6 @@
 					localHistory.Add(remoteHistoryItem);
 				}
 
-				localHistory.Add(conflict.Remote);
-
 				localMetadata[SynchronizationConstants.RavenSynchronizationHistory] = HistoryUpdater.SerializeHistory(localHistory);
 
 				accessor.UpdateFileMetadata(fileName, localMetadata);
@@ -616,8 +620,8 @@
 						new ConflictResolution
 						{
 							Strategy = ConflictResolutionStrategy.RemoteVersion,
-							RemoteServerId = conflictItem.Remote.ServerId,
-							Version = conflictItem.Remote.Version,
+							RemoteServerId = conflictItem.RemoteHistory.Last().ServerId,
+							Version = conflictItem.RemoteHistory.Last().Version,
 						};
 
 					localMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] =

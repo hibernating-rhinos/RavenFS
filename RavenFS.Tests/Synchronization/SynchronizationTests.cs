@@ -6,6 +6,7 @@ namespace RavenFS.Tests.Synchronization
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
+	using System.Linq;
 	using System.Net;
 	using System.Text;
 	using System.Threading.Tasks;
@@ -339,10 +340,10 @@ namespace RavenFS.Tests.Synchronization
 			var conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(conflictItemString);
 
 			Assert.Equal(true.ToString(), resultFileMetadata[SynchronizationConstants.RavenSynchronizationConflict]);
-			Assert.Equal(guid, conflict.Remote.ServerId);
-			Assert.Equal(8, conflict.Remote.Version);
-			Assert.Equal(1, conflict.Current.Version);
-			Assert.Equal(1, conflict.RemoteHistory.Count);
+			Assert.Equal(guid, conflict.RemoteHistory.Last().ServerId);
+			Assert.Equal(8, conflict.RemoteHistory.Last().Version);
+			Assert.Equal(1, conflict.CurrentHistory.Last().Version);
+			Assert.Equal(2, conflict.RemoteHistory.Count);
 			Assert.Equal(guid, conflict.RemoteHistory[0].ServerId);
 			Assert.Equal(3, conflict.RemoteHistory[0].Version);
 		}
