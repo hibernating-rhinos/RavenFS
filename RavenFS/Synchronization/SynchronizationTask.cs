@@ -56,7 +56,7 @@ namespace RavenFS.Synchronization
 		{
 			log.Debug("Starting to synchronize destinations");
 
-			var destinationSyncResults = new List<DestinationSyncResult>();
+			var destinationSyncTasks = new List<Task<DestinationSyncResult>>();
 
 			foreach (var destination in GetSynchronizationDestinations())
 			{
@@ -70,10 +70,10 @@ namespace RavenFS.Synchronization
 					continue;
 				}
 
-				destinationSyncResults.Add(await SynchronizeDestinationAsync(destinationUrl, forceSyncingContinuation));
+				destinationSyncTasks.Add(SynchronizeDestinationAsync(destinationUrl, forceSyncingContinuation));
 			}
 
-			return destinationSyncResults;
+			return await TaskEx.WhenAll(destinationSyncTasks);
 		}
 
 		public async Task<SynchronizationReport> SynchronizeFileToAsync(string fileName, string destinationUrl)
