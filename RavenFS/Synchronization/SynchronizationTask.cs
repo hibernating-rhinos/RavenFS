@@ -226,14 +226,14 @@ namespace RavenFS.Synchronization
 					log.Debug(
 					    "File '{0}' was conflicted on a destination {1} and had no resolution. No need to queue it", file,
 					    destinationUrl);
-					return;
+					continue;
 				}
 
 				if (localMetadata != null &&
 					localMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null)
 				{
 					log.Debug("File '{0}' was conflicted on our side. No need to queue it", file, destinationUrl);
-					return;
+					continue;
 				}
 
 				var work = DetermineSynchronizationWork(file, localMetadata, destinationMetadata);
@@ -241,7 +241,7 @@ namespace RavenFS.Synchronization
 				if (work == null)
 				{
 					log.Debug("There was no need to synchronize a file '{0}' to {1}", file, destinationUrl);
-					return;
+					continue;
 				}
 
 				synchronizationQueue.EnqueueSynchronization(destinationUrl, work);
