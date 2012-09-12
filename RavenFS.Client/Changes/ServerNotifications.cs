@@ -178,7 +178,7 @@ namespace RavenFS.Client.Changes
 			if (disposed)
 				return;
 
-			DisposeAsync();
+			DisposeAsync().Wait();
 		}
 
 		private bool disposed;
