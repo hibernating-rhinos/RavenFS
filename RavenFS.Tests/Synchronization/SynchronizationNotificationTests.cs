@@ -10,7 +10,7 @@ namespace RavenFS.Tests.Synchronization
 
 	public class SynchronizationNotificationTests : MultiHostTestBase
 	{
-		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
+		[Fact]
 		public void NotificationsAreReceivedOnSourceWhenSynchronizationsAreStartedAndFinished()
 		{
 			using (var source = NewClient(0))
@@ -112,7 +112,7 @@ namespace RavenFS.Tests.Synchronization
             }
 		}
 
-		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
+		[Fact]
 		public void NotificationsAreReceivedOnDestinationWhenSynchronizationsAreFinished()
 		{
 			using (var source = NewClient(0))

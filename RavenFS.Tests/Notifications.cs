@@ -14,7 +14,7 @@ namespace RavenFS.Tests
 {
     public class Notifications : WebApiTest
     {
-		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
+		[Fact]
         public void NotificationReceivedWhenFileAdded()
         {
             using(var client = NewClient())
@@ -34,7 +34,7 @@ namespace RavenFS.Tests
             }
         }
 
-		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
+		[Fact]
 		public void NotificationReceivedWhenFileDeleted()
         {
             using (var client = NewClient())
@@ -55,7 +55,7 @@ namespace RavenFS.Tests
             }
         }
 
-		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
+		[Fact]
 		public void NotificationReceivedWhenFileUpdated()
         {
             using (var client = NewClient())
@@ -75,7 +75,7 @@ namespace RavenFS.Tests
             }
         }
 
-		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
+		[Fact]
 		public void NotificationsReceivedWhenFileRenamed()
         {
             using (var client = NewClient())
@@ -97,7 +97,7 @@ namespace RavenFS.Tests
             }
         }
 
-		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
+		[Fact]
 		public void NotificationsAreOnlyReceivedForFilesInGivenFolder()
         {
             using (var client = NewClient())
@@ -114,7 +114,7 @@ namespace RavenFS.Tests
             }
         }
 
-		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
+		[Fact]
 		public void NotificationsIsReceivedWhenConfigIsUpdated()
         {
             using (var client = NewClient())
@@ -132,7 +132,7 @@ namespace RavenFS.Tests
             }
         }
 
-		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
+		[Fact]
 		public void NotificationsIsReceivedWhenConfigIsDeleted()
         {
             using (var client = NewClient())

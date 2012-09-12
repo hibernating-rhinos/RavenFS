@@ -9,7 +9,7 @@ namespace RavenFS.Tests.Synchronization
 
 	public class ConflictNotificationTests : MultiHostTestBase
 	{
-		[Fact(/*Skip = "When running the build script from command line notification tests cause the crash"*/)]
+		[Fact]
 		public void NotificationIsReceivedWhenConflictIsDetected()
 		{
 			using(var destinationClient = NewClient(0))
