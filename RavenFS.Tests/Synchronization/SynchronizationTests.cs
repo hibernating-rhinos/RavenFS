@@ -910,5 +910,20 @@ namespace RavenFS.Tests.Synchronization
 				Assert.Equal("File test.txt is conflicted", report.Exception.Message);
 			}
 		}
+
+		[Fact]
+		public void Can_increment_last_etag()
+		{
+			var client = NewClient(1);
+
+			var id = Guid.NewGuid();
+			var etag = Guid.NewGuid();
+
+			client.Synchronization.IncrementLastETagAsync(id, etag).Wait();
+
+			var lastSyncInfo = client.Synchronization.GetLastSynchronizationFromAsync(id).Result;
+
+			Assert.Equal(etag, lastSyncInfo.LastSourceFileEtag);
+		}
 	}
 }

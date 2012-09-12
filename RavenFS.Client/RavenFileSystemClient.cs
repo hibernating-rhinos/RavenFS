@@ -777,6 +777,18 @@ namespace RavenFS.Client
 					})
 					.TryThrowBetterError();
 			}
+
+			public Task IncrementLastETagAsync(Guid sourceServerId, Guid sourceFileETag)
+			{
+				var requestUriString = String.Format("{0}/synchronization/IncrementLastETag?sourceServerId={1}&sourceFileETag={2}",
+				                                     ravenFileSystemClient.ServerUrl, sourceServerId, sourceFileETag);
+				var request = (HttpWebRequest) WebRequest.Create(requestUriString.NoCache());
+				request.ContentLength = 0;
+				request.Method = "POST";
+				return request.GetResponseAsync()
+					.ContinueWith(task => task.Result.Close())
+					.TryThrowBetterError();
+			}
 		}
 
 		public Task<RdcStats> GetRdcStatsAsync()

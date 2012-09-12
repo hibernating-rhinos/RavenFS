@@ -99,14 +99,14 @@ namespace RavenFS.Synchronization
 				return SynchronizationUtils.SynchronizationExceptionReport(fileName, "File does not exist locally");
 			}
 
-			string reason;
+			NoSyncReason reason;
 			var work = DetermineSynchronizationWork(fileName, localMetadata, destinationMetadata, out reason);
 
 			if (work == null)
 			{
 				return SynchronizationUtils.SynchronizationExceptionReport(fileName,
 				                                                           string.Format("No synchronization work needed. {0}.",
-				                                                                         reason));
+				                                                                         reason.GetDescription()));
 			}
 
 			return await PerformSynchronizationAsync(destinationClient.ServerUrl, work);
@@ -239,12 +239,19 @@ namespace RavenFS.Synchronization
 					continue;
 				}
 
-				string reason;
+				NoSyncReason reason;
 				var work = DetermineSynchronizationWork(file, localMetadata, destinationMetadata, out reason);
 
 				if (work == null)
 				{
-					log.Debug("There was no need to synchronize a file '{0}' to {1}. {2}", file, destinationUrl, reason);
+					log.Debug("There was no need to synchronize a file '{0}' to {1}. {2}", file, destinationUrl, reason.GetDescription());
+
+					if (reason == NoSyncReason.ContainedInDestHistory)
+					{
+						var etag = localMetadata.Value<Guid>("ETag");
+						destinationClient.Synchronization.IncrementLastETagAsync(storage.Id, etag);
+					}
+					
 					continue;
 				}
 
@@ -252,9 +259,9 @@ namespace RavenFS.Synchronization
 			}
 		}
 
-		private SynchronizationWorkItem DetermineSynchronizationWork(string file, NameValueCollection localMetadata, NameValueCollection destinationMetadata, out string reason)
+		private SynchronizationWorkItem DetermineSynchronizationWork(string file, NameValueCollection localMetadata, NameValueCollection destinationMetadata, out NoSyncReason reason)
 		{
-			reason = null;
+			reason = NoSyncReason.Unknown;
 
 			if (localMetadata[SynchronizationConstants.RavenDeleteMarker] != null)
 			{
@@ -269,7 +276,7 @@ namespace RavenFS.Synchronization
 
 			if (localMetadata != null && destinationMetadata != null && Historian.IsDirectChildOfCurrent(localMetadata, destinationMetadata))
 			{
-				reason = "Destination server had this file in the past";
+				reason = NoSyncReason.ContainedInDestHistory;
 				return null;
 			}
 
@@ -281,7 +288,7 @@ namespace RavenFS.Synchronization
 					return new MetadataUpdateWorkItem(file, destinationMetadata, storage);
 				}
 
-				reason = "There were the same content and metadata";
+				reason = NoSyncReason.SameContentAndMetadata;
 
 				return null; // the same content and metadata - no need to synchronize
 			}

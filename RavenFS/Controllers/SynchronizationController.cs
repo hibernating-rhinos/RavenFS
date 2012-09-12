@@ -563,6 +563,30 @@
 			return Request.CreateResponse(HttpStatusCode.OK, lastEtag);
 		}
 
+		[AcceptVerbs("POST")]
+		public HttpResponseMessage IncrementLastETag(Guid sourceServerId, Guid sourceFileETag)
+		{
+			try
+			{
+				// we want to execute those operation in a single batch but we also have to ensure that
+				// Raven/Synchronization/Sources/sourceServerId config is modified only by one finishing synchronization at the same time
+				synchronizationFinishLocks.GetOrAdd(sourceServerId.ToString(), new ReaderWriterLockSlim()).EnterWriteLock();
+
+				Storage.Batch(accessor => SaveSynchronizationSourceInformation(sourceServerId, sourceFileETag, accessor));
+			}
+			catch (Exception ex)
+			{
+				log.ErrorException(
+					string.Format("Failed to update last seen ETag from {0}", sourceServerId), ex);
+			}
+			finally
+			{
+				synchronizationFinishLocks.GetOrAdd(sourceServerId.ToString(), new ReaderWriterLockSlim()).ExitWriteLock();
+			}
+
+			return Request.CreateResponse(HttpStatusCode.OK);
+		}
+
 	    private void PublishFileNotification(string fileName, Notifications.FileChangeAction action)
 	    {
 	        Publisher.Publish(new Notifications.FileChange()

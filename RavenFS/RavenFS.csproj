@@ -160,6 +160,7 @@
     <Compile Include="Extensions\Buffers.cs" />
     <Compile Include="Extensions\ByteExtensions.cs" />
     <Compile Include="Extensions\ConfigurationExtension.cs" />
+    <Compile Include="Extensions\EnumExtensions.cs" />
     <Compile Include="Extensions\GuidExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Infrastructure\CachePreventingHandler.cs" />
@@ -211,6 +212,7 @@
     <Compile Include="Synchronization\Multipart\SourceFilePart.cs" />
     <Compile Include="Synchronization\Multipart\SynchronizationMultipartRequest.cs" />
     <Compile Include="Synchronization\Multipart\SyncingMultipartConstants.cs" />
+    <Compile Include="Synchronization\NoSyncReason.cs" />
     <Compile Include="Synchronization\RenameWorkItem.cs" />
     <Compile Include="Synchronization\SynchronizationLock.cs" />
     <Compile Include="Synchronization\SynchronizationTask.cs" />
