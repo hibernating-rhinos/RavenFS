@@ -99,7 +99,7 @@
 					isNewFile = true;
 				}
 
-				HistoryUpdater.UpdateLastModified(sourceMetadata);
+				Historian.UpdateLastModified(sourceMetadata);
 
 				var synchronizingFile = SynchronizingFileStream.CreatingOrOpeningAndWritting(Storage, Search, tempFileName, sourceMetadata);
 				
@@ -260,7 +260,7 @@
 
 				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, out isConflictResolved);
 
-				HistoryUpdater.UpdateLastModified(sourceMetadata);
+				Historian.UpdateLastModified(sourceMetadata);
 
 				Storage.Batch(accessor => accessor.UpdateFileMetadata(fileName, sourceMetadata));
 
@@ -519,7 +519,7 @@
 					              Version = long.Parse(localMetadata[SynchronizationConstants.RavenSynchronizationVersion])
 				              };
 
-			var currentConflictHistory = HistoryUpdater.DeserializeHistory(localMetadata);
+			var currentConflictHistory = Historian.DeserializeHistory(localMetadata);
 			currentConflictHistory.Add(current);
 
 			var remote = new HistoryItem
@@ -591,7 +591,7 @@
 				var conflict =
 					accessor.GetConfigurationValue<ConflictItem>(SynchronizationHelper.ConflictConfigNameForFile(fileName));
 				var localMetadata = accessor.GetFile(fileName, 0, 0).Metadata;
-				var localHistory = HistoryUpdater.DeserializeHistory(localMetadata);
+				var localHistory = Historian.DeserializeHistory(localMetadata);
 
 				// incorporate remote version history into local
 				foreach (var remoteHistoryItem in conflict.RemoteHistory.Where(remoteHistoryItem => !localHistory.Contains(remoteHistoryItem)))
@@ -599,7 +599,7 @@
 					localHistory.Add(remoteHistoryItem);
 				}
 
-				localMetadata[SynchronizationConstants.RavenSynchronizationHistory] = HistoryUpdater.SerializeHistory(localHistory);
+				localMetadata[SynchronizationConstants.RavenSynchronizationHistory] = Historian.SerializeHistory(localHistory);
 
 				accessor.UpdateFileMetadata(fileName, localMetadata);
 

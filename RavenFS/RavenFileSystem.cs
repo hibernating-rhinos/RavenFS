@@ -28,7 +28,7 @@ namespace RavenFS
 		private readonly IndexStorage search;
 		private readonly SigGenerator sigGenerator;
 		private readonly NotificationPublisher notificationPublisher;
-		private readonly HistoryUpdater historyUpdater;
+		private readonly Historian historian;
 		private readonly FileLockManager fileLockManager;
 		private readonly SynchronizationTask synchronizationTask;
 		private readonly ConflictActifactManager conflictActifactManager;
@@ -62,7 +62,7 @@ namespace RavenFS
 			storage.Initialize();
 			search.Initialize();
 			var uuidGenerator = new UuidGenerator(sequenceActions);
-			historyUpdater = new HistoryUpdater(storage, replicationHiLo, uuidGenerator);
+			historian = new Historian(storage, replicationHiLo, uuidGenerator);
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
 			conflictActifactManager = new ConflictActifactManager(storage,search);
 			conflictDetector = new ConflictDetector();
@@ -104,9 +104,9 @@ namespace RavenFS
 			get { return notificationPublisher; }
 		}
 
-		public HistoryUpdater HistoryUpdater
+		public Historian Historian
 		{
-			get { return historyUpdater; }
+			get { return historian; }
 		}
 
 		public FileLockManager FileLockManager

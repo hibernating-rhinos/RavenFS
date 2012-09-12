@@ -79,7 +79,7 @@ namespace RavenFS.Controllers
 						AssertFileIsNotBeingSynced(name, accessor);
 						accessor.Delete(name);
 						var tombstoneMetadata = new NameValueCollection {{SynchronizationConstants.RavenDeleteMarker, "true"}};
-						HistoryUpdater.UpdateLastModified(tombstoneMetadata);
+						Historian.UpdateLastModified(tombstoneMetadata);
 						accessor.PutFile(name, 0, tombstoneMetadata);
 					});
 				}
@@ -128,8 +128,8 @@ namespace RavenFS.Controllers
 			name = Uri.UnescapeDataString(name);
 
 			var headers = Request.Headers.FilterHeaders();
-			HistoryUpdater.UpdateLastModified(headers);
-			HistoryUpdater.Update(name, headers);
+			Historian.UpdateLastModified(headers);
+			Historian.Update(name, headers);
 			
 			var shouldRetry = false;
 			var retries = 128;
@@ -186,7 +186,7 @@ namespace RavenFS.Controllers
 						fileAndPages = accessor.GetFile(name, 0, 0);
 
 						var metadata = fileAndPages.Metadata;
-						HistoryUpdater.UpdateLastModified(metadata);
+						Historian.UpdateLastModified(metadata);
 
 						// copy renaming file metadata and set special markers
 						var tombstoneMetadata = new NameValueCollection(metadata)
@@ -233,8 +233,8 @@ namespace RavenFS.Controllers
 			name = Uri.UnescapeDataString(name);
 
 			var headers = Request.Headers.FilterHeaders();
-			HistoryUpdater.UpdateLastModified(headers);
-			HistoryUpdater.Update(name, headers);
+			Historian.UpdateLastModified(headers);
+			Historian.Update(name, headers);
 			name = Uri.UnescapeDataString(name);
 			
 			var shouldRetry = false;
@@ -280,7 +280,7 @@ namespace RavenFS.Controllers
 				{
 					await readFileToDatabase.Execute();
 
-					HistoryUpdater.UpdateLastModified(headers); // update with the final file size
+					Historian.UpdateLastModified(headers); // update with the final file size
 
 					log.Debug("File '{0}' was uploaded. Starting to update file medatata and indexes", name);
 

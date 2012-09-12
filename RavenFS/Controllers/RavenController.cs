@@ -70,9 +70,9 @@ namespace RavenFS.Controllers
 			get { return RavenFileSystem.SigGenerator; }
 		}
 
-		public HistoryUpdater HistoryUpdater
+		public Historian Historian
 		{
-			get { return RavenFileSystem.HistoryUpdater; }
+			get { return RavenFileSystem.Historian; }
 		}
 
 		private NameValueCollection QueryString

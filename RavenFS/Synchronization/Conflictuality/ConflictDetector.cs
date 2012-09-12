@@ -2,7 +2,6 @@ namespace RavenFS.Synchronization.Conflictuality
 {
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
-	using System.Linq;
 	using Client;
 	using RavenFS.Infrastructure;
 
@@ -10,32 +9,16 @@ namespace RavenFS.Synchronization.Conflictuality
 	{
 		public ConflictItem Check(string fileName, NameValueCollection localMetadata, NameValueCollection remoteMetadata)
 		{
-			var localVersion = long.Parse(localMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
-			var localServerId = localMetadata[SynchronizationConstants.RavenSynchronizationSource];
-			var localHistory = HistoryUpdater.DeserializeHistory(localMetadata);
-			var currentLocalVersion = new HistoryItem() {ServerId = localServerId, Version = localVersion};
-
-			var version = localHistory.LastOrDefault() ?? currentLocalVersion;
-
-			var remoteVersion = long.Parse(remoteMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
-			var remoteServerId = remoteMetadata[SynchronizationConstants.RavenSynchronizationSource];
-			var remoteConflictHistory = HistoryUpdater.DeserializeHistory(remoteMetadata);
-			remoteConflictHistory.Add(new HistoryItem() {ServerId = remoteServerId, Version = remoteVersion});
-
-			// if there are the same files or destination is direct child there are no conflicts
-			if ((remoteServerId == currentLocalVersion.ServerId && remoteVersion == currentLocalVersion.Version)
-				|| remoteConflictHistory.Any(item => item.ServerId == version.ServerId && item.Version == version.Version))
+			if (Historian.IsDirectChildOfCurrent(localMetadata, remoteMetadata))
 			{
 				return null;
 			}
 
-			var localConflictHistory = new List<HistoryItem>(localHistory) {currentLocalVersion};
-
 			return
 				new ConflictItem
 				{
-					CurrentHistory = localConflictHistory,
-					RemoteHistory = remoteConflictHistory,
+					CurrentHistory = TransformToFullConflictHistory(localMetadata),
+					RemoteHistory = TransformToFullConflictHistory(remoteMetadata),
 					FileName = fileName,
 				};
 		}
@@ -45,5 +28,15 @@ namespace RavenFS.Synchronization.Conflictuality
 		{
 			return Check(fileName, remoteMetadata, localMetadata);
 		}
+
+		private static List<HistoryItem> TransformToFullConflictHistory(NameValueCollection metadata)
+		{
+			var version = long.Parse(metadata[SynchronizationConstants.RavenSynchronizationVersion]);
+			var serverId = metadata[SynchronizationConstants.RavenSynchronizationSource];
+			var fullHistory = Historian.DeserializeHistory(metadata);
+			fullHistory.Add(new HistoryItem() { ServerId = serverId, Version = version });
+
+			return fullHistory;
+		} 
 	}
 }

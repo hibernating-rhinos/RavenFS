@@ -14,7 +14,7 @@
 				return false;
 			}
 
-			return Version.Equals(history.Version) && ServerId.Equals(history.ServerId);
+			return Version == history.Version && ServerId == history.ServerId;
 		}
 
 		public override int GetHashCode()

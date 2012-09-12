@@ -260,6 +260,12 @@ namespace RavenFS.Synchronization
 				}
 				return new DeleteWorkItem(file, storage);
 			}
+
+			if (localMetadata != null && destinationMetadata != null && Historian.IsDirectChildOfCurrent(localMetadata, destinationMetadata))
+			{
+				return null;
+			}
+
 			if (destinationMetadata != null && localMetadata["Content-MD5"] == destinationMetadata["Content-MD5"]) // file exists on dest and has the same content
 			{
 				// check metadata to detect if any synchronization is needed

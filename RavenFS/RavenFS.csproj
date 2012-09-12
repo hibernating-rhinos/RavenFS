@@ -167,7 +167,7 @@
     <Compile Include="Infrastructure\Connections\EventsTransport.cs" />
     <Compile Include="Infrastructure\Connections\TimeSensitiveStore.cs" />
     <Compile Include="Infrastructure\Connections\TransportState.cs" />
-    <Compile Include="Infrastructure\HistoryUpdater.cs" />
+    <Compile Include="Infrastructure\Historian.cs" />
     <Compile Include="Infrastructure\TempDirectoryTools.cs" />
     <Compile Include="Notifications\ConfigChange.cs" />
     <Compile Include="Notifications\ConflictDetected.cs" />

@@ -505,15 +505,40 @@ namespace RavenFS.Tests.Synchronization
 		        var metadata = sourceClient.DownloadAsync("test.txt", resultFileContent).Result;
 		        Assert.Equal("shouldnt-be-overwritten", metadata["SomeTest-metadata"]);
 		        resultFileContent.Position = 0;
-		        resultMd5 = IOExtensions.GetMD5Hash(resultFileContent);
+		        resultMd5 = resultFileContent.GetMD5Hash();
 		        resultFileContent.Position = 0;
 		    }
 
 		    destinationContent.Position = 0;
-		    var destinationMd5 = IOExtensions.GetMD5Hash(destinationContent);
+		    var destinationMd5 = destinationContent.GetMD5Hash();
 		    sourceContent.Position = 0;
 
 		    Assert.True(resultMd5 == destinationMd5);
+		}
+
+		[Fact]
+		public void Should_not_synchronize_to_destination_if_conflict_resolved_there_by_current_strategy()
+		{
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
+
+			sourceClient.UploadAsync("test", new MemoryStream(new byte[] {1, 2, 3})).Wait();
+			destinationClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
+
+			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test", destinationClient.ServerUrl).Result;
+
+			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
+
+			destinationClient.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion).Wait();
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destinationClient.ServerUrl },
+			                                                                                     	}).Wait();
+
+			var report = sourceClient.Synchronization.StartSynchronizationToAsync("test", destinationClient.ServerUrl).Result;
+
+			Assert.Equal("No synchronization work needed", report.Exception.Message);
 		}
 
 		[Fact]

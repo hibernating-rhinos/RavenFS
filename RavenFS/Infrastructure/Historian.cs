@@ -12,13 +12,13 @@ namespace RavenFS.Infrastructure
 	using Client;
 	using Synchronization;
 
-	public class HistoryUpdater
+	public class Historian
     {
         private readonly TransactionalStorage storage;
         private readonly ReplicationHiLo replicationHiLo;
         private readonly UuidGenerator uuidGenerator;
 
-        public HistoryUpdater(TransactionalStorage storage, ReplicationHiLo replicationHiLo, UuidGenerator uuidGenerator)
+        public Historian(TransactionalStorage storage, ReplicationHiLo replicationHiLo, UuidGenerator uuidGenerator)
         {
             this.storage = storage;
             this.uuidGenerator = uuidGenerator;
@@ -83,5 +83,21 @@ namespace RavenFS.Infrastructure
             new JsonSerializer().Serialize(jw, history);
             return sb.ToString();
         }
+
+		public static bool IsDirectChildOfCurrent(NameValueCollection destinationMetadata, NameValueCollection sourceMetadata)
+		{
+			var destVersion = long.Parse(destinationMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
+			var destServerId = destinationMetadata[SynchronizationConstants.RavenSynchronizationSource];
+
+			var version = new HistoryItem() { ServerId = destServerId, Version = destVersion };
+
+			var history = Historian.DeserializeHistory(sourceMetadata);
+			var sourceVersion = long.Parse(sourceMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
+			var sourceServerId = sourceMetadata[SynchronizationConstants.RavenSynchronizationSource];
+
+			history.Add(new HistoryItem() { ServerId = sourceServerId, Version = sourceVersion });
+
+			return history.Contains(version);
+		}
     }
 }
