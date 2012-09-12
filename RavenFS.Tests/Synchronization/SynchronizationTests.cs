@@ -198,7 +198,7 @@ namespace RavenFS.Tests.Synchronization
 			Assert.Equal(0, secondSynchronization.NeedListLength);
 			Assert.Equal(0, secondSynchronization.BytesTransfered);
 			Assert.Equal(0, secondSynchronization.BytesCopied);
-			Assert.Equal("No synchronization work needed", secondSynchronization.Exception.Message);
+			Assert.Equal("No synchronization work needed. Destination server had this file in the past.", secondSynchronization.Exception.Message);
 		}
 
 		[Theory]
@@ -538,7 +538,7 @@ namespace RavenFS.Tests.Synchronization
 
 			var report = sourceClient.Synchronization.StartSynchronizationToAsync("test", destinationClient.ServerUrl).Result;
 
-			Assert.Equal("No synchronization work needed", report.Exception.Message);
+			Assert.Equal("No synchronization work needed. Destination server had this file in the past.", report.Exception.Message);
 		}
 
 		[Fact]
