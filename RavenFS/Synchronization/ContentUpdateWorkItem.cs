@@ -71,11 +71,14 @@
 
 				log.Debug("Number of a local file '{0}' signatures was {1}.", FileName, localSignatureManifest.Signatures.Count);
 
-				var destinationSignatureManifest = await destinationRdcManager.SynchronizeSignaturesAsync(FileDataInfo);
-
-				if (destinationSignatureManifest.Signatures.Count > 0)
+				if (localSignatureManifest.Signatures.Count > 0)
 				{
-					return await SynchronizeTo(destination, localSignatureRepository, remoteSignatureCache, localSignatureManifest, destinationSignatureManifest);
+					var destinationSignatureManifest = await destinationRdcManager.SynchronizeSignaturesAsync(FileDataInfo);
+
+					if (destinationSignatureManifest.Signatures.Count > 0)
+					{
+						return await SynchronizeTo(destination, localSignatureRepository, remoteSignatureCache, localSignatureManifest, destinationSignatureManifest);
+					}
 				}
 
 				return await UploadToAsync(destination);
