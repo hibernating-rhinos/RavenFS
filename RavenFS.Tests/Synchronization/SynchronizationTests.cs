@@ -594,5 +594,39 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal(etag, lastSyncInfo.LastSourceFileEtag);
 		}
+
+		[Fact]
+		public void Should_synchronize_files_with_different_number_of_signatures()
+		{
+			const int size20Mb = 1024 * 1024 * 20;
+			const int size1Mb = 1024 * 1024;
+
+			var source = NewClient(0);
+			var destination = NewClient(1);
+
+			var buffer = new byte[size20Mb]; // 20Mb file should have 2 signatures
+            new Random().NextBytes(buffer);
+
+			var sourceContent = new MemoryStream(buffer);
+			source.UploadAsync("test.bin", sourceContent).Wait();
+
+			buffer = new byte[size1Mb]; // while 1Mb file has only 1 signature
+            new Random().NextBytes(buffer);
+
+			destination.UploadAsync("test.bin", new MemoryStream(buffer)).Wait();
+
+			var sourceSigCount = source.Synchronization.GetRdcManifestAsync("test.bin").Result.Signatures.Count;
+			var destinationSigCount = destination.Synchronization.GetRdcManifestAsync("test.bin").Result.Signatures.Count;
+
+			// ensure that file on source has more signatures than file on destination
+			Assert.True(sourceSigCount > destinationSigCount, "File on source should be much bigger in order to have more signatures");
+
+			var result = SyncTestUtils.ResolveConflictAndSynchronize(source, destination, "test.bin");
+
+			Assert.Null(result.Exception);
+			Assert.Equal(size20Mb, result.BytesTransfered + result.BytesCopied);
+			sourceContent.Position = 0;
+			Assert.Equal(sourceContent.GetMD5Hash(), destination.GetMetadataForAsync("test.bin").Result["Content-MD5"]);
+		}
 	}
 }

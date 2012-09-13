@@ -57,41 +57,40 @@
 				return await ApplyConflictOnDestinationAsync(conflict, destination, log);
 			}
 
-			using (var signatureRepository = new StorageSignatureRepository(Storage, FileName))
+			using (var localSignatureRepository = new StorageSignatureRepository(Storage, FileName))
 			using (var remoteSignatureCache = new VolatileSignatureRepository(FileName))
 			{
-				var localRdcManager = new LocalRdcManager(signatureRepository, Storage, sigGenerator);
-				var destinationRdcManager = new RemoteRdcManager(destinationRavenFileSystemClient, signatureRepository,
+				var localRdcManager = new LocalRdcManager(localSignatureRepository, Storage, sigGenerator);
+				var destinationRdcManager = new RemoteRdcManager(destinationRavenFileSystemClient, localSignatureRepository,
 				                                                 remoteSignatureCache);
 
 				log.Debug("Starting to retrieve signatures of a local file '{0}'.", FileName);
 
 				// first we need to create a local file signatures before we synchronize with remote ones
-				var sourceSignatureManifest = localRdcManager.GetSignatureManifest(FileDataInfo);
+				var localSignatureManifest = localRdcManager.GetSignatureManifest(FileDataInfo);
 
-				log.Debug("Number of a local file '{0}' signatures was {1}.", FileName, sourceSignatureManifest.Signatures.Count);
+				log.Debug("Number of a local file '{0}' signatures was {1}.", FileName, localSignatureManifest.Signatures.Count);
 
 				var destinationSignatureManifest = await destinationRdcManager.SynchronizeSignaturesAsync(FileDataInfo);
 
 				if (destinationSignatureManifest.Signatures.Count > 0)
 				{
-					return await SynchronizeTo(remoteSignatureCache, destination, sourceSignatureManifest);
+					return await SynchronizeTo(destination, localSignatureRepository, remoteSignatureCache, localSignatureManifest, destinationSignatureManifest);
 				}
 
 				return await UploadToAsync(destination);
 			}
 		}
 
-		private async Task<SynchronizationReport> SynchronizeTo(ISignatureRepository remoteSignatureRepository, string destinationServerUrl, SignatureManifest sourceSignatureManifest)
+		private async Task<SynchronizationReport> SynchronizeTo(string destinationServerUrl, ISignatureRepository localSignatureRepository, ISignatureRepository remoteSignatureRepository, SignatureManifest sourceSignatureManifest, SignatureManifest destinationSignatureManifest)
 		{
-			var seedSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
+			var seedSignatureInfo = SignatureInfo.Parse(destinationSignatureManifest.Signatures.Last().Name);
 			var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
 
 			using (var localFile = StorageStream.Reading(Storage, FileName))
 			{
 				IList<RdcNeed> needList;
-				using (var signatureRepository = new StorageSignatureRepository(Storage, FileName))
-				using (var needListGenerator = new NeedListGenerator(remoteSignatureRepository, signatureRepository))
+				using (var needListGenerator = new NeedListGenerator(remoteSignatureRepository, localSignatureRepository))
 				{
 					needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
 				}
