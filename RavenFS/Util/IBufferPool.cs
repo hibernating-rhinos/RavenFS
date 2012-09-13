@@ -4,7 +4,6 @@
 
 	public interface IBufferPool : IDisposable
 	{
-		void Dispose();
 		byte[] TakeBuffer(int size);
 		void ReturnBuffer(byte[] buffer);
 	}
