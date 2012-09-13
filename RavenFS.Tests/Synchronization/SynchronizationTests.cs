@@ -531,11 +531,6 @@ namespace RavenFS.Tests.Synchronization
 
 			destinationClient.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion).Wait();
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl },
-			                                                                                     	}).Wait();
-
 			var report = sourceClient.Synchronization.StartSynchronizationToAsync("test", destinationClient.ServerUrl).Result;
 
 			Assert.Equal("No synchronization work needed. Destination server had this file in the past.", report.Exception.Message);
