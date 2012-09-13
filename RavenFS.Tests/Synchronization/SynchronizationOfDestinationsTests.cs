@@ -1,5 +1,3 @@
-using RavenFS.Notifications;
-
 namespace RavenFS.Tests.Synchronization
 {
 	using System;
@@ -15,6 +13,7 @@ namespace RavenFS.Tests.Synchronization
 	using RavenFS.Synchronization;
 	using RavenFS.Util;
 	using Xunit;
+	using RavenFS.Notifications;
 
 	public class SynchronizationOfDestinationsTests : MultiHostTestBase
 	{
@@ -540,36 +539,6 @@ namespace RavenFS.Tests.Synchronization
 			Assert.DoesNotThrow(() => results = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result);
 
 			Assert.Null(results.ToArray()[0].Reports);
-		}
-
-		[Fact]
-		public void Should_increment_etag_on_dest_if_conflict_was_resolved_there_by_current_strategy()
-		{
-			var sourceClient = NewClient(0);
-			var destinationClient = NewClient(1);
-
-			sourceClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
-			destinationClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
-
-			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test", destinationClient.ServerUrl).Result;
-
-			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
-
-			destinationClient.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion).Wait();
-
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl },
-			                                                                                     	}).Wait();
-
-			var report = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
-
-			Assert.Equal(1, report.Count());
-			Assert.Null(report.First().Reports);
-
-			var lastEtag = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
-
-			Assert.Equal(sourceClient.GetMetadataForAsync("test").Result.Value<Guid>("ETag"), lastEtag.LastSourceFileEtag);
 		}
 	}
 }
