@@ -5,20 +5,18 @@ using System.Globalization;
 using System.IO;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
-using Lucene.Net.QueryParsers;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using RavenFS.Extensions;
 using RavenFS.Infrastructure;
-using Version = Lucene.Net.Util.Version;
 using System.Linq;
 
 namespace RavenFS.Search
 {
 	public class IndexStorage : IDisposable
 	{
-        private static readonly string DateIndexFormat = "yyyy-MM-dd_HH-mm-ss";
-        private static readonly string[] NumericIndexFields = new[] { "__size_numeric" };
+		private const string DateIndexFormat = "yyyy-MM-dd_HH-mm-ss";
+		private static readonly string[] NumericIndexFields = new[] { "__size_numeric" };
 
 		private readonly string path;
 		private FSDirectory directory;
@@ -64,12 +62,12 @@ namespace RavenFS.Search
 
 				var results = new List<string>();
 
-				for (var i = start; i < pageSize + start && i < topDocs.totalHits; i++)
+				for (var i = start; i < pageSize + start && i < topDocs.TotalHits; i++)
 				{
-					var document = searcher.Doc(topDocs.scoreDocs[i].doc);
+					var document = searcher.Doc(topDocs.ScoreDocs[i].doc);
 					results.Add(document.Get("__key"));
 				}
-				totalResults = topDocs.totalHits;
+				totalResults = topDocs.TotalHits;
 				return results.ToArray();
 			}
 		}
@@ -145,7 +143,7 @@ namespace RavenFS.Search
 			} while (directoryName != null);
             doc.Add(new Field("__modified", DateTime.UtcNow.ToString(DateIndexFormat, CultureInfo.InvariantCulture), Field.Store.NO,
 							  Field.Index.NOT_ANALYZED_NO_NORMS));
-			doc.Add(new Field("__level", level.ToString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+			doc.Add(new Field("__level", level.ToString(CultureInfo.InvariantCulture), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
 			long len;
 			if (long.TryParse(metadata["Content-Length"], out len))
 			{
