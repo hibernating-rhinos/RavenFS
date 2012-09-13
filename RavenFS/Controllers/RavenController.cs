@@ -15,7 +15,6 @@ using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
-	using System.Diagnostics;
 	using System.Net;
 	using Client;
 	using NLog;

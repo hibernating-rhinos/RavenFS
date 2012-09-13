@@ -5,13 +5,10 @@ namespace RavenFS.Synchronization.Multipart
 	using System.Linq;
 	using System.Net.Http;
 	using System.Net.Http.Headers;
-	using NLog;
 	using Util;
 
 	public class MultipartSyncStreamProvider : MultipartStreamProvider
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
-
 		private readonly SynchronizingFileStream synchronizingFile;
 		private readonly StorageStream localFile;
 

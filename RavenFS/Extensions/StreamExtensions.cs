@@ -1,10 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using RavenFS.Infrastructure;
 using RavenFS.Util;
-using System.Linq;
 
 namespace RavenFS.Extensions
 {

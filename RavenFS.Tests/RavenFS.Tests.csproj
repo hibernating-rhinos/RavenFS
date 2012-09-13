@@ -116,7 +116,7 @@
     <Compile Include="StorageSignatureRepositoryTests.cs" />
     <Compile Include="StorageTest.cs" />
     <Compile Include="StorageStreamTest.cs" />
-    <Compile Include="Synchronization\WorkingWithConflicts.cs" />
+    <Compile Include="Synchronization\WorkingWithConflictsTests.cs" />
     <Compile Include="Tools\HttpWebRequestExtensions.cs" />
     <Compile Include="Tools\IisDeploymentUtil.cs" />
     <Compile Include="MultiHostTestBase.cs" />

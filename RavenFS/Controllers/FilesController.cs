@@ -3,19 +3,18 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using RavenFS.Extensions;
 using RavenFS.Storage;
-using System.Linq;
 using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
 	using System.Security.Cryptography;
-	using System.Text;
 	using Client;
 	using NLog;
 	using Synchronization;

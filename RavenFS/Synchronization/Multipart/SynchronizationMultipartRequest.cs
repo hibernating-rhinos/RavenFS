@@ -4,13 +4,12 @@ namespace RavenFS.Synchronization.Multipart
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
-	using System.Linq;
 	using System.Net;
 	using System.Net.Http;
 	using System.Threading.Tasks;
+	using Newtonsoft.Json;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
-	using Newtonsoft.Json;
 	using RavenFS.Util;
 	using Rdc.Wrapper;
 

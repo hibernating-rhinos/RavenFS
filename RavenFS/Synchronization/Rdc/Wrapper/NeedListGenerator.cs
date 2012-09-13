@@ -63,10 +63,10 @@
 
                     while (!eofOutput)
                     {
-                        var bytesRead = 0;
-                        if (inputBuffer.Size == inputBuffer.Used && !eofInput)
-                        {                            
-                            try
+	                    if (inputBuffer.Size == inputBuffer.Used && !eofInput)
+                        {
+	                        var bytesRead = 0;
+	                        try
                             {
                                 bytesRead = RdcBufferTools.IntPtrCopy(sourceStream, inputBuffer.Data, InputBufferSize);
                             }

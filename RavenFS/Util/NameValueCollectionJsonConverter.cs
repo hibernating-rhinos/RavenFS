@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Specialized;
-using System.IO;
 using Newtonsoft.Json;
 
 #if !CLIENT && !SILVERLIGHT

@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 
 namespace RavenFS.Controllers
 {
-	using System.Web.Http;
 	using Client;
 	using NLog;
 	using ConfigChange = Notifications.ConfigChange;

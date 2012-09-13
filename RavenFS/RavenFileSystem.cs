@@ -14,15 +14,12 @@ namespace RavenFS
 {
 	using System.Linq;
 	using System.Web.Http;
-	using NLog;
 	using Synchronization;
 	using Synchronization.Conflictuality;
 	using Synchronization.Rdc.Wrapper;
 
 	public class RavenFileSystem : IDisposable
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
-
 		private readonly string path;
 		private readonly TransactionalStorage storage;
 		private readonly IndexStorage search;

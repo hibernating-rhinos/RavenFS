@@ -1,5 +1,6 @@
 namespace RavenFS.Synchronization.Multipart
 {
+	using System.Globalization;
 	using System.IO;
 	using System.Net;
 	using System.Net.Http;
@@ -13,8 +14,8 @@ namespace RavenFS.Synchronization.Multipart
 		{
 			Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data");
 			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.NeedType, SyncingNeedType));
-			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeFrom, @from.ToString()));
-			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeTo, to.ToString()));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeFrom, @from.ToString(CultureInfo.InvariantCulture)));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeTo, to.ToString(CultureInfo.InvariantCulture)));
 
 			Headers.ContentType = new MediaTypeHeaderValue("plain/text");
 		}
