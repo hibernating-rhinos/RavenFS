@@ -117,6 +117,12 @@ namespace RavenFS.Controllers
 				return new HttpResponseMessage(HttpStatusCode.NotFound);
 			}
 
+			if(fileAndPages.Metadata.AllKeys.Contains(SynchronizationConstants.RavenDeleteMarker))
+			{
+				log.Debug("Cannot get metadata of a file '{0}' because file was deleted", name);
+				return new HttpResponseMessage(HttpStatusCode.NotFound);
+			}
+
 			var httpResponseMessage = Request.CreateResponse(HttpStatusCode.OK, fileAndPages);
 			MetadataExtensions.AddHeaders(httpResponseMessage, fileAndPages);
 			return httpResponseMessage;

@@ -335,6 +335,18 @@ namespace RavenFS.Tests
 			Assert.Equal("visible.bin", fileInfos[0].Name);
 		}
 
+		[Fact]
+		public void Should_not_return_metadata_of_deleted_file()
+		{
+			var client = NewClient();
+			client.UploadAsync("toDelete.bin", new RandomStream(1)).Wait();
+
+			client.DeleteAsync("toDelete.bin").Wait();
+
+			var metadata = client.GetMetadataForAsync("toDelete.bin").Result;
+			Assert.Null(metadata);
+		}
+
         private static MemoryStream PrepareTextSourceStream()
         {
             var ms = new MemoryStream();
