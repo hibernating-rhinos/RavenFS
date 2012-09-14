@@ -67,8 +67,8 @@
             var localSignatures = localSignatureRepository.GetByFileName().ToList();
 
             var length = Math.Min(remoteSignatures.Count, localSignatures.Count);
-            var remoteSignatureNames = remoteSignatures.Take(length).Select(item => item.Name).ToList();
-            var localSignatureNames = localSignatures.Take(length).Select(item => item.Name).ToList();
+            var remoteSignatureNames = remoteSignatures.Skip(remoteSignatures.Count - length).Take(length).Select(item => item.Name).ToList();
+			var localSignatureNames = localSignatures.Skip(localSignatures.Count - length).Take(length).Select(item => item.Name).ToList();
 	        return
 		        localSignatureNames.Zip(remoteSignatureNames,
 		                                (local, remote) => new LocalRemotePair {Local = local, Remote = remote}).ToList();
