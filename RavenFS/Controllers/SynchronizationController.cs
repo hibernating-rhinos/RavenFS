@@ -126,7 +126,14 @@
 					Search.Index(fileName, sourceMetadata);
 				});
 
-				log.Debug("Old file '{0}' was deleted. Indexes was updated", fileName);
+				if (isNewFile)
+				{
+					log.Debug("Temporary downloading file '{0}' was renamed to '{1}'. Indexes was updated.", tempFileName, fileName);
+				}
+				else
+				{
+					log.Debug("Old file '{0}' was deleted. Indexes was updated.", fileName);
+				}
 
 				if (isConflictResolved)
 				{
@@ -708,6 +715,12 @@
 			{
 				return null;
 			}
+
+			if (result.AllKeys.Contains(SynchronizationConstants.RavenDeleteMarker))
+			{
+				return null;
+			}
+
 			return result;
 		}
 

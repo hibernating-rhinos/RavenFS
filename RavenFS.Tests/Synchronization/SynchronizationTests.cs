@@ -697,5 +697,32 @@ namespace RavenFS.Tests.Synchronization
 			sourceContent.Position = 0;
 			Assert.Equal(sourceContent.GetMD5Hash(), destination.GetMetadataForAsync("test.bin").Result["Content-MD5"]);
 		}
+
+		[Fact]
+		public void After_file_delete_next_synchronization_should_override_tombsone()
+		{
+			var source = NewClient(0);
+			var destination = NewClient(1);
+
+			var sourceContent = new MemoryStream(new byte[] {5, 10, 15});
+			sourceContent.Position = 0;
+			source.UploadAsync("test.bin", sourceContent).Wait();
+
+			var report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+			Assert.Null(report.Exception);
+
+			destination.DeleteAsync("test.bin").Wait();
+
+			report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+			Assert.Null(report.Exception);
+
+			var destContent = new MemoryStream();
+			var destMetadata = destination.DownloadAsync("test.bin", destContent).Result;
+
+			Assert.True(destMetadata[SynchronizationConstants.RavenDeleteMarker] == null, "Metedata should not containt Raven-Delete-Marker");
+
+			sourceContent.Position = destContent.Position = 0;
+			Assert.Equal(sourceContent.GetMD5Hash(), destContent.GetMD5Hash());
+		}
 	}
 }
