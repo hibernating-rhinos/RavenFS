@@ -6,6 +6,7 @@ namespace RavenFS.Synchronization.Multipart
 	using System.IO;
 	using System.Net;
 	using System.Net.Http;
+	using System.Threading;
 	using System.Threading.Tasks;
 	using Newtonsoft.Json;
 	using RavenFS.Client;
@@ -22,6 +23,7 @@ namespace RavenFS.Synchronization.Multipart
 		private readonly Stream sourceStream;
 		private readonly IList<RdcNeed> needList;
 		private readonly string syncingBoundary;
+		private HttpWebRequest request;
 
 		public SynchronizationMultipartRequest(string destinationUrl, Guid sourceId, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList)
 		{
@@ -34,14 +36,18 @@ namespace RavenFS.Synchronization.Multipart
 			this.syncingBoundary = "syncing";
 		}
 
-		public async Task<SynchronizationReport> PushChangesAsync()
+		public async Task<SynchronizationReport> PushChangesAsync(CancellationToken token)
 		{
+			token.Register(() => request.Abort());
+
+			token.ThrowIfCancellationRequested();
+
 			if (sourceStream.CanRead == false)
 			{
 				throw new AggregateException("Stream does not support reading");
 			}
 
-			var request = (HttpWebRequest)WebRequest.Create(destinationUrl + "/synchronization/MultipartProceed");
+			request = (HttpWebRequest)WebRequest.Create(destinationUrl + "/synchronization/MultipartProceed");
 			request.Method = "POST";
 			request.SendChunked = true;
 			request.AllowWriteStreamBuffering = false;
@@ -58,29 +64,49 @@ namespace RavenFS.Synchronization.Multipart
 			{
 				using (var requestStream = await request.GetRequestStreamAsync())
 				{
-					await PrepareMultipartContent().CopyToAsync(requestStream);
+					await PrepareMultipartContent(token).CopyToAsync(requestStream);
 
 					using (var respose = await request.GetResponseAsync())
 					{
 						using (var responseStream = respose.GetResponseStream())
 						{
-							return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(responseStream)));
+							return
+								new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(responseStream)));
 						}
 					}
 				}
 			}
-			catch (WebException exception)
+			catch (Exception exception)
 			{
-				throw exception.BetterWebExceptionError();
+				if (token.IsCancellationRequested)
+				{
+					throw new OperationCanceledException(token);
+				}
+
+				var webException = exception as WebException;
+
+				if (webException != null)
+				{
+					webException.BetterWebExceptionError();
+				}
+
+				throw;
 			}
 		}
 
-		internal MultipartContent PrepareMultipartContent()
+		public void Abort()
+		{
+			request.Abort();
+		}
+
+		internal MultipartContent PrepareMultipartContent(CancellationToken token)
 		{
 			var content = new MultipartContent("form-data", syncingBoundary);
 
 			foreach (var item in needList)
 			{
+				token.ThrowIfCancellationRequested();
+
 				long @from = Convert.ToInt64(item.FileOffset);
 				long length = Convert.ToInt64(item.BlockLength);
 				long to = from + length - 1;

@@ -371,6 +371,8 @@ namespace RavenFS.Synchronization
 				};
 			}
 
+			bool synchronizationCancelled = false;
+
 			if (report.Exception == null)
 			{
 				var moreDetails = string.Empty;
@@ -385,12 +387,24 @@ namespace RavenFS.Synchronization
 			}
 			else
 			{
-				log.WarnException(string.Format("{0} to {1} has finished with the exception", work, destinationUrl),
-				                  report.Exception);
+				if (work.IsCancelled || report.Exception is TaskCanceledException)
+				{
+					synchronizationCancelled = true;
+					log.DebugException(string.Format("{0} to {1} was cancelled", work, destinationUrl), report.Exception);
+				}
+				else
+				{
+					log.WarnException(string.Format("{0} to {1} has finished with the exception", work, destinationUrl),
+					                  report.Exception);
+				}
 			}
 
 			Queue.SynchronizationFinished(work, destinationUrl);
-			CreateSyncingConfiguration(fileName, destinationUrl, work.SynchronizationType);
+			
+			if(!synchronizationCancelled)
+			{
+				CreateSyncingConfiguration(fileName, destinationUrl, work.SynchronizationType);
+			}
 
 			publisher.Publish(new SynchronizationUpdate
 			{
@@ -598,6 +612,12 @@ namespace RavenFS.Synchronization
 				// even if the file is uploaded make sure file has Content-MD5
 				// it's necessary to determine synchronization type and ensures right ETag
 				   && (header.Metadata[SynchronizationConstants.RavenDeleteMarker] != null || header.Metadata["Content-MD5"] != null);
+		}
+
+		public void Cancel(string fileName)
+		{
+			log.Debug("Cancellation of active synchronizations of a file '{0}'", fileName);
+			Queue.CancelActiveSynchronizations(fileName);
 		}
 	}
 }

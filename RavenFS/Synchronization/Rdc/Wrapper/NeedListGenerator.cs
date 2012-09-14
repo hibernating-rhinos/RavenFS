@@ -33,7 +33,12 @@
             _sourceSignatureRepository = sourceSignatureRepository;
         }
 
-        public IList<RdcNeed> CreateNeedsList(SignatureInfo seedSignature, SignatureInfo sourceSignature)
+		public IList<RdcNeed> CreateNeedsList(SignatureInfo seedSignature, SignatureInfo sourceSignature)
+		{
+			return CreateNeedsList(seedSignature, sourceSignature, CancellationToken.None);
+		}
+
+        public IList<RdcNeed> CreateNeedsList(SignatureInfo seedSignature, SignatureInfo sourceSignature, CancellationToken token)
         {
             var result = new List<RdcNeed>();
             using (var seedStream = _seedSignatureRepository.GetContentForReading(seedSignature.Name))
@@ -63,6 +68,8 @@
 
                     while (!eofOutput)
                     {
+						token.ThrowIfCancellationRequested();
+
 	                    if (inputBuffer.Size == inputBuffer.Used && !eofInput)
                         {
 	                        var bytesRead = 0;

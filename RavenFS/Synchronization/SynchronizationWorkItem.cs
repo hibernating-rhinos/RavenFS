@@ -4,6 +4,7 @@
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.Linq;
+	using System.Threading;
 	using System.Threading.Tasks;
 	using Conflictuality;
 	using Extensions;
@@ -15,6 +16,7 @@
 	{
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
+		protected readonly CancellationTokenSource cts = new CancellationTokenSource();
 
 		protected SynchronizationWorkItem(string fileName, TransactionalStorage storage)
 		{
@@ -25,8 +27,8 @@
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0,0));
 			FileMetadata = fileAndPages.Metadata;
 
-			this.conflictDetector = new ConflictDetector();
-			this.conflictResolver = new ConflictResolver();
+			conflictDetector = new ConflictDetector();
+			conflictResolver = new ConflictResolver();
 		}
 
 		protected TransactionalStorage Storage { get; private set; }
@@ -35,6 +37,8 @@
 
 		public Guid FileETag { get { return FileMetadata.Value<Guid>("ETag"); } }
 
+		public bool IsCancelled { get { return cts.Token.IsCancellationRequested; } }
+
 		protected NameValueCollection FileMetadata { get; set; }
 
 		protected Guid SourceServerId { get { return Storage.Id; } }
@@ -42,6 +46,10 @@
 		public abstract SynchronizationType SynchronizationType { get; }
 
 		public abstract Task<SynchronizationReport> PerformAsync(string destination);
+
+		public virtual void Cancel()
+		{
+		}
 
 		protected void AssertLocalFileExistsAndIsNotConflicted(NameValueCollection sourceMetadata)
 		{

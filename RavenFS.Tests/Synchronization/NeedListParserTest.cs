@@ -44,7 +44,7 @@
 			var partialDataAccessSeedMock = new PartialDataAccessMock(RdcNeedType.Seed.ToString(), queue);
         	var needList = GenerateAlternatedNeeds(needListSize).ToList();
             var result = NeedListParser.ParseAsync(partialDataAccessSourceMock, partialDataAccessSeedMock,
-                                                   Stream.Null, needList);
+                                                   Stream.Null, needList, CancellationToken.None);
             result.Wait();
             var calls = queue.ToList();
             for (var i = 0; i < needListSize; i++)

@@ -73,6 +73,11 @@ namespace RavenFS.Infrastructure
         public static List<HistoryItem> DeserializeHistory(NameValueCollection nameValueCollection)
         {
             var serializedHistory = nameValueCollection[SynchronizationConstants.RavenSynchronizationHistory];
+	        if (serializedHistory == null)
+	        {
+		        return null;
+	        }
+
             return new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(serializedHistory)));
         }
 
@@ -91,7 +96,7 @@ namespace RavenFS.Infrastructure
 
 			var version = new HistoryItem() { ServerId = destServerId, Version = destVersion };
 
-			var history = Historian.DeserializeHistory(sourceMetadata);
+			var history = Historian.DeserializeHistory(sourceMetadata) ?? new List<HistoryItem>();
 			var sourceVersion = long.Parse(sourceMetadata[SynchronizationConstants.RavenSynchronizationVersion]);
 			var sourceServerId = sourceMetadata[SynchronizationConstants.RavenSynchronizationSource];
 

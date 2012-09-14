@@ -3,15 +3,18 @@
 	using System;
 	using System.Collections.Generic;
 	using System.IO;
+	using System.Threading;
 	using System.Threading.Tasks;
 	using RavenFS.Synchronization.Rdc.Wrapper;
 
 	public class NeedListParser
 	{
-		public static async Task ParseAsync(IPartialDataAccess source, IPartialDataAccess seed, Stream output, IEnumerable<RdcNeed> needList)
+		public static async Task ParseAsync(IPartialDataAccess source, IPartialDataAccess seed, Stream output, IEnumerable<RdcNeed> needList, CancellationToken token)
 		{
 			foreach (var item in needList)
 			{
+				token.ThrowIfCancellationRequested();
+
 				switch (item.BlockType)
 				{
 					case RdcNeedType.Source:

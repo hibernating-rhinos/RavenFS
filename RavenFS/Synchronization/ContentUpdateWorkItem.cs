@@ -19,7 +19,8 @@
 
 		private readonly SigGenerator sigGenerator;
 		private DataInfo fileDataInfo;
-		
+		private SynchronizationMultipartRequest multipartRequest;
+
 		public ContentUpdateWorkItem(string file, TransactionalStorage storage, SigGenerator sigGenerator)
 			: base(file, storage)
 		{
@@ -34,6 +35,11 @@
 		private DataInfo FileDataInfo
 		{
 			get { return fileDataInfo ?? (fileDataInfo = GetLocalFileDataInfo(FileName)); }
+		}
+
+		public override void Cancel()
+		{
+			cts.Cancel();
 		}
 
 		public async override Task<SynchronizationReport> PerformAsync(string destination)
@@ -56,7 +62,7 @@
 			{
 				return await ApplyConflictOnDestinationAsync(conflict, destination, log);
 			}
-
+			
 			using (var localSignatureRepository = new StorageSignatureRepository(Storage, FileName))
 			using (var remoteSignatureCache = new VolatileSignatureRepository(FileName))
 			{
@@ -66,6 +72,8 @@
 
 				log.Debug("Starting to retrieve signatures of a local file '{0}'.", FileName);
 
+				cts.Token.ThrowIfCancellationRequested();
+
 				// first we need to create a local file signatures before we synchronize with remote ones
 				var localSignatureManifest = localRdcManager.GetSignatureManifest(FileDataInfo);
 
@@ -73,7 +81,7 @@
 
 				if (localSignatureManifest.Signatures.Count > 0)
 				{
-					var destinationSignatureManifest = await destinationRdcManager.SynchronizeSignaturesAsync(FileDataInfo);
+					var destinationSignatureManifest = await destinationRdcManager.SynchronizeSignaturesAsync(FileDataInfo, cts.Token);
 
 					if (destinationSignatureManifest.Signatures.Count > 0)
 					{
@@ -95,7 +103,7 @@
 				IList<RdcNeed> needList;
 				using (var needListGenerator = new NeedListGenerator(remoteSignatureRepository, localSignatureRepository))
 				{
-					needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo);
+					needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo, cts.Token);
 				}
 
 				return await PushByUsingMultipartRequest(destinationServerUrl, localFile, needList);
@@ -124,7 +132,9 @@
 
 		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, Stream sourceFileStream, IList<RdcNeed> needList)
 		{
-			var multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerId, FileName, FileMetadata,
+			cts.Token.ThrowIfCancellationRequested();
+
+			multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerId, FileName, FileMetadata,
 																	   sourceFileStream, needList);
 
 			var bytesToTransferCount = needList.Where(x => x.BlockType == RdcNeedType.Source).Sum(x => (double) x.BlockLength);
@@ -133,7 +143,7 @@
 				"Synchronizing a file '{0}' (ETag {1}) to {2} by using multipart request. Need list length is {3}. Number of bytes that needs to be transfered is {4}",
 				FileName, FileETag, destinationServerUrl, needList.Count, bytesToTransferCount);
 
-			return multipartRequest.PushChangesAsync();
+			return multipartRequest.PushChangesAsync(cts.Token);
 		}
 
 		private DataInfo GetLocalFileDataInfo(string fileName)

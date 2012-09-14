@@ -4,6 +4,7 @@ namespace RavenFS.Synchronization
 	using System.Collections.Generic;
 	using System.Linq;
 	using System.Threading;
+	using System.Threading.Tasks;
 	using Extensions;
 	using NLog;
 	using RavenFS.Client;
@@ -201,6 +202,20 @@ namespace RavenFS.Synchronization
 			{
 				log.Debug("File '{0}' with ETag {1} was removed from an active synchronization queue for a destination {2}", work.FileName,
 						  work.FileETag, destination);
+			}
+		}
+
+		public void CancelActiveSynchronizations(string fileName)
+		{
+			foreach (var destSync in activeSynchronizations)
+			{
+				foreach (var activeSynchronization in destSync.Value)
+				{
+					if (activeSynchronization.Key == fileName)
+					{
+						activeSynchronization.Value.Cancel();
+					}
+				}
 			}
 		}
 	}

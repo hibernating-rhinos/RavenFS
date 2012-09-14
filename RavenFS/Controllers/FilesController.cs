@@ -245,6 +245,8 @@ namespace RavenFS.Controllers
 			var shouldRetry = false;
 			var retries = 128;
 
+			SynchronizationTask.Cancel(name);
+
 			do
 			{
 				try
