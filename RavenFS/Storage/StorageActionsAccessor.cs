@@ -131,7 +131,16 @@ namespace RavenFS.Storage
 				Api.JetSetColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, size,
 								 SetColumnGrbit.None, null);
 
-				update.Save(bookMarkBuffer, bookMarkBuffer.Length, out actualSize);
+				try
+				{
+					update.Save(bookMarkBuffer, bookMarkBuffer.Length, out actualSize);
+				}
+				catch (EsentKeyDuplicateException)
+				{
+					// if there has been already created the same page we are ok with that
+					// most importantly that page has been inserted
+				}
+				
 			}
 
 			Api.JetGotoBookmark(session, Pages, bookMarkBuffer, actualSize);
