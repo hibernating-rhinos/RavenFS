@@ -369,5 +369,32 @@
 
 			Assert.Equal(sourceClient.GetMetadataForAsync("test").Result.Value<Guid>("ETag"), lastEtag.LastSourceFileEtag);
 		}
+
+		[Fact]
+		public void Source_should_remove_syncing_item_if_conflict_was_resolved_on_destination_by_current()
+		{
+			var sourceClient = NewClient(0);
+			var destinationClient = NewClient(1);
+
+			sourceClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
+			destinationClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
+
+			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test", destinationClient.ServerUrl).Result;
+
+			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
+
+			destinationClient.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion).Wait();
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destinationClient.ServerUrl },
+			                                                                                     	}).Wait();
+
+			var report = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
+			Assert.Null(report.ToArray()[0].Exception);
+
+			var syncingItem = sourceClient.Config.GetConfig(SynchronizationHelper.SyncNameForFile("test", destinationClient.ServerUrl)).Result;
+			Assert.Null(syncingItem);
+		}
 	}
 }

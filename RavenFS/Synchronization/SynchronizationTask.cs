@@ -250,6 +250,7 @@ namespace RavenFS.Synchronization
 					{
 						var etag = localMetadata.Value<Guid>("ETag");
 						destinationClient.Synchronization.IncrementLastETagAsync(storage.Id, etag);
+						RemoveSyncingConfiguration(file, destinationClient.ServerUrl);
 					}
 					
 					continue;
