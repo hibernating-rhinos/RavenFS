@@ -201,9 +201,9 @@ namespace RavenFS.Synchronization
 				return;
 			}
 
-			for (var i = 0; i < filesToSynchronization.Count; i++)
+			foreach (var fileHeader in filesToSynchronization)
 			{
-				var file = filesToSynchronization[i].Name;
+				var file = fileHeader.Name;
 				var localMetadata = GetLocalMetadata(file);
 
 				NameValueCollection destinationMetadata;
@@ -223,17 +223,17 @@ namespace RavenFS.Synchronization
 				}
 
 				if (destinationMetadata != null &&
-					        destinationMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null
-					        && destinationMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] == null)
+				    destinationMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null
+				    && destinationMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] == null)
 				{
 					log.Debug(
-					    "File '{0}' was conflicted on a destination {1} and had no resolution. No need to queue it", file,
-					    destinationUrl);
+						"File '{0}' was conflicted on a destination {1} and had no resolution. No need to queue it", file,
+						destinationUrl);
 					continue;
 				}
 
 				if (localMetadata != null &&
-					localMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null)
+				    localMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null)
 				{
 					log.Debug("File '{0}' was conflicted on our side. No need to queue it", file, destinationUrl);
 					continue;
@@ -458,7 +458,7 @@ namespace RavenFS.Synchronization
 				log.WarnException(string.Format("Could not get files to synchronize after: " + destinationsSynchronizationInformationForSource.LastSourceFileEtag), e);
 			}
 
-			log.Debug("There were {0} file(s) that needed synchronization ({1})", filesToSynchronization.Count,
+			log.Debug("There were {0} file(s) that needed synchronization ({1}) because of greater ETag value", filesToSynchronization.Count,
 			          string.Join(",",
 			                      filesToSynchronization.Select(
 			                      	x => string.Format("{0} [ETag {1}]", x.Name, x.Metadata.Value<Guid>("ETag")))));
