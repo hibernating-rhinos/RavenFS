@@ -211,6 +211,8 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal("test.bin", synchronizationDetails.FileName);
 			Assert.Equal(destinationClient.ServerUrl, synchronizationDetails.DestinationUrl);
+			Assert.NotEqual(Guid.Empty, synchronizationDetails.FileETag);
+			Assert.Equal(SynchronizationType.ContentUpdate, synchronizationDetails.Type);
 		}
 
 		[Fact]

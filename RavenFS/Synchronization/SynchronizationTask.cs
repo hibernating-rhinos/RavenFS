@@ -403,7 +403,7 @@ namespace RavenFS.Synchronization
 			
 			if(!synchronizationCancelled)
 			{
-				CreateSyncingConfiguration(fileName, destinationUrl, work.SynchronizationType);
+				CreateSyncingConfiguration(fileName, work.FileETag, destinationUrl, work.SynchronizationType);
 			}
 
 			publisher.Publish(new SynchronizationUpdate
@@ -494,7 +494,7 @@ namespace RavenFS.Synchronization
 			return configObjects.Select(x => x.FileName).ToList();
 		}
 
-		private void CreateSyncingConfiguration(string fileName, string destination, SynchronizationType synchronizationType)
+		private void CreateSyncingConfiguration(string fileName, Guid etag, string destination, SynchronizationType synchronizationType)
 		{
 			try
 			{
@@ -503,6 +503,7 @@ namespace RavenFS.Synchronization
 				                                                               	{
 				                                                               		DestinationUrl = destination,
 				                                                               		FileName = fileName,
+																					FileETag = etag,
 																					Type = synchronizationType
 				                                                               	}));
 			}
