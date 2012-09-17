@@ -200,7 +200,7 @@
     <Compile Include="Infrastructure\DelegateDependencyResolver.cs" />
     <Compile Include="RavenFileSystem.cs" />
     <Compile Include="Infrastructure\CompletedTask.cs" />
-    <Compile Include="Synchronization\Conflictuality\ConflictActifactManager.cs" />
+    <Compile Include="Synchronization\Conflictuality\ConflictArtifactManager.cs" />
     <Compile Include="Synchronization\Conflictuality\ConflictDetector.cs" />
     <Compile Include="Synchronization\Conflictuality\ConflictResolution.cs" />
     <Compile Include="Synchronization\Conflictuality\ConflictResolver.cs" />

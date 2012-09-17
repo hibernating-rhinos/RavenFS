@@ -137,7 +137,7 @@
 
 				if (isConflictResolved)
 				{
-					ConflictActifactManager.Delete(fileName);
+					ConflictArtifactManager.Delete(fileName);
 				}
 			}
 			catch (Exception ex)
@@ -210,7 +210,7 @@
 
 			if (conflict != null && !isConflictResolved)
 			{
-				ConflictActifactManager.Create(fileName, conflict);
+				ConflictArtifactManager.Create(fileName, conflict);
 
 				Publisher.Publish(new ConflictDetected
 				                  	{
@@ -275,7 +275,7 @@
 
 				if (isConflictResolved)
 				{
-					ConflictActifactManager.Delete(fileName);
+					ConflictArtifactManager.Delete(fileName);
 				}
 
                 PublishFileNotification(fileName, Notifications.FileChangeAction.Update);
@@ -545,7 +545,7 @@
 				FileName = filename
 			};
 
-			ConflictActifactManager.Create(filename, conflict);
+			ConflictArtifactManager.Create(filename, conflict);
 
 			Publisher.Publish(new ConflictDetected
 			{
@@ -634,7 +634,7 @@
 
 				accessor.UpdateFileMetadata(fileName, localMetadata);
 
-				ConflictActifactManager.Delete(fileName, accessor);
+				ConflictArtifactManager.Delete(fileName, accessor);
 			});
 		}
 

@@ -28,7 +28,7 @@ namespace RavenFS
 		private readonly Historian historian;
 		private readonly FileLockManager fileLockManager;
 		private readonly SynchronizationTask synchronizationTask;
-		private readonly ConflictActifactManager conflictActifactManager;
+		private readonly ConflictArtifactManager conflictArtifactManager;
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
 	    private readonly TransportState transportState;
@@ -61,7 +61,7 @@ namespace RavenFS
 			var uuidGenerator = new UuidGenerator(sequenceActions);
 			historian = new Historian(storage, replicationHiLo, uuidGenerator);
 			BufferPool = new BufferPool(1024 * 1024 * 1024, 65 * 1024);
-			conflictActifactManager = new ConflictActifactManager(storage,search);
+			conflictArtifactManager = new ConflictArtifactManager(storage,search);
 			conflictDetector = new ConflictDetector();
 			conflictResolver = new ConflictResolver();
 			synchronizationTask = new SynchronizationTask(storage, sigGenerator, notificationPublisher);
@@ -116,9 +116,9 @@ namespace RavenFS
 			get { return synchronizationTask; }
 		}
 
-		public ConflictActifactManager ConflictActifactManager
+		public ConflictArtifactManager ConflictArtifactManager
 		{
-			get { return conflictActifactManager; }
+			get { return conflictArtifactManager; }
 		}
 
 		public ConflictDetector ConflictDetector

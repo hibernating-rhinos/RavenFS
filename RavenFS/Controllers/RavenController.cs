@@ -94,9 +94,9 @@ namespace RavenFS.Controllers
 			get { return RavenFileSystem.FileLockManager; }
 		}
 
-		protected ConflictActifactManager ConflictActifactManager
+		protected ConflictArtifactManager ConflictArtifactManager
 		{
-			get { return RavenFileSystem.ConflictActifactManager; }
+			get { return RavenFileSystem.ConflictArtifactManager; }
 		}
 
 		protected ConflictDetector ConflictDetector

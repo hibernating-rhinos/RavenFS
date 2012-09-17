@@ -9,12 +9,12 @@ namespace RavenFS.Synchronization.Conflictuality
 	using RavenFS.Storage;
 	using RavenFS.Util;
 
-	public class ConflictActifactManager
+	public class ConflictArtifactManager
 	{
 		private readonly TransactionalStorage storage;
 	    private readonly IndexStorage index;
 
-	    public ConflictActifactManager(TransactionalStorage storage, IndexStorage index)
+	    public ConflictArtifactManager(TransactionalStorage storage, IndexStorage index)
 		{
 		    this.storage = storage;
 		    this.index = index;
