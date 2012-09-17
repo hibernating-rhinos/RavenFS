@@ -10,6 +10,7 @@ namespace RavenFS.Controllers
 {
 	using Client;
 	using NLog;
+	using Util;
 	using ConfigChange = Notifications.ConfigChange;
 	using ConfigChangeAction = Notifications.ConfigChangeAction;
 	using NameValueCollectionJsonConverter = Util.NameValueCollectionJsonConverter;
@@ -60,25 +61,9 @@ namespace RavenFS.Controllers
 			var nameValueCollection =
 				jsonSerializer.Deserialize<NameValueCollection>(new JsonTextReader(new StreamReader(contentStream)));
 
-			var shouldRetry = false;
-			var retries = 128;
+			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor => accessor.SetConfig(name, nameValueCollection)),
+			                                 ConcurrencyResponseException);
 
-			do
-			{
-				try
-				{
-					Storage.Batch(accessor => accessor.SetConfig(name, nameValueCollection));
-				}
-				catch (ConcurrencyException ce)
-				{
-					if (retries-- > 0)
-					{
-						shouldRetry = true;
-						continue;
-					}
-					throw ConcurrencyResponseException(ce);
-				}
-			} while (shouldRetry);
 			Publisher.Publish(new ConfigChange() {Name = name, Action = ConfigChangeAction.Set});
 
 			log.Debug("Config '{0}' was inserted", name);
@@ -88,25 +73,8 @@ namespace RavenFS.Controllers
 
 		public HttpResponseMessage Delete(string name)
 		{
-			var shouldRetry = false;
-			var retries = 128;
-
-			do
-			{
-				try
-				{
-					Storage.Batch(accessor => accessor.DeleteConfig(name));
-				}
-				catch (ConcurrencyException ce)
-				{
-					if (retries-- > 0)
-					{
-						shouldRetry = true;
-						continue;
-					}
-					throw ConcurrencyResponseException(ce);
-				}
-			} while (shouldRetry);
+			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor => accessor.DeleteConfig(name)),
+			                                 ConcurrencyResponseException);
 
 			Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Delete });
 

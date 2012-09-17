@@ -308,6 +308,7 @@
     <Compile Include="Util\AwaitableQueue.cs" />
     <Compile Include="Util\BoundedMemoryTarget.cs" />
     <Compile Include="Util\CombinedStream.cs" />
+    <Compile Include="Util\ConcurrencyAwareExecutor.cs" />
     <Compile Include="Util\ConcurrentSet.cs" />
     <Compile Include="Util\DispsableAction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

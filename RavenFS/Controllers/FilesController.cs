@@ -66,32 +66,15 @@ namespace RavenFS.Controllers
 		public HttpResponseMessage Delete(string name)
 		{
 			name = Uri.UnescapeDataString(name);
-			var shouldRetry = false;
-			var retries = 128;
 
-			do
+			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
 			{
-				try
-				{
-					Storage.Batch(accessor =>
-					{
-						AssertFileIsNotBeingSynced(name, accessor);
-						accessor.Delete(name);
-						var tombstoneMetadata = new NameValueCollection {{SynchronizationConstants.RavenDeleteMarker, "true"}};
-						Historian.UpdateLastModified(tombstoneMetadata);
-						accessor.PutFile(name, 0, tombstoneMetadata);
-					});
-				}
-				catch (ConcurrencyException ce)
-				{
-					if (retries-- > 0)
-					{
-						shouldRetry = true;
-						continue;
-					}
-					throw ConcurrencyResponseException(ce);
-				}
-			} while (shouldRetry);
+				AssertFileIsNotBeingSynced(name, accessor);
+				accessor.Delete(name);
+				var tombstoneMetadata = new NameValueCollection {{SynchronizationConstants.RavenDeleteMarker, "true"}};
+				Historian.UpdateLastModified(tombstoneMetadata);
+				accessor.PutFile(name, 0, tombstoneMetadata);
+			}), ConcurrencyResponseException);
 
 			Search.Delete(name);
 
@@ -135,40 +118,27 @@ namespace RavenFS.Controllers
 			var headers = Request.Headers.FilterHeaders();
 			Historian.UpdateLastModified(headers);
 			Historian.Update(name, headers);
-			
-			var shouldRetry = false;
-			var retries = 128;
 
-			do
+			try
 			{
-				try
-				{
-					Storage.Batch(accessor =>
-					{
-						AssertFileIsNotBeingSynced(name, accessor);
-						accessor.UpdateFileMetadata(name, headers);
-					});
 
-					Search.Index(name, headers);
+				ConcurrencyAwareExecutor.Execute(() =>
+				Storage.Batch(accessor =>
+				{
+					AssertFileIsNotBeingSynced(name, accessor);
+					accessor.UpdateFileMetadata(name, headers);
+				}), ConcurrencyResponseException);
+			}
+			catch (FileNotFoundException)
+			{
+				log.Debug("Cannot update metadata because file '{0}' was not found", name);
+				return new HttpResponseMessage(HttpStatusCode.NotFound);
+			}
 
-					Publisher.Publish(new FileChange {File = name, Action = FileChangeAction.Update});
-					SynchronizationTask.SynchronizeDestinationsAsync();
-				}
-				catch (FileNotFoundException)
-				{
-					log.Debug("Cannot update metadata because file '{0}' was not found", name);
-					return new HttpResponseMessage(HttpStatusCode.NotFound);
-				}
-				catch (ConcurrencyException ce)
-				{
-					if (retries-- > 0)
-					{
-						shouldRetry = true;
-						continue;
-					}
-					throw ConcurrencyResponseException(ce);
-				}
-			} while (shouldRetry);
+			Search.Index(name, headers);
+
+			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Update });
+			SynchronizationTask.SynchronizeDestinationsAsync();
 
 			log.Debug("Metadata of a file '{0}' was updated", name);
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
@@ -178,48 +148,36 @@ namespace RavenFS.Controllers
 		public HttpResponseMessage Patch(string name, string rename)
 		{
 			FileAndPages fileAndPages = null;
-			var shouldRetry = false;
-			var retries = 128;
-
-			do
+			
+			try
 			{
-				try
+				ConcurrencyAwareExecutor.Execute(() =>
+				Storage.Batch(accessor =>
 				{
-					Storage.Batch(accessor =>
-					{
-						AssertFileIsNotBeingSynced(name, accessor);
-						fileAndPages = accessor.GetFile(name, 0, 0);
+					AssertFileIsNotBeingSynced(name, accessor);
+					fileAndPages = accessor.GetFile(name, 0, 0);
 
-						var metadata = fileAndPages.Metadata;
-						Historian.UpdateLastModified(metadata);
+					var metadata = fileAndPages.Metadata;
+					Historian.UpdateLastModified(metadata);
 
-						// copy renaming file metadata and set special markers
-						var tombstoneMetadata = new NameValueCollection(metadata)
-						                        	{
-						                        		{SynchronizationConstants.RavenDeleteMarker, "true"},
-						                        		{SynchronizationConstants.RavenRenameFile, rename}
-						                        	};
+					// copy renaming file metadata and set special markers
+					var tombstoneMetadata = new NameValueCollection(metadata)
+												{
+													{SynchronizationConstants.RavenDeleteMarker, "true"},
+													{SynchronizationConstants.RavenRenameFile, rename}
+												};
 
-						accessor.RenameFile(name, rename);
-						accessor.UpdateFileMetadata(rename, metadata);
-						accessor.PutFile(name, 0, tombstoneMetadata);
-					});
-				}
-				catch (FileNotFoundException)
-				{
-					log.Debug("Cannot rename a file '{0}' to '{1}' because a file was not found", name, rename);
-					return new HttpResponseMessage(HttpStatusCode.NotFound);
-				}
-				catch (ConcurrencyException ce)
-				{
-					if (retries-- > 0)
-					{
-						shouldRetry = true;
-						continue;
-					}
-					throw ConcurrencyResponseException(ce);
-				}
-			} while (shouldRetry);
+					accessor.RenameFile(name, rename);
+					accessor.UpdateFileMetadata(rename, metadata);
+					accessor.PutFile(name, 0, tombstoneMetadata);
+				}), ConcurrencyResponseException);
+			}
+			catch (FileNotFoundException)
+			{
+				log.Debug("Cannot rename a file '{0}' to '{1}' because a file was not found", name, rename);
+				return new HttpResponseMessage(HttpStatusCode.NotFound);
+			}
+
 
 			Search.Delete(name);
 			Search.Index(rename, fileAndPages.Metadata);
@@ -241,41 +199,24 @@ namespace RavenFS.Controllers
 			Historian.UpdateLastModified(headers);
 			Historian.Update(name, headers);
 			name = Uri.UnescapeDataString(name);
-			
-			var shouldRetry = false;
-			var retries = 128;
+
 
 			SynchronizationTask.Cancel(name);
 
-			do
+			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
 			{
-				try
-				{
-					Storage.Batch(accessor =>
-					{
-						AssertFileIsNotBeingSynced(name, accessor);
-						accessor.Delete(name);
+				AssertFileIsNotBeingSynced(name, accessor);
+				accessor.Delete(name);
 
-						long? contentLength = Request.Content.Headers.ContentLength;
-						if (Request.Headers.TransferEncodingChunked ?? false)
-						{
-							contentLength = null;
-						}
-						accessor.PutFile(name, contentLength, headers);
-
-						Search.Index(name, headers);
-					});
-				}
-				catch (ConcurrencyException ce)
+				long? contentLength = Request.Content.Headers.ContentLength;
+				if (Request.Headers.TransferEncodingChunked ?? false)
 				{
-					if (retries-- > 0)
-					{
-						shouldRetry = true;
-						continue;
-					}
-					throw ConcurrencyResponseException(ce);
+					contentLength = null;
 				}
-			} while (shouldRetry);
+				accessor.PutFile(name, contentLength, headers);
+
+				Search.Index(name, headers);
+			}), ConcurrencyResponseException);
 
 			log.Debug("Inserted a new file '{0}' with ETag {1}", name, headers.Value<Guid>("ETag"));
 
@@ -359,31 +300,11 @@ namespace RavenFS.Controllers
 							return task; // task is done
 						}
 
-						var shouldRetry = false;
-						var retries = 128;
-
-						do
+						ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor =>
 						{
-							try
-							{
-								storage.Batch(accessor =>
-								{
-									var hashKey = accessor.InsertPage(buffer, task.Result);
-									accessor.AssociatePage(filename, hashKey, pos, task.Result);
-								});
-
-								shouldRetry = false;
-							}
-							catch (ConcurrencyException)
-							{
-								if (retries-- > 0)
-								{
-									shouldRetry = true;
-									continue;
-								}
-								throw;
-							}
-						} while (shouldRetry);
+							var hashKey = accessor.InsertPage(buffer, task.Result);
+							accessor.AssociatePage(filename, hashKey, pos, task.Result);
+						}));
 						
 						md5Hasher.TransformBlock(buffer, 0, task.Result, null, 0);
 
