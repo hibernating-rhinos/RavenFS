@@ -16,6 +16,7 @@ using RavenFS.Util;
 namespace RavenFS.Storage
 {
 	using System.Linq;
+	using Client;
 	using Extensions;
 
 	public class StorageActionsAccessor : IDisposable
@@ -137,8 +138,8 @@ namespace RavenFS.Storage
 				}
 				catch (EsentKeyDuplicateException)
 				{
-					// if there has been already created the same page we are ok with that
-					// most importantly that page has been inserted
+					// it means that page is being inserted by another thread
+					throw new ConcurrencyException("The same file page is being created");
 				}
 				
 			}

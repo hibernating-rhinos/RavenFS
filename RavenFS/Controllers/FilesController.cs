@@ -359,14 +359,33 @@ namespace RavenFS.Controllers
 							return task; // task is done
 						}
 
-						storage.Batch(accessor =>
+						var shouldRetry = false;
+						var retries = 128;
+
+						do
 						{
-							var hashKey = accessor.InsertPage(buffer, task.Result);
-							accessor.AssociatePage(filename, hashKey, pos, task.Result);
-						});
+							try
+							{
+								storage.Batch(accessor =>
+								{
+									var hashKey = accessor.InsertPage(buffer, task.Result);
+									accessor.AssociatePage(filename, hashKey, pos, task.Result);
+								});
 
+								shouldRetry = false;
+							}
+							catch (ConcurrencyException)
+							{
+								if (retries-- > 0)
+								{
+									shouldRetry = true;
+									continue;
+								}
+								throw;
+							}
+						} while (shouldRetry);
+						
 						md5Hasher.TransformBlock(buffer, 0, task.Result, null, 0);
-
 
 						pos++;
 						return Execute();
