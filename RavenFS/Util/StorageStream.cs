@@ -152,13 +152,14 @@ namespace RavenFS.Util
         {
 			if (innerBuffer != null && innerBufferOffset > 0)
 			{
-				TransactionalStorage.Batch(
+				
+				ConcurrencyAwareExecutor.Execute(() => TransactionalStorage.Batch(
 					accessor =>
 					{
 						var hashKey = accessor.InsertPage(innerBuffer, innerBufferOffset);
 						accessor.AssociatePage(Name, hashKey, writtingPagePosition, innerBufferOffset);
 						writtingPagePosition++;
-					});
+					}));
 
 				innerBuffer = null;
 				innerBufferOffset = 0;
