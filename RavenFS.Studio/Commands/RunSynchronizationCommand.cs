@@ -19,7 +19,7 @@ namespace RavenFS.Studio.Commands
         {
             ApplicationModel.Current.AddInfoNotification("Starting Synchronization");
 
-            ApplicationModel.Current.Client.Synchronization.SynchronizeDestinationsAsync().Catch();
+            ApplicationModel.Current.Client.Synchronization.SynchronizeDestinationsAsync(true).Catch();
         }
     }
 }

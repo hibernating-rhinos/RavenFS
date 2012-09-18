@@ -34,9 +34,9 @@
 		private static readonly ConcurrentDictionary<string, ReaderWriterLockSlim> synchronizationFinishLocks = new ConcurrentDictionary<string, ReaderWriterLockSlim>();
 
 		[AcceptVerbs("POST")]
-		public Task<IEnumerable<DestinationSyncResult>> ToDestinations()
+		public Task<IEnumerable<DestinationSyncResult>> ToDestinations(bool forceSyncingAll)
 		{
-			return SynchronizationTask.SynchronizeDestinationsAsync(forceSyncingContinuation: false);
+			return SynchronizationTask.SynchronizeDestinationsAsync(forceSyncingContinuation: forceSyncingAll);
 		}
 
 		[AcceptVerbs("POST")]
