@@ -192,7 +192,7 @@ namespace RavenFS.Tests.Synchronization
 			Assert.Equal(0, secondSynchronization.NeedListLength);
 			Assert.Equal(0, secondSynchronization.BytesTransfered);
 			Assert.Equal(0, secondSynchronization.BytesCopied);
-			Assert.Equal("No synchronization work needed. Destination server had this file in the past.", secondSynchronization.Exception.Message);
+			Assert.Equal("Destination server had this file in the past", secondSynchronization.Exception.Message);
 		}
 
 		[Theory]
@@ -577,7 +577,7 @@ namespace RavenFS.Tests.Synchronization
 
 			var result = source.Synchronization.StartSynchronizationToAsync("file_which_doesnt_exist", destination.ServerUrl).Result;
 
-			Assert.Equal("File does not exist locally", result.Exception.Message);
+			Assert.Equal("File did not exist locally", result.Exception.Message);
 		}
 
 		[Fact]

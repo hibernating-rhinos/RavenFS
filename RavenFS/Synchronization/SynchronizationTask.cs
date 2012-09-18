@@ -93,20 +93,14 @@ namespace RavenFS.Synchronization
 
 			var localMetadata = GetLocalMetadata(fileName);
 
-			if (localMetadata == null)
-			{
-				log.Warn("Could not find local file '{0}' to syncronize");
-				return SynchronizationUtils.SynchronizationExceptionReport(fileName, "File does not exist locally");
-			}
-
 			NoSyncReason reason;
 			var work = DetermineSynchronizationWork(fileName, localMetadata, destinationMetadata, out reason);
 
 			if (work == null)
 			{
-				return SynchronizationUtils.SynchronizationExceptionReport(fileName,
-				                                                           string.Format("No synchronization work needed. {0}.",
-				                                                                         reason.GetDescription()));
+				log.Debug("File '{0}' were not synchronized to {1}. {2}", fileName, destinationUrl, reason.GetDescription());
+
+				return SynchronizationUtils.SynchronizationExceptionReport(fileName, reason.GetDescription());
 			}
 
 			return await PerformSynchronizationAsync(destinationClient.ServerUrl, work);
@@ -222,31 +216,14 @@ namespace RavenFS.Synchronization
 					continue;
 				}
 
-				if (destinationMetadata != null &&
-				    destinationMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null
-				    && destinationMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] == null)
-				{
-					log.Debug(
-						"File '{0}' was conflicted on a destination {1} and had no resolution. No need to queue it", file,
-						destinationUrl);
-					continue;
-				}
-
-				if (localMetadata != null &&
-				    localMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null)
-				{
-					log.Debug("File '{0}' was conflicted on our side. No need to queue it", file, destinationUrl);
-					continue;
-				}
-
 				NoSyncReason reason;
 				var work = DetermineSynchronizationWork(file, localMetadata, destinationMetadata, out reason);
 
 				if (work == null)
 				{
-					log.Debug("There was no need to synchronize a file '{0}' to {1}. {2}", file, destinationUrl, reason.GetDescription());
+					log.Debug("File '{0}' were not synchronized to {1}. {2}", file, destinationUrl, reason.GetDescription());
 
-					if (reason == NoSyncReason.ContainedInDestHistory)
+					if (reason == NoSyncReason.ContainedInDestinationHistory)
 					{
 						var etag = localMetadata.Value<Guid>("ETag");
 						destinationClient.Synchronization.IncrementLastETagAsync(storage.Id, etag);
@@ -264,6 +241,27 @@ namespace RavenFS.Synchronization
 		{
 			reason = NoSyncReason.Unknown;
 
+			if (localMetadata == null)
+			{
+				reason = NoSyncReason.SourceFileNotExist;
+				return null;
+			}
+
+			if (destinationMetadata != null &&
+					destinationMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null
+					&& destinationMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] == null)
+			{
+				reason = NoSyncReason.DestinationFileConflicted;
+				return null;
+			}
+
+			if (localMetadata != null &&
+				localMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null)
+			{
+				reason = NoSyncReason.SourceFileConflicted;
+				return null;
+			}
+
 			if (localMetadata[SynchronizationConstants.RavenDeleteMarker] != null)
 			{
 				var rename = localMetadata[SynchronizationConstants.RavenRenameFile];
@@ -277,7 +275,7 @@ namespace RavenFS.Synchronization
 
 			if (localMetadata != null && destinationMetadata != null && Historian.IsDirectChildOfCurrent(localMetadata, destinationMetadata))
 			{
-				reason = NoSyncReason.ContainedInDestHistory;
+				reason = NoSyncReason.ContainedInDestinationHistory;
 				return null;
 			}
 

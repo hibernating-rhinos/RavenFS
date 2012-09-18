@@ -130,7 +130,7 @@
 		}
 
 		[Fact]
-		public void Must_not_synchronize_conflicted_file()
+		public void Must_not_synchronize_file_conflicted_on_source_side()
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadataWithConflict = new NameValueCollection
@@ -146,7 +146,7 @@
 			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
 
 			Assert.NotNull(shouldBeConflict.Exception);
-			Assert.Equal("File test.bin is conflicted", shouldBeConflict.Exception.Message);
+			Assert.Equal("File was conflicted on our side", shouldBeConflict.Exception.Message);
 		}
 
 		[Fact]
@@ -296,7 +296,7 @@
 
 			var report = sourceClient.Synchronization.StartSynchronizationToAsync("test", destinationClient.ServerUrl).Result;
 
-			Assert.Equal("No synchronization work needed. Destination server had this file in the past.", report.Exception.Message);
+			Assert.Equal("Destination server had this file in the past", report.Exception.Message);
 		}
 
 		[Fact]
