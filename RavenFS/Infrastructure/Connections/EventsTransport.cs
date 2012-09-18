@@ -87,27 +87,32 @@ namespace RavenFS.Infrastructure.Connections
             {
                 // if Disconnect() is called DequeueOrWaitAsync will throw OperationCancelledException, 
                 var messageWithTask = await messageQueue.DequeueOrWaitAsync();
+				using (var streamWriter = new StreamWriter(stream))
+				{
+					while (Connected)
+					{
+						var taskCompletionSource = messageWithTask.Item2;
+						var messageContent = messageWithTask.Item1;
 
-                while (Connected)
-                {
-                    var taskCompletionSource = messageWithTask.Item2;
-                    var messageContent = messageWithTask.Item1;
+						try
+						{
+							await streamWriter.WriteAsync(messageContent);
+							await streamWriter.FlushAsync();
+							taskCompletionSource.SetResult(true);
+						}
+						catch (Exception ex)
+						{
+							log.DebugException("Error when using events transport", ex);
 
-                    try
-                    {
-                        await WriteContentToStreamAsync(stream, messageContent);
-                        taskCompletionSource.SetResult(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        taskCompletionSource.SetException(ex);
-                        Disconnect();
-                        SignalErrorToQueuedTasks(ex);
-                        break;
-                    }
+							taskCompletionSource.SetException(ex);
+							Disconnect();
+							SignalErrorToQueuedTasks(ex);
+							break;
+						}
 
-                    messageWithTask = await messageQueue.DequeueOrWaitAsync();
-                }
+						messageWithTask = await messageQueue.DequeueOrWaitAsync();
+					}
+				}
             }
             catch (OperationCanceledException)
             {
@@ -164,21 +169,6 @@ namespace RavenFS.Infrastructure.Connections
 
             return tcs.Task;
         }
-
-	    private async Task WriteContentToStreamAsync(Stream stream, string content)
-	    {
-	        var buffer = Encoding.UTF8.GetBytes(content);
-            try
-            {
-                await stream.WriteAsync(buffer, 0, buffer.Length);
-                await stream.FlushAsync();
-            }
-            catch (Exception ex)
-            {
-                log.DebugException("Error when using events transport", ex);
-                throw;
-            }
-	    }
 
 	    private void CloseTransport(Stream stream)
 	    {
