@@ -255,8 +255,7 @@ namespace RavenFS.Synchronization
 				return null;
 			}
 
-			if (localMetadata != null &&
-				localMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null)
+			if (localMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null)
 			{
 				reason = NoSyncReason.SourceFileConflicted;
 				return null;
@@ -273,7 +272,7 @@ namespace RavenFS.Synchronization
 				return new DeleteWorkItem(file, storage);
 			}
 
-			if (localMetadata != null && destinationMetadata != null && Historian.IsDirectChildOfCurrent(localMetadata, destinationMetadata))
+			if (destinationMetadata != null && Historian.IsDirectChildOfCurrent(localMetadata, destinationMetadata))
 			{
 				reason = NoSyncReason.ContainedInDestinationHistory;
 				return null;
@@ -429,14 +428,14 @@ namespace RavenFS.Synchronization
 			{
 				var destinationId = destinationsSynchronizationInformationForSource.DestinationServerInstanceId.ToString();
 
-				var candidatesToSynchronization = Enumerable.Empty<FileHeader>();
+				IList<FileHeader> candidatesToSynchronization = null;
 
 				storage.Batch(
 					accessor =>
 					candidatesToSynchronization =
 					accessor.GetFilesAfter(destinationsSynchronizationInformationForSource.LastSourceFileEtag, take)
 						.Where(x => x.Metadata[SynchronizationConstants.RavenSynchronizationSource] != destinationId // prevent synchronization back to source
-									&& FileIsNotBeingUploaded(x)));
+									&& FileIsNotBeingUploaded(x)).ToList());
 				
 				foreach (var file in candidatesToSynchronization)
 				{
@@ -552,7 +551,7 @@ namespace RavenFS.Synchronization
 
 			if (!destinationsConfigExists)
 			{
-				log.Debug("Configuration Raven/Synchronization/Destinations does not exist");
+				log.Debug("Configuration " + SynchronizationConstants.RavenSynchronizationDestinations  + " does not exist");
 				return Enumerable.Empty<string>();
 			}
 
@@ -564,7 +563,7 @@ namespace RavenFS.Synchronization
 
 			if (destinations == null)
 			{
-				log.Warn("Invalid Raven/Synchronization/Destinations configuration");
+				log.Warn("Invalid " + SynchronizationConstants.RavenSynchronizationDestinations + " configuration");
 				return Enumerable.Empty<string>();
 			}
 
@@ -578,7 +577,7 @@ namespace RavenFS.Synchronization
 
 			if (destinations.Length == 0)
 			{
-				log.Warn("Configuration Raven/Synchronization/Destinations does not contain any destination");
+				log.Warn("Configuration " + SynchronizationConstants.RavenSynchronizationDestinations + " does not contain any destination");
 			}
 
 			return destinations;
