@@ -724,5 +724,20 @@ namespace RavenFS.Tests.Synchronization
 			sourceContent.Position = destContent.Position = 0;
 			Assert.Equal(sourceContent.GetMD5Hash(), destContent.GetMD5Hash());
 		}
+
+		[Fact]
+		public void Should_save_file_etag_in_report()
+		{
+			var source = NewClient(0);
+			var destination = NewClient(1);
+
+			var sourceContent = new MemoryStream(new byte[] { 5, 10, 15 });
+			sourceContent.Position = 0;
+			source.UploadAsync("test.bin", sourceContent).Wait();
+
+			var report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+			
+			Assert.NotEqual(Guid.Empty, report.FileETag);
+		}
 	}
 }

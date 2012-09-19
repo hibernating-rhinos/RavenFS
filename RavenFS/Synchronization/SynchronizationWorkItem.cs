@@ -97,11 +97,9 @@
 				log.WarnException(string.Format("Failed to apply conflict on {0} for file '{1}'", destination, FileName), ex);
 			}
 
-			return new SynchronizationReport
+			return new SynchronizationReport(FileName, FileETag, SynchronizationType)
 			{
-				FileName = FileName,
 				Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
-				Type = SynchronizationType
 			};
 		}
 

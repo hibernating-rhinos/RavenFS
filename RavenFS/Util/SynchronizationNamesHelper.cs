@@ -2,7 +2,7 @@ namespace RavenFS.Util
 {
 	using System;
 
-	public static class SynchronizationHelper
+	public static class SynchronizationNamesHelper
 	{
 	    public const string SyncNamePrefix = "Syncing-";
 		public static string SyncNameForFile(string fileName, string destination)

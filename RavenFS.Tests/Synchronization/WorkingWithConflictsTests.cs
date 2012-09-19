@@ -158,7 +158,7 @@
 			var guid = Guid.NewGuid().ToString();
 			client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem> { new HistoryItem() { ServerId = guid, Version = 3 } }).Wait();
 			var resultFileMetadata = client.GetMetadataForAsync("test.bin").Result;
-			var conflictItemString = client.Config.GetConfig(SynchronizationHelper.ConflictConfigNameForFile("test.bin")).Result["value"];
+			var conflictItemString = client.Config.GetConfig(SynchronizationNamesHelper.ConflictConfigNameForFile("test.bin")).Result["value"];
 			var conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(conflictItemString);
 
 			Assert.Equal(true.ToString(), resultFileMetadata[SynchronizationConstants.RavenSynchronizationConflict]);
@@ -393,7 +393,7 @@
 			var report = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 			Assert.Null(report.ToArray()[0].Exception);
 
-			var syncingItem = sourceClient.Config.GetConfig(SynchronizationHelper.SyncNameForFile("test", destinationClient.ServerUrl)).Result;
+			var syncingItem = sourceClient.Config.GetConfig(SynchronizationNamesHelper.SyncNameForFile("test", destinationClient.ServerUrl)).Result;
 			Assert.Null(syncingItem);
 		}
 	}

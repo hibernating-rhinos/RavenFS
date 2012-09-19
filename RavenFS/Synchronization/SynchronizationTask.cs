@@ -87,8 +87,13 @@ namespace RavenFS.Synchronization
 			}
 			catch (Exception ex)
 			{
-				log.WarnException("Could not get metadata details for " + fileName + " from " + destinationUrl, ex);
-				return SynchronizationUtils.SynchronizationExceptionReport(fileName, ex.ToString());
+				var exceptionMessage = "Could not get metadata details for " + fileName + " from " + destinationUrl;
+				log.WarnException(exceptionMessage, ex);
+
+				return new SynchronizationReport(fileName, Guid.Empty, SynchronizationType.Unknown)
+					       {
+							   Exception = new SynchronizationException(exceptionMessage, ex)
+					       };
 			}
 
 			var localMetadata = GetLocalMetadata(fileName);
@@ -100,7 +105,10 @@ namespace RavenFS.Synchronization
 			{
 				log.Debug("File '{0}' were not synchronized to {1}. {2}", fileName, destinationUrl, reason.GetDescription());
 
-				return SynchronizationUtils.SynchronizationExceptionReport(fileName, reason.GetDescription());
+				return new SynchronizationReport(fileName, Guid.Empty, SynchronizationType.Unknown)
+					       {
+						       Exception = new SynchronizationException(reason.GetDescription())
+					       };
 			}
 
 			return await PerformSynchronizationAsync(destinationClient.ServerUrl, work);
@@ -292,10 +300,12 @@ namespace RavenFS.Synchronization
 
 				synchronizationQueue.EnqueueSynchronization(destinationUrl, work);
 
-				return SynchronizationUtils.SynchronizationExceptionReport(work.FileName,
-				                                                           string.Format(
-					                                                           "The limit of active synchronizations to {0} server has been achieved. Cannot process a file '{1}'.",
-					                                                           destinationUrl, work.FileName));
+				return new SynchronizationReport(work.FileName, work.FileETag, work.SynchronizationType)
+					       {
+						       Exception = new SynchronizationException(string.Format(
+							       "The limit of active synchronizations to {0} server has been achieved. Cannot process a file '{1}'.",
+							       destinationUrl, work.FileName))
+					       };
 			}
 
 			var fileName = work.FileName;
@@ -318,11 +328,9 @@ namespace RavenFS.Synchronization
 			}
 			catch (Exception ex)
 			{
-				report = new SynchronizationReport
+				report = new SynchronizationReport(work.FileName, work.FileETag, work.SynchronizationType)
 				{
-					FileName = work.FileName,
 					Exception = ex,
-					Type = work.SynchronizationType
 				};
 			}
 
@@ -414,7 +422,7 @@ namespace RavenFS.Synchronization
 				storage.Batch(
 					accessor =>
 						{
-							configObjects = accessor.GetConfigsStartWithPrefix<SynchronizationDetails>(SynchronizationHelper.SyncNamePrefix, 0, 100);
+							configObjects = accessor.GetConfigsStartWithPrefix<SynchronizationDetails>(SynchronizationNamesHelper.SyncNamePrefix, 0, 100);
 						});
 			}
 			catch (Exception e)
@@ -429,7 +437,7 @@ namespace RavenFS.Synchronization
 		{
 			try
 			{
-				var name = SynchronizationHelper.SyncNameForFile(fileName, destination);
+				var name = SynchronizationNamesHelper.SyncNameForFile(fileName, destination);
 				storage.Batch(accessor => accessor.SetConfigurationValue(name, new SynchronizationDetails
 				                                                               	{
 				                                                               		DestinationUrl = destination,
@@ -449,7 +457,7 @@ namespace RavenFS.Synchronization
 		{
 			try
 			{
-				var name = SynchronizationHelper.SyncNameForFile(fileName, destination);
+				var name = SynchronizationNamesHelper.SyncNameForFile(fileName, destination);
 				storage.Batch(accessor => accessor.DeleteConfig(name));
 			}
 			catch (Exception e)

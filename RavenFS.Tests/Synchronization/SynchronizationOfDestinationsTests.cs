@@ -204,7 +204,7 @@ namespace RavenFS.Tests.Synchronization
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
 			var savedRecord =
-				sourceClient.Config.GetConfig(SynchronizationHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result
+				sourceClient.Config.GetConfig(SynchronizationNamesHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result
 					["value"];
 
 			var synchronizationDetails = new TypeHidingJsonSerializer().Parse<SynchronizationDetails>(savedRecord);
@@ -236,7 +236,7 @@ namespace RavenFS.Tests.Synchronization
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait(); 
 
 			var shouldBeNull =
-				sourceClient.Config.GetConfig(SynchronizationHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result;
+				sourceClient.Config.GetConfig(SynchronizationNamesHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result;
 
 			Assert.Null(shouldBeNull);
 		}
@@ -454,14 +454,14 @@ namespace RavenFS.Tests.Synchronization
 		{
 			var destinationClient = NewClient(0);
 
-			var failureSynchronization = new SynchronizationReport()
+			var failureSynchronization = new SynchronizationReport("test.bin",  Guid.Empty, SynchronizationType.Unknown)
 			                             	{Exception = new Exception("There was an exception in last synchronization.")};
 
 			var sb = new StringBuilder();
             var jw = new JsonTextWriter(new StringWriter(sb));
             new JsonSerializer().Serialize(jw, failureSynchronization);
 
-			destinationClient.Config.SetConfig(SynchronizationHelper.SyncResultNameForFile("test.bin"),
+			destinationClient.Config.SetConfig(SynchronizationNamesHelper.SyncResultNameForFile("test.bin"),
 			                                   new NameValueCollection() {{"value", sb.ToString()}}).Wait();
 
 			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<string> { "test.bin" }).Result;

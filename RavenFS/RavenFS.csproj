@@ -229,7 +229,6 @@
     <Compile Include="Synchronization\Rdc\LocalRdcManager.cs" />
     <Compile Include="Synchronization\Rdc\NeedListParser.cs" />
     <Compile Include="Synchronization\ContentUpdateWorkItem.cs" />
-    <Compile Include="Synchronization\SynchronizationUtils.cs" />
     <Compile Include="Infrastructure\UuidGenerator.cs" />
     <Compile Include="Synchronization\SynchronizationWorkItem.cs" />
     <Compile Include="Synchronization\Rdc\Wrapper\ISignatureRepository.cs" />
@@ -322,7 +321,7 @@
     <Compile Include="Util\NarrowedStream.cs" />
     <Compile Include="Util\RabinKarpHasher.cs" />
     <Compile Include="Storage\StorageConstants.cs" />
-    <Compile Include="Util\SynchronizationHelper.cs" />
+    <Compile Include="Util\SynchronizationNamesHelper.cs" />
     <Compile Include="Util\StorageStream.cs" />
     <Compile Include="Util\StorageStreamAccess.cs" />
     <Compile Include="Util\SynchronizingFileStream.cs" />

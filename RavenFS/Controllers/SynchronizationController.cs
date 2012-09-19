@@ -56,16 +56,12 @@
 			}
 
 			var fileName = Request.Headers.GetValues(SyncingMultipartConstants.FileName).FirstOrDefault();
-			var report = new SynchronizationReport
-			{
-				Type = SynchronizationType.ContentUpdate,
-				FileName = fileName
-			};
-
-			var tempFileName = SynchronizationHelper.DownloadingFileName(fileName);
+			var tempFileName = SynchronizationNamesHelper.DownloadingFileName(fileName);
 
 			var sourceServerId = new Guid(Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault());
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
+
+			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.ContentUpdate);
 
 			log.Debug("Starting to process multipart synchronization request of a file '{0}' with ETag {1} from {2}", fileName,
 						sourceFileETag, sourceServerId);
@@ -232,7 +228,7 @@
 			DeleteSynchronizationReport(fileName, accessor);
 
 			// remove previous .downloading file
-			accessor.Delete(SynchronizationHelper.DownloadingFileName(fileName));
+			accessor.Delete(SynchronizationNamesHelper.DownloadingFileName(fileName));
 		}
 
 		[AcceptVerbs("POST")]
@@ -243,11 +239,7 @@
 
 			log.Debug("Starting to update a metadata of file '{0}' with ETag {1} from {2} bacause of synchronization", fileName, sourceServerId, sourceFileETag);
 
-			var report = new SynchronizationReport
-			             	{
-								FileName = fileName,
-			             		Type = SynchronizationType.MetadataUpdate
-			             	};
+			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.MetadataUpdate);
 
 			Storage.Batch(accessor =>
 			{
@@ -310,11 +302,7 @@
 
 			log.Debug("Starting to delete a file '{0}' with ETag {1} from {2} bacause of synchronization", fileName, sourceServerId, sourceFileETag);
 
-			var report = new SynchronizationReport
-			{
-				FileName = fileName,
-				Type = SynchronizationType.Delete
-			};
+			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.Delete);
 
 			try
 			{
@@ -364,11 +352,7 @@
 
 			log.Debug("Starting to rename a file '{0}' to '{1}' with ETag {2} from {3} because of synchronization", fileName, rename, sourceServerId, sourceFileETag);
 
-			var report = new SynchronizationReport
-			{
-				FileName = fileName,
-				Type = SynchronizationType.Rename
-			};
+			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.Rename);
 
 			Storage.Batch(accessor =>
 			{
@@ -429,13 +413,11 @@
 
 			var confirmingFiles = new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(contentStream)));
 
-			var confirmations = confirmingFiles.Select(file => new SynchronizationConfirmation
+			return confirmingFiles.Select(file => new SynchronizationConfirmation
 				                                                   {
 					                                                   FileName = file,
 					                                                   Status = CheckSynchronizedFileStatus(file)
-				                                                   }).ToList();
-
-			return confirmations.AsEnumerable();
+				                                                   });
 		}
 
 		[AcceptVerbs("GET")]
@@ -451,7 +433,7 @@
 
 			Storage.Batch(accessor =>
 			{
-				var reports = accessor.GetConfigsStartWithPrefix<SynchronizationReport>(SynchronizationHelper.SyncResultNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
+				var reports = accessor.GetConfigsStartWithPrefix<SynchronizationReport>(SynchronizationNamesHelper.SyncResultNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
 				page = new ListPage<SynchronizationReport>(reports, reports.Count);
 			});
 
@@ -484,7 +466,7 @@
 
 			Storage.Batch(accessor =>
 			{
-				var conflicts = accessor.GetConfigsStartWithPrefix<ConflictItem>(SynchronizationHelper.ConflictConfigNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
+				var conflicts = accessor.GetConfigsStartWithPrefix<ConflictItem>(SynchronizationNamesHelper.ConflictConfigNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
 				page = new ListPage<ConflictItem>(conflicts, conflicts.Count);
 			});
 
@@ -620,7 +602,7 @@
 			Storage.Batch(accessor =>
 			{
 				var conflict =
-					accessor.GetConfigurationValue<ConflictItem>(SynchronizationHelper.ConflictConfigNameForFile(fileName));
+					accessor.GetConfigurationValue<ConflictItem>(SynchronizationNamesHelper.ConflictConfigNameForFile(fileName));
 				var localMetadata = accessor.GetFile(fileName, 0, 0).Metadata;
 				var localHistory = Historian.DeserializeHistory(localMetadata);
 
@@ -644,7 +626,7 @@
 				accessor =>
 				{
 					var localMetadata = accessor.GetFile(fileName, 0, 0).Metadata;
-					var conflictConfigName = SynchronizationHelper.ConflictConfigNameForFile(fileName);
+					var conflictConfigName = SynchronizationNamesHelper.ConflictConfigNameForFile(fileName);
 					var conflictItem = accessor.GetConfigurationValue<ConflictItem>(conflictConfigName);
 
 					var conflictResolution =
@@ -675,13 +657,13 @@
 
 		private void SaveSynchronizationReport(string fileName, StorageActionsAccessor accessor, SynchronizationReport report)
 		{
-			var name = SynchronizationHelper.SyncResultNameForFile(fileName);
+			var name = SynchronizationNamesHelper.SyncResultNameForFile(fileName);
 			accessor.SetConfigurationValue(name, report);
 		}
 
 		private void DeleteSynchronizationReport(string fileName, StorageActionsAccessor accessor)
 		{
-			var name = SynchronizationHelper.SyncResultNameForFile(fileName);
+			var name = SynchronizationNamesHelper.SyncResultNameForFile(fileName);
 			accessor.DeleteConfig(name);
 			Search.Delete(name);
 		}
@@ -693,7 +675,7 @@
 			Storage.Batch(
 				accessor =>
 				{
-					var name = SynchronizationHelper.SyncResultNameForFile(fileName);
+					var name = SynchronizationNamesHelper.SyncResultNameForFile(fileName);
 					accessor.TryGetConfigurationValue(name, out preResult);
 				});
 
