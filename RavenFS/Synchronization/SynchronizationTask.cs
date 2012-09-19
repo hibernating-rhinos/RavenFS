@@ -404,16 +404,16 @@ namespace RavenFS.Synchronization
 			return filesToSynchronization;
 		}
 
-		private Task<IEnumerable<SynchronizationConfirmation>> ConfirmPushedFiles(List<string> filesNeedConfirmation, RavenFileSystemClient destinationClient)
+		private Task<IEnumerable<SynchronizationConfirmation>> ConfirmPushedFiles(IList<SynchronizationDetails> filesNeedConfirmation, RavenFileSystemClient destinationClient)
 		{
 			if (filesNeedConfirmation.Count == 0)
 			{
 				return new CompletedTask<IEnumerable<SynchronizationConfirmation>>(Enumerable.Empty<SynchronizationConfirmation>());
 			}
-			return destinationClient.Synchronization.ConfirmFilesAsync(filesNeedConfirmation);
+			return destinationClient.Synchronization.ConfirmFilesAsync(filesNeedConfirmation.Select(x => new Tuple<string, Guid>(x.FileName, x.FileETag)));
 		}
 
-		private List<string> GetSyncingConfigurations(string destination)
+		private IList<SynchronizationDetails> GetSyncingConfigurations(string destination)
 		{
 			IList<SynchronizationDetails> configObjects = new List<SynchronizationDetails>();
 
@@ -430,7 +430,7 @@ namespace RavenFS.Synchronization
 				log.WarnException(string.Format("Could not get syncing configurations for a destination {0}", destination), e);
 			}
 
-			return configObjects.Select(x => x.FileName).ToList();
+			return configObjects;
 		}
 
 		private void CreateSyncingConfiguration(string fileName, Guid etag, string destination, SynchronizationType synchronizationType)

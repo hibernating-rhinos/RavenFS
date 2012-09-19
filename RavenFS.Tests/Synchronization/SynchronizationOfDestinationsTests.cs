@@ -430,10 +430,36 @@ namespace RavenFS.Tests.Synchronization
 
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
-			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<string> {"test.bin"}).Result;
+			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>> { new Tuple<string, Guid>("test.bin", sourceClient.GetMetadataForAsync("test.bin").Result.Value<Guid>("ETag"))}).Result;
 
 			Assert.Equal(1, confirmations.Count());
 			Assert.Equal(FileStatus.Safe, confirmations.ToArray()[0].Status);
+			Assert.Equal("test.bin", confirmations.ToArray()[0].FileName);
+		}
+
+		[Fact]
+		public void Should_say_that_file_status_is_unknown_if_there_is_different_etag()
+		{
+			var sourceContent = new RandomStream(1024 * 1024);
+
+			var sourceClient = NewClient(1);
+			var destinationClient = NewClient(0);
+
+			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
+
+			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
+			                                                                                     	{
+			                                                                                     		{ "url", destinationClient.ServerUrl }
+			                                                                                     	}).Wait();
+
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
+
+			var differentETag = Guid.NewGuid();
+
+			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>> { new Tuple<string, Guid>("test.bin", differentETag) }).Result;
+
+			Assert.Equal(1, confirmations.Count());
+			Assert.Equal(FileStatus.Unknown, confirmations.ToArray()[0].Status);
 			Assert.Equal("test.bin", confirmations.ToArray()[0].FileName);
 		}
 
@@ -442,7 +468,7 @@ namespace RavenFS.Tests.Synchronization
 		{
 			var destinationClient = NewClient(0);
 
-			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<string> { "test.bin" }).Result;
+			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>> { new Tuple<string, Guid>("test.bin", Guid.Empty) }).Result;
 
 			Assert.Equal(1, confirmations.Count());
 			Assert.Equal(FileStatus.Unknown, confirmations.ToArray()[0].Status);
@@ -454,7 +480,9 @@ namespace RavenFS.Tests.Synchronization
 		{
 			var destinationClient = NewClient(0);
 
-			var failureSynchronization = new SynchronizationReport("test.bin",  Guid.Empty, SynchronizationType.Unknown)
+			var sampleGuid = Guid.Empty;
+
+			var failureSynchronization = new SynchronizationReport("test.bin",  sampleGuid, SynchronizationType.Unknown)
 			                             	{Exception = new Exception("There was an exception in last synchronization.")};
 
 			var sb = new StringBuilder();
@@ -464,7 +492,7 @@ namespace RavenFS.Tests.Synchronization
 			destinationClient.Config.SetConfig(SynchronizationNamesHelper.SyncResultNameForFile("test.bin"),
 			                                   new NameValueCollection() {{"value", sb.ToString()}}).Wait();
 
-			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<string> { "test.bin" }).Result;
+			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>> { new Tuple<string, Guid>("test.bin", sampleGuid) }).Result;
 
 			Assert.Equal(1, confirmations.Count());
 			Assert.Equal(FileStatus.Broken, confirmations.ToArray()[0].Status);

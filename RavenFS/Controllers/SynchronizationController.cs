@@ -411,11 +411,11 @@
 		{
 			var contentStream = await Request.Content.ReadAsStreamAsync();
 
-			var confirmingFiles = new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(contentStream)));
+			var confirmingFiles = new JsonSerializer().Deserialize<IEnumerable<Tuple<string, Guid>>>(new JsonTextReader(new StreamReader(contentStream)));
 
 			return confirmingFiles.Select(file => new SynchronizationConfirmation
 				                                                   {
-					                                                   FileName = file,
+					                                                   FileName = file.Item1,
 					                                                   Status = CheckSynchronizedFileStatus(file)
 				                                                   });
 		}
@@ -643,11 +643,11 @@
 				});
 		}
 
-		private FileStatus CheckSynchronizedFileStatus(string fileName)
+		private FileStatus CheckSynchronizedFileStatus(Tuple<string, Guid> fileInfo)
 		{
-			var report = GetSynchronizationReport(fileName);
+			var report = GetSynchronizationReport(fileInfo.Item1);
 
-			if (report == null)
+			if (report == null || report.FileETag != fileInfo.Item2)
 			{
 				return FileStatus.Unknown;
 			}
