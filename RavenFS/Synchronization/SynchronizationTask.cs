@@ -422,7 +422,7 @@ namespace RavenFS.Synchronization
 				storage.Batch(
 					accessor =>
 						{
-							configObjects = accessor.GetConfigsStartWithPrefix<SynchronizationDetails>(SynchronizationNamesHelper.SyncNamePrefix, 0, 100);
+							configObjects = accessor.GetConfigsStartWithPrefix<SynchronizationDetails>(SynchronizationNamesHelper.SyncNamePrefix + Uri.EscapeUriString(destination), 0, 100);
 						});
 			}
 			catch (Exception e)
