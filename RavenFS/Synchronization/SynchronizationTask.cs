@@ -138,8 +138,8 @@ namespace RavenFS.Synchronization
 								needSyncingAgain.Add(fileHeader);
 
 								log.Debug(
-									"Destination server {0} said that file '{1}' is {2}. File will be added to a synchronization queue again.",
-									destinationUrl, confirmation.FileName, confirmation.Status);
+									"Destination server {0} said that file '{1}' is {2}.", destinationUrl, confirmation.FileName,
+									confirmation.Status);
 							}
 						});
 					}
@@ -184,16 +184,24 @@ namespace RavenFS.Synchronization
 			}
 		}
 
-		private async Task EnqueueMissingUpdatesAsync(RavenFileSystemClient destinationClient, SourceSynchronizationInformation lastEtag, IEnumerable<FileHeader> needSyncingAgain)
+		private async Task EnqueueMissingUpdatesAsync(RavenFileSystemClient destinationClient, SourceSynchronizationInformation lastEtag, IList<FileHeader> needSyncingAgain)
 		{
+			LogFilesInfo("There were {0} file(s) that needed synchronization because the previous one went wrong: {1}",
+			             needSyncingAgain);
+
 			var destinationUrl = destinationClient.ServerUrl;
 			var filesToSynchronization = GetFilesToSynchronization(lastEtag, 100);
+
+			LogFilesInfo("There were {0} file(s) that needed synchronization because of greater ETag value: {1}",
+			             filesToSynchronization);
 
 			filesToSynchronization.AddRange(needSyncingAgain);
 
 			var filteredFilesToSychronization =
 				filesToSynchronization.Where(
 					x => synchronizationStrategy.Filter(x, lastEtag.DestinationServerInstanceId, filesToSynchronization)).ToList();
+
+			LogFilesInfo("There were {0} file(s) that needed synchronization after filtering: {1}", filteredFilesToSychronization);
 
 			if (filteredFilesToSychronization.Count == 0)
 			{
@@ -385,11 +393,6 @@ namespace RavenFS.Synchronization
 				log.WarnException(string.Format("Could not get files to synchronize after: " + destinationsSynchronizationInformationForSource.LastSourceFileEtag), e);
 			}
 
-			log.Debug("There were {0} file(s) that needed synchronization ({1}) because of greater ETag value", filesToSynchronization.Count,
-			          string.Join(",",
-			                      filesToSynchronization.Select(
-			                      	x => string.Format("{0} [ETag {1}]", x.Name, x.Metadata.Value<Guid>("ETag")))));
-
 			return filesToSynchronization;
 		}
 
@@ -539,6 +542,12 @@ namespace RavenFS.Synchronization
 		{
 			log.Debug("Cancellation of active synchronizations of a file '{0}'", fileName);
 			Queue.CancelActiveSynchronizations(fileName);
+		}
+
+		private static void LogFilesInfo(string message, IList<FileHeader> files)
+		{
+			log.Debug(message, files.Count,
+					  string.Join(",", files.Select(x => string.Format("{0} [ETag {1}]", x.Name, x.Metadata.Value<Guid>("ETag")))));
 		}
 	}
 }
