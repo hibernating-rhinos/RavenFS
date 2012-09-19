@@ -132,8 +132,8 @@ namespace RavenFS.Synchronization
 				{
 					if (confirmation.Status == FileStatus.Safe)
 					{
-						RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
 						log.Debug("Destination server {0} said that file '{1}' is safe", destinationUrl, confirmation.FileName);
+						RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
 					}
 					else
 					{
@@ -386,8 +386,8 @@ namespace RavenFS.Synchronization
 		{
 			var filesToSynchronization = new List<FileHeader>();
 
-			log.Debug("Getting files to synchronize with ETag greater than {0}",
-			          destinationsSynchronizationInformationForSource.LastSourceFileEtag);
+			log.Debug("Getting files to synchronize with ETag greater than {0} [parameter take = {1}]",
+			          destinationsSynchronizationInformationForSource.LastSourceFileEtag, take);
 
 			try
 			{
