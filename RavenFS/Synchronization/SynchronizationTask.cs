@@ -27,17 +27,17 @@ namespace RavenFS.Synchronization
 
 		private readonly SynchronizationQueue synchronizationQueue;
 		private readonly TransactionalStorage storage;
-		private readonly SigGenerator sigGenerator;
 		private readonly NotificationPublisher publisher;
+		private readonly SynchronizationStrategy synchronizationStrategy;
 
 		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(10));
 
 		public SynchronizationTask(TransactionalStorage storage, SigGenerator sigGenerator, NotificationPublisher publisher)
 		{
 			this.storage = storage;
-			this.sigGenerator = sigGenerator;
 			this.publisher = publisher;
 			synchronizationQueue = new SynchronizationQueue();
+			synchronizationStrategy = new SynchronizationStrategy(storage, sigGenerator);
 
 			InitializeTimer();
 		}
@@ -94,7 +94,7 @@ namespace RavenFS.Synchronization
 			var localMetadata = GetLocalMetadata(fileName);
 
 			NoSyncReason reason;
-			var work = DetermineSynchronizationWork(fileName, localMetadata, destinationMetadata, out reason);
+			var work = synchronizationStrategy.DetermineWork(fileName, localMetadata, destinationMetadata, out reason);
 
 			if (work == null)
 			{
@@ -132,15 +132,16 @@ namespace RavenFS.Synchronization
 						storage.Batch(accessor =>
 						{
 							var fileHeader = accessor.ReadFile(confirmation.FileName);
-							if (FileIsNotBeingUploaded(fileHeader))
+
+							if (fileHeader != null)
 							{
 								needSyncingAgain.Add(fileHeader);
+
+								log.Debug(
+									"Destination server {0} said that file '{1}' is {2}. File will be added to a synchronization queue again.",
+									destinationUrl, confirmation.FileName, confirmation.Status);
 							}
 						});
-
-						log.Debug(
-							"Destination server {0} said that file '{1}' is {2}. File will be added to a synchronization queue again.",
-							destinationUrl, confirmation.FileName, confirmation.Status);
 					}
 				}
 
@@ -190,12 +191,16 @@ namespace RavenFS.Synchronization
 
 			filesToSynchronization.AddRange(needSyncingAgain);
 
-			if (filesToSynchronization.Count == 0)
+			var filteredFilesToSychronization =
+				filesToSynchronization.Where(
+					x => synchronizationStrategy.Filter(x, lastEtag.DestinationServerInstanceId, filesToSynchronization)).ToList();
+
+			if (filteredFilesToSychronization.Count == 0)
 			{
 				return;
 			}
 
-			foreach (var fileHeader in filesToSynchronization)
+			foreach (var fileHeader in filteredFilesToSychronization)
 			{
 				var file = fileHeader.Name;
 				var localMetadata = GetLocalMetadata(file);
@@ -217,7 +222,7 @@ namespace RavenFS.Synchronization
 				}
 
 				NoSyncReason reason;
-				var work = DetermineSynchronizationWork(file, localMetadata, destinationMetadata, out reason);
+				var work = synchronizationStrategy.DetermineWork(file, localMetadata, destinationMetadata, out reason);
 
 				if (work == null)
 				{
@@ -235,62 +240,6 @@ namespace RavenFS.Synchronization
 
 				synchronizationQueue.EnqueueSynchronization(destinationUrl, work);
 			}
-		}
-
-		private SynchronizationWorkItem DetermineSynchronizationWork(string file, NameValueCollection localMetadata, NameValueCollection destinationMetadata, out NoSyncReason reason)
-		{
-			reason = NoSyncReason.Unknown;
-
-			if (localMetadata == null)
-			{
-				reason = NoSyncReason.SourceFileNotExist;
-				return null;
-			}
-
-			if (destinationMetadata != null &&
-					destinationMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null
-					&& destinationMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] == null)
-			{
-				reason = NoSyncReason.DestinationFileConflicted;
-				return null;
-			}
-
-			if (localMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null)
-			{
-				reason = NoSyncReason.SourceFileConflicted;
-				return null;
-			}
-
-			if (localMetadata[SynchronizationConstants.RavenDeleteMarker] != null)
-			{
-				var rename = localMetadata[SynchronizationConstants.RavenRenameFile];
-
-				if (rename != null)
-				{
-					return new RenameWorkItem(file, rename, storage);
-				}
-				return new DeleteWorkItem(file, storage);
-			}
-
-			if (destinationMetadata != null && Historian.IsDirectChildOfCurrent(localMetadata, destinationMetadata))
-			{
-				reason = NoSyncReason.ContainedInDestinationHistory;
-				return null;
-			}
-
-			if (destinationMetadata != null && localMetadata["Content-MD5"] == destinationMetadata["Content-MD5"]) // file exists on dest and has the same content
-			{
-				// check metadata to detect if any synchronization is needed
-				if (localMetadata.AllKeys.Except(new[] { "ETag", "Last-Modified" }).Any(key => !destinationMetadata.AllKeys.Contains(key) || localMetadata[key] != destinationMetadata[key]))
-				{
-					return new MetadataUpdateWorkItem(file, destinationMetadata, storage);
-				}
-
-				reason = NoSyncReason.SameContentAndMetadata;
-
-				return null; // the same content and metadata - no need to synchronize
-			}
-			return new ContentUpdateWorkItem(file, storage, sigGenerator);
 		}
 
 		private IEnumerable<Task<SynchronizationReport>> SynchronizePendingFilesAsync(string destinationUrl, bool forceSyncingContinuation)
@@ -426,29 +375,10 @@ namespace RavenFS.Synchronization
 
 			try
 			{
-				var destinationId = destinationsSynchronizationInformationForSource.DestinationServerInstanceId.ToString();
-
-				IList<FileHeader> candidatesToSynchronization = null;
-
 				storage.Batch(
 					accessor =>
-					candidatesToSynchronization =
-					accessor.GetFilesAfter(destinationsSynchronizationInformationForSource.LastSourceFileEtag, take)
-						.Where(x => x.Metadata[SynchronizationConstants.RavenSynchronizationSource] != destinationId // prevent synchronization back to source
-									&& FileIsNotBeingUploaded(x)).ToList());
-				
-				foreach (var file in candidatesToSynchronization)
-				{
-					var fileName = file.Name;
-
-					if (!candidatesToSynchronization.Any(
-						x =>
-						x.Metadata[SynchronizationConstants.RavenDeleteMarker] != null &&
-						x.Metadata[SynchronizationConstants.RavenRenameFile] == fileName)) // do not synchronize entire file after renaming, process only a tombstone file
-					{
-						filesToSynchronization.Add(file);
-					}
-				}
+					filesToSynchronization =
+					accessor.GetFilesAfter(destinationsSynchronizationInformationForSource.LastSourceFileEtag, take).ToList());
 			}
 			catch (Exception e)
 			{
@@ -603,14 +533,6 @@ namespace RavenFS.Synchronization
 				limit = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenSynchronizationLimit, out configuredLimit));
 
 			return limit ? configuredLimit : DefaultLimitOfConcurrentSynchronizations;
-		}
-
-		private static bool FileIsNotBeingUploaded(FileHeader header)
-		{			// do not synchronize files that are being uploaded
-			return header.TotalSize != null && header.TotalSize == header.UploadedSize
-				// even if the file is uploaded make sure file has Content-MD5
-				// it's necessary to determine synchronization type and ensures right ETag
-				   && (header.Metadata[SynchronizationConstants.RavenDeleteMarker] != null || header.Metadata["Content-MD5"] != null);
 		}
 
 		public void Cancel(string fileName)

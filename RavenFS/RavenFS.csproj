@@ -215,6 +215,7 @@
     <Compile Include="Synchronization\NoSyncReason.cs" />
     <Compile Include="Synchronization\RenameWorkItem.cs" />
     <Compile Include="Synchronization\SynchronizationLock.cs" />
+    <Compile Include="Synchronization\SynchronizationStrategy.cs" />
     <Compile Include="Synchronization\SynchronizationTask.cs" />
     <Compile Include="Synchronization\SynchronizationQueue.cs" />
     <Compile Include="Infrastructure\SequenceActions.cs" />
