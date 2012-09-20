@@ -2,6 +2,7 @@ namespace RavenFS.Client
 {
 	using System;
 	using System.Runtime.Serialization;
+	using Newtonsoft.Json;
 
 	/// <summary>
 	/// This exception is raised when a concurrency conflict is encountered
@@ -30,6 +31,7 @@ namespace RavenFS.Client
 		/// </summary>
 		/// <param name="message">The message.</param>
 		/// <param name="inner">The inner.</param>
+		[JsonConstructor]
 		public ConcurrencyException(string message, Exception inner)
 			: base(message, inner)
 		{

@@ -3,7 +3,9 @@ using System.Runtime.Serialization;
 
 namespace RavenFS.Client
 {
-    [Serializable]
+	using Newtonsoft.Json;
+
+	[Serializable]
     public class SynchronizationException : Exception
     {
         public SynchronizationException(string message) : base(message)
@@ -11,6 +13,7 @@ namespace RavenFS.Client
             
         }
 
+		[JsonConstructor]
 		public SynchronizationException(string message, Exception inner)
 			: base(message, inner)
 		{
