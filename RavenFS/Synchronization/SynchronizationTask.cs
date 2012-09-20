@@ -22,6 +22,7 @@ namespace RavenFS.Synchronization
 	public class SynchronizationTask
 	{
 		private const int DefaultLimitOfConcurrentSynchronizations = 5;
+		private int failedAttemptsToGetDestinationsConfig = 0;
 
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
 
@@ -54,8 +55,6 @@ namespace RavenFS.Synchronization
 
 		public async Task<IEnumerable<DestinationSyncResult>> SynchronizeDestinationsAsync(bool forceSyncingContinuation = true)
 		{
-			log.Debug("Starting to synchronize destinations");
-
 			var destinationSyncTasks = new List<Task<DestinationSyncResult>>();
 
 			foreach (var destination in GetSynchronizationDestinations())
@@ -492,9 +491,17 @@ namespace RavenFS.Synchronization
 
 			if (!destinationsConfigExists)
 			{
-				log.Debug("Configuration " + SynchronizationConstants.RavenSynchronizationDestinations  + " does not exist");
+				if (failedAttemptsToGetDestinationsConfig < 3 || failedAttemptsToGetDestinationsConfig % 10 == 0)
+				{
+					log.Debug("Configuration " + SynchronizationConstants.RavenSynchronizationDestinations  + " does not exist");
+				}
+
+				failedAttemptsToGetDestinationsConfig++;
+
 				return Enumerable.Empty<string>();
 			}
+
+			failedAttemptsToGetDestinationsConfig = 0;
 
 			var destionationsConfig = new NameValueCollection();
 
