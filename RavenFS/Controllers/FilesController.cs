@@ -69,7 +69,7 @@ namespace RavenFS.Controllers
 
 			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
 			{
-				AssertFileIsNotBeingSynced(name, accessor);
+				AssertFileIsNotBeingSynced(name, accessor, true);
 				accessor.Delete(name);
 
 				if(!name.EndsWith(SynchronizationNamesHelper.DownloadingFileSuffix)) // don't create a tombstone for .downloading file
@@ -129,7 +129,7 @@ namespace RavenFS.Controllers
 				ConcurrencyAwareExecutor.Execute(() =>
 				Storage.Batch(accessor =>
 				{
-					AssertFileIsNotBeingSynced(name, accessor);
+					AssertFileIsNotBeingSynced(name, accessor, true);
 					accessor.UpdateFileMetadata(name, headers);
 				}), ConcurrencyResponseException);
 			}
@@ -158,7 +158,7 @@ namespace RavenFS.Controllers
 				ConcurrencyAwareExecutor.Execute(() =>
 				Storage.Batch(accessor =>
 				{
-					AssertFileIsNotBeingSynced(name, accessor);
+					AssertFileIsNotBeingSynced(name, accessor, true);
 					fileAndPages = accessor.GetFile(name, 0, 0);
 
 					var metadata = fileAndPages.Metadata;
@@ -209,7 +209,7 @@ namespace RavenFS.Controllers
 
 			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
 			{
-				AssertFileIsNotBeingSynced(name, accessor);
+				AssertFileIsNotBeingSynced(name, accessor, true);
 				accessor.Delete(name);
 
 				long? contentLength = Request.Content.Headers.ContentLength;

@@ -241,17 +241,17 @@
 
 			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.MetadataUpdate);
 
-			Storage.Batch(accessor =>
-			{
-				AssertFileIsNotBeingSynced(fileName, accessor);
-				StartupProceed(fileName, accessor);
-				FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
-			});
-			
-			PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
-
 			try
 			{
+				Storage.Batch(accessor =>
+				{
+					AssertFileIsNotBeingSynced(fileName, accessor);
+					StartupProceed(fileName, accessor);
+					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
+				});
+
+				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
+
 				var localMetadata = GetLocalMetadata(fileName);
 				var sourceMetadata = Request.Headers.FilterHeaders();
 
@@ -354,17 +354,17 @@
 
 			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.Rename);
 
-			Storage.Batch(accessor =>
-			{
-				AssertFileIsNotBeingSynced(fileName, accessor);
-				StartupProceed(fileName, accessor);
-				FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
-			});
-
-			PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
-
 			try
 			{
+				Storage.Batch(accessor =>
+				{
+					AssertFileIsNotBeingSynced(fileName, accessor);
+					StartupProceed(fileName, accessor);
+					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
+				});
+
+				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
+
 				var localMetadata = GetLocalMetadata(fileName);
 
 				bool isConflictResolved;

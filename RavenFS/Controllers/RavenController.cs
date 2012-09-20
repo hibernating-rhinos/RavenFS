@@ -194,7 +194,7 @@ namespace RavenFS.Controllers
 			return response;
 		}
 
-		protected void AssertFileIsNotBeingSynced(string fileName, StorageActionsAccessor accessor)
+		protected void AssertFileIsNotBeingSynced(string fileName, StorageActionsAccessor accessor, bool wrapByResponseException = false)
 		{
 			if (FileLockManager.TimeoutExceeded(fileName, accessor))
 			{
@@ -203,9 +203,15 @@ namespace RavenFS.Controllers
 			else
 			{
 				log.Debug("Cannot execute operation because file '{0}' is being synced",  fileName);
-				throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.PreconditionFailed,
-																			new SynchronizationException(
-																				string.Format("File {0} is being synced", fileName))));
+
+				var beingSyncedException = new SynchronizationException(string.Format("File {0} is being synced", fileName));
+				
+				if (wrapByResponseException)
+				{
+					throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.PreconditionFailed, beingSyncedException));
+				}
+
+				throw beingSyncedException;
 			}
 		}
 
