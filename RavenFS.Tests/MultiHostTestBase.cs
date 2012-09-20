@@ -75,7 +75,7 @@ namespace RavenFS.Tests
 
 		#region IDisposable Members
 
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			foreach (var disposable in disposables)
 			{

@@ -64,7 +64,7 @@ namespace RavenFS.Tests
 			return new RavenFileSystemClient(Url);
 		}
 
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			server.CloseAsync().Wait();
 			server.Dispose();
