@@ -28,9 +28,10 @@ namespace RavenFS.Util
             return SyncResultNamePrefix + fileName;
         }
 
+		public const string DownloadingFilePrefix = ".downloading";
 	    public static string DownloadingFileName(string fileName)
         {
-            return fileName + ".downloading";
+			return fileName + DownloadingFilePrefix;
         }
 	}
 }

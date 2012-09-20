@@ -7,6 +7,7 @@
 	using Infrastructure;
 	using Rdc.Wrapper;
 	using Storage;
+	using Util;
 
 	public class SynchronizationStrategy
 	{
@@ -23,6 +24,11 @@
 		{
 			// prevent synchronization back to source
 			if(file.Metadata[SynchronizationConstants.RavenSynchronizationSource] == destinationId.ToString())
+			{
+				return false;
+			}
+
+			if (file.Name.EndsWith(SynchronizationNamesHelper.DownloadingFilePrefix))
 			{
 				return false;
 			}
