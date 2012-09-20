@@ -71,9 +71,13 @@ namespace RavenFS.Controllers
 			{
 				AssertFileIsNotBeingSynced(name, accessor);
 				accessor.Delete(name);
-				var tombstoneMetadata = new NameValueCollection {{SynchronizationConstants.RavenDeleteMarker, "true"}};
-				Historian.UpdateLastModified(tombstoneMetadata);
-				accessor.PutFile(name, 0, tombstoneMetadata);
+
+				if(!name.EndsWith(SynchronizationNamesHelper.DownloadingFileSuffix)) // don't create a tombstone for .downloading file
+				{
+					var tombstoneMetadata = new NameValueCollection { { SynchronizationConstants.RavenDeleteMarker, "true" } };
+					Historian.UpdateLastModified(tombstoneMetadata);
+					accessor.PutFile(name, 0, tombstoneMetadata);
+				}
 			}), ConcurrencyResponseException);
 
 			Search.Delete(name);

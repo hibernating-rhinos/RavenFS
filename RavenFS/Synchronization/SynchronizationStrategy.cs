@@ -28,7 +28,7 @@
 				return false;
 			}
 
-			if (file.Name.EndsWith(SynchronizationNamesHelper.DownloadingFilePrefix))
+			if (file.Name.EndsWith(SynchronizationNamesHelper.DownloadingFileSuffix))
 			{
 				return false;
 			}
