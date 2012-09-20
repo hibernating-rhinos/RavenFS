@@ -96,7 +96,7 @@ namespace RavenFS.Studio.Commands
 	        ApplicationModel.Current.AsyncOperations.RegisterOperation(operation);
 	    }
 
-	    private static string GetProgressText(int bytesUploaded, long fileSize)
+	    private static string GetProgressText(long bytesUploaded, long fileSize)
 	    {
 	        return string.Format("{0} of {1} uploaded", GetNaturalSize(bytesUploaded), GetNaturalSize(fileSize));
 	    }

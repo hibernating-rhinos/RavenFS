@@ -184,7 +184,7 @@ namespace RavenFS.Client
 		}
 
 		private Task<NameValueCollection> DownloadAsync(string path, string filename, Stream destination, long? from = null, long? to = null,
-			Action<string, int> progress = null)
+			Action<string, long> progress = null)
 		{
 #if SILVERLIGHT
             if (from != null || to != null)
@@ -259,7 +259,7 @@ namespace RavenFS.Client
 			return UploadAsync(filename, metadata, source, null);
 		}
 
-		public Task UploadAsync(string filename, NameValueCollection metadata, Stream source, Action<string, int> progress)
+		public Task UploadAsync(string filename, NameValueCollection metadata, Stream source, Action<string, long> progress)
 		{
 			if (source.CanRead == false)
 				throw new AggregateException("Stream does not support reading");

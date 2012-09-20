@@ -6,12 +6,12 @@ namespace RavenFS.Client
 {
 	public static class AsyncExtensions
 	{
-		public static Task CopyToAsync(this Stream source, Stream destination, Action<int> progressReport, int bufferSize = 0x1000)
+		public static Task CopyToAsync(this Stream source, Stream destination, Action<long> progressReport, int bufferSize = 0x1000)
 		{
 			return CopyStream(source, destination, progressReport, bufferSize);
 		}
 
-		private static Task CopyStream(Stream source, Stream destination, Action<int> progressReport,
+		private static Task CopyStream(Stream source, Stream destination, Action<long> progressReport,
 		                                       int bufferSize)
 		{
 		    var listenableStream = new ListenableStream(source);

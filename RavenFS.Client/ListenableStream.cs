@@ -10,17 +10,17 @@ namespace RavenFS.Client
     {
         public class ProgressEventArgs : EventArgs
         {
-            public int Processed { get; private set; }
+            public long Processed { get; private set; }
 
-            public ProgressEventArgs(int processed)
+            public ProgressEventArgs(long processed)
             {
                 Processed = processed;
             }
         }
 
         private readonly Stream source;
-        private int alreadyRead;
-        private int alreadyWritten { get; set; }
+        private long alreadyRead;
+        private long alreadyWritten { get; set; }
         public event EventHandler<ProgressEventArgs> ReadingProgress;
 
         public void InvokeReadingProgress(ProgressEventArgs e)
