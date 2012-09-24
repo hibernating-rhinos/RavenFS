@@ -6,6 +6,7 @@ using RavenFS.Client;
 
 namespace RavenFS.Controllers
 {
+	using System.Threading.Tasks;
 	using System.Web.Http;
 	using NLog;
 	using Storage;
@@ -43,7 +44,7 @@ namespace RavenFS.Controllers
 		}
 
 		[AcceptVerbs("GET")]
-		public HttpResponseMessage Manifest(string filename)
+		public async Task<HttpResponseMessage> Manifest(string filename)
 		{
 			filename = Uri.UnescapeDataString(filename);
 			FileAndPages fileAndPages = null;
@@ -64,7 +65,7 @@ namespace RavenFS.Controllers
 			{
 				var rdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
 				var signatureManifest =
-					rdcManager.GetSignatureManifest(new DataInfo
+					await rdcManager.GetSignatureManifestAsync(new DataInfo
 					                                	{
 					                                		Name = filename,
 					                                		CreatedAt =

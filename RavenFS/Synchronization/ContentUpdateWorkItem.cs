@@ -75,7 +75,7 @@
 				cts.Token.ThrowIfCancellationRequested();
 
 				// first we need to create a local file signatures before we synchronize with remote ones
-				var localSignatureManifest = localRdcManager.GetSignatureManifest(FileDataInfo);
+				var localSignatureManifest = await localRdcManager.GetSignatureManifestAsync(FileDataInfo);
 
 				log.Debug("Number of a local file '{0}' signatures was {1}.", FileName, localSignatureManifest.Signatures.Count);
 

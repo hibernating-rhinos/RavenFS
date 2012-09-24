@@ -5,6 +5,7 @@
 	using System.IO;
 	using System.Linq;
 	using System.Threading;
+	using System.Threading.Tasks;
 	using RavenFS.Client;
 	using RavenFS.Storage;
 	using RavenFS.Util;
@@ -25,44 +26,47 @@
             _sigGenerator = sigGenerator;
         }
 
-        public SignatureManifest GetSignatureManifest(DataInfo dataInfo)
+        public Task<SignatureManifest> GetSignatureManifestAsync(DataInfo dataInfo)
         {
-			signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).EnterUpgradeableReadLock();
-			IEnumerable<SignatureInfo> signatureInfos = null;
-
-	        try
+	        return Task.Factory.StartNew(() =>
 	        {
-				var lastUpdate = _signatureRepository.GetLastUpdate();
-				
-				if (lastUpdate == null || lastUpdate < dataInfo.CreatedAt)
-				{
-					signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).EnterWriteLock();
-					try
-					{
-						signatureInfos = PrepareSignatures(dataInfo.Name);
-					}
-					finally
-					{
-						signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).ExitWriteLock();
-					}
-				}
-				else
-				{
-					signatureInfos = _signatureRepository.GetByFileName();
-				}
-	        }
-	        finally
-	        {
-				signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).ExitUpgradeableReadLock();
-	        }
+		        signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).EnterUpgradeableReadLock();
+		        IEnumerable<SignatureInfo> signatureInfos = null;
 
-            var result = new SignatureManifest
-                             {
-                                 FileLength = dataInfo.Length,
-                                 FileName = dataInfo.Name,
-                                 Signatures = SignatureInfosToSignatures(signatureInfos)
-                             };
-            return result;
+		        try
+		        {
+			        var lastUpdate = _signatureRepository.GetLastUpdate();
+
+			        if (lastUpdate == null || lastUpdate < dataInfo.CreatedAt)
+			        {
+				        signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).EnterWriteLock();
+				        try
+				        {
+					        signatureInfos = PrepareSignatures(dataInfo.Name);
+				        }
+				        finally
+				        {
+					        signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).ExitWriteLock();
+				        }
+			        }
+			        else
+			        {
+				        signatureInfos = _signatureRepository.GetByFileName();
+			        }
+		        }
+		        finally
+		        {
+			        signatureBuidInProgress.GetOrAdd(dataInfo.Name, new ReaderWriterLockSlim()).ExitUpgradeableReadLock();
+		        }
+
+		        var result = new SignatureManifest
+			                     {
+				                     FileLength = dataInfo.Length,
+				                     FileName = dataInfo.Name,
+				                     Signatures = SignatureInfosToSignatures(signatureInfos)
+			                     };
+		        return result;
+	        });
         }
 
         public Stream GetSignatureContentForReading(string sigName)
