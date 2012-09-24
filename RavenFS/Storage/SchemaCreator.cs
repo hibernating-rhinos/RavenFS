@@ -169,7 +169,7 @@ namespace RavenFS.Storage
 
 			Api.JetAddColumn(session, tableid, "data", new JET_COLUMNDEF
 			{
-				cbMax = 64 * 1024 * 1024,
+				cbMax = 1024 * 1024 * 1024,
 				coltyp = JET_coltyp.LongBinary,
 				grbit = ColumndefGrbit.ColumnNotNULL
 			}, null, 0, out columnid);
