@@ -4,10 +4,9 @@ namespace RavenFS.Synchronization
 	using System.Collections.Generic;
 	using System.Linq;
 	using System.Threading;
-	using System.Threading.Tasks;
-	using Extensions;
 	using NLog;
 	using RavenFS.Client;
+	using Util;
 
 	public class SynchronizationQueue
 	{

@@ -1,7 +1,7 @@
-﻿using System.Threading.Tasks;
-
-namespace RavenFS.Infrastructure
+﻿namespace RavenFS.Extensions
 {
+	using System.Threading.Tasks;
+
 	public static class TaskExtensions
 	{
 		public static void AssertNotFaulted(this Task task)

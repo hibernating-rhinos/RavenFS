@@ -7,7 +7,9 @@ using Xunit.Extensions;
 namespace RavenFS.Tests
 {
 	using Extensions;
+	using Infrastructure;
 	using Synchronization.IO;
+	using Util;
 
 	public class ClientUsage : WebApiTest
     {

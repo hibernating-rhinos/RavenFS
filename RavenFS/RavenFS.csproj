@@ -157,7 +157,7 @@
     <Compile Include="Controllers\FilesController.cs" />
     <Compile Include="Controllers\FoldersController.cs" />
     <Compile Include="Controllers\LogsController.cs" />
-    <Compile Include="Extensions\Buffers.cs" />
+    <Compile Include="Util\Buffers.cs" />
     <Compile Include="Extensions\ByteExtensions.cs" />
     <Compile Include="Extensions\ConfigurationExtension.cs" />
     <Compile Include="Extensions\EnumExtensions.cs" />
@@ -192,7 +192,7 @@
     <Compile Include="Infrastructure\LimitedStream.cs" />
     <Compile Include="Infrastructure\RedirectHandler.cs" />
     <Compile Include="Infrastructure\RedirectRouteHandler.cs" />
-    <Compile Include="Infrastructure\TaskExtensions.cs" />
+    <Compile Include="Extensions\TaskExtensions.cs" />
     <Compile Include="NonAdminHttp.cs" />
     <Compile Include="Notifications\NotificationPublisher.cs" />
     <Compile Include="Notifications\SynchronizationUpdate.cs" />

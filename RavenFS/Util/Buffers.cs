@@ -1,4 +1,4 @@
-namespace RavenFS.Extensions
+namespace RavenFS.Util
 {
 	public class Buffers
 	{
