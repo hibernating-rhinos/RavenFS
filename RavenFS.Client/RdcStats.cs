@@ -1,9 +1,9 @@
-﻿using System;
-
-namespace RavenFS.Client
+﻿namespace RavenFS.Client
 {
     public class RdcStats
     {
-        public int Version { get; set; }
+        public uint CurrentVersion { get; set; }
+
+        public uint MinimumCompatibileAppVersion { get; set; }
     }
 }

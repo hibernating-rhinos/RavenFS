@@ -157,6 +157,8 @@
     <Compile Include="Controllers\FilesController.cs" />
     <Compile Include="Controllers\FoldersController.cs" />
     <Compile Include="Controllers\LogsController.cs" />
+    <Compile Include="Synchronization\Rdc\Wrapper\RdcVersion.cs" />
+    <Compile Include="Synchronization\Rdc\Wrapper\RdcVersionChecker.cs" />
     <Compile Include="Util\Buffers.cs" />
     <Compile Include="Extensions\ByteExtensions.cs" />
     <Compile Include="Extensions\ConfigurationExtension.cs" />

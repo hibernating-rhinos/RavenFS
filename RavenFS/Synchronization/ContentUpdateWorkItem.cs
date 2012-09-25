@@ -56,6 +56,12 @@
 				return await UploadToAsync(destination);
 			}
 
+            var destinationServerRdcStats = await destinationRavenFileSystemClient.GetRdcStatsAsync();
+            if (!IsRemoteRdcCompatible(destinationServerRdcStats))
+            {
+                throw new SynchronizationException("Incompatible RDC version detected on destination server");
+            }
+            
 			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata);
 
 			if (conflict != null)
@@ -93,7 +99,21 @@
 			}
 		}
 
-		private async Task<SynchronizationReport> SynchronizeTo(string destinationServerUrl, ISignatureRepository localSignatureRepository, ISignatureRepository remoteSignatureRepository, SignatureManifest sourceSignatureManifest, SignatureManifest destinationSignatureManifest)
+	    private bool IsRemoteRdcCompatible(RdcStats destinationServerRdcStats)
+	    {
+            using (var versionChecker = new RdcVersionChecker())
+            {
+                RdcVersion localRdcVersion = versionChecker.GetRdcVersion();
+                if (destinationServerRdcStats.CurrentVersion >= localRdcVersion.MinimumCompatibleAppVersion)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+	    }
+
+	    private async Task<SynchronizationReport> SynchronizeTo(string destinationServerUrl, ISignatureRepository localSignatureRepository, ISignatureRepository remoteSignatureRepository, SignatureManifest sourceSignatureManifest, SignatureManifest destinationSignatureManifest)
 		{
 			var seedSignatureInfo = SignatureInfo.Parse(destinationSignatureManifest.Signatures.Last().Name);
 			var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);

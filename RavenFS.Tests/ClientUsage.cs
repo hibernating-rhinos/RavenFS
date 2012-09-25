@@ -163,7 +163,9 @@ namespace RavenFS.Tests
             var client = NewClient();
             var result = client.GetRdcStatsAsync().Result;
             Assert.NotNull(result);
-            Assert.Equal(0x010000, result.Version);
+            Assert.True(result.CurrentVersion > 0);
+            Assert.True(result.MinimumCompatibileAppVersion > 0);
+            Assert.True(result.CurrentVersion >= result.MinimumCompatibileAppVersion);
         }
 
         [Fact]

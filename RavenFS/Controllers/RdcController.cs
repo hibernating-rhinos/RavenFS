@@ -37,10 +37,15 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("GET")]
 		public RdcStats Stats()
 		{
-			return new RdcStats
-			{
-				Version = (int)Msrdc.Version
-			};
+            using (var rdcVersionChecker = new RdcVersionChecker())
+            {
+                RdcVersion rdcVersion = rdcVersionChecker.GetRdcVersion();
+                return new RdcStats
+                {
+                    CurrentVersion = rdcVersion.CurrentVersion,
+                    MinimumCompatibileAppVersion = rdcVersion.MinimumCompatibleAppVersion
+                };
+            }
 		}
 
 		[AcceptVerbs("GET")]
