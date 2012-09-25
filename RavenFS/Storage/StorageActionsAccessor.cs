@@ -244,18 +244,6 @@ namespace RavenFS.Storage
 			}
 		}
 
-		public void IncreasePageUsageCount(int pageId)
-		{
-			Api.JetSetCurrentIndex(session, Pages, "by_id");
-
-			Api.MakeKey(session, Pages, pageId, MakeKeyGrbit.NewKey);
-
-			if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
-			{
-				Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], 1);
-			}
-		}
-
 		private long? GetTotalSize()
 		{
 			var totalSize = Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]);
