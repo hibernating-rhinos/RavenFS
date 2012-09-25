@@ -41,5 +41,11 @@ namespace RavenFS.Util
 			return fileName + (deleteVersion > 0 ? deleteVersion.ToString(CultureInfo.InvariantCulture) : string.Empty) +
 			       DeletingFileSuffix;
 		}
+
+		public const string DeletingFileConfigPrefix = "Deleting-";
+		public static string DeletingFileConfigNameForFile(string fileName)
+		{
+			return DeletingFileConfigPrefix + fileName;
+		}
 	}
 }

@@ -1,9 +1,12 @@
 ﻿namespace RavenFS.Infrastructure
 {
 	using System;
+	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Reactive.Linq;
+	using System.Threading.Tasks;
+	using Extensions;
 	using Microsoft.Isam.Esent.Interop;
 	using NLog;
 	using Search;
@@ -30,10 +33,10 @@
 
 		private void InitializeTimer()
 		{
-			//timer.Subscribe(tick => );
+			timer.Subscribe(tick => PerformAsync());
 		}
 
-		public void DeleteFile(string fileName)
+		public void IndicateFileToDelete(string fileName)
 		{
 			var deletingFileName = RavenFileNameHelper.DeletingFileName(fileName);
 			var fileExists = true;
@@ -84,6 +87,9 @@
 
 					log.Debug(string.Format("File '{0}' was renamed to '{1}' and marked as deleted",
 					                        fileName, deletingFileName));
+
+					accessor.SetConfigurationValue(RavenFileNameHelper.DeletingFileConfigNameForFile(deletingFileName),
+					                               deletingFileName);
 				}
 				else
 				{
@@ -96,6 +102,36 @@
 			{
 				search.Delete(fileName);
 				search.Delete(deletingFileName);
+			}
+		}
+
+		public void PerformAsync()
+		{
+			IList<string> filesToDelete = null;
+
+			storage.Batch(
+				accessor =>
+				filesToDelete = accessor.GetConfigsStartWithPrefix<string>(RavenFileNameHelper.DeletingFileConfigPrefix, 0, 10));
+
+			foreach (var fileToDelete in filesToDelete)
+			{
+				var fileName = fileToDelete;
+
+				Task.Factory.StartNew(
+					() => ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor => accessor.Delete(fileName)))).ContinueWith(
+						t =>
+						{
+							if (t.Exception == null)
+							{
+								storage.Batch(accessor => accessor.DeleteConfig(RavenFileNameHelper.DeletingFileConfigNameForFile(fileName)));
+
+								log.Debug("File '{0}' was deleted from storage", fileName);
+							}
+							else
+							{
+								log.Warn("Could not delete file '{0}' from storage", fileName);
+							}
+						});
 			}
 		}
 	}

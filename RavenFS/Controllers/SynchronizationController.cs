@@ -115,7 +115,7 @@
 
 				Storage.Batch(accessor =>
 				{
-					StorageCleanupTask.DeleteFile(fileName);
+					StorageCleanupTask.IndicateFileToDelete(fileName);
 					accessor.RenameFile(tempFileName, fileName);
 
 					Search.Delete(tempFileName);
@@ -228,7 +228,7 @@
 			DeleteSynchronizationReport(fileName, accessor);
 
 			// remove previous .downloading file
-			StorageCleanupTask.DeleteFile(RavenFileNameHelper.DownloadingFileName(fileName));
+			StorageCleanupTask.IndicateFileToDelete(RavenFileNameHelper.DownloadingFileName(fileName));
 		}
 
 		[AcceptVerbs("POST")]
@@ -315,7 +315,7 @@
 				
 				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
 
-				StorageCleanupTask.DeleteFile(fileName);
+				StorageCleanupTask.IndicateFileToDelete(fileName);
 
                 PublishFileNotification(fileName, Notifications.FileChangeAction.Delete);
 			}

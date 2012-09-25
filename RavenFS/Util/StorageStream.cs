@@ -64,7 +64,7 @@ namespace RavenFS.Util
                 case StorageStreamAccess.CreateAndWrite:
                     TransactionalStorage.Batch(accessor =>
                     {
-						cleanup.DeleteFile(fileName);
+						cleanup.IndicateFileToDelete(fileName);
                         accessor.PutFile(fileName, null, metadata);
                         indexStorage.Index(fileName, metadata);
                     });
