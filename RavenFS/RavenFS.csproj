@@ -159,6 +159,7 @@
     <Compile Include="Controllers\LogsController.cs" />
     <Compile Include="Synchronization\Rdc\Wrapper\RdcVersion.cs" />
     <Compile Include="Synchronization\Rdc\Wrapper\RdcVersionChecker.cs" />
+    <Compile Include="Infrastructure\StorageCleanupTask.cs" />
     <Compile Include="Util\Buffers.cs" />
     <Compile Include="Extensions\ByteExtensions.cs" />
     <Compile Include="Extensions\ConfigurationExtension.cs" />
@@ -323,7 +324,7 @@
     <Compile Include="Util\NarrowedStream.cs" />
     <Compile Include="Util\RabinKarpHasher.cs" />
     <Compile Include="Storage\StorageConstants.cs" />
-    <Compile Include="Util\SynchronizationNamesHelper.cs" />
+    <Compile Include="Util\RavenFileNameHelper.cs" />
     <Compile Include="Util\StorageStream.cs" />
     <Compile Include="Util\StorageStreamAccess.cs" />
     <Compile Include="Util\SynchronizingFileStream.cs" />

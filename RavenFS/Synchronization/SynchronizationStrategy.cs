@@ -28,7 +28,12 @@
 				return false;
 			}
 
-			if (file.Name.EndsWith(SynchronizationNamesHelper.DownloadingFileSuffix))
+			if (file.Name.EndsWith(RavenFileNameHelper.DownloadingFileSuffix))
+			{
+				return false;
+			}
+
+			if (file.Name.EndsWith(RavenFileNameHelper.DeletingFileSuffix))
 			{
 				return false;
 			}

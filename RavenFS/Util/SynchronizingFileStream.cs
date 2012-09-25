@@ -3,6 +3,7 @@ namespace RavenFS.Util
 	using System.Collections.Specialized;
 	using System.Security.Cryptography;
 	using Extensions;
+	using Infrastructure;
 	using Search;
 	using Storage;
 
@@ -10,7 +11,7 @@ namespace RavenFS.Util
 	{
 		private readonly MD5 md5Hasher;
 
-		private SynchronizingFileStream(TransactionalStorage transactionalStorage, string fileName, StorageStreamAccess storageStreamAccess, NameValueCollection metadata, IndexStorage indexStorage) : base(transactionalStorage, fileName, storageStreamAccess, metadata, indexStorage)
+		private SynchronizingFileStream(TransactionalStorage transactionalStorage, string fileName, StorageStreamAccess storageStreamAccess, NameValueCollection metadata, IndexStorage indexStorage, StorageCleanupTask cleanup) : base(transactionalStorage, fileName, storageStreamAccess, metadata, indexStorage, cleanup)
 		{
 			md5Hasher = new MD5CryptoServiceProvider();
 		}
@@ -40,9 +41,9 @@ namespace RavenFS.Util
 			}
 		}
 
-		public static SynchronizingFileStream CreatingOrOpeningAndWritting(TransactionalStorage storage, IndexStorage search, string fileName, NameValueCollection metadata)
+		public static SynchronizingFileStream CreatingOrOpeningAndWritting(TransactionalStorage storage, IndexStorage search, StorageCleanupTask cleanupTask, string fileName, NameValueCollection metadata)
 		{
-			return new SynchronizingFileStream(storage, fileName, StorageStreamAccess.CreateAndWrite, metadata, search)
+			return new SynchronizingFileStream(storage, fileName, StorageStreamAccess.CreateAndWrite, metadata, search, cleanupTask)
 			       	{ PreventUploadComplete = true };
 		}
 	}

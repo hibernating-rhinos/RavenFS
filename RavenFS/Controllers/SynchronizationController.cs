@@ -56,7 +56,7 @@
 			}
 
 			var fileName = Request.Headers.GetValues(SyncingMultipartConstants.FileName).FirstOrDefault();
-			var tempFileName = SynchronizationNamesHelper.DownloadingFileName(fileName);
+			var tempFileName = RavenFileNameHelper.DownloadingFileName(fileName);
 
 			var sourceServerId = new Guid(Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault());
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
@@ -97,7 +97,7 @@
 
 				Historian.UpdateLastModified(sourceMetadata);
 
-				var synchronizingFile = SynchronizingFileStream.CreatingOrOpeningAndWritting(Storage, Search, tempFileName, sourceMetadata);
+				var synchronizingFile = SynchronizingFileStream.CreatingOrOpeningAndWritting(Storage, Search, StorageCleanupTask, tempFileName, sourceMetadata);
 				
 				var provider = new MultipartSyncStreamProvider(synchronizingFile, localFile);
 
@@ -115,7 +115,7 @@
 
 				Storage.Batch(accessor =>
 				{
-					accessor.Delete(fileName);
+					StorageCleanupTask.DeleteFile(fileName);
 					accessor.RenameFile(tempFileName, fileName);
 
 					Search.Delete(tempFileName);
@@ -228,7 +228,7 @@
 			DeleteSynchronizationReport(fileName, accessor);
 
 			// remove previous .downloading file
-			accessor.Delete(SynchronizationNamesHelper.DownloadingFileName(fileName));
+			StorageCleanupTask.DeleteFile(RavenFileNameHelper.DownloadingFileName(fileName));
 		}
 
 		[AcceptVerbs("POST")]
@@ -315,9 +315,7 @@
 				
 				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
 
-				Storage.Batch(accessor => accessor.Delete(fileName));
-
-				Search.Delete(fileName);
+				StorageCleanupTask.DeleteFile(fileName);
 
                 PublishFileNotification(fileName, Notifications.FileChangeAction.Delete);
 			}
@@ -433,7 +431,7 @@
 
 			Storage.Batch(accessor =>
 			{
-				var reports = accessor.GetConfigsStartWithPrefix<SynchronizationReport>(SynchronizationNamesHelper.SyncResultNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
+				var reports = accessor.GetConfigsStartWithPrefix<SynchronizationReport>(RavenFileNameHelper.SyncResultNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
 				page = new ListPage<SynchronizationReport>(reports, reports.Count);
 			});
 
@@ -466,7 +464,7 @@
 
 			Storage.Batch(accessor =>
 			{
-				var conflicts = accessor.GetConfigsStartWithPrefix<ConflictItem>(SynchronizationNamesHelper.ConflictConfigNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
+				var conflicts = accessor.GetConfigsStartWithPrefix<ConflictItem>(RavenFileNameHelper.ConflictConfigNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
 				page = new ListPage<ConflictItem>(conflicts, conflicts.Count);
 			});
 
@@ -602,7 +600,7 @@
 			Storage.Batch(accessor =>
 			{
 				var conflict =
-					accessor.GetConfigurationValue<ConflictItem>(SynchronizationNamesHelper.ConflictConfigNameForFile(fileName));
+					accessor.GetConfigurationValue<ConflictItem>(RavenFileNameHelper.ConflictConfigNameForFile(fileName));
 				var localMetadata = accessor.GetFile(fileName, 0, 0).Metadata;
 				var localHistory = Historian.DeserializeHistory(localMetadata);
 
@@ -626,7 +624,7 @@
 				accessor =>
 				{
 					var localMetadata = accessor.GetFile(fileName, 0, 0).Metadata;
-					var conflictConfigName = SynchronizationNamesHelper.ConflictConfigNameForFile(fileName);
+					var conflictConfigName = RavenFileNameHelper.ConflictConfigNameForFile(fileName);
 					var conflictItem = accessor.GetConfigurationValue<ConflictItem>(conflictConfigName);
 
 					var conflictResolution =
@@ -657,13 +655,13 @@
 
 		private void SaveSynchronizationReport(string fileName, StorageActionsAccessor accessor, SynchronizationReport report)
 		{
-			var name = SynchronizationNamesHelper.SyncResultNameForFile(fileName);
+			var name = RavenFileNameHelper.SyncResultNameForFile(fileName);
 			accessor.SetConfigurationValue(name, report);
 		}
 
 		private void DeleteSynchronizationReport(string fileName, StorageActionsAccessor accessor)
 		{
-			var name = SynchronizationNamesHelper.SyncResultNameForFile(fileName);
+			var name = RavenFileNameHelper.SyncResultNameForFile(fileName);
 			accessor.DeleteConfig(name);
 			Search.Delete(name);
 		}
@@ -675,7 +673,7 @@
 			Storage.Batch(
 				accessor =>
 				{
-					var name = SynchronizationNamesHelper.SyncResultNameForFile(fileName);
+					var name = RavenFileNameHelper.SyncResultNameForFile(fileName);
 					accessor.TryGetConfigurationValue(name, out preResult);
 				});
 

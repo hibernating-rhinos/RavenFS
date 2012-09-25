@@ -28,6 +28,7 @@ namespace RavenFS
 		private readonly Historian historian;
 		private readonly FileLockManager fileLockManager;
 		private readonly SynchronizationTask synchronizationTask;
+		private readonly StorageCleanupTask storageCleanupTask;
 		private readonly ConflictArtifactManager conflictArtifactManager;
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
@@ -65,6 +66,7 @@ namespace RavenFS
 			conflictDetector = new ConflictDetector();
 			conflictResolver = new ConflictResolver();
 			synchronizationTask = new SynchronizationTask(storage, sigGenerator, notificationPublisher);
+			storageCleanupTask = new StorageCleanupTask(storage, search);
 
 			AppDomain.CurrentDomain.ProcessExit += ShouldDispose;
 			AppDomain.CurrentDomain.DomainUnload += ShouldDispose;
@@ -114,6 +116,11 @@ namespace RavenFS
 		public SynchronizationTask SynchronizationTask
 		{
 			get { return synchronizationTask; }
+		}
+
+		public StorageCleanupTask StorageCleanupTask
+		{
+			get { return storageCleanupTask; }
 		}
 
 		public ConflictArtifactManager ConflictArtifactManager

@@ -1,8 +1,9 @@
 namespace RavenFS.Util
 {
 	using System;
+	using System.Globalization;
 
-	public static class SynchronizationNamesHelper
+	public static class RavenFileNameHelper
 	{
 	    public const string SyncNamePrefix = "Syncing-";
 		public static string SyncNameForFile(string fileName, string destination)
@@ -33,5 +34,12 @@ namespace RavenFS.Util
         {
 			return fileName + DownloadingFileSuffix;
         }
+
+		public const string DeletingFileSuffix = ".deleting";
+		public static string DeletingFileName(string fileName, int deleteVersion = 0)
+		{
+			return fileName + (deleteVersion > 0 ? deleteVersion.ToString(CultureInfo.InvariantCulture) : string.Empty) +
+			       DeletingFileSuffix;
+		}
 	}
 }

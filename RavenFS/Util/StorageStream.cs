@@ -7,7 +7,9 @@ using RavenFS.Storage;
 
 namespace RavenFS.Util
 {
-    public class StorageStream : Stream
+	using Infrastructure;
+
+	public class StorageStream : Stream
     {
         public TransactionalStorage TransactionalStorage { get; private set; }
         public StorageStreamAccess StorageStreamAccess { get; private set; }
@@ -29,20 +31,20 @@ namespace RavenFS.Util
 
         public static StorageStream Reading(TransactionalStorage transactionalStorage, string fileName)
         {
-            return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.Read, null, null);
+            return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.Read, null, null, null);
         }
 
-        public static StorageStream CreatingNewAndWritting(TransactionalStorage transactionalStorage, IndexStorage indexStorage, string fileName, NameValueCollection metadata)
+        public static StorageStream CreatingNewAndWritting(TransactionalStorage transactionalStorage, IndexStorage indexStorage, StorageCleanupTask cleanup, string fileName, NameValueCollection metadata)
         {
             if (indexStorage == null)
             {
                 throw new ArgumentNullException("indexStorage", "indexStorage == null");
             }
-            return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.CreateAndWrite, metadata, indexStorage);
+            return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.CreateAndWrite, metadata, indexStorage, cleanup);
         }
 
     	protected StorageStream(TransactionalStorage transactionalStorage, string fileName, StorageStreamAccess storageStreamAccess,
-            NameValueCollection metadata, Search.IndexStorage indexStorage)
+            NameValueCollection metadata, Search.IndexStorage indexStorage, StorageCleanupTask cleanup)
         {
             TransactionalStorage = transactionalStorage;
             StorageStreamAccess = storageStreamAccess;
@@ -62,7 +64,7 @@ namespace RavenFS.Util
                 case StorageStreamAccess.CreateAndWrite:
                     TransactionalStorage.Batch(accessor =>
                     {
-                        accessor.Delete(fileName);
+						cleanup.DeleteFile(fileName);
                         accessor.PutFile(fileName, null, metadata);
                         indexStorage.Index(fileName, metadata);
                     });
@@ -107,6 +109,7 @@ namespace RavenFS.Util
                 TransactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(Name, nextPageIndex, PagesBatchSize));
                 if (fileAndPages.Pages.Count < 1)
                 {
+	                fileAndPages.Start = 0;
                     break;
                 }
                 currentPageFrameOffset += lastPageFrameSize;
