@@ -255,6 +255,8 @@ namespace RavenFS.Storage
 			{
 				using(var storageActionsAccessor = new StorageActionsAccessor(tableColumnsCache, instance, database))
 				{
+					current.Value = storageActionsAccessor;
+
 					action(storageActionsAccessor);
 					storageActionsAccessor.Commit();
 				}
