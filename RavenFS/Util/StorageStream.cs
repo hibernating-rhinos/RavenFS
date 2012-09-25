@@ -107,6 +107,7 @@ namespace RavenFS.Util
                 TransactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(Name, nextPageIndex, PagesBatchSize));
                 if (fileAndPages.Pages.Count < 1)
                 {
+	                fileAndPages.Start = 0;
                     break;
                 }
                 currentPageFrameOffset += lastPageFrameSize;

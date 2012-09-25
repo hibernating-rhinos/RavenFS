@@ -323,6 +323,10 @@ namespace RavenFS.Storage
 
 					do
 					{
+						var name = Api.RetrieveColumnAsString(session, Usage, tableColumnsCache.UsageColumns["name"]);
+						if (name != filename)
+							continue;
+
 						fileInformation.Pages.Add(new PageInformation
 						{
 							Size = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_size"]).Value,

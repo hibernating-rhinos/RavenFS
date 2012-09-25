@@ -85,6 +85,7 @@
   <ItemGroup>
     <Compile Include="BigFileHandling.cs" />
     <Compile Include="Bugs\CaseSensitiveFileDeletion.cs" />
+    <Compile Include="Bugs\ReadingFileIfFileWithGreaterNameExists.cs" />
     <Compile Include="Bugs\GettingListOfFilesAfterSynchronization.cs" />
     <Compile Include="Bugs\FileRenaming.cs" />
     <Compile Include="Bugs\Queries.cs" />
