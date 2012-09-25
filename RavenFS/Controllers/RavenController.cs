@@ -114,6 +114,11 @@ namespace RavenFS.Controllers
 			get { return RavenFileSystem.SynchronizationTask; }
 		}
 
+		protected StorageCleanupTask StorageCleanupTask
+		{
+			get { return RavenFileSystem.StorageCleanupTask; }
+		}
+
 		protected PagingInfo Paging
 		{
 			get

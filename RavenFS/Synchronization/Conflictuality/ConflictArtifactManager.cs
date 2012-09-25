@@ -29,7 +29,7 @@ namespace RavenFS.Synchronization.Conflictuality
 				{
 					metadata = accessor.GetFile(fileName, 0, 0).Metadata;
 					accessor.SetConfigurationValue(
-						SynchronizationNamesHelper.ConflictConfigNameForFile(fileName), conflict);
+						RavenFileNameHelper.ConflictConfigNameForFile(fileName), conflict);
 					metadata[SynchronizationConstants.RavenSynchronizationConflict] = "True";
 					accessor.UpdateFileMetadata(fileName, metadata);
 				});
@@ -46,7 +46,7 @@ namespace RavenFS.Synchronization.Conflictuality
 
 			Action<StorageActionsAccessor> delete = accessor =>
 			{
-				accessor.DeleteConfig(SynchronizationNamesHelper.ConflictConfigNameForFile(fileName));
+				accessor.DeleteConfig(RavenFileNameHelper.ConflictConfigNameForFile(fileName));
 				metadata = accessor.GetFile(fileName, 0, 0).Metadata;
 				metadata.Remove(SynchronizationConstants.RavenSynchronizationConflict);
 				metadata.Remove(SynchronizationConstants.RavenSynchronizationConflictResolution);

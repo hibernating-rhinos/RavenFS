@@ -70,17 +70,15 @@ namespace RavenFS.Controllers
 			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
 			{
 				AssertFileIsNotBeingSynced(name, accessor, true);
-				accessor.Delete(name);
+				StorageCleanupTask.DeleteFile(name);
 
-				if(!name.EndsWith(SynchronizationNamesHelper.DownloadingFileSuffix)) // don't create a tombstone for .downloading file
+				if(!name.EndsWith(RavenFileNameHelper.DownloadingFileSuffix)) // don't create a tombstone for .downloading file
 				{
 					var tombstoneMetadata = new NameValueCollection { { SynchronizationConstants.RavenDeleteMarker, "true" } };
 					Historian.UpdateLastModified(tombstoneMetadata);
 					accessor.PutFile(name, 0, tombstoneMetadata);
 				}
 			}), ConcurrencyResponseException);
-
-			Search.Delete(name);
 
 			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Delete });
 			log.Debug("File '{0}' was deleted", name);
@@ -210,7 +208,7 @@ namespace RavenFS.Controllers
 			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
 			{
 				AssertFileIsNotBeingSynced(name, accessor, true);
-				accessor.Delete(name);
+				StorageCleanupTask.DeleteFile(name);
 
 				long? contentLength = Request.Content.Headers.ContentLength;
 				if (Request.Headers.TransferEncodingChunked ?? false)

@@ -28,14 +28,14 @@ namespace RavenFS.Synchronization
 												FileLockedAt = DateTime.UtcNow
 											};
 
-			accessor.SetConfigurationValue(SynchronizationNamesHelper.SyncLockNameForFile(fileName), syncOperationDetails);
+			accessor.SetConfigurationValue(RavenFileNameHelper.SyncLockNameForFile(fileName), syncOperationDetails);
 
 			log.Debug("File '{0}' was locked", fileName);
 		}
 
 		public void UnlockByDeletingSyncConfiguration(string fileName, StorageActionsAccessor accessor)
 		{
-			accessor.DeleteConfig(SynchronizationNamesHelper.SyncLockNameForFile(fileName));
+			accessor.DeleteConfig(RavenFileNameHelper.SyncLockNameForFile(fileName));
 			log.Debug("File '{0}' was unlocked", fileName);
 		}
 
@@ -43,7 +43,7 @@ namespace RavenFS.Synchronization
 		{
 			SynchronizationLock syncOperationDetails;
 			
-			if (!accessor.TryGetConfigurationValue(SynchronizationNamesHelper.SyncLockNameForFile(fileName), out syncOperationDetails))
+			if (!accessor.TryGetConfigurationValue(RavenFileNameHelper.SyncLockNameForFile(fileName), out syncOperationDetails))
 				return true;
 
 			return DateTime.UtcNow - syncOperationDetails.FileLockedAt > ReplicationTimeout(accessor);

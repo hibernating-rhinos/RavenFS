@@ -4,6 +4,7 @@ namespace RavenFS.Tests
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Linq;
+	using Infrastructure;
 	using RavenFS.Search;
 	using Storage;
 	using Util;
@@ -30,7 +31,7 @@ namespace RavenFS.Tests
 		[Fact]
 		public void StorageStream_should_write_to_storage_by_64kB_pages()
 		{
-			using (var stream = StorageStream.CreatingNewAndWritting(transactionalStorage, new MockIndexStorage(), "file", EmptyETagMetadata))
+			using (var stream = StorageStream.CreatingNewAndWritting(transactionalStorage, new MockIndexStorage(), new StorageCleanupTask(transactionalStorage, new MockIndexStorage()), "file", EmptyETagMetadata))
 			{
 				var buffer = new byte[StorageConstants.MaxPageSize];
 
@@ -53,7 +54,7 @@ namespace RavenFS.Tests
 		[Fact]
 		public void SynchronizingFileStream_should_write_to_storage_by_64kB_pages()
 		{
-			using (var stream = SynchronizingFileStream.CreatingOrOpeningAndWritting(transactionalStorage, new MockIndexStorage(), "file", EmptyETagMetadata))
+			using (var stream = SynchronizingFileStream.CreatingOrOpeningAndWritting(transactionalStorage, new MockIndexStorage(), new StorageCleanupTask(transactionalStorage, new MockIndexStorage()), "file", EmptyETagMetadata))
 			{
 				var buffer = new byte[StorageConstants.MaxPageSize];
 
@@ -82,7 +83,7 @@ namespace RavenFS.Tests
 
 			new Random().NextBytes(buffer);
 
-			using (var stream = StorageStream.CreatingNewAndWritting(transactionalStorage, new MockIndexStorage(), "file", EmptyETagMetadata))
+			using (var stream = StorageStream.CreatingNewAndWritting(transactionalStorage, new MockIndexStorage(), new StorageCleanupTask(transactionalStorage, new MockIndexStorage()), "file", EmptyETagMetadata))
 			{
 				stream.Write(buffer, 0, StorageConstants.MaxPageSize);
 			}

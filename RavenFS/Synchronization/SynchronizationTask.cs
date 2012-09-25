@@ -421,7 +421,7 @@ namespace RavenFS.Synchronization
 				storage.Batch(
 					accessor =>
 						{
-							configObjects = accessor.GetConfigsStartWithPrefix<SynchronizationDetails>(SynchronizationNamesHelper.SyncNamePrefix + Uri.EscapeUriString(destination), 0, 100);
+							configObjects = accessor.GetConfigsStartWithPrefix<SynchronizationDetails>(RavenFileNameHelper.SyncNamePrefix + Uri.EscapeUriString(destination), 0, 100);
 						});
 			}
 			catch (Exception e)
@@ -436,7 +436,7 @@ namespace RavenFS.Synchronization
 		{
 			try
 			{
-				var name = SynchronizationNamesHelper.SyncNameForFile(fileName, destination);
+				var name = RavenFileNameHelper.SyncNameForFile(fileName, destination);
 				storage.Batch(accessor => accessor.SetConfigurationValue(name, new SynchronizationDetails
 				                                                               	{
 				                                                               		DestinationUrl = destination,
@@ -456,7 +456,7 @@ namespace RavenFS.Synchronization
 		{
 			try
 			{
-				var name = SynchronizationNamesHelper.SyncNameForFile(fileName, destination);
+				var name = RavenFileNameHelper.SyncNameForFile(fileName, destination);
 				storage.Batch(accessor => accessor.DeleteConfig(name));
 			}
 			catch (Exception e)
