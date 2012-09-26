@@ -7,7 +7,6 @@ using Xunit.Extensions;
 namespace RavenFS.Tests
 {
 	using Extensions;
-	using Infrastructure;
 	using Synchronization.IO;
 	using Util;
 
@@ -349,6 +348,28 @@ namespace RavenFS.Tests
 
 			var metadata = client.GetMetadataForAsync("toDelete.bin").Result;
 			Assert.Null(metadata);
+		}
+
+		[Fact]
+		public void Server_stats_after_file_delete()
+		{
+			var client = NewClient();
+			client.UploadAsync("toDelete.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+
+			client.DeleteAsync("toDelete.bin").Wait();
+
+			Assert.Equal(0, client.StatsAsync().Result.FileCount);
+		}
+
+		[Fact]
+		public void Server_stats_after_rename()
+		{
+			var client = NewClient();
+			client.UploadAsync("file.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+
+			client.RenameAsync("file.bin", "renamed.bin").Wait();
+
+			Assert.Equal(1, client.StatsAsync().Result.FileCount);
 		}
 
         private static MemoryStream PrepareTextSourceStream()

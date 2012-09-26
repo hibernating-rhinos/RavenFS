@@ -76,7 +76,7 @@ namespace RavenFS.Controllers
 				{
 					var tombstoneMetadata = new NameValueCollection { { SynchronizationConstants.RavenDeleteMarker, "true" } };
 					Historian.UpdateLastModified(tombstoneMetadata);
-					accessor.PutFile(name, 0, tombstoneMetadata);
+					accessor.PutFile(name, 0, tombstoneMetadata, true);
 				}
 			}), ConcurrencyResponseException);
 
@@ -171,7 +171,7 @@ namespace RavenFS.Controllers
 
 					accessor.RenameFile(name, rename);
 					accessor.UpdateFileMetadata(rename, metadata);
-					accessor.PutFile(name, 0, tombstoneMetadata);
+					accessor.PutFile(name, 0, tombstoneMetadata, true);
 				}), ConcurrencyResponseException);
 			}
 			catch (FileNotFoundException)

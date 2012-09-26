@@ -149,7 +149,7 @@ namespace RavenFS.Storage
 			return Api.RetrieveColumnAsInt32(session, Pages, tableColumnsCache.PagesColumns["id"]).Value;
 		}
 
-		public void PutFile(string filename, long? totalSize, NameValueCollection metadata)
+		public void PutFile(string filename, long? totalSize, NameValueCollection metadata, bool tombstone = false)
 		{
 			using (var update = new Update(session, Files, JET_prep.Insert))
 			{
@@ -175,10 +175,14 @@ namespace RavenFS.Storage
 
 				update.Save();
 			}
-			if (Api.TryMoveFirst(session, Details) == false)
-				throw new InvalidOperationException("Could not find system metadata row");
 
-			Api.EscrowUpdate(session, Details, tableColumnsCache.DetailsColumns["file_count"], 1);
+			if (!tombstone)
+			{
+				if (Api.TryMoveFirst(session, Details) == false)
+					throw new InvalidOperationException("Could not find system metadata row");
+
+				Api.EscrowUpdate(session, Details, tableColumnsCache.DetailsColumns["file_count"], 1);
+			}
 		}
 
 		private static string ToQueryString(NameValueCollection metadata)
@@ -401,11 +405,6 @@ namespace RavenFS.Storage
 				return;
 			Api.JetDelete(session, Files);
 
-			if (Api.TryMoveFirst(session, Details) == false)
-				throw new InvalidOperationException("Could not find system metadata row");
-
-			Api.EscrowUpdate(session, Details, tableColumnsCache.DetailsColumns["file_count"], -1);
-
 			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
 			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			if (!Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
@@ -491,6 +490,14 @@ namespace RavenFS.Storage
 				throw new InvalidOperationException("Could not find system metadata row");
 
 			return Api.RetrieveColumnAsInt32(session, Details, tableColumnsCache.DetailsColumns["file_count"]).Value;
+		}
+
+		public void DecrementFileCount()
+		{
+			if (Api.TryMoveFirst(session, Details) == false)
+				throw new InvalidOperationException("Could not find system metadata row");
+
+			Api.EscrowUpdate(session, Details, tableColumnsCache.DetailsColumns["file_count"], -1);
 		}
 
 		public void RenameFile(string filename, string rename)

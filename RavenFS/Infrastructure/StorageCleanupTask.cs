@@ -25,7 +25,7 @@
 		private readonly INotificationPublisher notificationPublisher;
 		private readonly ConcurrentDictionary<string, Task> deleteFileTasks = new ConcurrentDictionary<string, Task>();
 
-		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(10));
+		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(15));
 
 		public StorageCleanupTask(TransactionalStorage storage, IndexStorage search, INotificationPublisher notificationPublisher)
 		{
@@ -89,6 +89,7 @@
 				if (renameSucceeded)
 				{
 					accessor.UpdateFileMetadata(deletingFileName, metadata);
+					accessor.DecrementFileCount();
 
 					log.Debug(string.Format("File '{0}' was renamed to '{1}' and marked as deleted",
 					                        fileName, deletingFileName));
