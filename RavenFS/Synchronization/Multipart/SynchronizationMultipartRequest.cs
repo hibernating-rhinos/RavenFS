@@ -94,11 +94,6 @@ namespace RavenFS.Synchronization.Multipart
 			}
 		}
 
-		public void Abort()
-		{
-			request.Abort();
-		}
-
 		internal MultipartContent PrepareMultipartContent(CancellationToken token)
 		{
 			var content = new MultipartContent("form-data", syncingBoundary);
