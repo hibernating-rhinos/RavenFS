@@ -1,6 +1,7 @@
 ﻿namespace RavenFS.Infrastructure
 {
 	using System;
+	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.IO;
@@ -9,6 +10,7 @@
 	using Extensions;
 	using Microsoft.Isam.Esent.Interop;
 	using NLog;
+	using Notifications;
 	using Search;
 	using Storage;
 	using Synchronization;
@@ -20,13 +22,16 @@
 
 		private readonly TransactionalStorage storage;
 		private readonly IndexStorage search;
+		private readonly INotificationPublisher notificationPublisher;
+		private readonly ConcurrentDictionary<string, Task> deleteFileTasks = new ConcurrentDictionary<string, Task>();
 
 		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(10));
 
-		public StorageCleanupTask(TransactionalStorage storage, IndexStorage search)
+		public StorageCleanupTask(TransactionalStorage storage, IndexStorage search, INotificationPublisher notificationPublisher)
 		{
 			this.storage = storage;
 			this.search = search;
+			this.notificationPublisher = notificationPublisher;
 
 			InitializeTimer();
 		}
@@ -88,8 +93,10 @@
 					log.Debug(string.Format("File '{0}' was renamed to '{1}' and marked as deleted",
 					                        fileName, deletingFileName));
 
-					accessor.SetConfigurationValue(RavenFileNameHelper.DeletingFileConfigNameForFile(deletingFileName),
-					                               deletingFileName);
+					var configName = RavenFileNameHelper.DeletingFileConfigNameForFile(deletingFileName);
+					accessor.SetConfigurationValue(configName, deletingFileName);
+
+					notificationPublisher.Publish(new ConfigChange() { Name = configName, Action = ConfigChangeAction.Set });
 				}
 				else
 				{
@@ -105,34 +112,56 @@
 			}
 		}
 
-		public void PerformAsync()
+		public Task PerformAsync()
 		{
 			IList<string> filesToDelete = null;
 
 			storage.Batch(
 				accessor =>
-				filesToDelete = accessor.GetConfigsStartWithPrefix<string>(RavenFileNameHelper.DeletingFileConfigPrefix, 0, 10));
+				filesToDelete = accessor.GetConfigsWithPrefix<string>(RavenFileNameHelper.DeletingFileConfigPrefix, 0, 10));
+
+			var tasks = new List<Task>();
 
 			foreach (var fileToDelete in filesToDelete)
 			{
 				var fileName = fileToDelete;
 
-				Task.Factory.StartNew(
+				Task existingTask;
+
+				if (deleteFileTasks.TryGetValue(fileName, out existingTask))
+					if (!existingTask.IsCompleted)
+						continue;
+
+				log.Debug("Starting to delete file '{0}' from storage", fileName);
+
+				var deleteTask  = TaskEx.Run(
 					() => ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor => accessor.Delete(fileName)))).ContinueWith(
 						t =>
 						{
 							if (t.Exception == null)
 							{
-								storage.Batch(accessor => accessor.DeleteConfig(RavenFileNameHelper.DeletingFileConfigNameForFile(fileName)));
+								var configName = RavenFileNameHelper.DeletingFileConfigNameForFile(fileName);
 
+								storage.Batch(accessor => accessor.DeleteConfig(configName));
+								
+								notificationPublisher.Publish(new ConfigChange() { Name = configName, Action = ConfigChangeAction.Delete });
+								
 								log.Debug("File '{0}' was deleted from storage", fileName);
 							}
 							else
 							{
 								log.Warn("Could not delete file '{0}' from storage", fileName);
 							}
+
+							deleteFileTasks.TryRemove(fileName, out existingTask);
 						});
+
+				deleteFileTasks.AddOrUpdate(fileName, deleteTask, (file, oldTask) => deleteTask);
+
+				tasks.Add(deleteTask);
 			}
+
+			return TaskEx.WhenAll(tasks);
 		}
 	}
 }

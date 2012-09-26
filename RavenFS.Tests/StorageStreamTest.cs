@@ -5,6 +5,7 @@ namespace RavenFS.Tests
 	using System.IO;
 	using System.Linq;
 	using Infrastructure;
+	using RavenFS.Notifications;
 	using RavenFS.Search;
 	using Storage;
 	using Util;
@@ -28,10 +29,19 @@ namespace RavenFS.Tests
 			}
 		}
 
+
+		private class EmptyNotificationsPublisher : INotificationPublisher
+		{
+			public void Publish(Notification change)
+			{
+				
+			}
+		}
+
 		[Fact]
 		public void StorageStream_should_write_to_storage_by_64kB_pages()
 		{
-			using (var stream = StorageStream.CreatingNewAndWritting(transactionalStorage, new MockIndexStorage(), new StorageCleanupTask(transactionalStorage, new MockIndexStorage()), "file", EmptyETagMetadata))
+			using (var stream = StorageStream.CreatingNewAndWritting(transactionalStorage, new MockIndexStorage(), new StorageCleanupTask(transactionalStorage, new MockIndexStorage(), new EmptyNotificationsPublisher()), "file", EmptyETagMetadata))
 			{
 				var buffer = new byte[StorageConstants.MaxPageSize];
 
@@ -54,7 +64,7 @@ namespace RavenFS.Tests
 		[Fact]
 		public void SynchronizingFileStream_should_write_to_storage_by_64kB_pages()
 		{
-			using (var stream = SynchronizingFileStream.CreatingOrOpeningAndWritting(transactionalStorage, new MockIndexStorage(), new StorageCleanupTask(transactionalStorage, new MockIndexStorage()), "file", EmptyETagMetadata))
+			using (var stream = SynchronizingFileStream.CreatingOrOpeningAndWritting(transactionalStorage, new MockIndexStorage(), new StorageCleanupTask(transactionalStorage, new MockIndexStorage(), new EmptyNotificationsPublisher()), "file", EmptyETagMetadata))
 			{
 				var buffer = new byte[StorageConstants.MaxPageSize];
 
@@ -83,7 +93,7 @@ namespace RavenFS.Tests
 
 			new Random().NextBytes(buffer);
 
-			using (var stream = StorageStream.CreatingNewAndWritting(transactionalStorage, new MockIndexStorage(), new StorageCleanupTask(transactionalStorage, new MockIndexStorage()), "file", EmptyETagMetadata))
+			using (var stream = StorageStream.CreatingNewAndWritting(transactionalStorage, new MockIndexStorage(), new StorageCleanupTask(transactionalStorage, new MockIndexStorage(), new EmptyNotificationsPublisher()), "file", EmptyETagMetadata))
 			{
 				stream.Write(buffer, 0, StorageConstants.MaxPageSize);
 			}

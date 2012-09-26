@@ -431,7 +431,7 @@
 
 			Storage.Batch(accessor =>
 			{
-				var reports = accessor.GetConfigsStartWithPrefix<SynchronizationReport>(RavenFileNameHelper.SyncResultNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
+				var reports = accessor.GetConfigsWithPrefix<SynchronizationReport>(RavenFileNameHelper.SyncResultNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
 				page = new ListPage<SynchronizationReport>(reports, reports.Count);
 			});
 
@@ -464,7 +464,7 @@
 
 			Storage.Batch(accessor =>
 			{
-				var conflicts = accessor.GetConfigsStartWithPrefix<ConflictItem>(RavenFileNameHelper.ConflictConfigNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
+				var conflicts = accessor.GetConfigsWithPrefix<ConflictItem>(RavenFileNameHelper.ConflictConfigNamePrefix, Paging.PageSize * Paging.Start, Paging.PageSize);
 				page = new ListPage<ConflictItem>(conflicts, conflicts.Count);
 			});
 

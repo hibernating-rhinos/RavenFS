@@ -2,8 +2,8 @@
 
 namespace RavenFS.Notifications
 {
-    public class NotificationPublisher
-    {
+	public class NotificationPublisher : INotificationPublisher
+	{
         private readonly TransportState transportState;
 
         public NotificationPublisher(TransportState transportState)
