@@ -5,6 +5,7 @@ namespace RavenFS.Synchronization.Multipart
 	using System.Linq;
 	using System.Net.Http;
 	using System.Net.Http.Headers;
+	using Storage;
 	using Util;
 
 	public class MultipartSyncStreamProvider : MultipartStreamProvider
@@ -55,7 +56,7 @@ namespace RavenFS.Synchronization.Multipart
 			if (needType == "seed")
 			{
 				var limitedStream = new NarrowedStream(localFile, from, to);
-				limitedStream.CopyTo(synchronizingFile);
+				limitedStream.CopyTo(synchronizingFile, StorageConstants.MaxPageSize);
 
 				BytesCopied += length;
 
