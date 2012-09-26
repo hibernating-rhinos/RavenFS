@@ -317,6 +317,14 @@ namespace RavenFS.Client
 			get { return new ConfigurationClient(this);}
 		}
 
+		public StorageClient Storage
+		{
+			get
+			{
+				return new StorageClient(this);
+			}
+		}
+
         public IServerNotifications Notifications
         {
             get { return notifications; }
@@ -783,6 +791,27 @@ namespace RavenFS.Client
 				var requestUriString = String.Format("{0}/synchronization/IncrementLastETag?sourceServerId={1}&sourceFileETag={2}",
 				                                     ravenFileSystemClient.ServerUrl, sourceServerId, sourceFileETag);
 				var request = (HttpWebRequest) WebRequest.Create(requestUriString.NoCache());
+				request.ContentLength = 0;
+				request.Method = "POST";
+				return request.GetResponseAsync()
+					.ContinueWith(task => task.Result.Close())
+					.TryThrowBetterError();
+			}
+		}
+
+		public class StorageClient
+		{
+			private readonly RavenFileSystemClient ravenFileSystemClient;
+
+			public StorageClient(RavenFileSystemClient ravenFileSystemClient)
+			{
+				this.ravenFileSystemClient = ravenFileSystemClient;
+			}
+
+			public Task CleanUp()
+			{
+				var requestUriString = String.Format("{0}/storage/cleanup", ravenFileSystemClient.ServerUrl);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
 				request.ContentLength = 0;
 				request.Method = "POST";
 				return request.GetResponseAsync()
