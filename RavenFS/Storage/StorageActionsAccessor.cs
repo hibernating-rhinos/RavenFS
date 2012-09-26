@@ -399,40 +399,40 @@ namespace RavenFS.Storage
 
 		public void Delete(string filename)
 		{
+			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
+			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
+			if (Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
+			{
+				Api.JetSetCurrentIndex(session, Pages, "by_id");
+
+				do
+				{
+					var rowName = Api.RetrieveColumnAsString(session, Usage, tableColumnsCache.UsageColumns["name"]);
+					if (rowName != filename)
+						break;
+
+					var pageId = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value;
+
+					Api.MakeKey(session, Pages, pageId, MakeKeyGrbit.NewKey);
+
+					if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
+					{
+						var escrowUpdate = Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], -1);
+						if (escrowUpdate <= 1)
+						{
+							Api.JetDelete(session, Pages);
+						}
+					}
+
+					Api.JetDelete(session, Usage);
+				} while (Api.TryMoveNext(session, Usage));	
+			}
+
 			Api.JetSetCurrentIndex(session, Files, "by_name");
 			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
 				return;
 			Api.JetDelete(session, Files);
-
-			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
-			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
-			if (!Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
-				return;
-
-			Api.JetSetCurrentIndex(session, Pages, "by_id");
-
-			do
-			{
-				var rowName = Api.RetrieveColumnAsString(session, Usage, tableColumnsCache.UsageColumns["name"]);
-				if (rowName != filename)
-					break;
-
-				var pageId = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value;
-
-				Api.MakeKey(session, Pages, pageId, MakeKeyGrbit.NewKey);
-
-				if (Api.TrySeek(session, Pages, SeekGrbit.SeekEQ))
-				{
-					var escrowUpdate = Api.EscrowUpdate(session, Pages, tableColumnsCache.PagesColumns["usage_count"], -1);
-					if (escrowUpdate <= 1)
-					{
-						Api.JetDelete(session, Pages);
-					}
-				}
-
-				Api.JetDelete(session, Usage);
-			} while (Api.TryMoveNext(session, Usage));
 		}
 
 		public void UpdateFileMetadata(string filename, NameValueCollection metadata)
