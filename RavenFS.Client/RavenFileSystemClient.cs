@@ -226,7 +226,7 @@ namespace RavenFS.Client
 						collection[header] = task.Result.Headers[header];
 					}
 					var responseStream = task.Result.GetResponseStream();
-					return responseStream.CopyToAsync(destination, i => progress(filename, i))
+					return responseStream.CopyToAsync(destination, i => TaskEx.Run(() => progress(filename, i)))
 						.ContinueWith(_ =>
 						{
 							task.Result.Close();
@@ -284,11 +284,11 @@ namespace RavenFS.Client
 				.ContinueWith(
 					task => source.CopyToAsync(
 						task.Result,
-						written =>
+						written => TaskEx.Run(() =>
 						{
 							if (progress != null)
 								progress(filename, written);
-						})
+						}))
 				.ContinueWith(_ => task.Result.Close())
 				)
 				.Unwrap()
