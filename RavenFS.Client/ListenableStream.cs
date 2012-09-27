@@ -20,7 +20,10 @@ namespace RavenFS.Client
 
         private readonly Stream source;
         private long alreadyRead;
-        private long alreadyWritten { get; set; }
+	    private long alreadyWritten;
+	    private long readCount;
+	    private long writeCount;
+
         public event EventHandler<ProgressEventArgs> ReadingProgress;
 
         public void InvokeReadingProgress(ProgressEventArgs e)
@@ -68,7 +71,11 @@ namespace RavenFS.Client
         {
             var result = source.Read(buffer, offset, count);
             alreadyRead += result;
-            InvokeReadingProgress(new ProgressEventArgs(alreadyRead));
+			
+			if(readCount % 10 == 0 || readCount < 100)
+				InvokeReadingProgress(new ProgressEventArgs(alreadyRead));
+	        readCount++;
+
             return result;
         }
 
@@ -76,7 +83,10 @@ namespace RavenFS.Client
         {
             source.Write(buffer, offset, count);
             alreadyWritten += count;
-            InvokeWrittingProgress(new ProgressEventArgs(alreadyWritten));
+
+			if(writeCount % 10 == 0 || readCount < 100)
+				InvokeWrittingProgress(new ProgressEventArgs(alreadyWritten));
+	        writeCount++;
         }
 
         public override bool CanRead
