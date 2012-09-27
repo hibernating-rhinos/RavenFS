@@ -61,6 +61,15 @@
 					return;
 				}
 
+				if (fileAndPages.Metadata[SynchronizationConstants.RavenDeleteMarker] != null)
+				{
+					// if there exists a tombstone drop it
+					accessor.Delete(fileName);
+
+					fileExists = false;
+					return;
+				}
+
 				var metadata = new NameValueCollection(fileAndPages.Metadata)
 					               {
 						               {SynchronizationConstants.RavenDeleteMarker, "true"}
