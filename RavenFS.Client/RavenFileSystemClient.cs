@@ -797,6 +797,21 @@ namespace RavenFS.Client
 					.ContinueWith(task => task.Result.Close())
 					.TryThrowBetterError();
 			}
+
+			public Task<RdcStats> GetRdcStatsAsync()
+			{
+				var requestUriString = ravenFileSystemClient.ServerUrl + "/rdc/stats";
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
+				return request.GetResponseAsync()
+					.ContinueWith(task =>
+					{
+						using (var stream = task.Result.GetResponseStream())
+						{
+							return new JsonSerializer().Deserialize<RdcStats>(new JsonTextReader(new StreamReader(stream)));
+						}
+					})
+					.TryThrowBetterError();
+			}
 		}
 
 		public class StorageClient
@@ -818,21 +833,6 @@ namespace RavenFS.Client
 					.ContinueWith(task => task.Result.Close())
 					.TryThrowBetterError();
 			}
-		}
-
-		public Task<RdcStats> GetRdcStatsAsync()
-		{
-			var requestUriString = ServerUrl + "/rdc/stats";
-			var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
-			return request.GetResponseAsync()
-				.ContinueWith(task =>
-				{
-					using (var stream = task.Result.GetResponseStream())
-					{
-						return new JsonSerializer().Deserialize<RdcStats>(new JsonTextReader(new StreamReader(stream)));
-					}
-				})
-				.TryThrowBetterError();
 		}
 
 	    public void Dispose()

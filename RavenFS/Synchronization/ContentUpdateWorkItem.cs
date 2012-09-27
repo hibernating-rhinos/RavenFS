@@ -56,7 +56,7 @@
 				return await UploadToAsync(destination);
 			}
 
-            var destinationServerRdcStats = await destinationRavenFileSystemClient.GetRdcStatsAsync();
+            var destinationServerRdcStats = await destinationRavenFileSystemClient.Synchronization.GetRdcStatsAsync();
             if (!IsRemoteRdcCompatible(destinationServerRdcStats))
             {
                 throw new SynchronizationException("Incompatible RDC version detected on destination server");

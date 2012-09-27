@@ -160,7 +160,7 @@ namespace RavenFS.Tests
         public void Can_check_rdc_stats()
         {
             var client = NewClient();
-            var result = client.GetRdcStatsAsync().Result;
+            var result = client.Synchronization.GetRdcStatsAsync().Result;
             Assert.NotNull(result);
             Assert.True(result.CurrentVersion > 0);
             Assert.True(result.MinimumCompatibileAppVersion > 0);
