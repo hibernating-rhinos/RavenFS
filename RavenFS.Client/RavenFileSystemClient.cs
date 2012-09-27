@@ -14,10 +14,16 @@ using RavenFS.Client.Changes;
 
 namespace RavenFS.Client
 {
+	using System.Collections.Concurrent;
+	using System.Threading;
+
 	public class RavenFileSystemClient : IDisposable
 	{
 		private readonly string baseUrl;
-	    private ServerNotifications notifications;
+	    private readonly ServerNotifications notifications;
+
+		private readonly ConcurrentDictionary<string, CancellationTokenSource> uploadCancellationTokens =
+			new ConcurrentDictionary<string, CancellationTokenSource>();
 
 #if SILVERLIGHT
 		static RavenFileSystemClient()
@@ -34,6 +40,8 @@ namespace RavenFS.Client
 				this.baseUrl = this.ServerUrl.Substring(0, this.ServerUrl.Length - 1);
 
             notifications = new ServerNotifications(baseUrl);
+
+			notifications.CancelledUploads().Subscribe(CancelFileUpload);
 		}
 
 		public string ServerUrl
@@ -280,6 +288,11 @@ namespace RavenFS.Client
 			request.AllowWriteStreamBuffering = false;
 
 			AddHeaders(metadata, request);
+
+			var cts = new CancellationTokenSource();
+
+			RegisterUploadOperation(filename, cts);
+
 			return request.GetRequestStreamAsync()
 				.ContinueWith(
 					task => source.CopyToAsync(
@@ -288,7 +301,7 @@ namespace RavenFS.Client
 						{
 							if (progress != null)
 								progress(filename, written);
-						}))
+						}), cts.Token)
 				.ContinueWith(_ => task.Result.Close())
 				)
 				.Unwrap()
@@ -298,11 +311,33 @@ namespace RavenFS.Client
 					return request.GetResponseAsync();
 				})
 				.Unwrap()
-				.ContinueWith(task => task.Result.Close())
+				.ContinueWith(task =>
+				{
+					task.Result.Close();
+					UnregisterUploadOperation(filename);
+				})
 				.TryThrowBetterError();
 		}
 
+		private void CancelFileUpload(UploadCancelled uploadCancelled)
+		{
+			CancellationTokenSource cts;
+			if(uploadCancellationTokens.TryGetValue(uploadCancelled.File, out cts))
+			{
+				cts.Cancel();
+			}
+		}
 
+		private void RegisterUploadOperation(string fileName, CancellationTokenSource cts)
+		{
+			uploadCancellationTokens.TryAdd(fileName, cts);
+		}
+
+		private void UnregisterUploadOperation(string fileName)
+		{
+			CancellationTokenSource cts;
+			uploadCancellationTokens.TryRemove(fileName, out cts);
+		}
 
 		public SynchronizationClient Synchronization
 		{

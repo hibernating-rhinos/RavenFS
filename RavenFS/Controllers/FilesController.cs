@@ -17,9 +17,11 @@ namespace RavenFS.Controllers
 	using System.Security.Cryptography;
 	using Client;
 	using NLog;
+	using Notifications;
 	using Synchronization;
 	using FileChange = Notifications.FileChange;
 	using FileChangeAction = Notifications.FileChangeAction;
+	using UploadCancelled = Notifications.UploadCancelled;
 
 	public class FilesController : RavenController
 	{
@@ -202,7 +204,6 @@ namespace RavenFS.Controllers
 			Historian.Update(name, headers);
 			name = Uri.UnescapeDataString(name);
 
-
 			SynchronizationTask.Cancel(name);
 
 			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
@@ -248,6 +249,8 @@ namespace RavenFS.Controllers
 				}
 				catch (Exception ex)
 				{
+					Publisher.Publish(new UploadCancelled() { File = name });
+
 					log.WarnException(string.Format("Failed to upload a file '{0}'", name), ex);
 
 					var concurrencyException = ex as ConcurrencyException;

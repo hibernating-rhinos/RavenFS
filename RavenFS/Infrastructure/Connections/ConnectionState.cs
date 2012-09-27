@@ -18,6 +18,7 @@ namespace RavenFS.Infrastructure.Connections
 	    private int watchConfig;
 	    private int watchConflicts;
 	    private int watchSync;
+		private int watchCancellations;
         private ConcurrentSet<string> matchingFolders = new ConcurrentSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
 		public ConnectionState(EventsTransport eventsTransport)
@@ -55,6 +56,11 @@ namespace RavenFS.Infrastructure.Connections
             {
                 return true;
             }
+
+		    if (notification is UploadCancelled && watchCancellations > 0)
+		    {
+			    return true;
+		    }
 
 	        return false;
 	    }
@@ -137,6 +143,16 @@ namespace RavenFS.Infrastructure.Connections
         {
             matchingFolders.TryRemove(folder);
         }
+
+		public void WatchCancellations()
+		{
+			Interlocked.Increment(ref watchCancellations);
+		}
+
+		public void UnwatchCancellations()
+		{
+			Interlocked.Decrement(ref watchCancellations);
+		}
 
 		public void Disconnect()
 		{

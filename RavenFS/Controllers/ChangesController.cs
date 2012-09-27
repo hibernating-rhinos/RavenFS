@@ -63,6 +63,14 @@ namespace RavenFS.Controllers
             {
                 connectionState.UnwatchFolder(value);
             }
+			else if (Match(command, "watch-cancellations"))
+			{
+				connectionState.WatchCancellations();
+			}
+			else if (Match(command, "unwatch-cancellations"))
+			{
+				connectionState.UnwatchCancellations();
+			}
             else
             {
                 throw BadRequestException("command argument is mandatory");
