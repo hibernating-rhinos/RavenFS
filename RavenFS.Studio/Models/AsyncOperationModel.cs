@@ -90,6 +90,9 @@ namespace RavenFS.Studio.Models
 
         public void ProgressChanged(double amountCompleted, double amountToDo, string progressText = "")
         {
+			if (Math.Abs(amountToDo - 0) < double.Epsilon)
+				amountToDo = double.Epsilon;
+
             ProgressChanged((amountCompleted / amountToDo).Clamp(0, 1), progressText);
         }
 
