@@ -8,6 +8,12 @@ namespace RavenFS.Client
 {
     internal class ListenableStream : Stream
     {
+		private const double Kb = 1024;
+		private const double Mb = Kb * 1024;
+		private const double Gb = Mb * 1024;
+	    private const double MbPrecision = 0.1 * Mb;
+	    private const double GbPrecision = 0.01 * Gb;
+
         public class ProgressEventArgs : EventArgs
         {
             public long Processed { get; private set; }
@@ -21,8 +27,8 @@ namespace RavenFS.Client
         private readonly Stream source;
         private long alreadyRead;
 	    private long alreadyWritten;
-	    private long readCount;
-	    private long writeCount;
+		private long lastNotifiedRead;
+		private long lastNotifiedWritten;
 
         public event EventHandler<ProgressEventArgs> ReadingProgress;
 
@@ -71,10 +77,14 @@ namespace RavenFS.Client
         {
             var result = source.Read(buffer, offset, count);
             alreadyRead += result;
-			
-			if(readCount % 10 == 0 || readCount < 100)
+
+			if(alreadyRead <= Mb ||
+			   alreadyRead <= Gb && (alreadyRead - lastNotifiedRead) >= MbPrecision ||
+			   alreadyRead > Gb && (alreadyRead - lastNotifiedRead) >= GbPrecision)
+			{
 				InvokeReadingProgress(new ProgressEventArgs(alreadyRead));
-	        readCount++;
+				lastNotifiedRead = alreadyRead;
+			}
 
             return result;
         }
@@ -84,9 +94,13 @@ namespace RavenFS.Client
             source.Write(buffer, offset, count);
             alreadyWritten += count;
 
-			if(writeCount % 10 == 0 || readCount < 100)
+			if (alreadyWritten <= Mb ||
+				alreadyWritten <= Gb && (alreadyWritten - lastNotifiedWritten) >= MbPrecision ||
+				alreadyWritten > Gb && (alreadyWritten - lastNotifiedWritten) >= GbPrecision)
+			{
 				InvokeWrittingProgress(new ProgressEventArgs(alreadyWritten));
-	        writeCount++;
+				lastNotifiedWritten = alreadyWritten;
+			}
         }
 
         public override bool CanRead
