@@ -295,19 +295,16 @@ namespace RavenFS.Client
 			var uploadIdentifier = Guid.NewGuid();
 			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename + "?uploadId=" + uploadIdentifier);
 			request.Method = "PUT";
+			request.AllowWriteStreamBuffering = false;
+
 #if !SILVERLIGHT
 			request.SendChunked = true;
-			request.AllowWriteStreamBuffering = false;
 #else
 			if (source.CanSeek)
 			{
 				request.ContentLength = source.Length;
-				request.AllowWriteStreamBuffering = false;
 			}
 #endif
-			request.ContentLength = source.Length;
-			request.AllowWriteStreamBuffering = false;
-
 			AddHeaders(metadata, request);
 
 			var cts = new CancellationTokenSource();
