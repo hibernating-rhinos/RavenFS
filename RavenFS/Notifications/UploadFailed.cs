@@ -1,6 +1,6 @@
 ﻿namespace RavenFS.Notifications
 {
-	public class UploadCancelled : Notification
+	public class UploadFailed : Notification
 	{
 		public string File { get; set; }
 	}

@@ -17,11 +17,10 @@ namespace RavenFS.Controllers
 	using System.Security.Cryptography;
 	using Client;
 	using NLog;
-	using Notifications;
 	using Synchronization;
 	using FileChange = Notifications.FileChange;
 	using FileChangeAction = Notifications.FileChangeAction;
-	using UploadCancelled = Notifications.UploadCancelled;
+	using UploadFailed = Notifications.UploadFailed;
 
 	public class FilesController : RavenController
 	{
@@ -249,7 +248,7 @@ namespace RavenFS.Controllers
 				}
 				catch (Exception ex)
 				{
-					Publisher.Publish(new UploadCancelled() { File = name });
+					Publisher.Publish(new UploadFailed() { File = name });
 
 					log.WarnException(string.Format("Failed to upload a file '{0}'", name), ex);
 

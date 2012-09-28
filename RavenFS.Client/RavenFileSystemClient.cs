@@ -21,6 +21,7 @@ namespace RavenFS.Client
 	{
 		private readonly string baseUrl;
 	    private readonly ServerNotifications notifications;
+		private IDisposable failedUploadsObservator = null;
 
 		private readonly ConcurrentDictionary<string, CancellationTokenSource> uploadCancellationTokens =
 			new ConcurrentDictionary<string, CancellationTokenSource>();
@@ -40,13 +41,28 @@ namespace RavenFS.Client
 				this.baseUrl = this.ServerUrl.Substring(0, this.ServerUrl.Length - 1);
 
             notifications = new ServerNotifications(baseUrl);
-
-			notifications.CancelledUploads().Subscribe(CancelFileUpload);
 		}
 
 		public string ServerUrl
 		{
 			get { return baseUrl; }
+		}
+
+		public bool IsObservingFailedUploads
+		{
+			get { return failedUploadsObservator != null; }
+			set
+			{
+				if (value)
+				{
+					failedUploadsObservator = notifications.FailedUploads().Subscribe(CancelFileUpload);
+				}
+				else
+				{
+					failedUploadsObservator.Dispose();
+					failedUploadsObservator = null;
+				}
+			}
 		}
 
 		public Task<ServerStats> StatsAsync()
@@ -302,7 +318,11 @@ namespace RavenFS.Client
 							if (progress != null)
 								progress(filename, written);
 						}), cts.Token)
-				.ContinueWith(_ => task.Result.Close())
+				.ContinueWith(_ =>
+				{
+					UnregisterUploadOperation(filename);
+					task.Result.Close();
+				})
 				)
 				.Unwrap()
 				.ContinueWith(task =>
@@ -311,18 +331,14 @@ namespace RavenFS.Client
 					return request.GetResponseAsync();
 				})
 				.Unwrap()
-				.ContinueWith(task =>
-				{
-					task.Result.Close();
-					UnregisterUploadOperation(filename);
-				})
+				.ContinueWith(task => task.Result.Close())
 				.TryThrowBetterError();
 		}
 
-		private void CancelFileUpload(UploadCancelled uploadCancelled)
+		private void CancelFileUpload(UploadFailed uploadFailed)
 		{
 			CancellationTokenSource cts;
-			if(uploadCancellationTokens.TryGetValue(uploadCancelled.File, out cts))
+			if(uploadCancellationTokens.TryGetValue(uploadFailed.File, out cts))
 			{
 				cts.Cancel();
 			}
@@ -330,13 +346,19 @@ namespace RavenFS.Client
 
 		private void RegisterUploadOperation(string fileName, CancellationTokenSource cts)
 		{
-			uploadCancellationTokens.TryAdd(fileName, cts);
+			if (IsObservingFailedUploads)
+			{
+				uploadCancellationTokens.TryAdd(fileName, cts);
+			}
 		}
 
 		private void UnregisterUploadOperation(string fileName)
 		{
-			CancellationTokenSource cts;
-			uploadCancellationTokens.TryRemove(fileName, out cts);
+			if (IsObservingFailedUploads)
+			{
+				CancellationTokenSource cts;
+				uploadCancellationTokens.TryRemove(fileName, out cts);
+			}
 		}
 
 		public SynchronizationClient Synchronization

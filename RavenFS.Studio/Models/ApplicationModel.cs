@@ -20,6 +20,7 @@ namespace RavenFS.Studio.Models
             Notifications = new ObservableCollection<Notification>();
             Notifications.CollectionChanged += delegate { OnPropertyChanged(() => ErrorCount); };
 			Client = new RavenFileSystemClient(DetermineUri());
+			Client.IsObservingFailedUploads = true;
 		    AsyncOperations = new AsyncOperationsModel();
 		    State = new ApplicationState();
 		}

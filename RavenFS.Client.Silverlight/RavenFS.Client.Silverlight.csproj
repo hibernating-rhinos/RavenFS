@@ -205,8 +205,8 @@
     <Compile Include="..\RavenFS.Client\SynchronizationUpdate.cs">
       <Link>SynchronizationUpdate.cs</Link>
     </Compile>
-    <Compile Include="..\RavenFS.Client\UploadCancelled.cs">
-      <Link>UploadCancelled.cs</Link>
+    <Compile Include="..\RavenFS.Client\UploadFailed.cs">
+      <Link>UploadFailed.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\UrlExtensions.cs">
       <Link>UrlExtensions.cs</Link>

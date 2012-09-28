@@ -57,7 +57,7 @@ namespace RavenFS.Infrastructure.Connections
                 return true;
             }
 
-		    if (notification is UploadCancelled && watchCancellations > 0)
+		    if (notification is UploadFailed && watchCancellations > 0)
 		    {
 			    return true;
 		    }

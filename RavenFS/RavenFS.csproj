@@ -159,7 +159,7 @@
     <Compile Include="Controllers\LogsController.cs" />
     <Compile Include="Controllers\StorageController.cs" />
     <Compile Include="Notifications\INotificationPublisher.cs" />
-    <Compile Include="Notifications\UploadCancelled.cs" />
+    <Compile Include="Notifications\UploadFailed.cs" />
     <Compile Include="Synchronization\Rdc\Wrapper\RdcVersion.cs" />
     <Compile Include="Synchronization\Rdc\Wrapper\RdcVersionChecker.cs" />
     <Compile Include="Infrastructure\StorageCleanupTask.cs" />

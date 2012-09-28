@@ -155,16 +155,16 @@ namespace RavenFS.Client.Changes
             return (IObservable<SynchronizationUpdate>)observable;
         }
 
-		internal IObservable<UploadCancelled> CancelledUploads()
+		internal IObservable<UploadFailed> FailedUploads()
 		{
 			EnsureConnectionInitiated();
 
-			var observable = subjects.GetOrAdd("cancellations", s => new NotificationSubject<UploadCancelled>(
+			var observable = subjects.GetOrAdd("cancellations", s => new NotificationSubject<UploadFailed>(
 															   () => ConfigureConnection("watch-cancellations"),
 															   () => ConfigureConnection("unwatch-cancellations"),
 															   x => true));
 
-			return (IObservable<UploadCancelled>)observable;
+			return (IObservable<UploadFailed>)observable;
 		}
 
 		private Task Send(string command, string value)

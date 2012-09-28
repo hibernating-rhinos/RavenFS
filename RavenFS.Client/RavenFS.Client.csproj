@@ -131,7 +131,7 @@
     <Compile Include="FileStatus.cs" />
     <Compile Include="SynchronizationType.cs" />
     <Compile Include="SynchronizationUpdate.cs" />
-    <Compile Include="UploadCancelled.cs" />
+    <Compile Include="UploadFailed.cs" />
     <Compile Include="UrlExtensions.cs" />
     <Compile Include="Util\AtomicDictionary.cs" />
     <Compile Include="Util\ConcurrentSet.cs" />
