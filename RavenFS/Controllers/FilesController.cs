@@ -194,7 +194,7 @@ namespace RavenFS.Controllers
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 
-		public async Task<HttpResponseMessage> Put(string name)
+		public async Task<HttpResponseMessage> Put(string name, string uploadId = null)
 		{
 			name = Uri.UnescapeDataString(name);
 
@@ -248,7 +248,14 @@ namespace RavenFS.Controllers
 				}
 				catch (Exception ex)
 				{
-					Publisher.Publish(new UploadFailed() { File = name });
+					if (uploadId != null)
+					{
+						Guid uploadIdentifier;
+						if(Guid.TryParse(uploadId, out uploadIdentifier))
+						{
+							Publisher.Publish(new UploadFailed() { UploadId = uploadIdentifier, File = name });
+						}
+					}
 
 					log.WarnException(string.Format("Failed to upload a file '{0}'", name), ex);
 

@@ -23,8 +23,8 @@ namespace RavenFS.Client
 	    private readonly ServerNotifications notifications;
 		private IDisposable failedUploadsObservator = null;
 
-		private readonly ConcurrentDictionary<string, CancellationTokenSource> uploadCancellationTokens =
-			new ConcurrentDictionary<string, CancellationTokenSource>();
+		private readonly ConcurrentDictionary<Guid, CancellationTokenSource> uploadCancellationTokens =
+			new ConcurrentDictionary<Guid, CancellationTokenSource>();
 
 #if SILVERLIGHT
 		static RavenFileSystemClient()
@@ -292,7 +292,8 @@ namespace RavenFS.Client
 			if (source.CanRead == false)
 				throw new AggregateException("Stream does not support reading");
 
-			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename);
+			var uploadIdentifier = Guid.NewGuid();
+			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename + "?uploadId=" + uploadIdentifier);
 			request.Method = "PUT";
 #if !SILVERLIGHT
 			request.SendChunked = true;
@@ -311,7 +312,7 @@ namespace RavenFS.Client
 
 			var cts = new CancellationTokenSource();
 
-			RegisterUploadOperation(filename, cts);
+			RegisterUploadOperation(uploadIdentifier, cts);
 
 			return request.GetRequestStreamAsync()
 				.ContinueWith(
@@ -324,7 +325,7 @@ namespace RavenFS.Client
 						}, cts.Token)
 				.ContinueWith(_ =>
 				{
-					UnregisterUploadOperation(filename);
+					UnregisterUploadOperation(uploadIdentifier);
 					task.Result.Close();
 				})
 				)
@@ -342,26 +343,26 @@ namespace RavenFS.Client
 		private void CancelFileUpload(UploadFailed uploadFailed)
 		{
 			CancellationTokenSource cts;
-			if(uploadCancellationTokens.TryGetValue(uploadFailed.File, out cts))
+			if(uploadCancellationTokens.TryGetValue(uploadFailed.UploadId, out cts))
 			{
 				cts.Cancel();
 			}
 		}
 
-		private void RegisterUploadOperation(string fileName, CancellationTokenSource cts)
+		private void RegisterUploadOperation(Guid uploadId, CancellationTokenSource cts)
 		{
 			if (IsObservingFailedUploads)
 			{
-				uploadCancellationTokens.TryAdd(fileName, cts);
+				uploadCancellationTokens.TryAdd(uploadId, cts);
 			}
 		}
 
-		private void UnregisterUploadOperation(string fileName)
+		private void UnregisterUploadOperation(Guid uploadId)
 		{
 			if (IsObservingFailedUploads)
 			{
 				CancellationTokenSource cts;
-				uploadCancellationTokens.TryRemove(fileName, out cts);
+				uploadCancellationTokens.TryRemove(uploadId, out cts);
 			}
 		}
 
