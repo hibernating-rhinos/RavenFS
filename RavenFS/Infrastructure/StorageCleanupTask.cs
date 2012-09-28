@@ -160,7 +160,7 @@
 							}
 							else
 							{
-								log.Warn("Could not delete file '{0}' from storage", fileName);
+								log.WarnException(string.Format("Could not delete file '{0}' from storage", fileName), t.Exception);
 							}
 
 							deleteFileTasks.TryRemove(fileName, out existingTask);
