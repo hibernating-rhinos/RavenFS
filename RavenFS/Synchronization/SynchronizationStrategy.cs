@@ -4,6 +4,7 @@
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
 	using System.Linq;
+	using Extensions;
 	using Infrastructure;
 	using Rdc.Wrapper;
 	using Storage;
@@ -38,7 +39,7 @@
 				return false;
 			}
 
-			if (FileIsBeingUploaded(file))
+			if (file.IsBeingUploaded())
 			{
 				return false;
 			}
@@ -58,12 +59,6 @@
 					x =>
 					x.Metadata[SynchronizationConstants.RavenDeleteMarker] != null &&
 					x.Metadata[SynchronizationConstants.RavenRenameFile] == name);
-		}
-
-		private static bool FileIsBeingUploaded(FileHeader header)
-		{
-			return header.TotalSize == null || header.TotalSize != header.UploadedSize ||
-				   (header.Metadata[SynchronizationConstants.RavenDeleteMarker] == null && header.Metadata["Content-MD5"] == null);
 		}
 
 		public SynchronizationWorkItem DetermineWork(string file, NameValueCollection localMetadata, NameValueCollection destinationMetadata, out NoSyncReason reason)

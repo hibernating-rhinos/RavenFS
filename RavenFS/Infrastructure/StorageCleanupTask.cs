@@ -104,7 +104,8 @@
 					                        fileName, deletingFileName));
 
 					var configName = RavenFileNameHelper.DeletingFileConfigNameForFile(deletingFileName);
-					accessor.SetConfigurationValue(configName, deletingFileName);
+					accessor.SetConfigurationValue(configName,
+					                               new DeleteFile() {OriginalFileName = fileName, CurrentFileName = deletingFileName});
 
 					notificationPublisher.Publish(new ConfigChange() { Name = configName, Action = ConfigChangeAction.Set });
 				}
@@ -124,49 +125,56 @@
 
 		public Task PerformAsync()
 		{
-			IList<string> filesToDelete = null;
+			IList<DeleteFile> filesToDelete = null;
 
 			storage.Batch(
 				accessor =>
-				filesToDelete = accessor.GetConfigsWithPrefix<string>(RavenFileNameHelper.DeletingFileConfigPrefix, 0, 10));
+				filesToDelete = accessor.GetConfigsWithPrefix<DeleteFile>(RavenFileNameHelper.DeletingFileConfigPrefix, 0, 10));
 
 			var tasks = new List<Task>();
 
 			foreach (var fileToDelete in filesToDelete)
 			{
-				var fileName = fileToDelete;
+				var deletingFileName = fileToDelete.CurrentFileName;
 
 				Task existingTask;
 
-				if (deleteFileTasks.TryGetValue(fileName, out existingTask))
+				if (deleteFileTasks.TryGetValue(deletingFileName, out existingTask))
 					if (!existingTask.IsCompleted)
 						continue;
 
-				log.Debug("Starting to delete file '{0}' from storage", fileName);
+				FileHeader deletedFile = null;
+				storage.Batch(accessor => deletedFile = accessor.ReadFile(fileToDelete.OriginalFileName));
+
+				if (deletedFile != null) // if there exists a file already marked as deleted
+					if (deletedFile.IsBeingUploaded()) // and it's being currently uploaded
+						continue; // prevent delete operation because they might have common pages that can be reused by upload
+
+				log.Debug("Starting to delete file '{0}' from storage", deletingFileName);
 
 				var deleteTask  = TaskEx.Run(
-					() => ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor => accessor.Delete(fileName)))).ContinueWith(
+					() => ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor => accessor.Delete(deletingFileName)))).ContinueWith(
 						t =>
 						{
 							if (t.Exception == null)
 							{
-								var configName = RavenFileNameHelper.DeletingFileConfigNameForFile(fileName);
+								var configName = RavenFileNameHelper.DeletingFileConfigNameForFile(deletingFileName);
 
 								storage.Batch(accessor => accessor.DeleteConfig(configName));
 								
 								notificationPublisher.Publish(new ConfigChange() { Name = configName, Action = ConfigChangeAction.Delete });
 								
-								log.Debug("File '{0}' was deleted from storage", fileName);
+								log.Debug("File '{0}' was deleted from storage", deletingFileName);
 							}
 							else
 							{
-								log.WarnException(string.Format("Could not delete file '{0}' from storage", fileName), t.Exception);
+								log.WarnException(string.Format("Could not delete file '{0}' from storage", deletingFileName), t.Exception);
 							}
 
-							deleteFileTasks.TryRemove(fileName, out existingTask);
+							deleteFileTasks.TryRemove(deletingFileName, out existingTask);
 						});
 
-				deleteFileTasks.AddOrUpdate(fileName, deleteTask, (file, oldTask) => deleteTask);
+				deleteFileTasks.AddOrUpdate(deletingFileName, deleteTask, (file, oldTask) => deleteTask);
 
 				tasks.Add(deleteTask);
 			}

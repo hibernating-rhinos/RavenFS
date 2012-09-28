@@ -2,6 +2,7 @@
 {
 	using System;
 	using System.IO;
+	using Newtonsoft.Json;
 	using Storage;
 	using Util;
 	using Xunit;
@@ -22,7 +23,11 @@
 					.Result;
 
 			Assert.NotNull(config);
-			Assert.Equal(RavenFileNameHelper.DeletingFileName("toDelete.bin"), config["value"].Trim('"'));
+
+			var deleteFile = new JsonSerializer().Deserialize<DeleteFile>(new JsonTextReader(new StringReader(config["value"])));
+
+			Assert.Equal(RavenFileNameHelper.DeletingFileName("toDelete.bin"), deleteFile.CurrentFileName);
+			Assert.Equal("toDelete.bin", deleteFile.OriginalFileName);
 		}
 
 		[Fact]
