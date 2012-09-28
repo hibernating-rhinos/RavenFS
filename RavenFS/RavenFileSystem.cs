@@ -200,7 +200,7 @@ namespace RavenFS
 				);
 
 			config.Routes.MapHttpRoute(
-				name: "synchronizationWithFile",
+				name: "synchronization",
 				routeTemplate: "synchronization/{action}/{*filename}",
 				defaults: new { controller = "synchronization", filename = RouteParameter.Optional }
 				);
@@ -228,12 +228,6 @@ namespace RavenFS
 				routeTemplate: "{controller}/{*name}",
 				defaults: new { controller = "files", name = RouteParameter.Optional }
 				);
-
-			config.Routes.MapHttpRoute(
-				"Notifications",
-				routeTemplate: "notifications/{*path}",
-				defaults: new { controller = "notifications" });
-
 		}
 	}
 }
