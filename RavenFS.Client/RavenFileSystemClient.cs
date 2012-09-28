@@ -241,7 +241,7 @@ namespace RavenFS.Client
 				request.AddRange(destination.Position);
 			}
 #endif
-			progress = progress ?? delegate { };
+
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
 				{
@@ -250,7 +250,11 @@ namespace RavenFS.Client
 						collection[header] = task.Result.Headers[header];
 					}
 					var responseStream = task.Result.GetResponseStream();
-					return responseStream.CopyToAsync(destination, i => TaskEx.Run(() => progress(filename, i)))
+					return responseStream.CopyToAsync(destination, i =>
+					{
+						if (progress != null)
+							TaskEx.Run(() => progress(filename, i));
+					})
 						.ContinueWith(_ =>
 						{
 							task.Result.Close();
@@ -313,11 +317,11 @@ namespace RavenFS.Client
 				.ContinueWith(
 					task => source.CopyToAsync(
 						task.Result,
-						written => TaskEx.Run(() =>
+						written =>
 						{
 							if (progress != null)
-								progress(filename, written);
-						}), cts.Token)
+								TaskEx.Run(() => progress(filename, written));
+						}, cts.Token)
 				.ContinueWith(_ =>
 				{
 					UnregisterUploadOperation(filename);
