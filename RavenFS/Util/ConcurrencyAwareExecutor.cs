@@ -1,6 +1,7 @@
 ﻿namespace RavenFS.Util
 {
 	using System;
+	using System.Threading;
 	using Client;
 
 	public static class ConcurrencyAwareExecutor
@@ -22,6 +23,7 @@
 					if (retries-- > 0)
 					{
 						shouldRetry = true;
+						Thread.Sleep(50);
 						continue;
 					}
 
