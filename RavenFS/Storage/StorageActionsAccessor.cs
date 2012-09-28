@@ -18,6 +18,7 @@ namespace RavenFS.Storage
 	using System.Linq;
 	using Client;
 	using Extensions;
+	using Synchronization.Rdc;
 
 	public class StorageActionsAccessor : IDisposable
 	{

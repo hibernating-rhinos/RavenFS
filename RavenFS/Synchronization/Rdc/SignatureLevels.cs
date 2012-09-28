@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace RavenFS.Storage
+﻿namespace RavenFS.Synchronization.Rdc
 {
+	using System;
+
 	public class SignatureLevels
 	{
 		public int Id { get; set; }

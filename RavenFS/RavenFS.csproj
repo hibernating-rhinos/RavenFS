@@ -306,7 +306,7 @@
     <Compile Include="Storage\PageInformation.cs" />
     <Compile Include="Storage\SchemaCreator.cs" />
     <Compile Include="Storage\SearchResults.cs" />
-    <Compile Include="Storage\SignatureLevels.cs" />
+    <Compile Include="Synchronization\Rdc\SignatureLevels.cs" />
     <Compile Include="Storage\TransactionalStorage.cs" />
     <Compile Include="Storage\StorageActionsAccessor.cs" />
     <Compile Include="Storage\StorageConfigurator.cs" />
