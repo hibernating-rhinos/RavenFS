@@ -197,12 +197,15 @@ namespace RavenFS.Synchronization
 			             needSyncingAgain);
 
 			var destinationUrl = destinationClient.ServerUrl;
-			var filesToSynchronization = GetFilesToSynchronization(lastEtag, 100);
-
+			var filesToSynchronization = new HashSet<FileHeader>(GetFilesToSynchronization(lastEtag, 100));
+				
 			LogFilesInfo("There were {0} file(s) that needed synchronization because of greater ETag value: {1}",
 			             filesToSynchronization);
 
-			filesToSynchronization.AddRange(needSyncingAgain);
+			foreach (var needSyncing in needSyncingAgain)
+			{
+				filesToSynchronization.Add(needSyncing);
+			}
 
 			var filteredFilesToSychronization =
 				filesToSynchronization.Where(
@@ -559,7 +562,7 @@ namespace RavenFS.Synchronization
 			Queue.CancelActiveSynchronizations(fileName);
 		}
 
-		private static void LogFilesInfo(string message, IList<FileHeader> files)
+		private static void LogFilesInfo(string message, ICollection<FileHeader> files)
 		{
 			log.Debug(message, files.Count,
 					  string.Join(",", files.Select(x => string.Format("{0} [ETag {1}]", x.Name, x.Metadata.Value<Guid>("ETag")))));

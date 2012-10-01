@@ -44,5 +44,31 @@ namespace RavenFS.Storage
 		}
 
 		public NameValueCollection Metadata { get; set; }
+
+		protected bool Equals(FileHeader other)
+		{
+			return string.Equals(Name, other.Name) && TotalSize == other.TotalSize && UploadedSize == other.UploadedSize &&
+			       Equals(Metadata, other.Metadata);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != this.GetType()) return false;
+			return Equals((FileHeader) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				int hashCode = (Name != null ? Name.GetHashCode() : 0);
+				hashCode = (hashCode*397) ^ TotalSize.GetHashCode();
+				hashCode = (hashCode*397) ^ UploadedSize.GetHashCode();
+				hashCode = (hashCode*397) ^ (Metadata != null ? Metadata.GetHashCode() : 0);
+				return hashCode;
+			}
+		}
 	}
 }
