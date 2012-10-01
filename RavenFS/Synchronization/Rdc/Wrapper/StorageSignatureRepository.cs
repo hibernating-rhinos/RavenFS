@@ -47,7 +47,7 @@
         public Stream CreateContent(string sigName)
         {
             var sigFileName = NameToPath(sigName);
-            var result = File.Create(sigFileName, 1024 * 128);
+            var result = File.Create(sigFileName, 64 * 1024);
             log.Info("File {0} created", sigFileName);
             _createdFiles.Add(sigFileName, result);
             return result;
