@@ -26,22 +26,22 @@
 
         public Stream GetContentForReading(string sigName)
         {
-            var ms = new MemoryStream();
+	        SignatureReadOnlyStream signatureStream = null;
             _storage.Batch(
                 accessor =>
                 {
                     var signatureLevel = GetSignatureLevel(sigName, accessor);
                     if (signatureLevel != null)
                     {
-                        accessor.GetSignatureStream(signatureLevel.Id, signatureLevel.Level, stream => stream.CopyTo(ms));
+						signatureStream = new SignatureReadOnlyStream(_storage, signatureLevel.Id, signatureLevel.Level);
                     }
                     else
                     {
                         throw new FileNotFoundException(sigName + " not found in the repo");
                     }
                 });
-            ms.Position = 0;
-            return ms;
+			signatureStream.Position = 0;
+			return signatureStream;
         }
 
         public Stream CreateContent(string sigName)
