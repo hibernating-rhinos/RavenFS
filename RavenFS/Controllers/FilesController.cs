@@ -196,37 +196,37 @@ namespace RavenFS.Controllers
 
 		public async Task<HttpResponseMessage> Put(string name, string uploadId = null)
 		{
-			name = Uri.UnescapeDataString(name);
-
-			var headers = Request.Headers.FilterHeaders();
-			Historian.UpdateLastModified(headers);
-			Historian.Update(name, headers);
-			name = Uri.UnescapeDataString(name);
-
-			SynchronizationTask.Cancel(name);
-
-			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
+			try
 			{
-				AssertFileIsNotBeingSynced(name, accessor, true);
-				StorageCleanupTask.IndicateFileToDelete(name);
+				name = Uri.UnescapeDataString(name);
 
-				long? contentLength = Request.Content.Headers.ContentLength;
-				if (Request.Headers.TransferEncodingChunked ?? false)
+				var headers = Request.Headers.FilterHeaders();
+				Historian.UpdateLastModified(headers);
+				Historian.Update(name, headers);
+				name = Uri.UnescapeDataString(name);
+
+				SynchronizationTask.Cancel(name);
+
+				ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
 				{
-					contentLength = null;
-				}
-				accessor.PutFile(name, contentLength, headers);
+					AssertFileIsNotBeingSynced(name, accessor, true);
+					StorageCleanupTask.IndicateFileToDelete(name);
 
-				Search.Index(name, headers);
-			}), ConcurrencyResponseException);
+					long? contentLength = Request.Content.Headers.ContentLength;
+					if (Request.Headers.TransferEncodingChunked ?? false)
+					{
+						contentLength = null;
+					}
+					accessor.PutFile(name, contentLength, headers);
 
-			log.Debug("Inserted a new file '{0}' with ETag {1}", name, headers.Value<Guid>("ETag"));
+					Search.Index(name, headers);
+				}));
 
-			var contentStream = await Request.Content.ReadAsStreamAsync();
+				log.Debug("Inserted a new file '{0}' with ETag {1}", name, headers.Value<Guid>("ETag"));
 
-			using (var readFileToDatabase = new ReadFileToDatabase(BufferPool, Storage, contentStream, name))
-			{
-				try
+				var contentStream = await Request.Content.ReadAsStreamAsync();
+
+				using (var readFileToDatabase = new ReadFileToDatabase(BufferPool, Storage, contentStream, name))
 				{
 					await readFileToDatabase.Execute();
 
@@ -239,34 +239,34 @@ namespace RavenFS.Controllers
 					Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
 					headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
 					Search.Index(name, headers);
-					Publisher.Publish(new FileChange {Action = FileChangeAction.Add, File = name});
+					Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });
 
 					log.Debug("Updates of '{0}' metadata and indexes were finished. New file ETag is {1}", name,
-					          headers.Value<Guid>("ETag"));
+							  headers.Value<Guid>("ETag"));
 
 					SynchronizationTask.SynchronizeDestinationsAsync();
 				}
-				catch (Exception ex)
+			}
+			catch (Exception ex)
+			{
+				if (uploadId != null)
 				{
-					if (uploadId != null)
+					Guid uploadIdentifier;
+					if (Guid.TryParse(uploadId, out uploadIdentifier))
 					{
-						Guid uploadIdentifier;
-						if(Guid.TryParse(uploadId, out uploadIdentifier))
-						{
-							Publisher.Publish(new UploadFailed() { UploadId = uploadIdentifier, File = name });
-						}
+						Publisher.Publish(new UploadFailed() { UploadId = uploadIdentifier, File = name });
 					}
-
-					log.WarnException(string.Format("Failed to upload a file '{0}'", name), ex);
-
-					var concurrencyException = ex as ConcurrencyException;
-					if (concurrencyException != null)
-					{
-						throw ConcurrencyResponseException(concurrencyException);
-					}
-
-					throw;
 				}
+
+				log.WarnException(string.Format("Failed to upload a file '{0}'", name), ex);
+
+				var concurrencyException = ex as ConcurrencyException;
+				if (concurrencyException != null)
+				{
+					throw ConcurrencyResponseException(concurrencyException);
+				}
+
+				throw;
 			}
 
 			return new HttpResponseMessage(HttpStatusCode.Created);
