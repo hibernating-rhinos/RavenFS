@@ -11,6 +11,7 @@ namespace RavenFS.Storage
 	using System.IO;
 	using Microsoft.Isam.Esent.Interop;
 	using NLog;
+	using Util;
 
 	public class StorageConfigurator
 	{
@@ -57,7 +58,8 @@ namespace RavenFS.Storage
 
 		public void LimitSystemCache()
 		{
-			int cacheSizeMaxInMegabytes = GetValueFromConfiguration("Raven/Esent/CacheSizeMax",1024);
+			var defaultCacheSize = Environment.Is64BitProcess ? Math.Min(1024, (MemoryStatistics.TotalPhysicalMemory / 4)) : 256;
+			int cacheSizeMaxInMegabytes = GetValueFromConfiguration("Raven/Esent/CacheSizeMax", defaultCacheSize);
 			int cacheSizeMax = TranslateToSizeInDatabasePages(cacheSizeMaxInMegabytes);
 			if (SystemParameters.CacheSizeMax > cacheSizeMax)
 			{
