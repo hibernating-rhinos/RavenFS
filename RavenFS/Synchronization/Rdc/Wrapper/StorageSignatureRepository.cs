@@ -129,11 +129,6 @@
             return result;
         }
 
-        public void Clean()
-        {
-            _storage.Batch(accessor => accessor.ClearSignatures(_fileName));
-        }
-
         public DateTime? GetLastUpdate()
         {
             SignatureLevels firstOrDefault = null;

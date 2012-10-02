@@ -10,7 +10,6 @@
         Stream CreateContent(string sigName);       
         void Flush(IEnumerable<SignatureInfo> signatureInfos);
         IEnumerable<SignatureInfo> GetByFileName();
-        void Clean();
         DateTime? GetLastUpdate();
     }
 }

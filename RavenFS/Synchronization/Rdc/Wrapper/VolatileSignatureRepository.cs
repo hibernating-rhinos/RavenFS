@@ -47,15 +47,6 @@
                    select SignatureInfo.Parse(item);
         }
 
-        public void Clean()
-        {
-            foreach (var item in GetSigFileNamesByFileName())
-            {
-                File.Delete(item);
-                log.Info("File {0} removed", item);
-            }
-        }
-
         public DateTime? GetLastUpdate()
         {
             var preResult = from item in GetSigFileNamesByFileName()
