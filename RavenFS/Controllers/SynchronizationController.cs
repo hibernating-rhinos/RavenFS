@@ -101,7 +101,11 @@
 				
 				var provider = new MultipartSyncStreamProvider(synchronizingFile, localFile);
 
+				log.Debug("Starting to process multipart content of a file '{0}'", fileName);
+
 				await Request.Content.ReadAsMultipartAsync(provider);
+
+				log.Debug("Multipart content of a file '{0}' was processed", fileName);
 
 				report.BytesCopied = provider.BytesCopied;
 				report.BytesTransfered = provider.BytesTransfered;
