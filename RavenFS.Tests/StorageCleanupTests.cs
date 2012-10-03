@@ -4,6 +4,7 @@
 	using System.IO;
 	using Newtonsoft.Json;
 	using Storage;
+	using Synchronization;
 	using Util;
 	using Xunit;
 
@@ -73,6 +74,33 @@
 				storage.Batch(accessor => pageId = accessor.ReadPage(i, null));
 				Assert.Equal(-1, pageId); // if page does not exist we return -1
 			}
+		}
+
+		[Fact]
+		public void Should_not_perform_file_delete_if_it_is_being_synced()
+		{
+			var client = NewClient();
+
+			client.UploadAsync("file.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+
+			client.DeleteAsync("file.bin").Wait();
+
+			client.Config.SetConfig(RavenFileNameHelper.SyncLockNameForFile("file.bin"), LockFileTests.SynchronizationConfig(DateTime.UtcNow)).Wait();
+
+			client.Storage.CleanUp().Wait();
+
+			var config =
+				client.Config.GetConfig(
+					RavenFileNameHelper.DeletingFileConfigNameForFile(RavenFileNameHelper.DeletingFileName("file.bin")))
+					.Result;
+
+			// config should still exists
+			Assert.NotNull(config);
+
+			var deleteFile = new JsonSerializer().Deserialize<DeleteFile>(new JsonTextReader(new StringReader(config["value"])));
+
+			Assert.Equal(RavenFileNameHelper.DeletingFileName("file.bin"), deleteFile.CurrentFileName);
+			Assert.Equal("file.bin", deleteFile.OriginalFileName);
 		}
 	}
 }

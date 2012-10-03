@@ -182,7 +182,7 @@
 			sourceClient.UploadAsync(fileName, EmptyData, sourceContent).Wait();
 		}
 
-		private static NameValueCollection SynchronizationConfig(DateTime fileLockedDate)
+		public static NameValueCollection SynchronizationConfig(DateTime fileLockedDate)
 		{
 			var foo = new SynchronizationLock() { FileLockedAt = fileLockedDate };
 

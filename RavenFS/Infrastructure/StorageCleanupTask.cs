@@ -24,6 +24,7 @@
 		private readonly IndexStorage search;
 		private readonly INotificationPublisher notificationPublisher;
 		private readonly ConcurrentDictionary<string, Task> deleteFileTasks = new ConcurrentDictionary<string, Task>();
+		private readonly FileLockManager fileLockManager = new FileLockManager();
 
 		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(15));
 
@@ -144,6 +145,9 @@
 				if (deletedFile != null) // if there exists a file already marked as deleted
 					if (deletedFile.IsFileBeingUploaded()) // and it's being currently uploaded
 						continue; // prevent delete operation because they might have common pages that can be reused by upload
+
+				if(!fileLockManager.TimeoutExceeded(fileToDelete.OriginalFileName, storage))
+					continue; // if original file is locked which means that is being synced do not delete it
 
 				log.Debug("Starting to delete file '{0}' from storage", deletingFileName);
 

@@ -48,5 +48,14 @@ namespace RavenFS.Synchronization
 
 			return DateTime.UtcNow - syncOperationDetails.FileLockedAt > ReplicationTimeout(accessor);
 		}
+
+		public bool TimeoutExceeded(string fileName, TransactionalStorage storage)
+		{
+			var result = false;
+
+			storage.Batch(accessor => result = TimeoutExceeded(fileName, accessor));
+
+			return result;
+		}
 	}
 }
