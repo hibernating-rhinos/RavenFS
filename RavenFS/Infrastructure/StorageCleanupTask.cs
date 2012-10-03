@@ -81,9 +81,16 @@
 						accessor.RenameFile(fileName, deletingFileName);
 						renameSucceeded = true;
 					}
-					catch (EsentKeyDuplicateException)
+					catch (EsentKeyDuplicateException) // it means that .deleting file was already existed
 					{
-						// it means that .deleting file was already existed
+						var deletingFileHeader = accessor.ReadFile(deletingFileName);
+
+						if (deletingFileHeader != null && deletingFileHeader.Equals(existingFileHeader))
+						{
+							fileExists = false; // the same file already marked as deleted no need to do it again
+							return;
+						}
+
 						// we need to use different name to do a file rename
 						deleteVersion++;
 						deletingFileName = RavenFileNameHelper.DeletingFileName(fileName, deleteVersion);
