@@ -5,6 +5,7 @@
 	using Newtonsoft.Json;
 	using Storage;
 	using Synchronization;
+	using Synchronization.IO;
 	using Util;
 	using Xunit;
 
@@ -101,6 +102,38 @@
 
 			Assert.Equal(RavenFileNameHelper.DeletingFileName("file.bin"), deleteFile.CurrentFileName);
 			Assert.Equal("file.bin", deleteFile.OriginalFileName);
+		}
+
+		[Fact]
+		public void Should_not_perform_file_delete_of_previous_downloading_file_is_synchronization_is_being_performed()
+		{
+			var fileName = "file.bin";
+			var downloadingFileName = RavenFileNameHelper.DownloadingFileName(fileName);
+
+			var client = NewClient();
+
+			client.UploadAsync(fileName, new RandomStream(1)).Wait();
+			
+			client.UploadAsync(downloadingFileName, new RandomStream(1)).Wait();
+
+			client.DeleteAsync(downloadingFileName).Wait();
+
+			client.Config.SetConfig(RavenFileNameHelper.SyncLockNameForFile(fileName), LockFileTests.SynchronizationConfig(DateTime.UtcNow)).Wait();
+
+			client.Storage.CleanUp().Wait();
+
+			var config =
+				client.Config.GetConfig(
+					RavenFileNameHelper.DeletingFileConfigNameForFile(RavenFileNameHelper.DeletingFileName(downloadingFileName)))
+					.Result;
+
+			// config should still exists
+			Assert.NotNull(config);
+
+			var deleteFile = new JsonSerializer().Deserialize<DeleteFile>(new JsonTextReader(new StringReader(config["value"])));
+
+			Assert.Equal(RavenFileNameHelper.DeletingFileName(downloadingFileName), deleteFile.CurrentFileName);
+			Assert.Equal(downloadingFileName, deleteFile.OriginalFileName);
 		}
 	}
 }

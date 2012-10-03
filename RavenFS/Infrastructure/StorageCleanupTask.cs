@@ -149,6 +149,16 @@
 				if(!fileLockManager.TimeoutExceeded(fileToDelete.OriginalFileName, storage))
 					continue; // if original file is locked which means that is being synced do not delete it
 
+				if(fileToDelete.OriginalFileName.EndsWith(RavenFileNameHelper.DownloadingFileSuffix)) // if it's .downloading file
+				{
+					var synchronizingFileName = fileToDelete.OriginalFileName.Substring(0,
+					                                                                    fileToDelete.OriginalFileName.IndexOf(
+						                                                                    RavenFileNameHelper.DownloadingFileSuffix,
+						                                                                    StringComparison.InvariantCulture));
+					if (!fileLockManager.TimeoutExceeded(synchronizingFileName, storage)) // and file is being synced
+						continue; // prevent delete operation because they might have common pages that can be reused in synchronization
+				}
+
 				log.Debug("Starting to delete file '{0}' from storage", deletingFileName);
 
 				var deleteTask  = TaskEx.Run(
