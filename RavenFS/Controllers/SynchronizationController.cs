@@ -75,11 +75,12 @@
 				Storage.Batch(accessor =>
 				{
 					AssertFileIsNotBeingSynced(fileName, accessor);
-					StartupProceed(fileName, accessor);
 					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
 				});
 
 				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
+				
+				Storage.Batch(accessor => StartupProceed(fileName, accessor));
 
 				var sourceMetadata = Request.Headers.FilterHeaders();
 
@@ -250,11 +251,12 @@
 				Storage.Batch(accessor =>
 				{
 					AssertFileIsNotBeingSynced(fileName, accessor);
-					StartupProceed(fileName, accessor);
 					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
 				});
 
 				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
+				
+				Storage.Batch(accessor => StartupProceed(fileName, accessor));
 
 				var localMetadata = GetLocalMetadata(fileName);
 				var sourceMetadata = Request.Headers.FilterHeaders();
@@ -313,11 +315,12 @@
 				Storage.Batch(accessor =>
 				{
 					AssertFileIsNotBeingSynced(fileName, accessor);
-					StartupProceed(fileName, accessor);
 					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
 				});
-				
+
 				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
+				
+				Storage.Batch(accessor => StartupProceed(fileName, accessor));
 
 				StorageCleanupTask.IndicateFileToDelete(fileName);
 
@@ -361,11 +364,12 @@
 				Storage.Batch(accessor =>
 				{
 					AssertFileIsNotBeingSynced(fileName, accessor);
-					StartupProceed(fileName, accessor);
 					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
 				});
 
 				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
+				
+				Storage.Batch(accessor => StartupProceed(fileName, accessor));
 
 				var localMetadata = GetLocalMetadata(fileName);
 
