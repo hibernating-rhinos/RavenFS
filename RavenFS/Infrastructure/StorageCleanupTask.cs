@@ -4,7 +4,6 @@
 	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
-	using System.IO;
 	using System.Reactive.Linq;
 	using System.Threading.Tasks;
 	using Extensions;
@@ -137,7 +136,7 @@
 
 				if (deleteFileTasks.TryGetValue(deletingFileName, out existingTask))
 					if (!existingTask.IsCompleted)
-						continue;
+						continue; // prevent delete the same file at the same time
 
 				FileHeader deletedFile = null;
 				storage.Batch(accessor => deletedFile = accessor.ReadFile(fileToDelete.OriginalFileName));
