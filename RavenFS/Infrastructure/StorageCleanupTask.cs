@@ -48,11 +48,11 @@
 
 			storage.Batch(accessor =>
 			{
-				FileAndPages fileAndPages;
+				FileHeader existingFileHeader;
 
 				try
 				{
-					fileAndPages = accessor.GetFile(fileName, 0, 0);
+					existingFileHeader = accessor.ReadFile(fileName);
 				}
 				catch (FileNotFoundException)
 				{
@@ -61,7 +61,7 @@
 					return;
 				}
 
-				if (fileAndPages.Metadata[SynchronizationConstants.RavenDeleteMarker] != null)
+				if (existingFileHeader.Metadata[SynchronizationConstants.RavenDeleteMarker] != null)
 				{
 					// if there exists a tombstone drop it
 					accessor.Delete(fileName);
@@ -70,7 +70,7 @@
 					return;
 				}
 
-				var metadata = new NameValueCollection(fileAndPages.Metadata)
+				var metadata = new NameValueCollection(existingFileHeader.Metadata)
 					               {
 						               {SynchronizationConstants.RavenDeleteMarker, "true"}
 					               };
@@ -90,9 +90,6 @@
 					{
 						// it means that .deleting file was already existed
 						// we need to use different name to do a file rename
-
-						//TODO check version of the file maybe there is no need to rename again
-
 						deleteVersion++;
 						deletingFileName = RavenFileNameHelper.DeletingFileName(fileName, deleteVersion);
 					}
