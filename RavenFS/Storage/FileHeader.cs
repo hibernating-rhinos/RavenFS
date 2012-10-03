@@ -3,6 +3,8 @@ using System.Collections.Specialized;
 
 namespace RavenFS.Storage
 {
+	using Synchronization;
+
 	public class FileHeader
 	{
 		public string Name { get; set; }
@@ -44,6 +46,15 @@ namespace RavenFS.Storage
 		}
 
 		public NameValueCollection Metadata { get; set; }
+
+		public bool IsFileBeingUploaded
+		{
+			get
+			{
+				return TotalSize == null || TotalSize != UploadedSize ||
+				       (Metadata[SynchronizationConstants.RavenDeleteMarker] == null && Metadata["Content-MD5"] == null);
+			}
+		}
 
 		protected bool Equals(FileHeader other)
 		{
