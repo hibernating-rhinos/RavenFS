@@ -142,7 +142,7 @@
 				storage.Batch(accessor => deletedFile = accessor.ReadFile(fileToDelete.OriginalFileName));
 
 				if (deletedFile != null) // if there exists a file already marked as deleted
-					if (deletedFile.IsFileBeingUploaded) // and it's being currently uploaded
+					if (deletedFile.IsFileBeingUploaded()) // and it's being currently uploaded
 						continue; // prevent delete operation because they might have common pages that can be reused by upload
 
 				log.Debug("Starting to delete file '{0}' from storage", deletingFileName);

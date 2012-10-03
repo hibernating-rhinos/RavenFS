@@ -39,7 +39,7 @@
 				return false;
 			}
 
-			if (file.IsFileBeingUploaded)
+			if (file.IsFileBeingUploaded())
 			{
 				return false;
 			}
