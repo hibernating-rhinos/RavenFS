@@ -197,7 +197,7 @@ namespace RavenFS.Synchronization
 			             needSyncingAgain);
 
 			var destinationUrl = destinationClient.ServerUrl;
-			var filesToSynchronization = new HashSet<FileHeader>(GetFilesToSynchronization(lastEtag, 100));
+			var filesToSynchronization = new HashSet<FileHeader>(GetFilesToSynchronization(lastEtag, 100), new FileHeaderNameEqualityComparer());
 				
 			LogFilesInfo("There were {0} file(s) that needed synchronization because of greater ETag value: {1}",
 			             filesToSynchronization);
