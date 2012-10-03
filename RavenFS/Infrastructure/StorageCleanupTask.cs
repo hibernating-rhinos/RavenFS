@@ -48,13 +48,9 @@
 
 			storage.Batch(accessor =>
 			{
-				FileHeader existingFileHeader;
+				var existingFileHeader = accessor.ReadFile(fileName);
 
-				try
-				{
-					existingFileHeader = accessor.ReadFile(fileName);
-				}
-				catch (FileNotFoundException)
+				if(existingFileHeader == null)
 				{
 					// do nothing if file does not exist
 					fileExists = false;
@@ -63,9 +59,8 @@
 
 				if (existingFileHeader.Metadata[SynchronizationConstants.RavenDeleteMarker] != null)
 				{
-					// if there exists a tombstone drop it
+					// if it is a tombstone drop it
 					accessor.Delete(fileName);
-
 					fileExists = false;
 					return;
 				}
