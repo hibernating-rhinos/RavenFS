@@ -27,7 +27,7 @@ namespace RavenFS.Storage
 		private readonly JET_DBID database;
 
 		private Table files, usage, pages, details;
-		private readonly Transaction transaction;
+		private Transaction transaction;
 		private Table config;
 		private Table signatures;
 
@@ -107,6 +107,13 @@ namespace RavenFS.Storage
 		public void Commit()
 		{
 			transaction.Commit(CommitTransactionGrbit.None);
+		}
+
+		public void PulseTransaction()
+		{
+			transaction.Commit(CommitTransactionGrbit.LazyFlush);
+			transaction.Dispose();
+			transaction = new Transaction(session);
 		}
 
 		public int InsertPage(byte[] buffer, int size)
@@ -406,6 +413,7 @@ namespace RavenFS.Storage
 			{
 				Api.JetSetCurrentIndex(session, Pages, "by_id");
 
+				var count = 0;
 				do
 				{
 					var rowName = Api.RetrieveColumnAsString(session, Usage, tableColumnsCache.UsageColumns["name"]);
@@ -426,6 +434,13 @@ namespace RavenFS.Storage
 					}
 
 					Api.JetDelete(session, Usage);
+
+					if (count++ > 100)
+					{
+						PulseTransaction();
+						count = 0;
+					}
+
 				} while (Api.TryMoveNext(session, Usage));	
 			}
 
