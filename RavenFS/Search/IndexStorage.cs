@@ -27,7 +27,7 @@ namespace RavenFS.Search
 
 		public IndexStorage(string path, NameValueCollection _)
 		{
-			this.path = Path.Combine(path.ToFullPath(), "Index.ravenfs");
+			this.path = path;
 		}
 
 		public void Initialize()

@@ -11,6 +11,7 @@ namespace RavenFS.Server
 {
 	using System.IO;
 	using System.Xml;
+	using Config;
 	using NLog.Config;
 	using Util;
 
@@ -20,16 +21,12 @@ namespace RavenFS.Server
 		{
 			HttpEndpointRegistration.RegisterHttpEndpointTarget();
 
-			var options = new RavenFileSystemConfiguration
-			{
-				Port = 9090,
-				Path = "~/Data.ravenfs"
-			};
+			var options = new RavenFileSystemConfiguration();
 
 			var programOptions = new OptionSet
 			{
 				{"port=", port => options.Port = int.Parse(port)},
-				{"path=", path => options.Path = path}
+				{"path=", path => options.DataDirectory = path}
 			};
 
 			try
@@ -48,8 +45,8 @@ namespace RavenFS.Server
 
 
 			Console.WriteLine("Raven FS is ready to process requests.");
-			Console.WriteLine("\tData directory: {0}", options.Path.ToFullPath());
-			Console.WriteLine("\tServer Url: {0}", options.Url);
+			Console.WriteLine("\tData directory: {0}", options.DataDirectory);
+			Console.WriteLine("\tServer Url: {0}", options.ServerUrl);
 
 			var hostingService = new HostingService
 			{
@@ -147,13 +144,4 @@ Enjoy...
 			}
 		}
 	}
-
-	public class RavenFileSystemConfiguration
-	{
-		public int Port { get; set; }
-		public string Path { get; set; }
-		public string Url { get { return "http://" + Environment.MachineName + ":" + Port + "/"; } }
-	}
-
-
 }

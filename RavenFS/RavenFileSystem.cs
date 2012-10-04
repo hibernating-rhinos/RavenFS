@@ -14,13 +14,14 @@ namespace RavenFS
 {
 	using System.Linq;
 	using System.Web.Http;
+	using Config;
 	using Synchronization;
 	using Synchronization.Conflictuality;
 	using Synchronization.Rdc.Wrapper;
 
 	public class RavenFileSystem : IDisposable
 	{
-		private readonly string path;
+		private readonly InMemoryConfiguration systemConfiguration;
 		private readonly TransactionalStorage storage;
 		private readonly IndexStorage search;
 		private readonly SigGenerator sigGenerator;
@@ -46,11 +47,12 @@ namespace RavenFS
 
 		public BufferPool BufferPool { get; private set; }
 
-		public RavenFileSystem(string path = @"~\Data")
+		public RavenFileSystem(InMemoryConfiguration systemConfiguration)
 		{
-			this.path = path.ToFullPath();
-			storage = new TransactionalStorage(this.path, new NameValueCollection());
-			search = new IndexStorage(this.path, new NameValueCollection());
+			this.systemConfiguration = systemConfiguration;
+
+			storage = new TransactionalStorage(systemConfiguration.DataDirectory, systemConfiguration.Settings);
+			search = new IndexStorage(systemConfiguration.IndexStoragePath, systemConfiguration.Settings);
 			sigGenerator = new SigGenerator();
 			var replicationHiLo = new ReplicationHiLo(storage);
 			var sequenceActions = new SequenceActions(storage);
@@ -72,9 +74,9 @@ namespace RavenFS
 			AppDomain.CurrentDomain.DomainUnload += ShouldDispose;
 		}
 
-		public string Path
+		public InMemoryConfiguration Configuration
 		{
-			get { return path; }
+			get { return systemConfiguration; }
 		}
 
 		private void ShouldDispose(object sender, EventArgs eventArgs)

@@ -99,6 +99,7 @@
       <HintPath>..\packages\NLog.2.0.0.2000\lib\net40\NLog.dll</HintPath>
     </Reference>
     <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Net.Http, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Net.Http.2.0.20710.0\lib\net40\System.Net.Http.dll</HintPath>
     </Reference>
@@ -153,6 +154,9 @@
     <Content Include="WebUI\Studio.html" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config\InMemoryConfiguration.cs" />
+    <Compile Include="Config\PortUtil.cs" />
+    <Compile Include="Config\RavenFileSystemConfiguration.cs" />
     <Compile Include="Controllers\ChangesController.cs" />
     <Compile Include="Controllers\ConfigController.cs" />
     <Compile Include="Controllers\FilesController.cs" />

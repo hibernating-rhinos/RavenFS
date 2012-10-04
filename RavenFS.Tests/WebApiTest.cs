@@ -8,6 +8,8 @@ using RavenFS.Extensions;
 
 namespace RavenFS.Tests
 {
+	using RavenFS.Config;
+
 	public class WebApiTest : WithNLog, IDisposable
 	{
 		private HttpSelfHostConfiguration config;
@@ -38,7 +40,10 @@ namespace RavenFS.Tests
 					MaxReceivedMessageSize = Int64.MaxValue,
 					TransferMode = TransferMode.Streamed
 				};
-				ravenFileSystem = new RavenFileSystem("~/Test");
+				var configuration = new InMemoryConfiguration();
+				configuration.Initialize();
+				configuration.DataDirectory = "~/Test";
+				ravenFileSystem = new RavenFileSystem(configuration);
 				ravenFileSystem.Start(config);
 			})
 			.Wait();

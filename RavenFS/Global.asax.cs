@@ -7,6 +7,7 @@ namespace RavenFS
 {
 	using System.IO;
 	using System.Xml;
+	using Config;
 	using NLog.Config;
 	using Util;
 
@@ -19,14 +20,13 @@ namespace RavenFS
 			HttpEndpointRegistration.RegisterHttpEndpointTarget();
 			ConfigureLogging();
 
-			ravenFileSystem = new RavenFileSystem();
+			ravenFileSystem = new RavenFileSystem(new RavenFileSystemConfiguration());
 
 			ravenFileSystem.Start(GlobalConfiguration.Configuration);
 
             // turn this on so we don't a conflict between the /search endpoint handled by the SearchController
             // and the Search folder.
 		    RouteTable.Routes.RouteExistingFiles = true;
-
 		}
 
 		protected void Application_End(object sender, EventArgs e)

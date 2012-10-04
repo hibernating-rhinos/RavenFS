@@ -5,6 +5,8 @@ using System.Web.Http.SelfHost;
 
 namespace RavenFS.Server
 {
+	using Config;
+
 	partial class HostingService : ServiceBase
 	{
 		private RavenFileSystem ravenFileSystem;
@@ -25,8 +27,8 @@ namespace RavenFS.Server
 
 		public void Start()
 		{
-			ravenFileSystem = new RavenFileSystem(Configuration.Path);
-			config = new HttpSelfHostConfiguration(Configuration.Url)
+			ravenFileSystem = new RavenFileSystem(Configuration);
+			config = new HttpSelfHostConfiguration(Configuration.ServerUrl)
 			{
 				MaxReceivedMessageSize = Int64.MaxValue,
 				TransferMode = TransferMode.Streamed,

@@ -12,6 +12,7 @@ namespace RavenFS.Tests
 {
 	using System.Globalization;
 	using System.Linq;
+	using RavenFS.Config;
 	using Storage;
 
 	public abstract class MultiHostTestBase : WithNLog, IDisposable
@@ -42,9 +43,11 @@ namespace RavenFS.Tests
 			                      		         		TransferMode = TransferMode.Streamed
 			                      		         	};
 
-			                      		var path = "~/" + port;
-			                      		IOExtensions.DeleteDirectory(path.ToFullPath());
-			                      		var ravenFileSystem = new RavenFileSystem(path);
+			                      		var configuration = new InMemoryConfiguration();
+										configuration.Initialize();
+			                      		configuration.DataDirectory = "~/" + port;
+
+			                      		var ravenFileSystem = new RavenFileSystem(new RavenFileSystemConfiguration());
 			                      		ravenFileSystem.Start(config);
 			                      		disposables.Add(ravenFileSystem);
 			                      	})
@@ -70,7 +73,7 @@ namespace RavenFS.Tests
 		{
 			return
 				disposables.OfType<RavenFileSystem>().First(
-					x => x.Path.EndsWith(Ports[index].ToString(CultureInfo.InvariantCulture)));
+					x => x.Configuration.DataDirectory.EndsWith(Ports[index].ToString(CultureInfo.InvariantCulture)));
 		}
 
 		#region IDisposable Members
