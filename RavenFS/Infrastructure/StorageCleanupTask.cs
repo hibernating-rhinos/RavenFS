@@ -23,6 +23,7 @@
 		private readonly IndexStorage search;
 		private readonly INotificationPublisher notificationPublisher;
 		private readonly ConcurrentDictionary<string, Task> deleteFileTasks = new ConcurrentDictionary<string, Task>();
+		private readonly ConcurrentDictionary<string, FileHeader> uploadingFiles = new ConcurrentDictionary<string, FileHeader>(); 
 		private readonly FileLockManager fileLockManager = new FileLockManager();
 
 		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(15));
@@ -139,30 +140,19 @@
 			{
 				var deletingFileName = fileToDelete.CurrentFileName;
 
-				Task existingTask;
+				if (IsDeleteInProgress(deletingFileName)) 
+					continue;
 
-				if (deleteFileTasks.TryGetValue(deletingFileName, out existingTask))
-					if (!existingTask.IsCompleted)
-						continue; // prevent delete the same file at the same time
+				if (IsUploadInProgress(fileToDelete.OriginalFileName)) 
+					continue;
 
-				FileHeader deletedFile = null;
-				storage.Batch(accessor => deletedFile = accessor.ReadFile(fileToDelete.OriginalFileName));
-
-				if (deletedFile != null) // if there exists a file already marked as deleted
-					if (deletedFile.IsFileBeingUploaded()) // and it's being currently uploaded
-						continue; // prevent delete operation because they might have common pages that can be reused by upload
-
-				if(!fileLockManager.TimeoutExceeded(fileToDelete.OriginalFileName, storage))
-					continue; // if original file is locked which means that is being synced do not delete it
+				if (IsSynchronizationInProgress(fileToDelete.OriginalFileName)) 
+					continue; 
 
 				if(fileToDelete.OriginalFileName.EndsWith(RavenFileNameHelper.DownloadingFileSuffix)) // if it's .downloading file
 				{
-					var synchronizingFileName = fileToDelete.OriginalFileName.Substring(0,
-					                                                                    fileToDelete.OriginalFileName.IndexOf(
-						                                                                    RavenFileNameHelper.DownloadingFileSuffix,
-						                                                                    StringComparison.InvariantCulture));
-					if (!fileLockManager.TimeoutExceeded(synchronizingFileName, storage)) // and file is being synced
-						continue; // prevent delete operation because they might have common pages that can be reused in synchronization
+					if (IsSynchronizationInProgress(SynchronizedFileName(fileToDelete.OriginalFileName))) // and file is being synced
+						continue;
 				}
 
 				log.Debug("Starting to delete file '{0}' from storage", deletingFileName);
@@ -186,7 +176,7 @@
 								log.WarnException(string.Format("Could not delete file '{0}' from storage", deletingFileName), t.Exception);
 							}
 
-							deleteFileTasks.TryRemove(deletingFileName, out existingTask);
+							
 						});
 
 				deleteFileTasks.AddOrUpdate(deletingFileName, deleteTask, (file, oldTask) => deleteTask);
@@ -195,6 +185,62 @@
 			}
 
 			return TaskEx.WhenAll(tasks);
+		}
+
+		private static string SynchronizedFileName(string originalFileName)
+		{
+			return originalFileName.Substring(0,
+			                                  originalFileName.IndexOf(RavenFileNameHelper.DownloadingFileSuffix,
+			                                                           StringComparison.InvariantCulture));
+		}
+
+		private bool IsSynchronizationInProgress(string originalFileName)
+		{
+			if (!fileLockManager.TimeoutExceeded(originalFileName, storage))
+				return true;
+			return false;
+		}
+
+		private bool IsUploadInProgress(string originalFileName)
+		{
+			FileHeader deletedFile = null;
+			storage.Batch(accessor => deletedFile = accessor.ReadFile(originalFileName));
+
+			if (deletedFile != null) // if there exists a file already marked as deleted
+			{
+				if (deletedFile.IsFileBeingUploadedOrUploadHasBeenBroken()) // and might be uploading at the momemnt
+				{
+					if (!uploadingFiles.ContainsKey(deletedFile.Name))
+					{
+						uploadingFiles.TryAdd(deletedFile.Name, deletedFile);
+						return true; // first attempt to delete a file, prevent this time
+					}
+					var uploadingFile = uploadingFiles[deletedFile.Name];
+					if (uploadingFile != null && uploadingFile.UploadedSize != deletedFile.UploadedSize)
+					{
+						return true; // if uploaded size changed it means that file is being uploading
+					}
+					FileHeader header;
+					uploadingFiles.TryRemove(deletedFile.Name, out header);
+				}
+			}
+			return false;
+		}
+
+		private bool IsDeleteInProgress(string deletingFileName)
+		{
+			Task existingTask;
+
+			if (deleteFileTasks.TryGetValue(deletingFileName, out existingTask))
+			{
+				if (!existingTask.IsCompleted)
+				{
+					return true;
+				}
+
+				deleteFileTasks.TryRemove(deletingFileName, out existingTask);
+			}
+			return false;
 		}
 	}
 }

@@ -47,7 +47,7 @@ namespace RavenFS.Storage
 
 		public NameValueCollection Metadata { get; set; }
 
-		public bool IsFileBeingUploaded()
+		public bool IsFileBeingUploadedOrUploadHasBeenBroken()
 		{
 			return TotalSize == null || TotalSize != UploadedSize ||
 				       (Metadata[SynchronizationConstants.RavenDeleteMarker] == null && Metadata["Content-MD5"] == null);

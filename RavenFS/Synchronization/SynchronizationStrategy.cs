@@ -38,7 +38,7 @@
 				return false;
 			}
 
-			if (file.IsFileBeingUploaded())
+			if (file.IsFileBeingUploadedOrUploadHasBeenBroken())
 			{
 				return false;
 			}
