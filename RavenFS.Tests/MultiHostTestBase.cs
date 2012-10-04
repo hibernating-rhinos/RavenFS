@@ -47,7 +47,9 @@ namespace RavenFS.Tests
 										configuration.Initialize();
 			                      		configuration.DataDirectory = "~/" + port;
 
-			                      		var ravenFileSystem = new RavenFileSystem(new RavenFileSystemConfiguration());
+										IOExtensions.DeleteDirectory(configuration.DataDirectory);
+
+										var ravenFileSystem = new RavenFileSystem(configuration);
 			                      		ravenFileSystem.Start(config);
 			                      		disposables.Add(ravenFileSystem);
 			                      	})
