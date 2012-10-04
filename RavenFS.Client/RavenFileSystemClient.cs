@@ -253,7 +253,7 @@ namespace RavenFS.Client
 					return responseStream.CopyToAsync(destination, i =>
 					{
 						if (progress != null)
-							TaskEx.Run(() => progress(filename, i));
+							progress(filename, i);
 					})
 						.ContinueWith(_ =>
 						{
@@ -318,7 +318,7 @@ namespace RavenFS.Client
 						written =>
 						{
 							if (progress != null)
-								TaskEx.Run(() => progress(filename, written));
+								progress(filename, written);
 						}, cts.Token)
 				.ContinueWith(_ =>
 				{

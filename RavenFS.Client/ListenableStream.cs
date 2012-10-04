@@ -6,7 +6,9 @@ using System.Text;
 
 namespace RavenFS.Client
 {
-    internal class ListenableStream : Stream
+	using System.Threading.Tasks;
+
+	internal class ListenableStream : Stream
     {
 		private const double Kb = 1024;
 		private const double Mb = Kb * 1024;
@@ -78,13 +80,17 @@ namespace RavenFS.Client
             var result = source.Read(buffer, offset, count);
             alreadyRead += result;
 
-			if(alreadyRead <= Mb ||
-			   alreadyRead <= Gb && (alreadyRead - lastNotifiedRead) >= MbPrecision ||
-			   alreadyRead > Gb && (alreadyRead - lastNotifiedRead) >= GbPrecision)
-			{
-				InvokeReadingProgress(new ProgressEventArgs(alreadyRead));
-				lastNotifiedRead = alreadyRead;
-			}
+	        Task.Factory.StartNew(() =>
+	        {
+		        if (alreadyRead <= Mb ||
+		            alreadyRead <= Gb && (alreadyRead - lastNotifiedRead) >= MbPrecision ||
+		            alreadyRead > Gb && (alreadyRead - lastNotifiedRead) >= GbPrecision ||
+		            (source.Length - alreadyRead < Mb))
+		        {
+			        InvokeReadingProgress(new ProgressEventArgs(alreadyRead));
+			        lastNotifiedRead = alreadyRead;
+		        }
+	        });
 
             return result;
         }
@@ -94,13 +100,17 @@ namespace RavenFS.Client
             source.Write(buffer, offset, count);
             alreadyWritten += count;
 
-			if (alreadyWritten <= Mb ||
-				alreadyWritten <= Gb && (alreadyWritten - lastNotifiedWritten) >= MbPrecision ||
-				alreadyWritten > Gb && (alreadyWritten - lastNotifiedWritten) >= GbPrecision)
-			{
-				InvokeWrittingProgress(new ProgressEventArgs(alreadyWritten));
-				lastNotifiedWritten = alreadyWritten;
-			}
+	        Task.Factory.StartNew(() =>
+	        {
+		        if (alreadyWritten <= Mb ||
+		            alreadyWritten <= Gb && (alreadyWritten - lastNotifiedWritten) >= MbPrecision ||
+		            alreadyWritten > Gb && (alreadyWritten - lastNotifiedWritten) >= GbPrecision ||
+					(source.Length - alreadyRead < Mb))
+		        {
+			        InvokeWrittingProgress(new ProgressEventArgs(alreadyWritten));
+			        lastNotifiedWritten = alreadyWritten;
+		        }
+	        });
         }
 
         public override bool CanRead
