@@ -14,7 +14,7 @@
 	{
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-		const int DefaultPort = 8080;
+		const int DefaultPort = 9090;
 
 		public static int GetPort(string portStr)
 		{
