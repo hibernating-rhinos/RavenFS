@@ -1,6 +1,6 @@
 ﻿namespace RavenFS.Storage
 {
-	public class DeleteFile
+	public class DeleteFileOperation
 	{
 		public string OriginalFileName { get; set; }
 

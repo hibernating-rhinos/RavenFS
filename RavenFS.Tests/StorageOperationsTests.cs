@@ -25,7 +25,7 @@
 
 			var configNames = client.Config.GetConfigNames().Result;
 
-			Assert.DoesNotContain(RavenFileNameHelper.DeletingFileConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin")), configNames);
+			Assert.DoesNotContain(RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin")), configNames);
 		}
 
 		[Fact]
@@ -38,11 +38,11 @@
 
 			rfs.StorageOperationsTask.IndicateFileToDelete("toDelete.bin");
 
-			DeleteFile deleteFile = null;
+			DeleteFileOperation deleteFile = null;
 			rfs.Storage.Batch(
 				accessor =>
-				deleteFile = accessor.GetConfigurationValue<DeleteFile>(
-					RavenFileNameHelper.DeletingFileConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin"))));
+				deleteFile = accessor.GetConfigurationValue<DeleteFileOperation>(
+					RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin"))));
 
 			Assert.Equal(RavenFileNameHelper.DeletingFileName("toDelete.bin"), deleteFile.CurrentFileName);
 			Assert.Equal("toDelete.bin", deleteFile.OriginalFileName);
@@ -63,7 +63,7 @@
 			IEnumerable<string> configNames = null;
 			rfs.Storage.Batch(accessor => configNames = accessor.GetConfigNames(0, 10).ToArray());
 
-			Assert.DoesNotContain(RavenFileNameHelper.DeletingFileConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin")), configNames);
+			Assert.DoesNotContain(RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin")), configNames);
 		}
 
 		[Fact]
@@ -109,10 +109,10 @@
 
 			rfs.StorageOperationsTask.CleanupDeletedFilesAsync().Wait();
 
-			DeleteFile deleteFile = null;
+			DeleteFileOperation deleteFile = null;
 
-			rfs.Storage.Batch(accessor => deleteFile = accessor.GetConfigurationValue<DeleteFile>(
-				RavenFileNameHelper.DeletingFileConfigNameForFile(RavenFileNameHelper.DeletingFileName("file.bin"))));
+			rfs.Storage.Batch(accessor => deleteFile = accessor.GetConfigurationValue<DeleteFileOperation>(
+				RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName("file.bin"))));
 
 			Assert.Equal(RavenFileNameHelper.DeletingFileName("file.bin"), deleteFile.CurrentFileName);
 			Assert.Equal("file.bin", deleteFile.OriginalFileName);
@@ -140,9 +140,9 @@
 
 			rfs.StorageOperationsTask.CleanupDeletedFilesAsync().Wait();
 
-			DeleteFile deleteFile = null;
-			rfs.Storage.Batch(accessor => deleteFile = accessor.GetConfigurationValue<DeleteFile>(
-				RavenFileNameHelper.DeletingFileConfigNameForFile(RavenFileNameHelper.DeletingFileName(downloadingFileName))));
+			DeleteFileOperation deleteFile = null;
+			rfs.Storage.Batch(accessor => deleteFile = accessor.GetConfigurationValue<DeleteFileOperation>(
+				RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName(downloadingFileName))));
 
 			Assert.Equal(RavenFileNameHelper.DeletingFileName(downloadingFileName), deleteFile.CurrentFileName);
 			Assert.Equal(downloadingFileName, deleteFile.OriginalFileName);

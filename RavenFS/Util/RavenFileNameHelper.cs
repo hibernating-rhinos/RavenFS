@@ -42,8 +42,8 @@ namespace RavenFS.Util
 			       DeletingFileSuffix;
 		}
 
-		public const string DeletingFileConfigPrefix = "Deleting-";
-		public static string DeletingFileConfigNameForFile(string fileName)
+		public const string DeletingFileConfigPrefix = "DeleteOp-";
+		public static string DeleteOperationConfigNameForFile(string fileName)
 		{
 			return DeletingFileConfigPrefix + fileName;
 		}

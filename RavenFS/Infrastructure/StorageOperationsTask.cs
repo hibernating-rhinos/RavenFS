@@ -106,9 +106,9 @@
 					log.Debug(string.Format("File '{0}' was renamed to '{1}' and marked as deleted",
 											fileName, deletingFileName));
 
-					var configName = RavenFileNameHelper.DeletingFileConfigNameForFile(deletingFileName);
+					var configName = RavenFileNameHelper.DeleteOperationConfigNameForFile(deletingFileName);
 					accessor.SetConfigurationValue(configName,
-												   new DeleteFile() { OriginalFileName = fileName, CurrentFileName = deletingFileName });
+												   new DeleteFileOperation() { OriginalFileName = fileName, CurrentFileName = deletingFileName });
 
 					notificationPublisher.Publish(new ConfigChange() { Name = configName, Action = ConfigChangeAction.Set });
 				}
@@ -128,11 +128,11 @@
 
 		public Task CleanupDeletedFilesAsync()
 		{
-			IList<DeleteFile> filesToDelete = null;
+			IList<DeleteFileOperation> filesToDelete = null;
 
 			storage.Batch(
 				accessor =>
-				filesToDelete = accessor.GetConfigsWithPrefix<DeleteFile>(RavenFileNameHelper.DeletingFileConfigPrefix, 0, 10));
+				filesToDelete = accessor.GetConfigsWithPrefix<DeleteFileOperation>(RavenFileNameHelper.DeletingFileConfigPrefix, 0, 10));
 
 			var tasks = new List<Task>();
 
@@ -163,7 +163,7 @@
 						{
 							if (t.Exception == null)
 							{
-								var configName = RavenFileNameHelper.DeletingFileConfigNameForFile(deletingFileName);
+								var configName = RavenFileNameHelper.DeleteOperationConfigNameForFile(deletingFileName);
 
 								storage.Batch(accessor => accessor.DeleteConfig(configName));
 
