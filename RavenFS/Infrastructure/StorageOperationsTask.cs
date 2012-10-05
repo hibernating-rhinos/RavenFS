@@ -15,7 +15,7 @@
 	using Synchronization;
 	using Util;
 
-	public class StorageCleanupTask
+	public class StorageOperationsTask
 	{
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
 
@@ -28,7 +28,7 @@
 
 		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(15));
 
-		public StorageCleanupTask(TransactionalStorage storage, IndexStorage search, INotificationPublisher notificationPublisher)
+		public StorageOperationsTask(TransactionalStorage storage, IndexStorage search, INotificationPublisher notificationPublisher)
 		{
 			this.storage = storage;
 			this.search = search;
@@ -39,7 +39,7 @@
 
 		private void InitializeTimer()
 		{
-			timer.Subscribe(tick => PerformAsync());
+			timer.Subscribe(tick => CleanupDeletedFilesAsync());
 		}
 
 		public void IndicateFileToDelete(string fileName)
@@ -126,7 +126,7 @@
 			}
 		}
 
-		public Task PerformAsync()
+		public Task CleanupDeletedFilesAsync()
 		{
 			IList<DeleteFile> filesToDelete = null;
 

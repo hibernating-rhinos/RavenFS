@@ -71,7 +71,7 @@ namespace RavenFS.Controllers
 			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
 			{
 				AssertFileIsNotBeingSynced(name, accessor, true);
-				StorageCleanupTask.IndicateFileToDelete(name);
+				StorageOperationsTask.IndicateFileToDelete(name);
 
 				if(!name.EndsWith(RavenFileNameHelper.DownloadingFileSuffix)) // don't create a tombstone for .downloading file
 				{
@@ -210,7 +210,7 @@ namespace RavenFS.Controllers
 				ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
 				{
 					AssertFileIsNotBeingSynced(name, accessor, true);
-					StorageCleanupTask.IndicateFileToDelete(name);
+					StorageOperationsTask.IndicateFileToDelete(name);
 
 					long? contentLength = Request.Content.Headers.ContentLength;
 					if (Request.Headers.TransferEncodingChunked ?? false)

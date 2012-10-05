@@ -8,7 +8,7 @@
 		[AcceptVerbs("POST")]
 		public Task CleanUp()
 		{
-			return StorageCleanupTask.PerformAsync();
+			return StorageOperationsTask.CleanupDeletedFilesAsync();
 		}
 	}
 }

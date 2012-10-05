@@ -34,17 +34,17 @@ namespace RavenFS.Util
             return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.Read, null, null, null);
         }
 
-        public static StorageStream CreatingNewAndWritting(TransactionalStorage transactionalStorage, IndexStorage indexStorage, StorageCleanupTask cleanup, string fileName, NameValueCollection metadata)
+        public static StorageStream CreatingNewAndWritting(TransactionalStorage transactionalStorage, IndexStorage indexStorage, StorageOperationsTask operations, string fileName, NameValueCollection metadata)
         {
             if (indexStorage == null)
             {
                 throw new ArgumentNullException("indexStorage", "indexStorage == null");
             }
-            return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.CreateAndWrite, metadata, indexStorage, cleanup);
+            return new StorageStream(transactionalStorage, fileName, StorageStreamAccess.CreateAndWrite, metadata, indexStorage, operations);
         }
 
     	protected StorageStream(TransactionalStorage transactionalStorage, string fileName, StorageStreamAccess storageStreamAccess,
-            NameValueCollection metadata, Search.IndexStorage indexStorage, StorageCleanupTask cleanup)
+            NameValueCollection metadata, Search.IndexStorage indexStorage, StorageOperationsTask operations)
         {
             TransactionalStorage = transactionalStorage;
             StorageStreamAccess = storageStreamAccess;
@@ -64,7 +64,7 @@ namespace RavenFS.Util
                 case StorageStreamAccess.CreateAndWrite:
                     TransactionalStorage.Batch(accessor =>
                     {
-						cleanup.IndicateFileToDelete(fileName);
+						operations.IndicateFileToDelete(fileName);
                         accessor.PutFile(fileName, null, metadata);
                         indexStorage.Index(fileName, metadata);
                     });

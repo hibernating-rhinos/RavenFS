@@ -98,7 +98,7 @@
 
 				Historian.UpdateLastModified(sourceMetadata);
 
-				var synchronizingFile = SynchronizingFileStream.CreatingOrOpeningAndWritting(Storage, Search, StorageCleanupTask, tempFileName, sourceMetadata);
+				var synchronizingFile = SynchronizingFileStream.CreatingOrOpeningAndWritting(Storage, Search, StorageOperationsTask, tempFileName, sourceMetadata);
 				
 				var provider = new MultipartSyncStreamProvider(synchronizingFile, localFile);
 
@@ -120,7 +120,7 @@
 
 				Storage.Batch(accessor =>
 				{
-					StorageCleanupTask.IndicateFileToDelete(fileName);
+					StorageOperationsTask.IndicateFileToDelete(fileName);
 					accessor.RenameFile(tempFileName, fileName);
 
 					Search.Delete(tempFileName);
@@ -233,7 +233,7 @@
 			DeleteSynchronizationReport(fileName, accessor);
 
 			// remove previous .downloading file
-			StorageCleanupTask.IndicateFileToDelete(RavenFileNameHelper.DownloadingFileName(fileName));
+			StorageOperationsTask.IndicateFileToDelete(RavenFileNameHelper.DownloadingFileName(fileName));
 		}
 
 		[AcceptVerbs("POST")]
@@ -322,7 +322,7 @@
 				
 				Storage.Batch(accessor => StartupProceed(fileName, accessor));
 
-				StorageCleanupTask.IndicateFileToDelete(fileName);
+				StorageOperationsTask.IndicateFileToDelete(fileName);
 
                 PublishFileNotification(fileName, Notifications.FileChangeAction.Delete);
 			}
