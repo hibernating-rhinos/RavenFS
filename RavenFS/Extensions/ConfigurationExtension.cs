@@ -47,7 +47,7 @@ namespace RavenFS.Extensions
         	do
         	{
         		old = start;
-        		var items = accessor.GetConfigNames(start, pageSize);
+        		var items = accessor.GetConfigNames(start, pageSize).ToArray();
         		foreach (var item in items)
         		{
         			start++;
