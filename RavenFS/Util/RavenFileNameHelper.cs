@@ -47,5 +47,11 @@ namespace RavenFS.Util
 		{
 			return DeleteOperationConfigPrefix + fileName;
 		}
+
+		public const string RenameOperationConfigPrefix = "RenameOp-";
+		public static string RenameOperationConfigNameForFile(string fileName)
+		{
+			return RenameOperationConfigPrefix + fileName;
+		}
 	}
 }

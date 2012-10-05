@@ -173,5 +173,37 @@
 					RavenFileNameHelper.DeleteOperationConfigPrefix + "file.bin1" + RavenFileNameHelper.DeletingFileSuffix == configName); // 1 indicate delete version
 			}
 		}
+
+		[Fact]
+		public void Should_resume_to_rename_file_if_appropriate_config_exists()
+		{
+			var client = NewClient();
+			var rfs = GetRavenFileSystem();
+
+			const string fileName = "file.bin";
+			const string rename = "renamed.bin";
+
+			client.UploadAsync(fileName, new RandomStream(1)).Wait();
+
+			// create config to say to the server that rename operation performed last time were not finished
+			var renameOpConfig = RavenFileNameHelper.RenameOperationConfigNameForFile(fileName);
+			rfs.Storage.Batch(accessor => accessor.SetConfigurationValue(renameOpConfig,
+			                                                             new RenameFileOperation()
+				                                                             {
+					                                                             Name = fileName,
+					                                                             Rename = rename
+				                                                             }));
+
+			rfs.StorageOperationsTask.RetryFileRenamingAsync().Wait();
+
+			IEnumerable<string> configNames = null;
+			rfs.Storage.Batch(accessor => configNames = accessor.GetConfigNames(0, 10).ToArray());
+
+			Assert.DoesNotContain(renameOpConfig, configNames);
+
+			var renamedMetadata = client.GetMetadataForAsync("renamed.bin").Result;
+
+			Assert.NotNull(renamedMetadata);
+		}
 	}
 }

@@ -4,6 +4,7 @@
 	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
+	using System.IO;
 	using System.Reactive.Linq;
 	using System.Threading.Tasks;
 	using Extensions;
@@ -23,6 +24,7 @@
 		private readonly IndexStorage search;
 		private readonly INotificationPublisher notificationPublisher;
 		private readonly ConcurrentDictionary<string, Task> deleteFileTasks = new ConcurrentDictionary<string, Task>();
+		private readonly ConcurrentDictionary<string, Task> renameFileTasks = new ConcurrentDictionary<string, Task>();
 		private readonly ConcurrentDictionary<string, FileHeader> uploadingFiles = new ConcurrentDictionary<string, FileHeader>();
 		private readonly FileLockManager fileLockManager = new FileLockManager();
 
@@ -39,7 +41,38 @@
 
 		private void InitializeTimer()
 		{
-			timer.Subscribe(tick => CleanupDeletedFilesAsync());
+			timer.Subscribe(tick =>
+			{
+				RetryFileRenamingAsync();
+				CleanupDeletedFilesAsync();
+			});
+		}
+
+		public void RenameFile(string fileName, string rename)
+		{
+			storage.Batch(
+				accessor =>
+				{
+					var renameOpConfig = RavenFileNameHelper.RenameOperationConfigNameForFile(fileName);
+
+					accessor.SetConfigurationValue(renameOpConfig,
+												   new RenameFileOperation()
+													   {
+														   Name = fileName,
+														   Rename = rename
+													   });
+					try
+					{
+						accessor.RenameFile(fileName, rename);
+					}
+					catch (FileNotFoundException)
+					{
+						accessor.DeleteConfig(renameOpConfig);
+						throw;
+					}
+
+					accessor.DeleteConfig(renameOpConfig);
+				});
 		}
 
 		public void IndicateFileToDelete(string fileName)
@@ -187,6 +220,54 @@
 			return TaskEx.WhenAll(tasks);
 		}
 
+		public Task RetryFileRenamingAsync()
+		{
+			IList<RenameFileOperation> filesToRename = null;
+
+			storage.Batch(
+				accessor =>
+				filesToRename = accessor.GetConfigsWithPrefix<RenameFileOperation>(RavenFileNameHelper.RenameOperationConfigPrefix, 0, 10));
+
+			var tasks = new List<Task>();
+
+			foreach (var fileToRename in filesToRename)
+			{
+				var fileName = fileToRename.Name;
+				var rename = fileToRename.Rename;
+
+				if (IsRenameInProgress(fileName))
+					continue;
+
+				log.Debug("Starting to resume rename a file '{0}' to '{1}'", fileName, rename);
+
+				var renameTask = TaskEx.Run(
+					() => ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor => accessor.RenameFile(fileName, rename)))).ContinueWith(
+						t =>
+						{
+							if (t.Exception == null)
+							{
+								var configName = RavenFileNameHelper.RenameOperationConfigNameForFile(fileName);
+
+								storage.Batch(accessor => accessor.DeleteConfig(configName));
+
+								notificationPublisher.Publish(new ConfigChange() { Name = configName, Action = ConfigChangeAction.Delete });
+
+								log.Debug("File '{0}' was renamed to '{1}'", fileName, rename);
+							}
+							else
+							{
+								log.WarnException(string.Format("Could not rename file '{0}' to '{1}'", fileName, rename), t.Exception);
+							}
+						});
+
+				renameFileTasks.AddOrUpdate(fileName, renameTask, (file, oldTask) => renameTask);
+
+				tasks.Add(renameTask);
+			}
+
+			return TaskEx.WhenAll(tasks);
+		}
+
 		private static string SynchronizedFileName(string originalFileName)
 		{
 			return originalFileName.Substring(0,
@@ -239,6 +320,22 @@
 				}
 
 				deleteFileTasks.TryRemove(deletingFileName, out existingTask);
+			}
+			return false;
+		}
+
+		private bool IsRenameInProgress(string fileName)
+		{
+			Task existingTask;
+
+			if (renameFileTasks.TryGetValue(fileName, out existingTask))
+			{
+				if (!existingTask.IsCompleted)
+				{
+					return true;
+				}
+
+				renameFileTasks.TryRemove(fileName, out existingTask);
 			}
 			return false;
 		}

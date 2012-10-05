@@ -166,6 +166,7 @@
     <Compile Include="Notifications\INotificationPublisher.cs" />
     <Compile Include="Notifications\UploadFailed.cs" />
     <Compile Include="Storage\DeleteFileOperation.cs" />
+    <Compile Include="Storage\RenameFileOperation.cs" />
     <Compile Include="Storage\SignatureReadOnlyStream.cs" />
     <Compile Include="Synchronization\FileHeaderNameEqualityComparer.cs" />
     <Compile Include="Synchronization\Rdc\Wrapper\RdcVersion.cs" />

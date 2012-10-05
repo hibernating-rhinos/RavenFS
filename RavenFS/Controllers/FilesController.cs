@@ -170,7 +170,7 @@ namespace RavenFS.Controllers
 													{SynchronizationConstants.RavenRenameFile, rename}
 												};
 
-					accessor.RenameFile(name, rename);
+					StorageOperationsTask.RenameFile(name, rename);
 					accessor.UpdateFileMetadata(rename, metadata);
 					accessor.PutFile(name, 0, tombstoneMetadata, true);
 				}), ConcurrencyResponseException);
@@ -180,7 +180,6 @@ namespace RavenFS.Controllers
 				log.Debug("Cannot rename a file '{0}' to '{1}' because a file was not found", name, rename);
 				return new HttpResponseMessage(HttpStatusCode.NotFound);
 			}
-
 
 			Search.Delete(name);
 			Search.Index(rename, fileAndPages.Metadata);
