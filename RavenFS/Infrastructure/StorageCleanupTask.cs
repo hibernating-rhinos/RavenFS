@@ -23,7 +23,7 @@
 		private readonly IndexStorage search;
 		private readonly INotificationPublisher notificationPublisher;
 		private readonly ConcurrentDictionary<string, Task> deleteFileTasks = new ConcurrentDictionary<string, Task>();
-		private readonly ConcurrentDictionary<string, FileHeader> uploadingFiles = new ConcurrentDictionary<string, FileHeader>(); 
+		private readonly ConcurrentDictionary<string, FileHeader> uploadingFiles = new ConcurrentDictionary<string, FileHeader>();
 		private readonly FileLockManager fileLockManager = new FileLockManager();
 
 		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(15));
@@ -51,7 +51,7 @@
 			{
 				var existingFileHeader = accessor.ReadFile(fileName);
 
-				if(existingFileHeader == null)
+				if (existingFileHeader == null)
 				{
 					// do nothing if file does not exist
 					fileExists = false;
@@ -104,18 +104,18 @@
 					accessor.DecrementFileCount();
 
 					log.Debug(string.Format("File '{0}' was renamed to '{1}' and marked as deleted",
-					                        fileName, deletingFileName));
+											fileName, deletingFileName));
 
 					var configName = RavenFileNameHelper.DeletingFileConfigNameForFile(deletingFileName);
 					accessor.SetConfigurationValue(configName,
-					                               new DeleteFile() {OriginalFileName = fileName, CurrentFileName = deletingFileName});
+												   new DeleteFile() { OriginalFileName = fileName, CurrentFileName = deletingFileName });
 
 					notificationPublisher.Publish(new ConfigChange() { Name = configName, Action = ConfigChangeAction.Set });
 				}
 				else
 				{
 					log.Warn("Could not rename a file '{0}' when a delete operation was performed",
-					         fileName);
+							 fileName);
 				}
 			});
 
@@ -140,16 +140,16 @@
 			{
 				var deletingFileName = fileToDelete.CurrentFileName;
 
-				if (IsDeleteInProgress(deletingFileName)) 
+				if (IsDeleteInProgress(deletingFileName))
 					continue;
 
-				if (IsUploadInProgress(fileToDelete.OriginalFileName)) 
+				if (IsUploadInProgress(fileToDelete.OriginalFileName))
 					continue;
 
-				if (IsSynchronizationInProgress(fileToDelete.OriginalFileName)) 
-					continue; 
+				if (IsSynchronizationInProgress(fileToDelete.OriginalFileName))
+					continue;
 
-				if(fileToDelete.OriginalFileName.EndsWith(RavenFileNameHelper.DownloadingFileSuffix)) // if it's .downloading file
+				if (fileToDelete.OriginalFileName.EndsWith(RavenFileNameHelper.DownloadingFileSuffix)) // if it's .downloading file
 				{
 					if (IsSynchronizationInProgress(SynchronizedFileName(fileToDelete.OriginalFileName))) // and file is being synced
 						continue;
@@ -157,7 +157,7 @@
 
 				log.Debug("Starting to delete file '{0}' from storage", deletingFileName);
 
-				var deleteTask  = TaskEx.Run(
+				var deleteTask = TaskEx.Run(
 					() => ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor => accessor.Delete(deletingFileName)))).ContinueWith(
 						t =>
 						{
@@ -166,9 +166,9 @@
 								var configName = RavenFileNameHelper.DeletingFileConfigNameForFile(deletingFileName);
 
 								storage.Batch(accessor => accessor.DeleteConfig(configName));
-								
+
 								notificationPublisher.Publish(new ConfigChange() { Name = configName, Action = ConfigChangeAction.Delete });
-								
+
 								log.Debug("File '{0}' was deleted from storage", deletingFileName);
 							}
 							else
@@ -176,7 +176,7 @@
 								log.WarnException(string.Format("Could not delete file '{0}' from storage", deletingFileName), t.Exception);
 							}
 
-							
+
 						});
 
 				deleteFileTasks.AddOrUpdate(deletingFileName, deleteTask, (file, oldTask) => deleteTask);
@@ -190,8 +190,8 @@
 		private static string SynchronizedFileName(string originalFileName)
 		{
 			return originalFileName.Substring(0,
-			                                  originalFileName.IndexOf(RavenFileNameHelper.DownloadingFileSuffix,
-			                                                           StringComparison.InvariantCulture));
+											  originalFileName.IndexOf(RavenFileNameHelper.DownloadingFileSuffix,
+																	   StringComparison.InvariantCulture));
 		}
 
 		private bool IsSynchronizationInProgress(string originalFileName)
