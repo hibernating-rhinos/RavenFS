@@ -105,7 +105,7 @@
 		}
 
 		[Fact]
-		public void Should_not_perform_file_delete_of_previous_downloading_file_is_synchronization_is_being_performed()
+		public void Should_not_perform_file_delete_of_previous_downloading_file_if_synchronization_is_being_performed()
 		{
 			var fileName = "file.bin";
 			var downloadingFileName = RavenFileNameHelper.DownloadingFileName(fileName);
