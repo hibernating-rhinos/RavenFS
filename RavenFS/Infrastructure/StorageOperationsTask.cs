@@ -132,7 +132,7 @@
 
 			storage.Batch(
 				accessor =>
-				filesToDelete = accessor.GetConfigsWithPrefix<DeleteFileOperation>(RavenFileNameHelper.DeletingFileConfigPrefix, 0, 10));
+				filesToDelete = accessor.GetConfigsWithPrefix<DeleteFileOperation>(RavenFileNameHelper.DeleteOperationConfigPrefix, 0, 10));
 
 			var tasks = new List<Task>();
 

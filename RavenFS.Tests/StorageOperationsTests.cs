@@ -147,5 +147,31 @@
 			Assert.Equal(RavenFileNameHelper.DeletingFileName(downloadingFileName), deleteFile.CurrentFileName);
 			Assert.Equal(downloadingFileName, deleteFile.OriginalFileName);
 		}
+
+		[Fact]
+		public void Upload_before_performing_cleanup_renames_by_adding_version_number()
+		{
+			var client = NewClient();
+			var rfs = GetRavenFileSystem();
+
+			client.UploadAsync("file.bin", new RandomStream(1)).Wait();
+
+			// this upload should indicate old file to delete
+			client.UploadAsync("file.bin", new RandomStream(1)).Wait();
+
+			// upload again - note that actual file delete was not performed yet
+			client.UploadAsync("file.bin", new RandomStream(1)).Wait();
+			
+			IEnumerable<string> configNames = null;
+			rfs.Storage.Batch(accessor => configNames = accessor.GetConfigNames(0, 10).ToArray().Where(x => x.StartsWith(RavenFileNameHelper.DeleteOperationConfigPrefix)));
+
+			Assert.Equal(2, configNames.Count());
+
+			foreach (var configName in configNames)
+			{
+				Assert.True(RavenFileNameHelper.DeleteOperationConfigPrefix + "file.bin" + RavenFileNameHelper.DeletingFileSuffix == configName ||
+					RavenFileNameHelper.DeleteOperationConfigPrefix + "file.bin1" + RavenFileNameHelper.DeletingFileSuffix == configName); // 1 indicate delete version
+			}
+		}
 	}
 }
