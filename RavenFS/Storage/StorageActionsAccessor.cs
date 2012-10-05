@@ -522,6 +522,7 @@ namespace RavenFS.Storage
 			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			if (Api.TrySeek(session, Usage, SeekGrbit.SeekGE))
 			{
+				var count = 0;
 				do
 				{
 					var name = Api.RetrieveColumnAsString(session, Usage, tableColumnsCache.UsageColumns["name"]);
@@ -533,6 +534,12 @@ namespace RavenFS.Storage
 						Api.SetColumn(session, Usage, tableColumnsCache.UsageColumns["name"], rename, Encoding.Unicode);
 
 						update.Save();
+					}
+
+					if (count++ > 100)
+					{
+						PulseTransaction();
+						count = 0;
 					}
 				} while (Api.TryMoveNext(session, Usage));
 			}
