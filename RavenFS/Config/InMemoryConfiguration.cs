@@ -21,7 +21,7 @@ namespace RavenFS.Config
 		public void Initialize()
 		{
 			// Data settings
-			DataDirectory = Settings["Raven/DataDir"] ?? @"~\Data";
+			DataDirectory = Settings["Raven/DataDir"] ?? @"~\Data.ravenfs";
 
 			if (string.IsNullOrEmpty(Settings["Raven/IndexStoragePath"]) == false)
 			{
