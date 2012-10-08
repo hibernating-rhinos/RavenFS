@@ -211,7 +211,10 @@ namespace RavenFS.Synchronization
 				filesToSynchronization.Where(
 					x => synchronizationStrategy.Filter(x, lastEtag.DestinationServerInstanceId, filesToSynchronization)).ToList();
 
-			LogFilesInfo("There were {0} file(s) that needed synchronization after filtering: {1}", filteredFilesToSychronization);
+			if(filesToSynchronization.Count > 0)
+			{
+				LogFilesInfo("There were {0} file(s) that needed synchronization after filtering: {1}", filteredFilesToSychronization);
+			}
 
 			if (filteredFilesToSychronization.Count == 0)
 			{
@@ -514,7 +517,7 @@ namespace RavenFS.Synchronization
 
 			if (destinations == null)
 			{
-				log.Warn("Invalid " + SynchronizationConstants.RavenSynchronizationDestinations + " configuration");
+				log.Warn("Empty " + SynchronizationConstants.RavenSynchronizationDestinations + " configuration");
 				return Enumerable.Empty<string>();
 			}
 
