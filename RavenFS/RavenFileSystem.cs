@@ -230,6 +230,8 @@ namespace RavenFS
 				routeTemplate: "{controller}/{*name}",
 				defaults: new { controller = "files", name = RouteParameter.Optional }
 				);
+
+		    StorageOperationsTask.ResumeFileRenamingAsync();
 		}
 	}
 }
