@@ -54,6 +54,14 @@
 
 			storage.Batch(accessor =>
 			{
+				var previousRenameTombstone = accessor.ReadFile(operation.Rename);
+
+				if (previousRenameTombstone != null && previousRenameTombstone.Metadata[SynchronizationConstants.RavenDeleteMarker] != null)
+				{
+					// if there is a tombstone delete it
+					accessor.Delete(previousRenameTombstone.Name);
+				}
+
 				accessor.RenameFile(operation.Name, operation.Rename, true);
 				accessor.UpdateFileMetadata(operation.Rename, operation.MetadataAfterOperation);
 

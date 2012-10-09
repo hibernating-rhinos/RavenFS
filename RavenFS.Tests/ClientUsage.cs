@@ -371,6 +371,19 @@ namespace RavenFS.Tests
 
 			Assert.Equal(1, client.StatsAsync().Result.FileCount);
 		}
+		
+		[Fact]
+		public void Can_back_to_previous_name()
+		{
+			var client = NewClient();
+			client.UploadAsync("file.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+
+			client.RenameAsync("file.bin", "renamed.bin").Wait();
+			client.RenameAsync("renamed.bin", "file.bin").Wait();
+
+			var files = client.BrowseAsync().Result;
+			Assert.Equal("file.bin", files[0].Name);
+		}
 
         private static MemoryStream PrepareTextSourceStream()
         {
