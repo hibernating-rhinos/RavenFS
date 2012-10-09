@@ -49,24 +49,6 @@ namespace RavenFS.Extensions
             accessor.SetConfig(key, new NameValueCollection { { "value", value } });
         }
 
-        public static IEnumerable<string> GetConfigNames(this StorageActionsAccessor accessor)
-        {
-            const int pageSize = 20;
-            var start = 0;
-        	int old;
-        	do
-        	{
-        		old = start;
-        		var items = accessor.GetConfigNames(start, pageSize).ToArray();
-        		foreach (var item in items)
-        		{
-        			start++;
-        			yield return item;
-        		}
-
-        	} while (old == start);
-        }
-
 		public static IList<T> GetConfigsWithPrefix<T>(this StorageActionsAccessor accessor, string prefix, int start, int take)
 		{
 			var configs = accessor.GetConfigsStartWithPrefix(prefix, start, take);
