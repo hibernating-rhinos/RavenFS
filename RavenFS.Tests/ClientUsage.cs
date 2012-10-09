@@ -413,6 +413,25 @@ namespace RavenFS.Tests
 			Assert.True("file.bin" == files[1].Name || "renamed.bin" == files[1].Name);
 		}
 
+		[Fact]
+		public void Should_refuse_to_rename_if_file_with_the_same_name_already_exists()
+		{
+			var client = NewClient();
+			client.UploadAsync("file1.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+			client.UploadAsync("file2.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+
+			Exception ex = null;
+			try
+			{
+				client.RenameAsync("file1.bin", "file2.bin").Wait();
+			}
+			catch (AggregateException e)
+			{
+				ex = e.InnerException;
+			}
+			Assert.Contains("Cannot rename because file file2.bin already exists", ex.Message);
+		}
+
         private static MemoryStream PrepareTextSourceStream()
         {
             var ms = new MemoryStream();
