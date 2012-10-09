@@ -377,18 +377,12 @@
 
 				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, out isConflictResolved);
 
-				FileAndPages fileAndPages = null;
-				Storage.Batch(accessor =>
-				{
-					fileAndPages = accessor.GetFile(fileName, 0, 0);
-					accessor.RenameFile(fileName, rename);
-				});
-
-				Search.Delete(fileName);
-				Search.Index(rename, fileAndPages.Metadata);
-
-                PublishFileNotification(fileName, Notifications.FileChangeAction.Renaming);
-                PublishFileNotification(rename, Notifications.FileChangeAction.Renamed);
+				StorageOperationsTask.RenameFile(new RenameFileOperation()
+					                                 {
+						                                 Name = fileName,
+														 Rename = rename,
+														 MetadataAfterOperation = sourceMetadata.WithETag(sourceFileETag).DropRenameMarkers()
+					                                 });
 			}
 			catch (Exception ex)
 			{

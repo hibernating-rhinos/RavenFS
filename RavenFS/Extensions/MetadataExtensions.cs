@@ -30,6 +30,9 @@ namespace RavenFS.Extensions
 	using System.Linq;
 	using System.Text.RegularExpressions;
 	using Newtonsoft.Json;
+#if !CLIENT
+	using Synchronization;
+#endif
 
 	/// <summary>
     /// Extensions for handling metadata
@@ -86,6 +89,35 @@ namespace RavenFS.Extensions
 					metadata.Add(headerName, value);
 				}
 			}
+			return metadata;
+		}
+
+		public static NameValueCollection WithETag(this NameValueCollection metadata, Guid etag)
+		{
+			metadata["ETag"] = "\"" + etag + "\"";
+			return metadata;
+		}
+
+		public static NameValueCollection DropRenameMarkers(this NameValueCollection metadata)
+		{
+			metadata.Remove(SynchronizationConstants.RavenDeleteMarker);
+			metadata.Remove(SynchronizationConstants.RavenRenameFile);
+
+			return metadata;
+		}
+
+		public static NameValueCollection WithRenameMarkers(this NameValueCollection metadata, string rename)
+		{
+			metadata[SynchronizationConstants.RavenDeleteMarker] = "true";
+			metadata[SynchronizationConstants.RavenRenameFile] = rename;
+
+			return metadata;
+		}
+
+		public static NameValueCollection WithDeleteMarker(this NameValueCollection metadata)
+		{
+			metadata[SynchronizationConstants.RavenDeleteMarker] = "true";
+
 			return metadata;
 		}
 

@@ -58,11 +58,7 @@
 				accessor.UpdateFileMetadata(operation.Rename, operation.MetadataAfterOperation);
 
 				// copy renaming file metadata and set special markers
-				var tombstoneMetadata = new NameValueCollection(operation.MetadataAfterOperation)
-					                        {
-						                        {SynchronizationConstants.RavenDeleteMarker, "true"},
-						                        {SynchronizationConstants.RavenRenameFile, operation.Rename}
-					                        };
+				var tombstoneMetadata = new NameValueCollection(operation.MetadataAfterOperation).WithRenameMarkers(operation.Rename);
 
 				accessor.PutFile(operation.Name, 0, tombstoneMetadata, true); // put rename tombstone
 
@@ -100,10 +96,7 @@
 					return;
 				}
 
-				var metadata = new NameValueCollection(existingFileHeader.Metadata)
-					               {
-						               {SynchronizationConstants.RavenDeleteMarker, "true"}
-					               };
+				var metadata = new NameValueCollection(existingFileHeader.Metadata).WithDeleteMarker();
 
 				var renameSucceeded = false;
 

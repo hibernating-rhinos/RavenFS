@@ -7,13 +7,13 @@ namespace RavenFS.Tests.Synchronization
 	using System.Linq;
 	using System.Text;
 	using IO;
+	using Newtonsoft.Json;
 	using RavenFS.Client;
 	using RavenFS.Extensions;
-	using Newtonsoft.Json;
+	using RavenFS.Notifications;
 	using RavenFS.Synchronization;
 	using RavenFS.Util;
 	using Xunit;
-	using RavenFS.Notifications;
 
 	public class SynchronizationOfDestinationsTests : MultiHostTestBase
 	{
