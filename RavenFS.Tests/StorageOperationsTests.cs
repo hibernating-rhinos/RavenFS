@@ -68,6 +68,24 @@
 		}
 
 		[Fact]
+		public void Should_update_indexes_after_storage_cleanup()
+		{
+			var client = NewClient();
+			var rfs = GetRavenFileSystem();
+
+			client.UploadAsync("toDelete.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+
+			rfs.StorageOperationsTask.IndicateFileToDelete("toDelete.bin");
+
+			rfs.StorageOperationsTask.CleanupDeletedFilesAsync().Wait();
+
+			var searchResults = client.GetFilesAsync("/").Result;
+
+			Assert.Equal(0, searchResults.FileCount);
+			Assert.Equal(0, searchResults.Files.Count());
+		}
+
+		[Fact]
 		public void Should_remove_deleting_file_and_its_pages_after_storage_cleanup()
 		{
 			const int numberOfPages = 10;
@@ -150,7 +168,7 @@
 		}
 
 		[Fact]
-		public void Upload_before_performing_cleanup_renames_by_adding_version_number()
+		public void Upload_before_performing_cleanup_do_a_rename_by_adding_version_number()
 		{
 			var client = NewClient();
 			var rfs = GetRavenFileSystem();
@@ -210,10 +228,10 @@
 
 			Assert.NotNull(renamedMetadata);
 
-			var files = client.BrowseAsync().Result;
+			var results = client.GetFilesAsync("/").Result; // make sure that indexes are updated
 
-			Assert.Equal(1, files.Count());
-			Assert.Equal(rename, files[0].Name);
+			Assert.Equal(1, results.FileCount);
+			Assert.Equal(rename, results.Files[0].Name);
 		}
 	}
 }
