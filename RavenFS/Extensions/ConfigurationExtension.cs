@@ -8,12 +8,18 @@ using RavenFS.Storage;
 
 namespace RavenFS.Extensions
 {
-    public static class ConfigurationExtension
+	using Util;
+
+	public static class ConfigurationExtension
     {
         public static T GetConfigurationValue<T>(this StorageActionsAccessor accessor, string key)
         {
             var value = accessor.GetConfig(key)["value"];
-            return new JsonSerializer().Deserialize<T>(new JsonTextReader(new StringReader(value)));
+			var serializer = new JsonSerializer()
+			{
+				Converters = { new NameValueCollectionJsonConverter() }
+			};
+            return serializer.Deserialize<T>(new JsonTextReader(new StringReader(value)));
         }
 
         public static bool TryGetConfigurationValue<T>(this StorageActionsAccessor accessor, string key, out T result)
@@ -34,7 +40,11 @@ namespace RavenFS.Extensions
         {
             var sb = new StringBuilder();
             var jw = new JsonTextWriter(new StringWriter(sb));
-            new JsonSerializer().Serialize(jw, objectToSave);
+			var serializer = new JsonSerializer()
+			{
+				Converters = { new NameValueCollectionJsonConverter() }
+			};
+            serializer.Serialize(jw, objectToSave);
             var value = sb.ToString();
             accessor.SetConfig(key, new NameValueCollection { { "value", value } });
         }
@@ -60,8 +70,11 @@ namespace RavenFS.Extensions
 		public static IList<T> GetConfigsWithPrefix<T>(this StorageActionsAccessor accessor, string prefix, int start, int take)
 		{
 			var configs = accessor.GetConfigsStartWithPrefix(prefix, start, take);
-
-			return configs.Select(config => new JsonSerializer().Deserialize<T>(new JsonTextReader(new StringReader(config["value"])))).ToList();
+			var serializer = new JsonSerializer()
+				                 {
+					                 Converters = { new NameValueCollectionJsonConverter() }
+				                 };
+			return configs.Select(config => serializer.Deserialize<T>(new JsonTextReader(new StringReader(config["value"])))).ToList();
 		} 
     }
 }
