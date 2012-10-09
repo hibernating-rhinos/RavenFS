@@ -2,6 +2,7 @@
 {
 	using System;
 	using System.Collections.Generic;
+	using System.Collections.Specialized;
 	using System.IO;
 	using System.Linq;
 	using Extensions;
@@ -188,22 +189,31 @@
 			// create config to say to the server that rename operation performed last time were not finished
 			var renameOpConfig = RavenFileNameHelper.RenameOperationConfigNameForFile(fileName);
 			rfs.Storage.Batch(accessor => accessor.SetConfigurationValue(renameOpConfig,
-			                                                             new RenameFileOperation()
-				                                                             {
-					                                                             Name = fileName,
-					                                                             Rename = rename
-				                                                             }));
+			                                        new RenameFileOperation()
+				                                        {
+					                                        Name = fileName,
+					                                        Rename = rename,
+					                                        MetadataAfterOperation = new NameValueCollection()
+						                                                                {
+							                                                                {"ETag","\"" + Guid.Empty + "\""}
+						                                                                }
+				                                        }));
 
-			rfs.StorageOperationsTask.RetryFileRenamingAsync().Wait();
+			rfs.StorageOperationsTask.ResumeFileRenamingAsync().Wait();
 
 			IEnumerable<string> configNames = null;
 			rfs.Storage.Batch(accessor => configNames = accessor.GetConfigNames(0, 10).ToArray());
 
 			Assert.DoesNotContain(renameOpConfig, configNames);
 
-			var renamedMetadata = client.GetMetadataForAsync("renamed.bin").Result;
+			var renamedMetadata = client.GetMetadataForAsync(rename).Result;
 
 			Assert.NotNull(renamedMetadata);
+
+			var files = client.BrowseAsync().Result;
+
+			Assert.Equal(1, files.Count());
+			Assert.Equal(rename, files[0].Name);
 		}
 	}
 }

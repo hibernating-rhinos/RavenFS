@@ -150,29 +150,27 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("PATCH")]
 		public HttpResponseMessage Patch(string name, string rename)
 		{
-			FileAndPages fileAndPages = null;
-			
 			try
 			{
 				ConcurrencyAwareExecutor.Execute(() =>
 				Storage.Batch(accessor =>
 				{
 					AssertFileIsNotBeingSynced(name, accessor, true);
-					fileAndPages = accessor.GetFile(name, 0, 0);
 
-					var metadata = fileAndPages.Metadata;
+					var metadata = accessor.GetFile(name, 0, 0).Metadata;
 					Historian.UpdateLastModified(metadata);
 
-					// copy renaming file metadata and set special markers
-					var tombstoneMetadata = new NameValueCollection(metadata)
-												{
-													{SynchronizationConstants.RavenDeleteMarker, "true"},
-													{SynchronizationConstants.RavenRenameFile, rename}
-												};
+					var operation = new RenameFileOperation()
+						                          {
+							                          Name = name,
+													  Rename = rename,
+													  MetadataAfterOperation = metadata
+						                          };
 
-					StorageOperationsTask.RenameFile(name, rename);
-					accessor.UpdateFileMetadata(rename, metadata);
-					accessor.PutFile(name, 0, tombstoneMetadata, true);
+					accessor.SetConfigurationValue(RavenFileNameHelper.RenameOperationConfigNameForFile(name), operation);
+					accessor.PulseTransaction(); // commit rename operation config
+
+					StorageOperationsTask.RenameFile(operation);
 				}), ConcurrencyResponseException);
 			}
 			catch (FileNotFoundException)
@@ -180,12 +178,7 @@ namespace RavenFS.Controllers
 				log.Debug("Cannot rename a file '{0}' to '{1}' because a file was not found", name, rename);
 				return new HttpResponseMessage(HttpStatusCode.NotFound);
 			}
-
-			Search.Delete(name);
-			Search.Index(rename, fileAndPages.Metadata);
-			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Renaming });
-			Publisher.Publish(new FileChange { File = rename, Action = FileChangeAction.Renamed });
-
+			
 			log.Debug("File '{0}' was renamed to '{1}'", name, rename);
 
 			SynchronizationTask.SynchronizeDestinationsAsync();

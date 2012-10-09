@@ -435,7 +435,7 @@ namespace RavenFS.Storage
 
 					Api.JetDelete(session, Usage);
 
-					if (count++ > 100)
+					if (count++ > 1000)
 					{
 						PulseTransaction();
 						count = 0;
@@ -516,7 +516,7 @@ namespace RavenFS.Storage
 			Api.EscrowUpdate(session, Details, tableColumnsCache.DetailsColumns["file_count"], -1);
 		}
 
-		public void RenameFile(string filename, string rename)
+		public void RenameFile(string filename, string rename, bool commitPeriodically = false)
 		{
 			Api.JetSetCurrentIndex(session, Usage, "by_name_and_pos");
 			Api.MakeKey(session, Usage, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
@@ -536,7 +536,7 @@ namespace RavenFS.Storage
 						update.Save();
 					}
 
-					if (count++ > 100)
+					if (commitPeriodically && count++ > 1000)
 					{
 						PulseTransaction();
 						count = 0;

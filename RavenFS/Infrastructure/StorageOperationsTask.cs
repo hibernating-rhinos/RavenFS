@@ -4,7 +4,6 @@
 	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
-	using System.IO;
 	using System.Reactive.Linq;
 	using System.Threading.Tasks;
 	using Extensions;
@@ -43,36 +42,38 @@
 		{
 			timer.Subscribe(tick =>
 			{
-				RetryFileRenamingAsync();
+				ResumeFileRenamingAsync();
 				CleanupDeletedFilesAsync();
 			});
 		}
 
-		public void RenameFile(string fileName, string rename)
+		public void RenameFile(RenameFileOperation operation)
 		{
-			storage.Batch(
-				accessor =>
-				{
-					var renameOpConfig = RavenFileNameHelper.RenameOperationConfigNameForFile(fileName);
+			var configName = RavenFileNameHelper.RenameOperationConfigNameForFile(operation.Name);
+			notificationPublisher.Publish(new FileChange { File = operation.Name, Action = FileChangeAction.Renaming });
 
-					accessor.SetConfigurationValue(renameOpConfig,
-												   new RenameFileOperation()
-													   {
-														   Name = fileName,
-														   Rename = rename
-													   });
-					try
-					{
-						accessor.RenameFile(fileName, rename);
-					}
-					catch (FileNotFoundException)
-					{
-						accessor.DeleteConfig(renameOpConfig);
-						throw;
-					}
+			storage.Batch(accessor =>
+			{
+				accessor.RenameFile(operation.Name, operation.Rename, true);
+				accessor.UpdateFileMetadata(operation.Rename, operation.MetadataAfterOperation);
 
-					accessor.DeleteConfig(renameOpConfig);
-				});
+				// copy renaming file metadata and set special markers
+				var tombstoneMetadata = new NameValueCollection(operation.MetadataAfterOperation)
+					                        {
+						                        {SynchronizationConstants.RavenDeleteMarker, "true"},
+						                        {SynchronizationConstants.RavenRenameFile, operation.Rename}
+					                        };
+
+				accessor.PutFile(operation.Name, 0, tombstoneMetadata, true); // put rename tombstone
+
+				accessor.DeleteConfig(configName);
+
+				search.Delete(operation.Name);
+				search.Index(operation.Rename, operation.MetadataAfterOperation);
+			});
+
+			notificationPublisher.Publish(new ConfigChange { Name = configName, Action = ConfigChangeAction.Set });
+			notificationPublisher.Publish(new FileChange { File = operation.Rename, Action = FileChangeAction.Renamed });
 		}
 
 		public void IndicateFileToDelete(string fileName)
@@ -141,9 +142,9 @@
 
 					var configName = RavenFileNameHelper.DeleteOperationConfigNameForFile(deletingFileName);
 					accessor.SetConfigurationValue(configName,
-												   new DeleteFileOperation() { OriginalFileName = fileName, CurrentFileName = deletingFileName });
+												   new DeleteFileOperation { OriginalFileName = fileName, CurrentFileName = deletingFileName });
 
-					notificationPublisher.Publish(new ConfigChange() { Name = configName, Action = ConfigChangeAction.Set });
+					notificationPublisher.Publish(new ConfigChange { Name = configName, Action = ConfigChangeAction.Set });
 				}
 				else
 				{
@@ -200,7 +201,7 @@
 
 								storage.Batch(accessor => accessor.DeleteConfig(configName));
 
-								notificationPublisher.Publish(new ConfigChange() { Name = configName, Action = ConfigChangeAction.Delete });
+								notificationPublisher.Publish(new ConfigChange { Name = configName, Action = ConfigChangeAction.Delete });
 
 								log.Debug("File '{0}' was deleted from storage", deletingFileName);
 							}
@@ -220,7 +221,7 @@
 			return TaskEx.WhenAll(tasks);
 		}
 
-		public Task RetryFileRenamingAsync()
+		public Task ResumeFileRenamingAsync()
 		{
 			IList<RenameFileOperation> filesToRename = null;
 
@@ -230,37 +231,30 @@
 
 			var tasks = new List<Task>();
 
-			foreach (var fileToRename in filesToRename)
+			foreach (var item in filesToRename)
 			{
-				var fileName = fileToRename.Name;
-				var rename = fileToRename.Rename;
+				var renameOperation = item;
 
-				if (IsRenameInProgress(fileName))
+				if (IsRenameInProgress(renameOperation.Name))
 					continue;
 
-				log.Debug("Starting to resume rename a file '{0}' to '{1}'", fileName, rename);
+				log.Debug("Starting to resume a rename operation of a file '{0}' to '{1}'", renameOperation.Name, renameOperation.Rename);
 
 				var renameTask = TaskEx.Run(
-					() => ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor => accessor.RenameFile(fileName, rename)))).ContinueWith(
+					() => ConcurrencyAwareExecutor.Execute(() => RenameFile(renameOperation))).ContinueWith(
 						t =>
 						{
 							if (t.Exception == null)
 							{
-								var configName = RavenFileNameHelper.RenameOperationConfigNameForFile(fileName);
-
-								storage.Batch(accessor => accessor.DeleteConfig(configName));
-
-								notificationPublisher.Publish(new ConfigChange() { Name = configName, Action = ConfigChangeAction.Delete });
-
-								log.Debug("File '{0}' was renamed to '{1}'", fileName, rename);
+								log.Debug("File '{0}' was renamed to '{1}'", renameOperation.Name, renameOperation.Rename);
 							}
 							else
 							{
-								log.WarnException(string.Format("Could not rename file '{0}' to '{1}'", fileName, rename), t.Exception);
+								log.WarnException(string.Format("Could not rename file '{0}' to '{1}'", renameOperation.Name, renameOperation.Rename), t.Exception);
 							}
 						});
 
-				renameFileTasks.AddOrUpdate(fileName, renameTask, (file, oldTask) => renameTask);
+				renameFileTasks.AddOrUpdate(renameOperation.Name, renameTask, (file, oldTask) => renameTask);
 
 				tasks.Add(renameTask);
 			}
