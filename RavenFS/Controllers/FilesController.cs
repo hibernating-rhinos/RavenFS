@@ -75,7 +75,7 @@ namespace RavenFS.Controllers
 
 				if(!name.EndsWith(RavenFileNameHelper.DownloadingFileSuffix)) // don't create a tombstone for .downloading file
 				{
-					var tombstoneMetadata = new NameValueCollection { { SynchronizationConstants.RavenDeleteMarker, "true" } };
+					var tombstoneMetadata = new NameValueCollection().WithDeleteMarker();
 					Historian.UpdateLastModified(tombstoneMetadata);
 					accessor.PutFile(name, 0, tombstoneMetadata, true);
 				}
