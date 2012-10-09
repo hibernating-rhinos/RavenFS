@@ -385,6 +385,34 @@ namespace RavenFS.Tests
 			Assert.Equal("file.bin", files[0].Name);
 		}
 
+		[Fact]
+		public void Can_upload_file_with_the_same_name_as_previously_deleted()
+		{
+			var client = NewClient();
+			client.UploadAsync("file.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+
+			client.DeleteAsync("file.bin").Wait();
+			client.UploadAsync("file.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+
+			var files = client.BrowseAsync().Result;
+			Assert.Equal("file.bin", files[0].Name);
+		}
+
+		[Fact]
+		public void Can_upload_file_with_the_same_name_as_previously_renamed()
+		{
+			var client = NewClient();
+			client.UploadAsync("file.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+
+			client.RenameAsync("file.bin", "renamed.bin").Wait();
+			client.UploadAsync("file.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+
+			var files = client.BrowseAsync().Result;
+			Assert.Equal(2, files.Length);
+			Assert.True("file.bin" == files[0].Name || "renamed.bin" == files[0].Name);
+			Assert.True("file.bin" == files[1].Name || "renamed.bin" == files[1].Name);
+		}
+
         private static MemoryStream PrepareTextSourceStream()
         {
             var ms = new MemoryStream();
