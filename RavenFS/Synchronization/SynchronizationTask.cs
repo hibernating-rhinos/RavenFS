@@ -121,7 +121,9 @@ namespace RavenFS.Synchronization
 
 				var lastETag = await destinationClient.Synchronization.GetLastSynchronizationFromAsync(storage.Id);
 
-				var filesNeedConfirmation = GetSyncingConfigurations(destinationUrl);
+				var activeTasks = synchronizationQueue.Active.ToList();
+				var filesNeedConfirmation =
+					GetSyncingConfigurations(destinationUrl).Where(sync => activeTasks.All(x => x.FileName != sync.FileName)).ToList();
 
 				var confirmations = await ConfirmPushedFiles(filesNeedConfirmation, destinationClient);
 
