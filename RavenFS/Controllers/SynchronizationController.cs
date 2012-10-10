@@ -322,7 +322,14 @@
 				
 				Storage.Batch(accessor => StartupProceed(fileName, accessor));
 
-				StorageOperationsTask.IndicateFileToDelete(fileName);
+				Storage.Batch(accessor =>
+				{
+					StorageOperationsTask.IndicateFileToDelete(fileName);
+
+					var tombstoneMetadata = new NameValueCollection().WithDeleteMarker();
+					Historian.UpdateLastModified(tombstoneMetadata);
+					accessor.PutFile(fileName, 0, tombstoneMetadata, true);
+				});
 
                 PublishFileNotification(fileName, Notifications.FileChangeAction.Delete);
 			}
