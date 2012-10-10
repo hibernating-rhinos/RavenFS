@@ -8,7 +8,6 @@
 	using Extensions;
 	using IO;
 	using Xunit;
-	using Xunit.Extensions;
 
 	public class FileChangesPropagationTests : MultiHostTestBase
 	{
@@ -42,9 +41,13 @@
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			Assert.Null(secondServer1Sychronization[0].Exception);
+			Assert.Equal(SynchronizationType.Rename, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
 
-			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			Assert.Null(secondServer2Synchronization[0].Exception);
+			Assert.Equal(SynchronizationType.Rename, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 
 			// On all servers should be file named "rename.bin"
 			Assert.Equal(1, server1.BrowseAsync().Result.Count());
@@ -57,14 +60,12 @@
 			Assert.Equal("rename.bin", server3.BrowseAsync().Result[0].Name);
 		}
 
-		[Theory]
-		[InlineData(1024)]
-		[InlineData(1024 * 1024 * 2)]
-		public void File_content_change_should_be_propagated(int size)
+		[Fact]
+		public void File_content_change_should_be_propagated()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
-			var buffer = new byte[size];
+			var buffer = new byte[1024 * 1024 * 2]; // 2 MB
 			new Random().NextBytes(buffer);
 
 			var content = new MemoryStream(buffer);
@@ -92,9 +93,13 @@
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			Assert.Null(secondServer1Sychronization[0].Exception);
+			Assert.Equal(SynchronizationType.ContentUpdate, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
 
-			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			Assert.Null(secondServer2Synchronization[0].Exception);
+			Assert.Equal(SynchronizationType.ContentUpdate, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 
 			// On all servers should have the same content of the file
 			string server1Md5 = null;
@@ -153,9 +158,13 @@
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			Assert.Null(secondServer1Sychronization[0].Exception);
+			Assert.Equal(SynchronizationType.Delete, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
 
-			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			Assert.Null(secondServer2Synchronization[0].Exception);
+			Assert.Equal(SynchronizationType.Delete, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 
 			// On all servers should not be any file
 			Assert.Equal(0, server1.BrowseAsync().Result.Count());
@@ -163,6 +172,52 @@
 			Assert.Equal(0, server2.BrowseAsync().Result.Count());
 
 			Assert.Equal(0, server3.BrowseAsync().Result.Count());
+		}
+
+		[Fact]
+		public void Metadata_change_should_be_propagated()
+		{
+			StartServerInstance(AddtitionalServerInstancePortNumber);
+
+			var content = new MemoryStream(new byte[] { 1, 2, 3 });
+
+			var server1 = NewClient(0);
+			var server2 = NewClient(1);
+			var server3 = new RavenFileSystemClient(ServerAddress(AddtitionalServerInstancePortNumber));
+
+			content.Position = 0;
+			server1.UploadAsync("test.bin", new NameValueCollection() { { "test", "value" } }, content).Wait();
+
+			SyncTestUtils.TurnOnSynchronization(server1, server2);
+
+			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+
+			SyncTestUtils.TurnOnSynchronization(server2, server3);
+
+			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+
+			SyncTestUtils.TurnOffSynchronization(server1);
+
+			server1.UpdateMetadataAsync("test.bin", new NameValueCollection() {{"new_test", "new_value"}}).Wait();
+
+			SyncTestUtils.TurnOnSynchronization(server1, server2);
+
+			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			Assert.Null(secondServer1Sychronization[0].Exception);
+			Assert.Equal(SynchronizationType.MetadataUpdate, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
+
+			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			Assert.Null(secondServer2Synchronization[0].Exception);
+			Assert.Equal(SynchronizationType.MetadataUpdate, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
+
+			// On all servers should be file named "rename.bin"
+			var server1Metadata = server1.GetMetadataForAsync("test.bin").Result;
+			var server2Metadata = server2.GetMetadataForAsync("test.bin").Result;
+			var server3Metadata = server3.GetMetadataForAsync("test.bin").Result;
+
+			Assert.Equal("new_value", server1Metadata["new_test"]);
+			Assert.Equal("new_value", server2Metadata["new_test"]);
+			Assert.Equal("new_value", server3Metadata["new_test"]);
 		}
 	}
 }
