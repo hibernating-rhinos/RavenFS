@@ -193,7 +193,7 @@
 				log.Debug("Starting to delete file '{0}' from storage", deletingFileName);
 
 				var deleteTask = TaskEx.Run(
-					() => ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor => accessor.Delete(deletingFileName)))).ContinueWith(
+					() => ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor => accessor.Delete(deletingFileName)), retries: 1)).ContinueWith(
 						t =>
 						{
 							if (t.Exception == null)
@@ -210,8 +210,6 @@
 							{
 								log.WarnException(string.Format("Could not delete file '{0}' from storage", deletingFileName), t.Exception);
 							}
-
-
 						});
 
 				deleteFileTasks.AddOrUpdate(deletingFileName, deleteTask, (file, oldTask) => deleteTask);
@@ -242,7 +240,7 @@
 				log.Debug("Starting to resume a rename operation of a file '{0}' to '{1}'", renameOperation.Name, renameOperation.Rename);
 
 				var renameTask = TaskEx.Run(
-					() => ConcurrencyAwareExecutor.Execute(() => RenameFile(renameOperation))).ContinueWith(
+					() => ConcurrencyAwareExecutor.Execute(() => RenameFile(renameOperation), retries: 1)).ContinueWith(
 						t =>
 						{
 							if (t.Exception == null)

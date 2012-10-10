@@ -6,10 +6,9 @@
 
 	public static class ConcurrencyAwareExecutor
 	{
-		public static void Execute(Action action, Func<ConcurrencyException, Exception> failed = null)
+		public static void Execute(Action action, Func<ConcurrencyException, Exception> failed = null, int retries = 50)
 		{
 			var shouldRetry = false;
-			var retries = 128;
 
 			do
 			{
