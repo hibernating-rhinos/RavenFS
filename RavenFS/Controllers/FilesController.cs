@@ -15,6 +15,7 @@ using RavenFS.Util;
 namespace RavenFS.Controllers
 {
 	using System.Security.Cryptography;
+	using System.Threading;
 	using Client;
 	using NLog;
 	using Synchronization;
@@ -83,7 +84,8 @@ namespace RavenFS.Controllers
 
 			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Delete });
 			log.Debug("File '{0}' was deleted", name);
-			SynchronizationTask.SynchronizeDestinationsAsync();
+			
+			StartSynchronizeDestinationsInBackground();
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
@@ -141,7 +143,8 @@ namespace RavenFS.Controllers
 			Search.Index(name, headers);
 
 			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Update });
-			SynchronizationTask.SynchronizeDestinationsAsync();
+
+			StartSynchronizeDestinationsInBackground();
 
 			log.Debug("Metadata of a file '{0}' was updated", name);
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
@@ -187,7 +190,7 @@ namespace RavenFS.Controllers
 			
 			log.Debug("File '{0}' was renamed to '{1}'", name, rename);
 
-			SynchronizationTask.SynchronizeDestinationsAsync();
+			StartSynchronizeDestinationsInBackground();
 
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
@@ -242,7 +245,7 @@ namespace RavenFS.Controllers
 					log.Debug("Updates of '{0}' metadata and indexes were finished. New file ETag is {1}", name,
 							  headers.Value<Guid>("ETag"));
 
-					SynchronizationTask.SynchronizeDestinationsAsync();
+					StartSynchronizeDestinationsInBackground();
 				}
 			}
 			catch (Exception ex)
@@ -328,6 +331,12 @@ namespace RavenFS.Controllers
 				bufferPool.ReturnBuffer(buffer);
 				md5Hasher.Dispose();
 			}
+		}
+
+		private void StartSynchronizeDestinationsInBackground()
+		{
+			Task.Factory.StartNew(() => SynchronizationTask.SynchronizeDestinationsAsync()
+				.ContinueWith(t => t.AssertNotFaulted()), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
 		}
 	}
 }
