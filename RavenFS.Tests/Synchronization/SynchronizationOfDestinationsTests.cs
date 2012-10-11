@@ -50,7 +50,7 @@ namespace RavenFS.Tests.Synchronization
 																										{ "url", destination2Client.ServerUrl }
 			                                                                                     	}).Wait();
 
-			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
 			// we expect conflicts after first attempt of synchronization
 			Assert.Equal(2, destinationSyncResults.Length);
@@ -60,7 +60,7 @@ namespace RavenFS.Tests.Synchronization
 			destination1Client.Synchronization.ResolveConflictAsync("test.bin", ConflictResolutionStrategy.RemoteVersion).Wait();
 			destination2Client.Synchronization.ResolveConflictAsync("test.bin", ConflictResolutionStrategy.RemoteVersion).Wait();
 
-			destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
 			// check if reports match
 			Assert.Equal(2, destinationSyncResults.Length);
@@ -109,7 +109,7 @@ namespace RavenFS.Tests.Synchronization
 			                                                                                     	}).Wait();
 
 			// synchronize from source to destination
-			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
 			Assert.Equal(1, destinationSyncResults[0].Reports.Count());
 			Assert.Equal(SynchronizationType.ContentUpdate, destinationSyncResults[0].Reports.ToArray()[0].Type);
@@ -120,7 +120,7 @@ namespace RavenFS.Tests.Synchronization
 			                                                                                     	}).Wait();
 
 			// synchronize from destination to source
-			var sourceSyncResults = destinationClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var sourceSyncResults = destinationClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
 			Assert.Equal(1, sourceSyncResults.Count());
 			Assert.Null(sourceSyncResults[0].Reports);
@@ -517,7 +517,7 @@ namespace RavenFS.Tests.Synchronization
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
 
-			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
 			Assert.Null(destinationSyncResults[0].Reports);
 		}
@@ -537,7 +537,7 @@ namespace RavenFS.Tests.Synchronization
 			                                                                                     		{ "url", destinationClient.ServerUrl }
 			                                                                                     	}).Wait();
 
-			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
 			Assert.Null(destinationSyncResults[0].Reports);
 		}

@@ -29,11 +29,11 @@
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result[0].Exception);
 
 			SyncTestUtils.TurnOnSynchronization(server2, server3);
 
-			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result[0].Exception);
 
 			SyncTestUtils.TurnOffSynchronization(server1);
 
@@ -41,11 +41,11 @@
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result;
 			Assert.Null(secondServer1Sychronization[0].Exception);
 			Assert.Equal(SynchronizationType.Rename, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
 
-			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result;
 			Assert.Null(secondServer2Synchronization[0].Exception);
 			Assert.Equal(SynchronizationType.Rename, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 
@@ -80,11 +80,11 @@
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result[0].Exception);
 
 			SyncTestUtils.TurnOnSynchronization(server2, server3);
 
-			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result[0].Exception);
 
 			SyncTestUtils.TurnOffSynchronization(server1);
 
@@ -93,11 +93,11 @@
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result;
 			Assert.Null(secondServer1Sychronization[0].Exception);
 			Assert.Equal(SynchronizationType.ContentUpdate, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
 
-			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result;
 			Assert.Null(secondServer2Synchronization[0].Exception);
 			Assert.Equal(SynchronizationType.ContentUpdate, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 
@@ -146,11 +146,11 @@
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result[0].Exception);
 
 			SyncTestUtils.TurnOnSynchronization(server2, server3);
 
-			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result[0].Exception);
 
 			SyncTestUtils.TurnOffSynchronization(server1);
 
@@ -158,11 +158,11 @@
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result;
 			Assert.Null(secondServer1Sychronization[0].Exception);
 			Assert.Equal(SynchronizationType.Delete, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
 
-			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result;
 			Assert.Null(secondServer2Synchronization[0].Exception);
 			Assert.Equal(SynchronizationType.Delete, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 
@@ -190,11 +190,11 @@
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			Assert.Null(server1.Synchronization.SynchronizeDestinationsAsync().Result[0].Exception);
 
 			SyncTestUtils.TurnOnSynchronization(server2, server3);
 
-			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray()[0].Exception);
+			Assert.Null(server2.Synchronization.SynchronizeDestinationsAsync().Result[0].Exception);
 
 			SyncTestUtils.TurnOffSynchronization(server1);
 
@@ -202,11 +202,11 @@
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result;
 			Assert.Null(secondServer1Sychronization[0].Exception);
 			Assert.Equal(SynchronizationType.MetadataUpdate, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
 
-			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result.ToArray();
+			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result;
 			Assert.Null(secondServer2Synchronization[0].Exception);
 			Assert.Equal(SynchronizationType.MetadataUpdate, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 

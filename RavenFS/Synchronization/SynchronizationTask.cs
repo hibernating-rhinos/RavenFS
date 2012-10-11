@@ -53,7 +53,7 @@ namespace RavenFS.Synchronization
 			timer.Subscribe(tick => SynchronizeDestinationsAsync());
 		}
 
-		public async Task<IEnumerable<DestinationSyncResult>> SynchronizeDestinationsAsync(bool forceSyncingContinuation = true)
+		public Task<DestinationSyncResult[]> SynchronizeDestinationsAsync(bool forceSyncingContinuation = true)
 		{
 			var destinationSyncTasks = new List<Task<DestinationSyncResult>>();
 
@@ -72,7 +72,7 @@ namespace RavenFS.Synchronization
 				destinationSyncTasks.Add(SynchronizeDestinationAsync(destinationUrl, forceSyncingContinuation));
 			}
 
-			return await TaskEx.WhenAll(destinationSyncTasks);
+			return TaskEx.WhenAll(destinationSyncTasks);
 		}
 
 		public async Task<SynchronizationReport> SynchronizeFileToAsync(string fileName, string destinationUrl)

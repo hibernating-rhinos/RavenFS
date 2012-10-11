@@ -631,7 +631,7 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
 			}
 
-			public Task<IEnumerable<DestinationSyncResult>> SynchronizeDestinationsAsync(bool forceSyncingAll = false)
+			public Task<DestinationSyncResult[]> SynchronizeDestinationsAsync(bool forceSyncingAll = false)
 			{
 				var requestUriString = String.Format("{0}/synchronization/ToDestinations?forceSyncingAll={1}", ravenFileSystemClient.ServerUrl, forceSyncingAll);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
@@ -642,7 +642,7 @@ namespace RavenFS.Client
 					{
 						using (var stream = task.Result.GetResponseStream())
 						{
-							return new JsonSerializer().Deserialize<IEnumerable<DestinationSyncResult>>(new JsonTextReader(new StreamReader(stream)));
+							return new JsonSerializer().Deserialize<DestinationSyncResult[]>(new JsonTextReader(new StreamReader(stream)));
 						}
 					})
 					.TryThrowBetterError();
