@@ -143,7 +143,7 @@
 
                 // Advance the intermediate pointer
                 // to our next RdcNeed struct.
-                ptr = (IntPtr)(ptr.ToInt32() + needSize);
+                ptr = new IntPtr(ptr.ToInt32() + needSize);
             }
             return result;
         }
