@@ -163,6 +163,7 @@
     <Compile Include="Controllers\FoldersController.cs" />
     <Compile Include="Controllers\LogsController.cs" />
     <Compile Include="Controllers\StorageController.cs" />
+    <Compile Include="Infrastructure\NoBufferPolicySelector.cs" />
     <Compile Include="Notifications\INotificationPublisher.cs" />
     <Compile Include="Notifications\UploadFailed.cs" />
     <Compile Include="Storage\DeleteFileOperation.cs" />

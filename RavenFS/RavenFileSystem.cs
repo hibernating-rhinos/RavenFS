@@ -14,6 +14,7 @@ namespace RavenFS
 {
 	using System.Linq;
 	using System.Web.Http;
+	using System.Web.Http.Hosting;
 	using Config;
 	using Synchronization;
 	using Synchronization.Conflictuality;
@@ -159,6 +160,8 @@ namespace RavenFS
 					return new[] { this };
 				return Enumerable.Empty<object>();
 			});
+
+			config.Services.Replace(typeof(IHostBufferPolicySelector), new NoBufferPolicySelector());
 
 			config.MessageHandlers.Add(new CachePreventingHandler());
 
