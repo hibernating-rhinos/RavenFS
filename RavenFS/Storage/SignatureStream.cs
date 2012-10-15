@@ -3,14 +3,15 @@
 	using System;
 	using System.IO;
 
-	public class SignatureReadOnlyStream : Stream
+	public class SignatureStream : Stream
 	{
 		private readonly TransactionalStorage storage;
 		private readonly int id;
 		private readonly int level;
 		private long? length = null;
+		private bool bytesWritten;
 
-		public SignatureReadOnlyStream(TransactionalStorage storage, int id, int level)
+		public SignatureStream(TransactionalStorage storage, int id, int level)
 		{
 			this.storage = storage;
 			this.id = id;
@@ -51,7 +52,7 @@
 		{
 			var readBytes = 0;
 			storage.Batch(
-				accessor => accessor.GetSignatureStream(id, level, sigContent =>
+				accessor => accessor.ReadSignatureContent(id, level, sigContent =>
 				{
 					sigContent.Position = Position;
 					readBytes = sigContent.Read(buffer, offset, count);
@@ -63,7 +64,15 @@
 
 		public override void Write(byte[] buffer, int offset, int count)
 		{
-			throw new NotImplementedException();
+			bytesWritten = true;
+
+			storage.Batch(
+				accessor => accessor.UpdateSignatureContent(id, level, sigContent =>
+				{
+					sigContent.Position = Position;
+					sigContent.Write(buffer, offset, count);
+					Position = sigContent.Position;
+				}));
 		}
 
 		public override bool CanRead
@@ -78,7 +87,7 @@
 
 		public override bool CanWrite
 		{
-			get { return false; }
+			get { return true; }
 		}
 
 		public override long Length
@@ -88,7 +97,7 @@
 				if (length == null)
 				{
 					storage.Batch(
-						accessor => accessor.GetSignatureStream(id, level, sigContent => length = sigContent.Length));
+						accessor => accessor.ReadSignatureContent(id, level, sigContent => length = sigContent.Length));
 				}
 
 				return length.Value;
@@ -96,5 +105,15 @@
 		}
 
 		public override long Position { get; set; }
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+
+			if (bytesWritten)
+			{
+				storage.Batch(accessor => accessor.CompleteSignatureUpdate(id,level));
+			}
+		}
 	}
 }

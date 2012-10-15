@@ -156,7 +156,7 @@ namespace RavenFS.Storage
 			{
 				cbMax = 1024,
 				coltyp = JET_coltyp.DateTime,
-				grbit = ColumndefGrbit.ColumnNotNULL,
+				grbit = ColumndefGrbit.ColumnMaybeNull,
 				cp = JET_CP.Unicode
 			}, null, 0, out columnid);
 
@@ -171,7 +171,7 @@ namespace RavenFS.Storage
 			{
 				cbMax = 1024 * 1024 * 1024,
 				coltyp = JET_coltyp.LongBinary,
-				grbit = ColumndefGrbit.ColumnNotNULL
+				grbit = ColumndefGrbit.ColumnMaybeNull
 			}, null, 0, out columnid);
 
 			string indexDef = "+id\0+level\0\0";

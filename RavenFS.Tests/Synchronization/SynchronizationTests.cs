@@ -749,5 +749,40 @@ namespace RavenFS.Tests.Synchronization
 			
 			Assert.NotEqual(Guid.Empty, report.FileETag);
 		}
+
+		[Fact]
+		public void Can_upload_and_synchronize_the_same_file_few_time()
+		{
+			var source = NewClient(0);
+			var destination = NewClient(1);
+
+			const int size5Mb = 1024 * 1024 * 5;
+
+			var buffer = new byte[size5Mb];
+			new Random().NextBytes(buffer);
+
+			var sourceContent = new MemoryStream(buffer);
+			source.UploadAsync("test.bin", sourceContent).Wait();
+			sourceContent.Position = 0;
+
+			var report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+			Assert.Null(report.Exception);
+
+			source.UploadAsync("test.bin", new RandomlyModifiedStream(sourceContent, 0.01)).Wait();
+			sourceContent.Position = 0;
+
+			report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+			Assert.Null(report.Exception);
+
+			sourceContent = new MemoryStream(buffer);
+			source.UploadAsync("test.bin", new RandomlyModifiedStream(sourceContent, 0.02)).Wait();
+			sourceContent.Position = 0;
+
+			report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+			Assert.Null(report.Exception);
+
+			Assert.Equal(source.GetMetadataForAsync("test.bin").Result["Content-MD5"],
+			             destination.GetMetadataForAsync("test.bin").Result["Content-MD5"]);
+		}
 	}
 }

@@ -7,8 +7,7 @@
 	public interface ISignatureRepository : IDisposable
     {
         Stream GetContentForReading(string sigName);        
-        Stream CreateContent(string sigName);       
-        void Flush(IEnumerable<SignatureInfo> signatureInfos);
+        Stream CreateContent(string sigName);
         IEnumerable<SignatureInfo> GetByFileName();
         DateTime? GetLastUpdate();
     }

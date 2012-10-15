@@ -13,7 +13,8 @@ namespace RavenFS.Tests
         {
             transactionalStorage.Batch(accessor =>
             {
-                accessor.AddSignature("test", 1, stream => stream.Write(new byte[] { 3 }, 0, 1));
+	            var id = accessor.CreateSignature("test", 1);
+	            accessor.UpdateSignatureContent(id, 1, stream => stream.Write(new byte[] {3}, 0, 1));
             });
 
             var tested = new StorageSignatureRepository(transactionalStorage, "test");
@@ -25,7 +26,8 @@ namespace RavenFS.Tests
         {
             transactionalStorage.Batch(accessor =>
             {
-                accessor.AddSignature("test", 1, stream => stream.Write(new byte[] { 3 }, 0, 1));
+				var id = accessor.CreateSignature("test", 1);
+				accessor.UpdateSignatureContent(id, 1, stream => stream.Write(new byte[] { 3 }, 0, 1));
             });
 
             var tested = new StorageSignatureRepository(transactionalStorage, "test");
@@ -37,7 +39,8 @@ namespace RavenFS.Tests
         {
             transactionalStorage.Batch(accessor =>
             {
-                accessor.AddSignature("test", 1, stream => stream.Write(new byte[] { 3 }, 0, 1));
+				var id = accessor.CreateSignature("test", 1);
+				accessor.UpdateSignatureContent(id, 1, stream => stream.Write(new byte[] { 3 }, 0, 1));
             });
             var tested = new StorageSignatureRepository(transactionalStorage, "test");
             var result = tested.GetByName("test.1.sig");
@@ -53,7 +56,6 @@ namespace RavenFS.Tests
             {
                 sigContent.WriteByte(3);
             }
-            tested.Flush(new[] { SignatureInfo.Parse("test.bin.0.sig") } );
 
             var result = tested.GetByName("test.bin.0.sig");
             Assert.Equal("test.bin.0.sig", result.Name);
@@ -67,9 +69,14 @@ namespace RavenFS.Tests
 
             transactionalStorage.Batch(accessor =>
             {
-                accessor.AddSignature("test", 0, stream => stream.Write(new byte[] { 3 }, 0, 1));
-                accessor.AddSignature("test", 1, stream => stream.Write(new byte[] { 3 }, 0, 1));
-                accessor.AddSignature("test", 2, stream => stream.Write(new byte[] { 3 }, 0, 1));
+				var id0 = accessor.CreateSignature("test", 0);
+				accessor.UpdateSignatureContent(id0, 0, stream => stream.Write(new byte[] { 3 }, 0, 1));
+
+				var id1 = accessor.CreateSignature("test", 1);
+				accessor.UpdateSignatureContent(id1, 1, stream => stream.Write(new byte[] { 3 }, 0, 1));
+
+				var id2 = accessor.CreateSignature("test", 2);
+				accessor.UpdateSignatureContent(id2, 2, stream => stream.Write(new byte[] { 3 }, 0, 1));
             });
 
             var signatureInfos = tested.GetByFileName().ToList();
