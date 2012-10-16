@@ -43,7 +43,7 @@
 				return false;
 			}
 
-			if(ExistsReplicationTombstone(file.Name, candidatesToSynchronization))
+			if(ExistsRenameTombstone(file.Name, candidatesToSynchronization))
 			{
 				return false;
 			}
@@ -51,7 +51,7 @@
 			return true;
 		}
 
-		private static bool ExistsReplicationTombstone(string name, IEnumerable<FileHeader> candidatesToSynchronization)
+		private static bool ExistsRenameTombstone(string name, IEnumerable<FileHeader> candidatesToSynchronization)
 		{
 			return
 				candidatesToSynchronization.Any(
@@ -90,7 +90,14 @@
 
 				if (rename != null)
 				{
-					return new RenameWorkItem(file, rename, storage);
+					if(destinationMetadata != null)
+					{
+						return new RenameWorkItem(file, rename, storage);
+					}
+					else
+					{
+						return new ContentUpdateWorkItem(rename, storage, sigGenerator); // we have a rename tombstone but file does not exists on destination
+					}
 				}
 				return new DeleteWorkItem(file, storage);
 			}

@@ -102,7 +102,7 @@ namespace RavenFS.Synchronization
 
 			if (work == null)
 			{
-				log.Debug("File '{0}' were not synchronized to {1}. {2}", fileName, destinationUrl, reason.GetDescription());
+				log.Debug("File '{0}' was not synchronized to {1}. {2}", fileName, destinationUrl, reason.GetDescription());
 
 				return new SynchronizationReport(fileName, Guid.Empty, SynchronizationType.Unknown)
 					       {
