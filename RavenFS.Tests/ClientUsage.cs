@@ -432,6 +432,16 @@ namespace RavenFS.Tests
 			Assert.Contains("Cannot rename because file file2.bin already exists", ex.Message);
 		}
 
+		[Fact]
+		public void Can_upload_file_with_hash_in_name()
+		{
+			var client = NewClient();
+
+			client.UploadAsync("name#.bin", new MemoryStream(new byte[] {1, 2, 3})).Wait();
+
+			Assert.NotNull(client.GetMetadataForAsync("name#.bin").Result);
+		}
+
         private static MemoryStream PrepareTextSourceStream()
         {
             var ms = new MemoryStream();

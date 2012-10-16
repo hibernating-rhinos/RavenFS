@@ -176,7 +176,7 @@ namespace RavenFS.Client
 
 		public Task<NameValueCollection> GetMetadataForAsync(string filename)
 		{
-			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename);
+			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files?name=" + Uri.EscapeDataString(filename));
 			request.Method = "HEAD";
 			return request.GetResponseAsync()
 				.ContinueWith(task =>
@@ -293,7 +293,7 @@ namespace RavenFS.Client
 				throw new AggregateException("Stream does not support reading");
 
 			var uploadIdentifier = Guid.NewGuid();
-			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files/" + filename + "?uploadId=" + uploadIdentifier);
+			var request = (HttpWebRequest)WebRequest.Create(ServerUrl + "/files?name=" + Uri.EscapeDataString(filename) + "&uploadId=" + uploadIdentifier);
 			request.Method = "PUT";
 			request.AllowWriteStreamBuffering = false;
 
