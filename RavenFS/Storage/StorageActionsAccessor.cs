@@ -642,7 +642,7 @@ namespace RavenFS.Storage
 			return Api.RetrieveColumnSize(session, Signatures, tableColumnsCache.SignaturesColumns["data"]) ?? 0;
 		}
 
-		public void ReadSignatureContent(int id, int level, Action<Stream> readAction)
+		public void GetSignatureStream(int id, int level, Action<Stream> action)
 		{
 			Api.JetSetCurrentIndex(session, Signatures, "by_id");
 			Api.MakeKey(session, Signatures, id, MakeKeyGrbit.NewKey);
@@ -650,71 +650,34 @@ namespace RavenFS.Storage
 			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
 				throw new InvalidOperationException("Could not find signature with id " + id + " and level " + level);
 
+
 			using (var stream = new ColumnStream(session, Signatures, tableColumnsCache.SignaturesColumns["data"]))
 			using (var buffer = new BufferedStream(stream))
 			{
-				readAction(buffer);
+				action(buffer);
 				buffer.Flush();
 				stream.Flush();
 			}
 		}
 
-		public void UpdateSignatureContent(int id, int level, Action<Stream> writeAction)
+		public void AddSignature(string name, int level, Action<Stream> action)
 		{
-			Api.JetSetCurrentIndex(session, Signatures, "by_id");
-			Api.MakeKey(session, Signatures, id, MakeKeyGrbit.NewKey);
-			Api.MakeKey(session, Signatures, level, MakeKeyGrbit.None);
-			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
-				throw new InvalidOperationException("Could not find signature with id " + id + " and level " + level);
-
-			using (var update = new Update(session, Signatures, JET_prep.Replace))
+			using (var update = new Update(session, Signatures, JET_prep.Insert))
 			{
+				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["name"], name, Encoding.Unicode);
+				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["level"], level);
 				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["created_at"], DateTime.UtcNow);
 
-				using (var stream = new ColumnStream(session, Signatures, tableColumnsCache.SignaturesColumns["data"]))
-				using (var buffer = new BufferedStream(stream))
+				using(var stream = new ColumnStream(session, Signatures, tableColumnsCache.SignaturesColumns["data"]))
+				using(var buffer = new BufferedStream(stream))
 				{
-					writeAction(buffer);
+					action(buffer);
 					buffer.Flush();
 					stream.Flush();
 				}
 
 				update.Save();
 			}
-		}
-
-		public void CompleteSignatureUpdate(int id, int level)
-		{
-			Api.JetSetCurrentIndex(session, Signatures, "by_id");
-			Api.MakeKey(session, Signatures, id, MakeKeyGrbit.NewKey);
-			Api.MakeKey(session, Signatures, level, MakeKeyGrbit.None);
-			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
-				throw new InvalidOperationException("Could not find signature with id " + id + " and level " + level);
-
-			using (var update = new Update(session, Signatures, JET_prep.Replace))
-			{
-				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["created_at"], DateTime.UtcNow);
-
-				update.Save();
-			}
-		}
-
-		public int CreateSignature(string name, int level)
-		{
-			byte[] bookMarkBuffer = new byte[SystemParameters.BookmarkMost];
-			int actualSize = 0;
-
-			using (var update = new Update(session, Signatures, JET_prep.Insert))
-			{
-				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["name"], name, Encoding.Unicode);
-				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["level"], level);
-
-				update.Save(bookMarkBuffer, bookMarkBuffer.Length, out actualSize);
-			}
-
-			Api.JetGotoBookmark(session, Signatures, bookMarkBuffer, actualSize);
-
-			return Api.RetrieveColumnAsInt32(session, Signatures, tableColumnsCache.SignaturesColumns["id"]).Value;
 		}
 
 		public IEnumerable<string> GetConfigNames(int start, int pageSize)

@@ -129,19 +129,13 @@
                 {
                     Marshal.FreeCoTaskMem(inputBuffer.Data);
                 }
-
                 foreach (var item in outputPointers)
                 {
                     Marshal.FreeCoTaskMem(item);
                 }
-
-				for (var i = 0; i < _recursionDepth; i++)
-				{
-					sigStreams[i].Dispose();
-				}
             }
             result.Reverse();
-            
+            signatureRepository.Flush(result);
             return result;
         }
 

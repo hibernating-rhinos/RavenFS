@@ -12,8 +12,7 @@ namespace RavenFS.Tests
 		{
 			transactionalStorage.Batch(accessor =>
 			{
-				var id = accessor.CreateSignature("test", 1);
-				accessor.UpdateSignatureContent(id, 1, stream => stream.Write(new byte[] {3}, 0, 1));
+				accessor.AddSignature("test", 1, stream => stream.Write(new byte[]{3},0,1));
 			});
 
 			transactionalStorage.Batch(accessor =>
@@ -31,8 +30,7 @@ namespace RavenFS.Tests
 			new Random().NextBytes(buffer);
 			transactionalStorage.Batch(accessor =>
 			{
-				var id = accessor.CreateSignature("test", 1);
-				accessor.UpdateSignatureContent(id, 1, stream => stream.Write(buffer, 0, buffer.Length));
+				accessor.AddSignature("test", 1, stream => stream.Write(buffer, 0, buffer.Length));
 			});
 
 			transactionalStorage.Batch(accessor =>
@@ -41,7 +39,7 @@ namespace RavenFS.Tests
 				Assert.Equal(1, signatureLevels.Count());
 				
 
-				accessor.ReadSignatureContent(signatureLevels[0].Id, signatureLevels[0].Level, stream =>
+				accessor.GetSignatureStream(signatureLevels[0].Id, signatureLevels[0].Level, stream =>
 				{
 					var memoryStream = new MemoryStream();
 					stream.CopyTo(memoryStream);
@@ -57,8 +55,7 @@ namespace RavenFS.Tests
 			new Random().NextBytes(buffer);
 			transactionalStorage.Batch(accessor =>
 			{
-				var id = accessor.CreateSignature("test", 1);
-				accessor.UpdateSignatureContent(id, 1, stream => stream.Write(buffer, 0, buffer.Length));
+				accessor.AddSignature("test", 1, stream => stream.Write(buffer, 0, buffer.Length));
 			});
 
 			transactionalStorage.Batch(accessor =>

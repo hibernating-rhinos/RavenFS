@@ -1,0 +1,668 @@
+time,logger,level,message,exception
+2012-07-19 12:23:30.2475,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 12:25:43.7567,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+2012-07-19 12:25:53.1282,RavenFS.Synchronization.FileLockManager,Debug,File 'BackgroundTextureBottom.png' was unlocked,
+2012-07-19 12:25:53.1282,RavenFS.Synchronization.FileLockManager,Debug,File 'BackgroundTexture.png' was unlocked,
+2012-07-19 12:25:53.1282,RavenFS.Synchronization.FileLockManager,Debug,File 'add_tiny.png' was unlocked,
+2012-07-19 12:25:53.1282,RavenFS.Synchronization.FileLockManager,Debug,File 'changeview_tiny.png' was unlocked,
+2012-07-19 12:25:53.1282,RavenFS.Synchronization.FileLockManager,Debug,File 'copy_to_clipboard_tiny.png' was unlocked,
+2012-07-19 12:25:53.2662,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'copy_to_clipboard_tiny.png' with ETag 00000000-0000-0100-0000-000000000002,
+2012-07-19 12:25:53.2822,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'BackgroundTexture.png' with ETag 00000000-0000-0100-0000-000000000005,
+2012-07-19 12:25:53.2992,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'add_tiny.png' with ETag 00000000-0000-0100-0000-000000000003,
+2012-07-19 12:25:53.3172,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'BackgroundTextureBottom.png' with ETag 00000000-0000-0100-0000-000000000004,
+2012-07-19 12:25:53.3252,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'changeview_tiny.png' with ETag 00000000-0000-0100-0000-000000000001,
+2012-07-19 12:25:53.3582,RavenFS.Controllers.FilesController,Debug,File 'copy_to_clipboard_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000007,
+2012-07-19 12:25:53.3582,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.3582,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.3742,RavenFS.Synchronization.FileLockManager,Debug,File 'Collapse_tiny.png' was unlocked,
+2012-07-19 12:25:53.3742,RavenFS.Controllers.FilesController,Debug,File 'add_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000006,
+2012-07-19 12:25:53.3742,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.3742,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.3882,RavenFS.Controllers.FilesController,Warn,Failed to upload a file 'BackgroundTextureBottom.png',"Microsoft.Isam.Esent.Interop.EsentKeyDuplicateException: Illegal duplicate key
+   at Microsoft.Isam.Esent.Interop.Api.Check(Int32 err) in C:\Work\ravendb\SharedLibs\Sources\managedesent-61618\EsentInterop\Api.cs:line 2736
+   at Microsoft.Isam.Esent.Interop.Api.JetUpdate(JET_SESID sesid, JET_TABLEID tableid, Byte[] bookmark, Int32 bookmarkSize, Int32& actualBookmarkSize) in C:\Work\ravendb\SharedLibs\Sources\managedesent-61618\EsentInterop\Api.cs:line 2374
+   at Microsoft.Isam.Esent.Interop.Update.Save(Byte[] bookmark, Int32 bookmarkSize, Int32& actualBookmarkSize) in C:\Work\ravendb\SharedLibs\Sources\managedesent-61618\EsentInterop\Update.cs:line 85
+   at RavenFS.Storage.StorageActionsAccessor.InsertPage(Byte[] buffer, Int32 size) in C:\Projects\HibernatingRhinos\RavenFS\RavenFS\RavenFS\Storage\StorageActionsAccessor.cs:line 134
+   at RavenFS.Controllers.FilesController.ReadFileToDatabase.<>c__DisplayClass2f.<Execute>b__2d(StorageActionsAccessor accessor) in C:\Projects\HibernatingRhinos\RavenFS\RavenFS\RavenFS\Controllers\FilesController.cs:line 359
+   at RavenFS.Storage.TransactionalStorage.ExecuteBatch(Action`1 action) in C:\Projects\HibernatingRhinos\RavenFS\RavenFS\RavenFS\Storage\TransactionalStorage.cs:line 258
+   at RavenFS.Storage.TransactionalStorage.Batch(Action`1 action) in C:\Projects\HibernatingRhinos\RavenFS\RavenFS\RavenFS\Storage\TransactionalStorage.cs:line 235
+   at RavenFS.Controllers.FilesController.ReadFileToDatabase.<Execute>b__2b(Task`1 task) in C:\Projects\HibernatingRhinos\RavenFS\RavenFS\RavenFS\Controllers\FilesController.cs:line 357
+   at System.Threading.Tasks.Task`1.<>c__DisplayClass1a`1.<ContinueWith>b__19()
+   at System.Threading.Tasks.Task`1.InvokeFuture(Object futureAsObj)
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.Execute()"
+2012-07-19 12:25:53.4012,RavenFS.Synchronization.FileLockManager,Debug,File 'database_add_tiny.png' was unlocked,
+2012-07-19 12:25:53.4012,RavenFS.Synchronization.FileLockManager,Debug,File 'database_add.png' was unlocked,
+2012-07-19 12:25:53.4012,RavenFS.Controllers.FilesController,Debug,File 'changeview_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000008,
+2012-07-19 12:25:53.4012,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.4012,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.4162,RavenFS.Synchronization.FileLockManager,Debug,File 'debug_tiny.png' was unlocked,
+2012-07-19 12:25:53.4322,RavenFS.Synchronization.FileLockManager,Debug,File 'database_tiny.png' was unlocked,
+2012-07-19 12:25:53.4322,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'Collapse_tiny.png' with ETag 00000000-0000-0100-0000-000000000009,
+2012-07-19 12:25:53.4642,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'database_add_tiny.png' with ETag 00000000-0000-0100-0000-00000000000a,
+2012-07-19 12:25:53.4922,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'database_add.png' with ETag 00000000-0000-0100-0000-00000000000b,
+2012-07-19 12:25:53.5112,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'debug_tiny.png' with ETag 00000000-0000-0100-0000-00000000000d,
+2012-07-19 12:25:53.5472,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'database_tiny.png' with ETag 00000000-0000-0100-0000-00000000000e,
+2012-07-19 12:25:53.5722,RavenFS.Controllers.FilesController,Debug,File 'Collapse_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000000f,
+2012-07-19 12:25:53.5722,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.5722,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.5722,RavenFS.Synchronization.FileLockManager,Debug,File 'document_add_tiny.png' was unlocked,
+2012-07-19 12:25:53.5972,RavenFS.Controllers.FilesController,Debug,File 'database_add_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000010,
+2012-07-19 12:25:53.5972,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.5972,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.6022,RavenFS.Synchronization.FileLockManager,Debug,File 'document_tiny.png' was unlocked,
+2012-07-19 12:25:53.6202,RavenFS.Controllers.FilesController,Debug,File 'BackgroundTexture.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000000c,
+2012-07-19 12:25:53.6202,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.6202,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.6642,RavenFS.Synchronization.FileLockManager,Debug,File 'edit_tiny.png' was unlocked,
+2012-07-19 12:25:53.6802,RavenFS.Controllers.FilesController,Debug,File 'database_add.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000011,
+2012-07-19 12:25:53.6802,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.6802,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.6802,RavenFS.Synchronization.FileLockManager,Debug,File 'error_small.png' was unlocked,
+2012-07-19 12:25:53.6992,RavenFS.Controllers.FilesController,Debug,File 'debug_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000012,
+2012-07-19 12:25:53.6992,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.6992,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.6992,RavenFS.Synchronization.FileLockManager,Debug,File 'error_tiny.png' was unlocked,
+2012-07-19 12:25:53.7212,RavenFS.Controllers.FilesController,Debug,File 'database_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000013,
+2012-07-19 12:25:53.7212,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.7212,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.7292,RavenFS.Synchronization.FileLockManager,Debug,File 'document_small.png' was unlocked,
+2012-07-19 12:25:53.7532,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'document_add_tiny.png' with ETag 00000000-0000-0100-0000-000000000014,
+2012-07-19 12:25:53.7742,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'document_tiny.png' with ETag 00000000-0000-0100-0000-000000000015,
+2012-07-19 12:25:53.7892,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'edit_tiny.png' with ETag 00000000-0000-0100-0000-000000000016,
+2012-07-19 12:25:53.8052,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'error_small.png' with ETag 00000000-0000-0100-0000-000000000017,
+2012-07-19 12:25:53.8212,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'error_tiny.png' with ETag 00000000-0000-0100-0000-000000000018,
+2012-07-19 12:25:53.8382,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'document_small.png' with ETag 00000000-0000-0100-0000-000000000019,
+2012-07-19 12:25:53.8542,RavenFS.Controllers.FilesController,Debug,File 'document_add_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000001a,
+2012-07-19 12:25:53.8542,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.8542,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.8542,RavenFS.Synchronization.FileLockManager,Debug,File 'error_medium.png' was unlocked,
+2012-07-19 12:25:53.8722,RavenFS.Controllers.FilesController,Debug,File 'document_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000001b,
+2012-07-19 12:25:53.8722,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.8722,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.8722,RavenFS.Synchronization.FileLockManager,Debug,File 'execute_query_tiny.png' was unlocked,
+2012-07-19 12:25:53.8932,RavenFS.Controllers.FilesController,Debug,File 'edit_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000001c,
+2012-07-19 12:25:53.8932,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.8932,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.8982,RavenFS.Synchronization.FileLockManager,Debug,File 'down_tiny.png' was unlocked,
+2012-07-19 12:25:53.9152,RavenFS.Controllers.FilesController,Debug,File 'error_small.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000001d,
+2012-07-19 12:25:53.9152,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.9152,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.9152,RavenFS.Synchronization.FileLockManager,Debug,File 'edit_columns_tiny.png' was unlocked,
+2012-07-19 12:25:53.9492,RavenFS.Controllers.FilesController,Debug,File 'error_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000001e,
+2012-07-19 12:25:53.9492,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.9492,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.9492,RavenFS.Synchronization.FileLockManager,Debug,File 'FooterTexture.png' was unlocked,
+2012-07-19 12:25:53.9732,RavenFS.Controllers.FilesController,Debug,File 'document_small.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000001f,
+2012-07-19 12:25:53.9732,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:53.9732,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:53.9762,RavenFS.Synchronization.FileLockManager,Debug,File 'index_add_tiny.png' was unlocked,
+2012-07-19 12:25:53.9972,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'error_medium.png' with ETag 00000000-0000-0100-0000-000000000020,
+2012-07-19 12:25:54.0102,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'execute_query_tiny.png' with ETag 00000000-0000-0100-0000-000000000021,
+2012-07-19 12:25:54.0262,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'down_tiny.png' with ETag 00000000-0000-0100-0000-000000000022,
+2012-07-19 12:25:54.0392,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'edit_columns_tiny.png' with ETag 00000000-0000-0100-0000-000000000023,
+2012-07-19 12:25:54.0602,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'FooterTexture.png' with ETag 00000000-0000-0100-0000-000000000024,
+2012-07-19 12:25:54.0772,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'index_add_tiny.png' with ETag 00000000-0000-0100-0000-000000000025,
+2012-07-19 12:25:54.0962,RavenFS.Controllers.FilesController,Debug,File 'error_medium.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000026,
+2012-07-19 12:25:54.0962,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.0962,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.0962,RavenFS.Synchronization.FileLockManager,Debug,File 'ImageCredits.txt' was unlocked,
+2012-07-19 12:25:54.1222,RavenFS.Controllers.FilesController,Debug,File 'execute_query_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000027,
+2012-07-19 12:25:54.1222,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.1222,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.1222,RavenFS.Synchronization.FileLockManager,Debug,File 'Images.xaml' was unlocked,
+2012-07-19 12:25:54.1402,RavenFS.Controllers.FilesController,Debug,File 'down_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000028,
+2012-07-19 12:25:54.1402,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.1402,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.1402,RavenFS.Synchronization.FileLockManager,Debug,File 'index_query_tiny.png' was unlocked,
+2012-07-19 12:25:54.1633,RavenFS.Controllers.FilesController,Debug,File 'edit_columns_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000029,
+2012-07-19 12:25:54.1633,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.1633,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.1633,RavenFS.Synchronization.FileLockManager,Debug,File 'navigate_first_tiny.png' was unlocked,
+2012-07-19 12:25:54.1833,RavenFS.Controllers.FilesController,Debug,File 'FooterTexture.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000002a,
+2012-07-19 12:25:54.1833,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.1833,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.1833,RavenFS.Synchronization.FileLockManager,Debug,File 'navigate_last_tiny.png' was unlocked,
+2012-07-19 12:25:54.2033,RavenFS.Controllers.FilesController,Debug,File 'index_add_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000002b,
+2012-07-19 12:25:54.2033,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.2033,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.2033,RavenFS.Synchronization.FileLockManager,Debug,File 'index_tiny.png' was unlocked,
+2012-07-19 12:25:54.2243,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'ImageCredits.txt' with ETag 00000000-0000-0100-0000-00000000002c,
+2012-07-19 12:25:54.2283,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'Images.xaml' with ETag 00000000-0000-0100-0000-00000000002d,
+2012-07-19 12:25:54.2583,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'index_query_tiny.png' with ETag 00000000-0000-0100-0000-00000000002e,
+2012-07-19 12:25:54.2823,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'navigate_first_tiny.png' with ETag 00000000-0000-0100-0000-00000000002f,
+2012-07-19 12:25:54.3043,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'navigate_last_tiny.png' with ETag 00000000-0000-0100-0000-000000000030,
+2012-07-19 12:25:54.3213,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'index_tiny.png' with ETag 00000000-0000-0100-0000-000000000031,
+2012-07-19 12:25:54.3453,RavenFS.Controllers.FilesController,Debug,File 'ImageCredits.txt' was uploaded its new ETag is 00000000-0000-0100-0000-000000000032,
+2012-07-19 12:25:54.3453,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.3453,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.3543,RavenFS.Synchronization.FileLockManager,Debug,File 'index_small.png' was unlocked,
+2012-07-19 12:25:54.3693,RavenFS.Controllers.FilesController,Debug,File 'Images.xaml' was uploaded its new ETag is 00000000-0000-0100-0000-000000000033,
+2012-07-19 12:25:54.3693,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.3693,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.3693,RavenFS.Synchronization.FileLockManager,Debug,File 'logs_small.png' was unlocked,
+2012-07-19 12:25:54.3893,RavenFS.Controllers.FilesController,Debug,File 'index_query_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000034,
+2012-07-19 12:25:54.3893,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.3893,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.3973,RavenFS.Synchronization.FileLockManager,Debug,File 'info_tiny.png' was unlocked,
+2012-07-19 12:25:54.3973,RavenFS.Controllers.FilesController,Debug,File 'navigate_first_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000035,
+2012-07-19 12:25:54.3973,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.3973,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.4293,RavenFS.Controllers.FilesController,Debug,File 'navigate_last_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000036,
+2012-07-19 12:25:54.4293,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.4293,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.4523,RavenFS.Controllers.FilesController,Debug,File 'index_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-000000000037,
+2012-07-19 12:25:54.4523,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.4523,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.4803,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'index_small.png' with ETag 00000000-0000-0100-0000-000000000038,
+2012-07-19 12:25:54.5103,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'logs_small.png' with ETag 00000000-0000-0100-0000-000000000039,
+2012-07-19 12:25:54.5273,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'info_tiny.png' with ETag 00000000-0000-0100-0000-00000000003a,
+2012-07-19 12:25:54.5403,RavenFS.Controllers.FilesController,Debug,File 'index_small.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000003b,
+2012-07-19 12:25:54.5403,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.5403,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.5663,RavenFS.Controllers.FilesController,Debug,File 'logs_small.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000003c,
+2012-07-19 12:25:54.5663,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.5663,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:25:54.5863,RavenFS.Controllers.FilesController,Debug,File 'info_tiny.png' was uploaded its new ETag is 00000000-0000-0100-0000-00000000003d,
+2012-07-19 12:25:54.5863,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:25:54.5863,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:35:44.7096,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:35:44.7096,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+time,logger,level,message,exception
+2012-07-19 12:36:58.2248,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+2012-07-19 12:46:58.6190,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:46:58.6190,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 12:56:58.6211,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 12:56:58.6211,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+2012-07-19 13:06:58.6147,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 13:06:58.6147,RavenFS.Synchronization.SynchronizationTask,Debug,Configuration Raven/Synchronization/Destinations does not exist,
+time,logger,level,message,exception
+2012-07-19 13:12:02.1352,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 13:13:53.7266,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 13:14:55.8137,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 13:15:12.0344,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+2012-07-19 13:15:28.2173,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+2012-07-19 13:25:08.4091,RavenFS.Synchronization.FileLockManager,Debug,File 'add_tiny.png' was unlocked,
+2012-07-19 13:25:08.5621,RavenFS.Controllers.FilesController,Debug,Inserted a new file 'add_tiny.png' with ETag 00000000-0000-0500-0000-000000000001,
+2012-07-19 13:25:08.6171,RavenFS.Controllers.FilesController,Debug,File 'add_tiny.png' was uploaded its new ETag is 00000000-0000-0500-0000-000000000002,
+2012-07-19 13:25:08.6171,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 13:25:08.6351,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37230,
+2012-07-19 13:25:08.6971,RavenFS.Controllers.SynchronizationController,Debug,Got synchronization last etag request from 580115c9-602b-4d93-bd5e-872ded0ee8b3: [LastSourceFileEtag: 00000000-0000-0000-0000-000000000000],
+2012-07-19 13:25:08.7221,RavenFS.Synchronization.SynchronizationTask,Debug,Getting files to synchronize with ETag greater than 00000000-0000-0000-0000-000000000000,
+2012-07-19 13:25:08.7251,RavenFS.Synchronization.SynchronizationTask,Debug,There were 0 files that needed synchronization,
+2012-07-19 13:25:08.7251,RavenFS.Synchronization.SynchronizationQueue,Warn,Could not get a pending synchronization queue for http://localhost:37230,
+2012-07-19 13:25:08.7251,RavenFS.Synchronization.SynchronizationTask,Debug,"Synchronization to a destination http://localhost:37230 has completed. 0 file(s) were synchronized successfully, 0 synchonization(s) were failed",
+2012-07-19 13:25:12.8623,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 13:25:12.8623,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37230,
+2012-07-19 13:25:12.8623,RavenFS.Controllers.SynchronizationController,Debug,Got synchronization last etag request from 580115c9-602b-4d93-bd5e-872ded0ee8b3: [LastSourceFileEtag: 00000000-0000-0000-0000-000000000000],
+2012-07-19 13:25:12.8623,RavenFS.Synchronization.SynchronizationTask,Debug,Getting files to synchronize with ETag greater than 00000000-0000-0000-0000-000000000000,
+2012-07-19 13:25:12.8623,RavenFS.Synchronization.SynchronizationTask,Debug,There were 0 files that needed synchronization,
+2012-07-19 13:25:12.8623,RavenFS.Synchronization.SynchronizationQueue,Warn,Could not get a pending synchronization queue for http://localhost:37230,
+2012-07-19 13:25:12.8623,RavenFS.Synchronization.SynchronizationTask,Debug,"Synchronization to a destination http://localhost:37230 has completed. 0 file(s) were synchronized successfully, 0 synchonization(s) were failed",
+2012-07-19 13:28:52.9659,RavenFS.Controllers.ConfigController,Debug,Config 'url' was deleted,
+2012-07-19 13:29:11.7200,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+2012-07-19 13:35:12.8597,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 13:35:12.8597,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server Another2,
+2012-07-19 13:45:12.8580,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 13:45:12.8580,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server Another2,
+2012-07-19 13:55:12.8443,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 13:55:12.8443,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server Another2,
+time,logger,level,message,exception
+2012-07-19 15:14:57.6720,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+2012-07-19 15:15:19.6402,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+2012-07-19 15:16:02.8367,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+2012-07-19 15:24:58.2233,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 15:24:58.2233,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server Another2,
+2012-07-19 15:25:11.5151,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+2012-07-19 15:25:44.4280,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Sources' was inserted,
+2012-07-19 15:27:31.1141,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Sources' was inserted,
+2012-07-19 15:27:38.8465,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Sources' was deleted,
+2012-07-19 15:28:06.5471,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+time,logger,level,message,exception
+2012-07-19 15:35:15.0456,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+2012-07-19 15:36:30.2339,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+2012-07-19 15:45:15.5590,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 15:45:15.5590,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37212,
+2012-07-19 15:45:17.5871,RavenFS.Synchronization.SynchronizationTask,Warn,Failed to perform a synchronization to a destination http://localhost:37212,"System.Net.WebException: Unable to connect to the remote server ---> System.Net.Sockets.SocketException: No connection could be made because the target machine actively refused it 127.0.0.1:37212
+   at System.Net.Sockets.Socket.EndConnect(IAsyncResult asyncResult)
+   at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+   --- End of inner exception stack trace ---
+   at System.Net.HttpWebRequest.EndGetResponse(IAsyncResult asyncResult)
+   at System.Threading.Tasks.TaskFactory`1.FromAsyncCoreLogic(IAsyncResult iar, Func`2 endMethod, TaskCompletionSource`1 tcs)"
+2012-07-19 15:55:15.5533,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 15:55:15.5533,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37212,
+2012-07-19 15:55:17.5544,RavenFS.Synchronization.SynchronizationTask,Warn,Failed to perform a synchronization to a destination http://localhost:37212,"System.Net.WebException: Unable to connect to the remote server ---> System.Net.Sockets.SocketException: No connection could be made because the target machine actively refused it 127.0.0.1:37212
+   at System.Net.Sockets.Socket.EndConnect(IAsyncResult asyncResult)
+   at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+   --- End of inner exception stack trace ---
+   at System.Net.HttpWebRequest.EndGetResponse(IAsyncResult asyncResult)
+   at System.Threading.Tasks.TaskFactory`1.FromAsyncCoreLogic(IAsyncResult iar, Func`2 endMethod, TaskCompletionSource`1 tcs)"
+2012-07-19 16:05:15.5628,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 16:05:15.5628,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37212,
+2012-07-19 16:05:17.5639,RavenFS.Synchronization.SynchronizationTask,Warn,Failed to perform a synchronization to a destination http://localhost:37212,"System.Net.WebException: Unable to connect to the remote server ---> System.Net.Sockets.SocketException: No connection could be made because the target machine actively refused it 127.0.0.1:37212
+   at System.Net.Sockets.Socket.EndConnect(IAsyncResult asyncResult)
+   at System.Net.ServicePoint.ConnectSocketInternal(Boolean connectFailure, Socket s4, Socket s6, Socket& socket, IPAddress& address, ConnectSocketState state, IAsyncResult asyncResult, Int32 timeout, Exception& exception)
+   --- End of inner exception stack trace ---
+   at System.Net.HttpWebRequest.EndGetResponse(IAsyncResult asyncResult)
+   at System.Threading.Tasks.TaskFactory`1.FromAsyncCoreLogic(IAsyncResult iar, Func`2 endMethod, TaskCompletionSource`1 tcs)"
+2012-07-19 16:15:08.5204,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+2012-07-19 16:15:15.5598,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 16:15:15.5598,RavenFS.Synchronization.SynchronizationTask,Warn,Invalid Raven/Synchronization/Destinations configuration,
+2012-07-19 16:15:18.2000,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+2012-07-19 16:24:51.1210,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+2012-07-19 16:24:57.0063,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+2012-07-19 16:25:15.5544,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 16:25:15.5544,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37230,
+2012-07-19 16:25:15.5544,RavenFS.Controllers.SynchronizationController,Debug,Got synchronization last etag request from 580115c9-602b-4d93-bd5e-872ded0ee8b3: [LastSourceFileEtag: 00000000-0000-0000-0000-000000000000],
+2012-07-19 16:25:15.5954,RavenFS.Synchronization.SynchronizationTask,Debug,Getting files to synchronize with ETag greater than 00000000-0000-0000-0000-000000000000,
+2012-07-19 16:25:15.5954,RavenFS.Synchronization.SynchronizationTask,Debug,There were 0 files that needed synchronization,
+2012-07-19 16:25:15.6054,RavenFS.Synchronization.SynchronizationQueue,Warn,Could not get a pending synchronization queue for http://localhost:37230,
+2012-07-19 16:25:15.6054,RavenFS.Synchronization.SynchronizationTask,Debug,"Synchronization to a destination http://localhost:37230 has completed. 0 file(s) were synchronized successfully, 0 synchonization(s) were failed",
+2012-07-19 16:35:15.5634,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 16:35:15.5634,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37230,
+2012-07-19 16:35:15.5634,RavenFS.Controllers.SynchronizationController,Debug,Got synchronization last etag request from 580115c9-602b-4d93-bd5e-872ded0ee8b3: [LastSourceFileEtag: 00000000-0000-0000-0000-000000000000],
+2012-07-19 16:35:15.5634,RavenFS.Synchronization.SynchronizationTask,Debug,Getting files to synchronize with ETag greater than 00000000-0000-0000-0000-000000000000,
+2012-07-19 16:35:15.5634,RavenFS.Synchronization.SynchronizationTask,Debug,There were 0 files that needed synchronization,
+2012-07-19 16:35:15.5634,RavenFS.Synchronization.SynchronizationQueue,Warn,Could not get a pending synchronization queue for http://localhost:37230,
+2012-07-19 16:35:15.5634,RavenFS.Synchronization.SynchronizationTask,Debug,"Synchronization to a destination http://localhost:37230 has completed. 0 file(s) were synchronized successfully, 0 synchonization(s) were failed",
+2012-07-19 16:45:15.5635,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 16:45:15.5635,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37230,
+2012-07-19 16:45:15.5635,RavenFS.Controllers.SynchronizationController,Debug,Got synchronization last etag request from 580115c9-602b-4d93-bd5e-872ded0ee8b3: [LastSourceFileEtag: 00000000-0000-0000-0000-000000000000],
+2012-07-19 16:45:15.5635,RavenFS.Synchronization.SynchronizationTask,Debug,Getting files to synchronize with ETag greater than 00000000-0000-0000-0000-000000000000,
+2012-07-19 16:45:15.5635,RavenFS.Synchronization.SynchronizationTask,Debug,There were 0 files that needed synchronization,
+2012-07-19 16:45:15.5635,RavenFS.Synchronization.SynchronizationQueue,Warn,Could not get a pending synchronization queue for http://localhost:37230,
+2012-07-19 16:45:15.5635,RavenFS.Synchronization.SynchronizationTask,Debug,"Synchronization to a destination http://localhost:37230 has completed. 0 file(s) were synchronized successfully, 0 synchonization(s) were failed",
+2012-07-19 16:55:15.5584,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 16:55:15.5584,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37230,
+2012-07-19 16:55:15.5584,RavenFS.Controllers.SynchronizationController,Debug,Got synchronization last etag request from 580115c9-602b-4d93-bd5e-872ded0ee8b3: [LastSourceFileEtag: 00000000-0000-0000-0000-000000000000],
+2012-07-19 16:55:15.5584,RavenFS.Synchronization.SynchronizationTask,Debug,Getting files to synchronize with ETag greater than 00000000-0000-0000-0000-000000000000,
+2012-07-19 16:55:15.5584,RavenFS.Synchronization.SynchronizationTask,Debug,There were 0 files that needed synchronization,
+2012-07-19 16:55:15.5584,RavenFS.Synchronization.SynchronizationQueue,Warn,Could not get a pending synchronization queue for http://localhost:37230,
+2012-07-19 16:55:15.5584,RavenFS.Synchronization.SynchronizationTask,Debug,"Synchronization to a destination http://localhost:37230 has completed. 0 file(s) were synchronized successfully, 0 synchonization(s) were failed",
+2012-07-19 17:05:15.5514,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 17:05:15.5514,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37230,
+2012-07-19 17:05:15.5514,RavenFS.Controllers.SynchronizationController,Debug,Got synchronization last etag request from 580115c9-602b-4d93-bd5e-872ded0ee8b3: [LastSourceFileEtag: 00000000-0000-0000-0000-000000000000],
+2012-07-19 17:05:15.5514,RavenFS.Synchronization.SynchronizationTask,Debug,Getting files to synchronize with ETag greater than 00000000-0000-0000-0000-000000000000,
+2012-07-19 17:05:15.5514,RavenFS.Synchronization.SynchronizationTask,Debug,There were 0 files that needed synchronization,
+2012-07-19 17:05:15.5514,RavenFS.Synchronization.SynchronizationQueue,Warn,Could not get a pending synchronization queue for http://localhost:37230,
+2012-07-19 17:05:15.5514,RavenFS.Synchronization.SynchronizationTask,Debug,"Synchronization to a destination http://localhost:37230 has completed. 0 file(s) were synchronized successfully, 0 synchonization(s) were failed",
+2012-07-19 17:15:15.5650,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 17:15:15.5650,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37230,
+2012-07-19 17:15:15.5650,RavenFS.Controllers.SynchronizationController,Debug,Got synchronization last etag request from 580115c9-602b-4d93-bd5e-872ded0ee8b3: [LastSourceFileEtag: 00000000-0000-0000-0000-000000000000],
+2012-07-19 17:15:15.5650,RavenFS.Synchronization.SynchronizationTask,Debug,Getting files to synchronize with ETag greater than 00000000-0000-0000-0000-000000000000,
+2012-07-19 17:15:15.5650,RavenFS.Synchronization.SynchronizationTask,Debug,There were 0 files that needed synchronization,
+2012-07-19 17:15:15.5650,RavenFS.Synchronization.SynchronizationQueue,Warn,Could not get a pending synchronization queue for http://localhost:37230,
+2012-07-19 17:15:15.5650,RavenFS.Synchronization.SynchronizationTask,Debug,"Synchronization to a destination http://localhost:37230 has completed. 0 file(s) were synchronized successfully, 0 synchonization(s) were failed",
+2012-07-19 17:25:15.5579,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 17:25:15.5579,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://localhost:37230,
+2012-07-19 17:25:15.5579,RavenFS.Controllers.SynchronizationController,Debug,Got synchronization last etag request from 580115c9-602b-4d93-bd5e-872ded0ee8b3: [LastSourceFileEtag: 00000000-0000-0000-0000-000000000000],
+2012-07-19 17:25:15.5579,RavenFS.Synchronization.SynchronizationTask,Debug,Getting files to synchronize with ETag greater than 00000000-0000-0000-0000-000000000000,
+2012-07-19 17:25:15.5579,RavenFS.Synchronization.SynchronizationTask,Debug,There were 0 files that needed synchronization,
+2012-07-19 17:25:15.5579,RavenFS.Synchronization.SynchronizationQueue,Warn,Could not get a pending synchronization queue for http://localhost:37230,
+2012-07-19 17:25:15.5579,RavenFS.Synchronization.SynchronizationTask,Debug,"Synchronization to a destination http://localhost:37230 has completed. 0 file(s) were synchronized successfully, 0 synchonization(s) were failed",
+time,logger,level,message,exception
+2012-07-19 17:31:43.4003,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 17:31:54.2229,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 17:32:05.0085,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 17:32:15.8611,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 17:32:26.7058,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 17:32:37.5244,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 17:32:48.3410,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 17:32:51.1862,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 17:33:02.0878,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 17:34:55.0867,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+time,logger,level,message,exception
+2012-07-19 17:36:39.7176,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+2012-07-19 17:38:36.5033,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+2012-07-19 17:38:45.4818,RavenFS.Controllers.ConfigController,Debug,Config 'Raven/Synchronization/Destinations' was inserted,
+time,logger,level,message,exception
+2012-07-19 17:40:42.2215,RavenFS.Storage.StorageConfigurator,Info,"Esent Settings:
+  MaxVerPages      = 32768
+  CacheSizeMax     = 262144
+  DatabasePageSize = 4096",
+2012-07-19 17:45:39.3495,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 17:45:39.3495,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://dell-i7860-1:9091,
+2012-07-19 17:46:09.5662,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 17:46:09.5662,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://dell-i7860-1:9091,
+2012-07-19 17:47:30.7459,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 17:47:43.8556,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://dell-i7860-1:9091,
+2012-07-19 17:49:31.2117,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 17:49:32.5818,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://dell-i7860-1:9091,
+2012-07-19 17:49:58.3723,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 17:49:59.6374,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://dell-i7860-1:9091,
+2012-07-19 17:50:42.4998,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 17:50:51.2033,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://dell-i7860-1:9091,
+2012-07-19 17:52:16.4032,RavenFS.Synchronization.SynchronizationTask,Warn,Failed to perform a synchronization to a destination http://dell-i7860-1:9091,"System.InvalidOperationException: [Fiddler] ReadResponse() failed: The server did not return a response for this request.                                                                                                                                                                                                                                                                                                                                                                                                                                         
+   at RavenFS.Client.ExceptionExtensions.<TryThrowBetterError>b__2[T](Task`1 task) in C:\Projects\HibernatingRhinos\RavenFS\RavenFS\RavenFS.Client\ExceptionExtensions.cs:line 85
+   at System.Threading.Tasks.Task`1.<>c__DisplayClass1a`1.<ContinueWith>b__19()
+   at System.Threading.Tasks.Task`1.InvokeFuture(Object futureAsObj)
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.Execute()"
+2012-07-19 17:52:16.4162,RavenFS.Synchronization.SynchronizationTask,Warn,Failed to perform a synchronization to a destination http://dell-i7860-1:9091,"System.InvalidOperationException: [Fiddler] ReadResponse() failed: The server did not return a response for this request.                                                                                                                                                                                                                                                                                                                                                                                                                                         
+   at RavenFS.Client.ExceptionExtensions.<TryThrowBetterError>b__2[T](Task`1 task) in C:\Projects\HibernatingRhinos\RavenFS\RavenFS\RavenFS.Client\ExceptionExtensions.cs:line 85
+   at System.Threading.Tasks.Task`1.<>c__DisplayClass1a`1.<ContinueWith>b__19()
+   at System.Threading.Tasks.Task`1.InvokeFuture(Object futureAsObj)
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.Execute()"
+2012-07-19 17:52:30.0800,RavenFS.Synchronization.SynchronizationTask,Warn,Failed to perform a synchronization to a destination http://dell-i7860-1:9091,"System.InvalidOperationException: [Fiddler] The socket connection to dell-i7860-1 failed. <br />ErrorCode: 10061. <br />No connection could be made because the target machine actively refused it 2001:0:5ef5:79fd:2061:1525:a949:c398:9091                                                                                                                                                                                                                                                                                                                      
+   at RavenFS.Client.ExceptionExtensions.<TryThrowBetterError>b__2[T](Task`1 task) in C:\Projects\HibernatingRhinos\RavenFS\RavenFS\RavenFS.Client\ExceptionExtensions.cs:line 85
+   at System.Threading.Tasks.Task`1.<>c__DisplayClass1a`1.<ContinueWith>b__19()
+   at System.Threading.Tasks.Task`1.InvokeFuture(Object futureAsObj)
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.Execute()"
+2012-07-19 17:52:30.0800,RavenFS.Synchronization.SynchronizationTask,Warn,Failed to perform a synchronization to a destination http://dell-i7860-1:9091,"System.InvalidOperationException: [Fiddler] The socket connection to dell-i7860-1 failed. <br />ErrorCode: 10061. <br />No connection could be made because the target machine actively refused it 2001:0:5ef5:79fd:2061:1525:a949:c398:9091                                                                                                                                                                                                                                                                                                                      
+   at RavenFS.Client.ExceptionExtensions.<TryThrowBetterError>b__2[T](Task`1 task) in C:\Projects\HibernatingRhinos\RavenFS\RavenFS\RavenFS.Client\ExceptionExtensions.cs:line 85
+   at System.Threading.Tasks.Task`1.<>c__DisplayClass1a`1.<ContinueWith>b__19()
+   at System.Threading.Tasks.Task`1.InvokeFuture(Object futureAsObj)
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.Execute()"
+2012-07-19 17:52:30.0800,RavenFS.Synchronization.SynchronizationTask,Warn,Failed to perform a synchronization to a destination http://dell-i7860-1:9091,"System.InvalidOperationException: [Fiddler] The socket connection to dell-i7860-1 failed. <br />ErrorCode: 10061. <br />No connection could be made because the target machine actively refused it 2001:0:5ef5:79fd:2061:1525:a949:c398:9091                                                                                                                                                                                                                                                                                                                      
+   at RavenFS.Client.ExceptionExtensions.<TryThrowBetterError>b__2[T](Task`1 task) in C:\Projects\HibernatingRhinos\RavenFS\RavenFS\RavenFS.Client\ExceptionExtensions.cs:line 85
+   at System.Threading.Tasks.Task`1.<>c__DisplayClass1a`1.<ContinueWith>b__19()
+   at System.Threading.Tasks.Task`1.InvokeFuture(Object futureAsObj)
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.Execute()"
+2012-07-19 17:52:31.4871,RavenFS.Synchronization.SynchronizationTask,Warn,Failed to perform a synchronization to a destination http://dell-i7860-1:9091,"System.InvalidOperationException: [Fiddler] The socket connection to dell-i7860-1 failed. <br />ErrorCode: 10061. <br />No connection could be made because the target machine actively refused it 2001:0:5ef5:79fd:2061:1525:a949:c398:9091                                                                                                                                                                                                                                                                                                                      
+   at RavenFS.Client.ExceptionExtensions.<TryThrowBetterError>b__2[T](Task`1 task) in C:\Projects\HibernatingRhinos\RavenFS\RavenFS\RavenFS.Client\ExceptionExtensions.cs:line 85
+   at System.Threading.Tasks.Task`1.<>c__DisplayClass1a`1.<ContinueWith>b__19()
+   at System.Threading.Tasks.Task`1.InvokeFuture(Object futureAsObj)
+   at System.Threading.Tasks.Task.InnerInvoke()
+   at System.Threading.Tasks.Task.Execute()"
+2012-07-19 17:52:55.2444,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 17:52:55.2444,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://dell-i7860-1:9091,
+2012-07-19 17:53:28.9013,RavenFS.Synchronization.SynchronizationTask,Debug,Getting files to synchronize with ETag greater than 00000000-0000-0000-0000-000000000000,
+2012-07-19 17:53:28.9013,RavenFS.Synchronization.SynchronizationTask,Debug,There were 31 files that needed synchronization,
+2012-07-19 17:54:12.8059,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file copy_to_clipboard_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8059,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file Collapse_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8059,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file changeview_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8059,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file database_add_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8059,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file BackgroundTexture.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8059,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file BackgroundTextureBottom.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8059,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file database_add.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8289,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file debug_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8379,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file database_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8809,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file document_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8809,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file document_add_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8949,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file edit_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.8949,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file error_small.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.9249,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file error_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.9489,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file error_medium.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.9489,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file document_small.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.9599,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file execute_query_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.9739,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file down_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.9879,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file edit_columns_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:12.9879,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file index_add_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.0309,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file FooterTexture.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.0309,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file ImageCredits.txt and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.0389,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file Images.xaml and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.0639,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file navigate_first_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.0679,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file index_query_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.0909,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file navigate_last_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.1009,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file index_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.1149,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file index_small.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.1149,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file logs_small.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.1359,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file info_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.1489,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file add_tiny.png and a destination http://dell-i7860-1:9091 was enqueued,
+2012-07-19 17:54:13.1639,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'copy_to_clipboard_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 17:54:13.1819,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'copy_to_clipboard_tiny.png' with ETag 00000000-0000-0100-0000-000000000007 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 17:54:13.1959,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'Collapse_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 17:54:13.2489,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'Collapse_tiny.png' with ETag 00000000-0000-0100-0000-00000000000f was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 17:54:13.3129,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'changeview_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 17:54:13.3329,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'changeview_tiny.png' with ETag 00000000-0000-0100-0000-000000000008 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 17:54:13.3469,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'copy_to_clipboard_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 17:54:13.3469,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'Collapse_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 17:54:13.3849,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'changeview_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 17:54:14.1579,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'Collapse_tiny.png' to http://dell-i7860-1:9091 has finished. 278 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 17:54:14.1579,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'Collapse_tiny.png' with ETag 00000000-0000-0100-0000-00000000000f was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 17:54:14.7150,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'copy_to_clipboard_tiny.png' to http://dell-i7860-1:9091 has finished. 807 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 17:54:14.7150,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'changeview_tiny.png' to http://dell-i7860-1:9091 has finished. 473 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 17:54:14.7150,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'copy_to_clipboard_tiny.png' with ETag 00000000-0000-0100-0000-000000000007 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 17:54:14.7150,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'changeview_tiny.png' with ETag 00000000-0000-0100-0000-000000000008 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 17:54:14.7200,RavenFS.Synchronization.SynchronizationTask,Debug,"Synchronization to a destination http://dell-i7860-1:9091 has completed. 3 file(s) were synchronized successfully, 0 synchonization(s) were failed",
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize destinations,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to synchronize a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationTask,Debug,Getting files to synchronize with ETag greater than 00000000-0000-0100-0000-00000000000f,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationTask,Debug,There were 26 files that needed synchronization,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file database_add_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file debug_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file database_add.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file error_small.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file edit_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file document_add_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file error_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file document_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5071,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file edit_columns_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file execute_query_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file ImageCredits.txt and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file document_small.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file FooterTexture.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file index_query_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file database_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file index_add_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file index_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file navigate_first_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file navigate_last_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file error_medium.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file logs_small.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file Images.xaml and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file index_small.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file down_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file info_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.5211,RavenFS.Synchronization.SynchronizationQueue,Debug,ContentUpdateWorkItem for a file add_tiny.png and a destination http://dell-i7860-1:9091 was already existed in a pending queue,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.SynchronizationTask,Debug,Destination server http://dell-i7860-1:9091 said that file 'changeview_tiny.png' is safe,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.SynchronizationTask,Debug,Destination server http://dell-i7860-1:9091 said that file 'Collapse_tiny.png' is safe,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.SynchronizationTask,Debug,Destination server http://dell-i7860-1:9091 said that file 'copy_to_clipboard_tiny.png' is safe,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'database_add_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'database_add_tiny.png' with ETag 00000000-0000-0100-0000-000000000010 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'BackgroundTexture.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'BackgroundTexture.png' with ETag 00000000-0000-0100-0000-00000000000c was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'BackgroundTextureBottom.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'BackgroundTextureBottom.png' with ETag 00000000-0000-0100-0000-000000000004 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'database_add_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'BackgroundTextureBottom.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:42.9182,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'BackgroundTexture.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:42.9982,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'database_add_tiny.png' to http://dell-i7860-1:9091 has finished. 890 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:42.9982,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'database_add_tiny.png' with ETag 00000000-0000-0100-0000-000000000010 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:42.9982,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'database_add.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:42.9982,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'database_add.png' with ETag 00000000-0000-0100-0000-000000000011 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:42.9982,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'debug_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:42.9982,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'debug_tiny.png' with ETag 00000000-0000-0100-0000-000000000012 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:42.9982,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'database_add.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.0152,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'debug_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.1652,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'database_add.png' to http://dell-i7860-1:9091 has finished. 777 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.1652,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'database_add.png' with ETag 00000000-0000-0100-0000-000000000011 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.1652,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'database_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.1652,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'database_tiny.png' with ETag 00000000-0000-0100-0000-000000000013 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.1652,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'database_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.1812,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'debug_tiny.png' to http://dell-i7860-1:9091 has finished. 824 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.1812,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'debug_tiny.png' with ETag 00000000-0000-0100-0000-000000000012 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.1812,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'document_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.1812,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'document_tiny.png' with ETag 00000000-0000-0100-0000-00000000001b was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.1812,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'document_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.2742,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'database_tiny.png' to http://dell-i7860-1:9091 has finished. 859 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.2742,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'database_tiny.png' with ETag 00000000-0000-0100-0000-000000000013 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.2742,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'document_add_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.2742,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'document_add_tiny.png' with ETag 00000000-0000-0100-0000-00000000001a was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.2742,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'document_add_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.3092,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'document_tiny.png' to http://dell-i7860-1:9091 has finished. 467 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.3092,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'document_tiny.png' with ETag 00000000-0000-0100-0000-00000000001b was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.3092,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'edit_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.3092,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'edit_tiny.png' with ETag 00000000-0000-0100-0000-00000000001c was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.3092,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'edit_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.4092,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'document_add_tiny.png' to http://dell-i7860-1:9091 has finished. 647 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.4092,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'document_add_tiny.png' with ETag 00000000-0000-0100-0000-00000000001a was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.4102,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'error_small.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.4102,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'error_small.png' with ETag 00000000-0000-0100-0000-00000000001d was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.4102,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'error_small.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.4432,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'edit_tiny.png' to http://dell-i7860-1:9091 has finished. 663 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.4432,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'edit_tiny.png' with ETag 00000000-0000-0100-0000-00000000001c was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.4432,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'error_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.4432,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'error_tiny.png' with ETag 00000000-0000-0100-0000-00000000001e was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.4432,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'error_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.5172,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'BackgroundTexture.png' to http://dell-i7860-1:9091 has finished. 95775 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.5172,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'BackgroundTexture.png' with ETag 00000000-0000-0100-0000-00000000000c was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.5172,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'error_medium.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.5172,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'error_medium.png' with ETag 00000000-0000-0100-0000-000000000026 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.5202,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'error_medium.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.5392,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'BackgroundTextureBottom.png' to http://dell-i7860-1:9091 has finished. 95775 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.5392,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'BackgroundTextureBottom.png' with ETag 00000000-0000-0100-0000-000000000004 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.5392,RavenFS.Synchronization.SynchronizationTask,Debug,"Synchronization to a destination http://dell-i7860-1:9091 has completed. 3 file(s) were synchronized successfully, 0 synchonization(s) were failed",
+2012-07-19 18:00:43.5392,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'document_small.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.5392,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'document_small.png' with ETag 00000000-0000-0100-0000-00000000001f was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.5392,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'document_small.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.6322,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'error_small.png' to http://dell-i7860-1:9091 has finished. 1759 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.6322,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'error_small.png' with ETag 00000000-0000-0100-0000-00000000001d was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.6322,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'execute_query_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.6322,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'execute_query_tiny.png' with ETag 00000000-0000-0100-0000-000000000027 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.6322,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'execute_query_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.6682,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'error_tiny.png' to http://dell-i7860-1:9091 has finished. 966 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.6682,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'error_tiny.png' with ETag 00000000-0000-0100-0000-00000000001e was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.6682,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'down_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.6682,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'down_tiny.png' with ETag 00000000-0000-0100-0000-000000000028 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.6682,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'down_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.7092,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'error_medium.png' to http://dell-i7860-1:9091 has finished. 2547 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.7092,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'error_medium.png' with ETag 00000000-0000-0100-0000-000000000026 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.7092,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'edit_columns_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.7092,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'edit_columns_tiny.png' with ETag 00000000-0000-0100-0000-000000000029 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.7092,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'edit_columns_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.7472,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'document_small.png' to http://dell-i7860-1:9091 has finished. 674 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.7472,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'document_small.png' with ETag 00000000-0000-0100-0000-00000000001f was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.7472,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'index_add_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.7472,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'index_add_tiny.png' with ETag 00000000-0000-0100-0000-00000000002b was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.7472,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'index_add_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.8462,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'execute_query_tiny.png' to http://dell-i7860-1:9091 has finished. 851 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.8462,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'execute_query_tiny.png' with ETag 00000000-0000-0100-0000-000000000027 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.8472,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'FooterTexture.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.8472,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'FooterTexture.png' with ETag 00000000-0000-0100-0000-00000000002a was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.8472,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'FooterTexture.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.8762,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'down_tiny.png' to http://dell-i7860-1:9091 has finished. 615 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.8762,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'down_tiny.png' with ETag 00000000-0000-0100-0000-000000000028 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.8762,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'ImageCredits.txt' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.8762,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'ImageCredits.txt' with ETag 00000000-0000-0100-0000-000000000032 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.8792,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'ImageCredits.txt' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.9302,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'edit_columns_tiny.png' to http://dell-i7860-1:9091 has finished. 698 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.9302,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'edit_columns_tiny.png' with ETag 00000000-0000-0100-0000-000000000029 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.9302,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'Images.xaml' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.9302,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'Images.xaml' with ETag 00000000-0000-0100-0000-000000000033 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.9302,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'Images.xaml' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:43.9732,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'index_add_tiny.png' to http://dell-i7860-1:9091 has finished. 758 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:43.9732,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'index_add_tiny.png' with ETag 00000000-0000-0100-0000-00000000002b was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.9732,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'navigate_first_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:43.9732,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'navigate_first_tiny.png' with ETag 00000000-0000-0100-0000-000000000035 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:43.9732,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'navigate_first_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:44.0642,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'ImageCredits.txt' to http://dell-i7860-1:9091 has finished. 1376 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:44.0642,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'ImageCredits.txt' with ETag 00000000-0000-0100-0000-000000000032 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.0652,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'index_query_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:44.0652,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'index_query_tiny.png' with ETag 00000000-0000-0100-0000-000000000034 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.0652,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'index_query_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:44.1952,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'FooterTexture.png' to http://dell-i7860-1:9091 has finished. 32305 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:44.1952,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'FooterTexture.png' with ETag 00000000-0000-0100-0000-00000000002a was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.1952,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'navigate_last_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:44.1952,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'navigate_last_tiny.png' with ETag 00000000-0000-0100-0000-000000000036 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.1952,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'navigate_last_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:44.2092,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'navigate_first_tiny.png' to http://dell-i7860-1:9091 has finished. 788 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:44.2092,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'navigate_first_tiny.png' with ETag 00000000-0000-0100-0000-000000000035 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.2092,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'index_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:44.2092,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'index_tiny.png' with ETag 00000000-0000-0100-0000-000000000037 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.2092,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'index_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:44.2312,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'Images.xaml' to http://dell-i7860-1:9091 has finished. 3561 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:44.2312,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'Images.xaml' with ETag 00000000-0000-0100-0000-000000000033 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.2312,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'index_small.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:44.2312,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'index_small.png' with ETag 00000000-0000-0100-0000-00000000003b was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.2312,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'index_small.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:44.2692,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'index_query_tiny.png' to http://dell-i7860-1:9091 has finished. 806 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:44.2692,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'index_query_tiny.png' with ETag 00000000-0000-0100-0000-000000000034 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.2692,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'logs_small.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:44.2692,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'logs_small.png' with ETag 00000000-0000-0100-0000-00000000003c was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.2692,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'logs_small.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:44.4223,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'navigate_last_tiny.png' to http://dell-i7860-1:9091 has finished. 802 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:44.4223,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'navigate_last_tiny.png' with ETag 00000000-0000-0100-0000-000000000036 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.4223,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'info_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:44.4223,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'info_tiny.png' with ETag 00000000-0000-0100-0000-00000000003d was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.4273,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'info_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:44.4273,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'index_tiny.png' to http://dell-i7860-1:9091 has finished. 754 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:44.4273,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'index_tiny.png' with ETag 00000000-0000-0100-0000-000000000037 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.4403,RavenFS.Synchronization.SynchronizationTask,Debug,Starting to perform ContentUpdateWorkItem for a file 'add_tiny.png' and a destination server http://dell-i7860-1:9091,
+2012-07-19 18:00:44.4403,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'add_tiny.png' with ETag 00000000-0000-0500-0000-000000000002 was added to an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.4403,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronizing a file 'add_tiny.png' to http://dell-i7860-1:9091 by using multipart request. Need list length is 1,
+2012-07-19 18:00:44.4563,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'index_small.png' to http://dell-i7860-1:9091 has finished. 1289 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:44.4563,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'index_small.png' with ETag 00000000-0000-0100-0000-00000000003b was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.4913,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'logs_small.png' to http://dell-i7860-1:9091 has finished. 1664 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:44.4913,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'logs_small.png' with ETag 00000000-0000-0100-0000-00000000003c was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.5733,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'info_tiny.png' to http://dell-i7860-1:9091 has finished. 863 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:44.5733,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'info_tiny.png' with ETag 00000000-0000-0100-0000-00000000003d was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,
+2012-07-19 18:00:44.5813,RavenFS.Synchronization.ContentUpdateWorkItem,Debug,Synchronization of a file 'add_tiny.png' to http://dell-i7860-1:9091 has finished. 698 bytes were transfered and 0 bytes copied. Need list length was 1,
+2012-07-19 18:00:44.5813,RavenFS.Synchronization.SynchronizationQueue,Debug,File 'add_tiny.png' with ETag 00000000-0000-0500-0000-000000000002 was removed from an active synchronization queue for a destination http://dell-i7860-1:9091,

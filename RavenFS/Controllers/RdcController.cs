@@ -13,6 +13,7 @@ namespace RavenFS.Controllers
 	using Synchronization;
 	using Synchronization.Rdc;
 	using Synchronization.Rdc.Wrapper;
+	using Synchronization.Rdc.Wrapper.Unmanaged;
 
 	public class RdcController : RavenController
 	{

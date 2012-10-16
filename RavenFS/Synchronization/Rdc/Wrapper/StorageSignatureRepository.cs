@@ -5,31 +5,35 @@
 	using System.IO;
 	using System.Linq;
 	using NLog;
+	using RavenFS.Infrastructure;
 	using RavenFS.Storage;
 
 	public class StorageSignatureRepository : ISignatureRepository
     {
         private static readonly Logger log = LogManager.GetCurrentClassLogger();
-        private readonly TransactionalStorage storage;
-        private readonly string fileName;
-		private bool oldSignaturesCleanupPerformed;
+        private readonly TransactionalStorage _storage;
+        private readonly string _fileName;
+        private readonly string _tempDirectory;
+        private IDictionary<string, FileStream> _createdFiles;
 
-		public StorageSignatureRepository(TransactionalStorage storage, string fileName)
+        public StorageSignatureRepository(TransactionalStorage storage, string fileName)
         {
-            this.storage = storage;
-            this.fileName = fileName;
+            _tempDirectory = TempDirectoryTools.Create();
+            _storage = storage;
+            _fileName = fileName;
+            _createdFiles = new Dictionary<string, FileStream>();
         }
 
         public Stream GetContentForReading(string sigName)
         {
-	        SignatureStream signatureStream = null;
-            storage.Batch(
+	        SignatureReadOnlyStream signatureStream = null;
+            _storage.Batch(
                 accessor =>
                 {
                     var signatureLevel = GetSignatureLevel(sigName, accessor);
                     if (signatureLevel != null)
                     {
-						signatureStream = new SignatureStream(storage, signatureLevel.Id, signatureLevel.Level);
+						signatureStream = new SignatureReadOnlyStream(_storage, signatureLevel.Id, signatureLevel.Level);
                     }
                     else
                     {
@@ -42,33 +46,17 @@
 
         public Stream CreateContent(string sigName)
         {
-			if(!oldSignaturesCleanupPerformed)
-			{
-				storage.Batch(accessor => accessor.ClearSignatures(fileName));
-				oldSignaturesCleanupPerformed = true;
-			}
-
-	        var level = SignatureInfo.Parse(sigName).Level;
-	        int? id = null;
-
-	        storage.Batch(
-		        accessor =>
-		        {
-			        id = accessor.CreateSignature(fileName, level);
-		        });
-
-	        if (id == null)
-				throw new InvalidOperationException("Signature " + sigName + " was not created");
-
-			log.Debug("Signature {0} was created and is ready to create it's content", sigName);
-
-			return new SignatureStream(storage, id.Value, level);
+            var sigFileName = NameToPath(sigName);
+            var result = File.Create(sigFileName, 64 * 1024);
+            log.Info("File {0} created", sigFileName);
+            _createdFiles.Add(sigFileName, result);
+            return result;
         }
 
         public SignatureInfo GetByName(string sigName)
         {
             SignatureInfo result = null;
-            storage.Batch(
+            _storage.Batch(
                 accessor =>
                 {
                     var signatureLevel = GetSignatureLevel(sigName, accessor);
@@ -83,6 +71,37 @@
             return result;
         }
 
+
+        public void Flush(IEnumerable<SignatureInfo> signatureInfos)
+        {
+            if (_createdFiles.Count == 0)
+            {
+                throw new ArgumentException("Must have at least one signature info", "signatureInfos");
+            }
+
+            CloseCreatedStreams();
+
+            _storage.Batch(
+                accessor =>
+                {
+                    accessor.ClearSignatures(_fileName);
+                    foreach (var item in _createdFiles)
+                    {
+                        var item1 = item;
+                        var level = SignatureInfo.Parse(item.Key).Level;
+                        accessor.AddSignature(_fileName, level,
+                                              stream =>
+                                              {
+                                                  using (var cachedSigContent = File.OpenRead(item1.Key))
+                                                  {
+                                                      cachedSigContent.CopyTo(stream);
+                                                  }
+                                              });
+                    }
+                });
+            _createdFiles = new Dictionary<string, FileStream>();
+        }
+
         private static SignatureLevels GetSignatureLevel(string sigName, StorageActionsAccessor accessor)
         {
             var fileNameAndLevel = ExtractFileNameAndLevel(sigName);
@@ -93,20 +112,19 @@
         public IEnumerable<SignatureInfo> GetByFileName()
         {
             IList<SignatureInfo> result = null;
-            storage.Batch(
+            _storage.Batch(
                 accessor =>
                 {
-                    result = (from item in accessor.GetSignatures(fileName)
+                    result = (from item in accessor.GetSignatures(_fileName)
                               orderby item.Level
-                              select new SignatureInfo(item.Level, fileName)
+                              select new SignatureInfo(item.Level, _fileName)
                                          {
                                              Length = accessor.GetSignatureSize(item.Id, item.Level)
                                          }). ToList();
                 });
-
             if (result.Count() < 1)
             {
-                throw new FileNotFoundException("Cannot find signatures for " + fileName);
+                throw new FileNotFoundException("Cannot find signatures for " + _fileName);
             }
             return result;
         }
@@ -114,9 +132,9 @@
         public DateTime? GetLastUpdate()
         {
             SignatureLevels firstOrDefault = null;
-            storage.Batch(accessor =>
+            _storage.Batch(accessor =>
             {
-                firstOrDefault = accessor.GetSignatures(fileName).FirstOrDefault();
+                firstOrDefault = accessor.GetSignatures(_fileName).FirstOrDefault();
             });
 
             if (firstOrDefault == null)
@@ -129,8 +147,23 @@
             return SignatureInfo.Parse(sigName);
         }
 
+        private string NameToPath(string name)
+        {
+            return Path.GetFullPath(Path.Combine(_tempDirectory, name));
+        }
+
+        private void CloseCreatedStreams()
+        {
+            foreach (var item in _createdFiles)
+            {
+                item.Value.Close();
+            }
+        }
+
         public void Dispose()
         {
+            CloseCreatedStreams();
+            Directory.Delete(_tempDirectory, true);
         }
     }
 }

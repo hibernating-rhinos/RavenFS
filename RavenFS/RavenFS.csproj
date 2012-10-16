@@ -168,7 +168,7 @@
     <Compile Include="Notifications\UploadFailed.cs" />
     <Compile Include="Storage\DeleteFileOperation.cs" />
     <Compile Include="Storage\RenameFileOperation.cs" />
-    <Compile Include="Storage\SignatureStream.cs" />
+    <Compile Include="Storage\SignatureReadOnlyStream.cs" />
     <Compile Include="Synchronization\FileHeaderNameEqualityComparer.cs" />
     <Compile Include="Synchronization\Rdc\Wrapper\RdcVersion.cs" />
     <Compile Include="Synchronization\Rdc\Wrapper\RdcVersionChecker.cs" />

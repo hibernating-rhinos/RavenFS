@@ -23,7 +23,7 @@
 
         public Stream GetContentForReading(string sigName)
         {
-			CloseCreatedStreams();
+            Flush(null);
             return File.OpenRead(NameToPath(sigName));
         }
 
@@ -34,6 +34,11 @@
             log.Info("File {0} created", sigFileName);
             _createdFiles.Add(sigFileName, result);
             return result;
+        }
+
+        public void Flush(IEnumerable<SignatureInfo> signatureInfos)
+        {
+            CloseCreatedStreams();
         }
 
         public IEnumerable<SignatureInfo> GetByFileName()
