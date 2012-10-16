@@ -31,6 +31,7 @@ namespace RavenFS.Client
 	    private long alreadyWritten;
 		private long lastNotifiedRead;
 		private long lastNotifiedWritten;
+		private readonly long allBytesToProcess = long.MaxValue;
 
         public event EventHandler<ProgressEventArgs> ReadingProgress;
 
@@ -58,6 +59,11 @@ namespace RavenFS.Client
         public ListenableStream(Stream source)
         {
             this.source = source;
+
+	        if (source.CanSeek)
+	        {
+		        allBytesToProcess = source.Length;
+	        }
         }
 
         public override void Flush()
@@ -85,7 +91,7 @@ namespace RavenFS.Client
 		        if (alreadyRead <= Mb ||
 		            alreadyRead <= Gb && (alreadyRead - lastNotifiedRead) >= MbPrecision ||
 		            alreadyRead > Gb && (alreadyRead - lastNotifiedRead) >= GbPrecision ||
-		            (source.Length - alreadyRead < Mb))
+		            (allBytesToProcess - alreadyRead < Mb))
 		        {
 			        InvokeReadingProgress(new ProgressEventArgs(alreadyRead));
 			        lastNotifiedRead = alreadyRead;
@@ -105,7 +111,7 @@ namespace RavenFS.Client
 		        if (alreadyWritten <= Mb ||
 		            alreadyWritten <= Gb && (alreadyWritten - lastNotifiedWritten) >= MbPrecision ||
 		            alreadyWritten > Gb && (alreadyWritten - lastNotifiedWritten) >= GbPrecision ||
-					(source.Length - alreadyRead < Mb))
+					(allBytesToProcess - alreadyRead < Mb))
 		        {
 			        InvokeWrittingProgress(new ProgressEventArgs(alreadyWritten));
 			        lastNotifiedWritten = alreadyWritten;
