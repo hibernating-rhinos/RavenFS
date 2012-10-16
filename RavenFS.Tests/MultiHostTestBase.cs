@@ -46,6 +46,7 @@ namespace RavenFS.Tests
 			                      		var configuration = new InMemoryConfiguration();
 										configuration.Initialize();
 			                      		configuration.DataDirectory = "~/" + port;
+			                      		configuration.Port = port;
 
 										IOExtensions.DeleteDirectory(configuration.DataDirectory);
 

@@ -24,7 +24,7 @@ namespace RavenFS.Synchronization
 			get { return SynchronizationType.Rename; }
 		}
 
-		public async override Task<SynchronizationReport> PerformAsync(string destination)
+		public async override Task<SynchronizationReport> PerformAsync(string destination, string source)
 		{
 			FileAndPages fileAndPages = null;
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));
@@ -36,6 +36,7 @@ namespace RavenFS.Synchronization
 			request.AddHeaders(fileAndPages.Metadata);
 
 			request.Headers[SyncingMultipartConstants.SourceServerId] = SourceServerId.ToString();
+			request.Headers[SyncingMultipartConstants.SourceServerUrl] = source;
 
 			try
 			{

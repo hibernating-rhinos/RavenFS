@@ -11,6 +11,7 @@ namespace RavenFS.Config
 		private string dataDirectory;
 		private string indexStoragePath;
 		private string virtualDirectory;
+		private string serverUrl;
 
 		public InMemoryConfiguration()
 		{
@@ -77,6 +78,11 @@ namespace RavenFS.Config
 		{
 			get
 			{
+				if (!string.IsNullOrEmpty(serverUrl) && ServerUrlUtil.TryReadPreviouslySavedServerUrl(out serverUrl))
+				{
+					return serverUrl;
+				}
+
 				HttpRequest httpRequest = null;
 				try
 				{

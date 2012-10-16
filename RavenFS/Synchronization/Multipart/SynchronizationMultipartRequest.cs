@@ -24,8 +24,9 @@ namespace RavenFS.Synchronization.Multipart
 		private readonly IList<RdcNeed> needList;
 		private readonly string syncingBoundary;
 		private HttpWebRequest request;
+		private readonly string sourceServerUrl;
 
-		public SynchronizationMultipartRequest(string destinationUrl, Guid sourceId, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList)
+		public SynchronizationMultipartRequest(string destinationUrl, string sourceServerUrl, Guid sourceId, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList)
 		{
 			this.destinationUrl = destinationUrl;
 			this.sourceId = sourceId;
@@ -33,6 +34,7 @@ namespace RavenFS.Synchronization.Multipart
 			this.sourceMetadata = sourceMetadata;
 			this.sourceStream = sourceStream;
 			this.needList = needList;
+			this.sourceServerUrl = sourceServerUrl;
 			this.syncingBoundary = "syncing";
 		}
 
@@ -59,6 +61,7 @@ namespace RavenFS.Synchronization.Multipart
 
 			request.Headers[SyncingMultipartConstants.FileName] = fileName;
 			request.Headers[SyncingMultipartConstants.SourceServerId] = sourceId.ToString();
+			request.Headers[SyncingMultipartConstants.SourceServerUrl] = sourceServerUrl;
 
 			try
 			{

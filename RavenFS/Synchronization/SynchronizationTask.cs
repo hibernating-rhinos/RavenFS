@@ -7,6 +7,7 @@ namespace RavenFS.Synchronization
 	using System.Linq;
 	using System.Reactive.Linq;
 	using System.Threading.Tasks;
+	using Config;
 	using NLog;
 	using Notifications;
 	using RavenFS.Client;
@@ -29,18 +30,25 @@ namespace RavenFS.Synchronization
 		private readonly SynchronizationQueue synchronizationQueue;
 		private readonly TransactionalStorage storage;
 		private readonly NotificationPublisher publisher;
+		private readonly InMemoryConfiguration systemConfiguration;
 		private readonly SynchronizationStrategy synchronizationStrategy;
 
 		private readonly IObservable<long> timer = Observable.Interval(TimeSpan.FromMinutes(10));
 
-		public SynchronizationTask(TransactionalStorage storage, SigGenerator sigGenerator, NotificationPublisher publisher)
+		public SynchronizationTask(TransactionalStorage storage, SigGenerator sigGenerator, NotificationPublisher publisher, InMemoryConfiguration systemConfiguration)
 		{
 			this.storage = storage;
 			this.publisher = publisher;
+			this.systemConfiguration = systemConfiguration;
 			synchronizationQueue = new SynchronizationQueue();
 			synchronizationStrategy = new SynchronizationStrategy(storage, sigGenerator);
 
 			InitializeTimer();
+		}
+
+		public string ServerUrl
+		{
+			get { return systemConfiguration.ServerUrl; }
 		}
 
 		public SynchronizationQueue Queue
@@ -331,7 +339,7 @@ namespace RavenFS.Synchronization
 			
 			try
 			{
-				report = await work.PerformAsync(destinationUrl);
+				report = await work.PerformAsync(destinationUrl, ServerUrl);
 			}
 			catch (Exception ex)
 			{

@@ -45,7 +45,7 @@
 
 		public abstract SynchronizationType SynchronizationType { get; }
 
-		public abstract Task<SynchronizationReport> PerformAsync(string destination);
+		public abstract Task<SynchronizationReport> PerformAsync(string destination, string sourceUrl);
 
 		public virtual void Cancel()
 		{
@@ -64,9 +64,9 @@
 			}
 		}
 
-		protected ConflictItem CheckConflictWithDestination(NameValueCollection sourceMetadata, NameValueCollection destinationMetadata)
+		protected ConflictItem CheckConflictWithDestination(NameValueCollection sourceMetadata, NameValueCollection destinationMetadata, string localServerUrl)
 		{
-			var conflict = conflictDetector.CheckOnSource(FileName, sourceMetadata, destinationMetadata);
+			var conflict = conflictDetector.CheckOnSource(FileName, sourceMetadata, destinationMetadata, localServerUrl);
 			var isConflictResolved = conflictResolver.IsResolved(destinationMetadata, conflict);
 
 			// optimization - conflict checking on source side before any changes pushed
@@ -78,9 +78,10 @@
 			return null;
 		}
 
-		protected async Task<SynchronizationReport> ApplyConflictOnDestinationAsync(ConflictItem conflict, string  destination, Logger log)
+		protected async Task<SynchronizationReport> ApplyConflictOnDestinationAsync(ConflictItem conflict, string destination, string localServerUrl, Logger log)
 		{
-			log.Debug("File '{0}' is in conflict with destination version from {1}. Applying conflict on destination", FileName, destination);
+			log.Debug("File '{0}' is in conflict with destination version from {1}. Applying conflict on destination", FileName,
+			          destination);
 
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 			try
@@ -90,7 +91,9 @@
 				var history = new List<HistoryItem>(conflict.RemoteHistory);
 				history.RemoveAt(conflict.RemoteHistory.Count - 1);
 
-				await destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(FileName, version, serverId, history);
+				await
+					destinationRavenFileSystemClient.Synchronization.ApplyConflictAsync(FileName, version, serverId, history,
+					                                                                    localServerUrl);
 			}
 			catch (Exception ex)
 			{
@@ -98,9 +101,9 @@
 			}
 
 			return new SynchronizationReport(FileName, FileETag, SynchronizationType)
-			{
-				Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
-			};
+				       {
+					       Exception = new SynchronizationException(string.Format("File {0} is conflicted", FileName)),
+				       };
 		}
 
 		public void RefreshMetadata()

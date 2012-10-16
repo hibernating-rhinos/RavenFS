@@ -7,7 +7,7 @@ namespace RavenFS.Synchronization.Conflictuality
 
 	public class ConflictDetector
 	{
-		public ConflictItem Check(string fileName, NameValueCollection localMetadata, NameValueCollection remoteMetadata)
+		public ConflictItem Check(string fileName, NameValueCollection localMetadata, NameValueCollection remoteMetadata, string remoteServerUrl)
 		{
 			if (Historian.IsDirectChildOfCurrent(localMetadata, remoteMetadata))
 			{
@@ -20,13 +20,14 @@ namespace RavenFS.Synchronization.Conflictuality
 					CurrentHistory = TransformToFullConflictHistory(localMetadata),
 					RemoteHistory = TransformToFullConflictHistory(remoteMetadata),
 					FileName = fileName,
+					RemoteServerUrl = remoteServerUrl
 				};
 		}
 
 		public ConflictItem CheckOnSource(string fileName, NameValueCollection localMetadata,
-		                                  NameValueCollection remoteMetadata)
+		                                  NameValueCollection remoteMetadata, string localServerUrl)
 		{
-			return Check(fileName, remoteMetadata, localMetadata);
+			return Check(fileName, remoteMetadata, localMetadata, localServerUrl);
 		}
 
 		private static List<HistoryItem> TransformToFullConflictHistory(NameValueCollection metadata)

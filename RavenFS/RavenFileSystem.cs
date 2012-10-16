@@ -68,7 +68,7 @@ namespace RavenFS
 			conflictArtifactManager = new ConflictArtifactManager(storage,search);
 			conflictDetector = new ConflictDetector();
 			conflictResolver = new ConflictResolver();
-			synchronizationTask = new SynchronizationTask(storage, sigGenerator, notificationPublisher);
+			synchronizationTask = new SynchronizationTask(storage, sigGenerator, notificationPublisher, systemConfiguration);
 			storageOperationsTask = new StorageOperationsTask(storage, search, notificationPublisher);
 
 			AppDomain.CurrentDomain.ProcessExit += ShouldDispose;

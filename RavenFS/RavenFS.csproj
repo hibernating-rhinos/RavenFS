@@ -157,6 +157,7 @@
     <Compile Include="Config\InMemoryConfiguration.cs" />
     <Compile Include="Config\PortUtil.cs" />
     <Compile Include="Config\RavenFileSystemConfiguration.cs" />
+    <Compile Include="Config\ServerUrlUtil.cs" />
     <Compile Include="Controllers\ChangesController.cs" />
     <Compile Include="Controllers\ConfigController.cs" />
     <Compile Include="Controllers\FilesController.cs" />

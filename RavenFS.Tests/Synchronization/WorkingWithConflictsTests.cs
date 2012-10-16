@@ -26,7 +26,7 @@
 			var client = NewClient(0);
 
 			client.UploadAsync("conflict.test", new MemoryStream(1)).Wait();
-			client.Synchronization.ApplyConflictAsync("conflict.test", 1, "blah", new List<HistoryItem>()).Wait();
+			client.Synchronization.ApplyConflictAsync("conflict.test", 1, "blah", new List<HistoryItem>(), "http://localhost:12345").Wait();
 
 			var results = client.SearchAsync("Raven-Synchronization-Conflict:true").Result;
 
@@ -156,7 +156,7 @@
 			var client = NewClient(1);
 			client.UploadAsync("test.bin", content).Wait();
 			var guid = Guid.NewGuid().ToString();
-			client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem> { new HistoryItem() { ServerId = guid, Version = 3 } }).Wait();
+			client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem> { new HistoryItem() { ServerId = guid, Version = 3 } }, "http://localhost:12345").Wait();
 			var resultFileMetadata = client.GetMetadataForAsync("test.bin").Result;
 			var conflictItemString = client.Config.GetConfig(RavenFileNameHelper.ConflictConfigNameForFile("test.bin")).Result["value"];
 			var conflict = new TypeHidingJsonSerializer().Parse<ConflictItem>(conflictItemString);
@@ -176,7 +176,7 @@
 			var client = NewClient(1);
 
 			var guid = Guid.NewGuid().ToString();
-			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem>()).Wait());
+			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem>(), "http://localhost:12345").Wait());
 
 			Assert.IsType(typeof(InvalidOperationException), innerException);
 			Assert.Contains("404", innerException.Message);
@@ -395,6 +395,27 @@
 
 			var syncingItem = sourceClient.Config.GetConfig(RavenFileNameHelper.SyncNameForFile("test", destinationClient.ServerUrl)).Result;
 			Assert.Null(syncingItem);
+		}
+
+		[Fact]
+		public void Conflict_item_should_have_remote_server_url()
+		{
+			var source = NewClient(0);
+			var destination = NewClient(1);
+
+			source.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
+			destination.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
+
+			var shouldBeConflict = source.Synchronization.StartSynchronizationToAsync("test", destination.ServerUrl).Result;
+
+			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
+
+			var pages = destination.Synchronization.GetConflicts().Result;
+			var remoteServerUrl = pages.Items[0].RemoteServerUrl;
+
+			Assert.NotNull(remoteServerUrl);
+
+			Assert.Equal(new Uri(source.ServerUrl).Port, new Uri(remoteServerUrl).Port);
 		}
 	}
 }

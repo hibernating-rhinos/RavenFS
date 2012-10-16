@@ -20,6 +20,7 @@
 		private readonly SigGenerator sigGenerator;
 		private DataInfo fileDataInfo;
 		private SynchronizationMultipartRequest multipartRequest;
+		private string localServerUrl;
 
 		public ContentUpdateWorkItem(string file, TransactionalStorage storage, SigGenerator sigGenerator)
 			: base(file, storage)
@@ -42,9 +43,11 @@
 			cts.Cancel();
 		}
 
-		public async override Task<SynchronizationReport> PerformAsync(string destination)
+		public async override Task<SynchronizationReport> PerformAsync(string destination, string source)
 		{
 			AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
+
+			localServerUrl = source;
 
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 
@@ -62,11 +65,11 @@
                 throw new SynchronizationException("Incompatible RDC version detected on destination server");
             }
             
-			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata);
+			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata, source);
 
 			if (conflict != null)
 			{
-				return await ApplyConflictOnDestinationAsync(conflict, destination, log);
+				return await ApplyConflictOnDestinationAsync(conflict, destination, source, log);
 			}
 			
 			using (var localSignatureRepository = new StorageSignatureRepository(Storage, FileName))
@@ -154,7 +157,7 @@
 		{
 			cts.Token.ThrowIfCancellationRequested();
 
-			multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerId, FileName, FileMetadata,
+			multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, localServerUrl, SourceServerId, FileName, FileMetadata,
 																	   sourceFileStream, needList);
 
 			var bytesToTransferCount = needList.Where(x => x.BlockType == RdcNeedType.Source).Sum(x => (double) x.BlockLength);

@@ -10,6 +10,8 @@ namespace RavenFS.Synchronization.Multipart
 
 		public static string FileName = "Temp-Syncing-file-name";
 
-		public static string SourceServerId = "Temp-Syncing-source-server-url";
+		public static string SourceServerId = "Temp-Syncing-source-server-id";
+
+		public static string SourceServerUrl = "Temp-Syncing-source-server-url";
 	}
 }

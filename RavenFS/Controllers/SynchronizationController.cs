@@ -59,6 +59,7 @@
 			var tempFileName = RavenFileNameHelper.DownloadingFileName(fileName);
 
 			var sourceServerId = new Guid(Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault());
+			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault();
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
 			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.ContentUpdate);
@@ -88,7 +89,7 @@
 
 				if (localMetadata != null)
 				{
-					AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, out isConflictResolved);
+					AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, sourceServerUrl, out isConflictResolved);
 					localFile = StorageStream.Reading(Storage, fileName);
 				}
 				else
@@ -204,9 +205,9 @@
 			}
 		}
 
-		private void AssertConflictDetection(string fileName, NameValueCollection localMetadata, NameValueCollection sourceMetadata, Guid sourceServerId, out bool isConflictResolved)
+		private void AssertConflictDetection(string fileName, NameValueCollection localMetadata, NameValueCollection sourceMetadata, Guid sourceServerId, string sourceServerUrl, out bool isConflictResolved)
 		{
-			var conflict = ConflictDetector.Check(fileName, localMetadata, sourceMetadata);
+			var conflict = ConflictDetector.Check(fileName, localMetadata, sourceMetadata, sourceServerUrl);
 			isConflictResolved = ConflictResolver.IsResolved(localMetadata, conflict);
 
 			if (conflict != null && !isConflictResolved)
@@ -240,6 +241,7 @@
 		public HttpResponseMessage UpdateMetadata(string fileName)
 		{
 			var sourceServerId = new Guid(Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault());
+			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault();
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
 			log.Debug("Starting to update a metadata of file '{0}' with ETag {1} from {2} bacause of synchronization", fileName, sourceServerId, sourceFileETag);
@@ -263,7 +265,7 @@
 
 				bool isConflictResolved;
 
-				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, out isConflictResolved);
+				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, sourceServerUrl, out isConflictResolved);
 
 				Historian.UpdateLastModified(sourceMetadata);
 
@@ -359,6 +361,7 @@
 		public HttpResponseMessage Rename(string fileName, string rename)
 		{
 			var sourceServerId = new Guid(Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault());
+			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault();
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 			var sourceMetadata = Request.Headers.FilterHeaders();
 
@@ -382,7 +385,7 @@
 
 				bool isConflictResolved;
 
-				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, out isConflictResolved);
+				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, sourceServerUrl, out isConflictResolved);
 
 				StorageOperationsTask.RenameFile(new RenameFileOperation()
 					                                 {
@@ -498,7 +501,7 @@
 		}
 
 		[AcceptVerbs("PATCH")]
-		public async Task<HttpResponseMessage> ApplyConflict(string filename, long remoteVersion, string remoteServerId)
+		public async Task<HttpResponseMessage> ApplyConflict(string filename, long remoteVersion, string remoteServerId, string remoteServerUrl)
 		{
 			var localMetadata = GetLocalMetadata(filename);
 
@@ -531,7 +534,8 @@
 			{
 				CurrentHistory = currentConflictHistory,
 				RemoteHistory = remoteConflictHistory,
-				FileName = filename
+				FileName = filename,
+				RemoteServerUrl = Uri.UnescapeDataString(remoteServerUrl)
 			};
 
 			ConflictArtifactManager.Create(filename, conflict);

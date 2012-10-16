@@ -14,6 +14,7 @@ namespace RavenFS
 	public class Global : System.Web.HttpApplication
 	{
 		private static RavenFileSystem ravenFileSystem;
+		private bool serverUrlSaved;
 
 		protected void Application_Start(object sender, EventArgs e)
 		{
@@ -34,6 +35,17 @@ namespace RavenFS
 			using(ravenFileSystem)
 			{
 				
+			}
+		}
+
+		protected void Application_BeginRequest(object sender, EventArgs e)
+		{
+			if (!serverUrlSaved && ravenFileSystem != null)
+			{
+				if(ServerUrlUtil.TrySaveServerUrlForNextTime(ravenFileSystem.Configuration.ServerUrl))
+				{
+					serverUrlSaved = true;
+				}
 			}
 		}
 
