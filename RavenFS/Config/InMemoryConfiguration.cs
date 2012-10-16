@@ -10,6 +10,7 @@ namespace RavenFS.Config
 	{
 		private string dataDirectory;
 		private string indexStoragePath;
+		private string virtualDirectory;
 
 		public InMemoryConfiguration()
 		{
@@ -32,6 +33,23 @@ namespace RavenFS.Config
 			HostName = Settings["Raven/HostName"];
 
 			Port = PortUtil.GetPort(Settings["Raven/Port"]);
+			
+			SetVirtualDirectory();
+		}
+
+		private void SetVirtualDirectory()
+		{
+			var defaultVirtualDirectory = "/";
+			try
+			{
+				if (HttpContext.Current != null)
+					defaultVirtualDirectory = HttpContext.Current.Request.ApplicationPath;
+			}
+			catch (HttpException)
+			{
+			}
+
+			VirtualDirectory = Settings["Raven/VirtualDirectory"] ?? defaultVirtualDirectory;
 		}
 
 		public string DataDirectory
@@ -59,16 +77,42 @@ namespace RavenFS.Config
 		{
 			get
 			{
-				if (HttpContext.Current != null)// running in IIS, let us figure out how
+				HttpRequest httpRequest = null;
+				try
 				{
-					var url = HttpContext.Current.Request.Url;
+					if (HttpContext.Current != null)
+						httpRequest = HttpContext.Current.Request;
+				}
+				catch (Exception)
+				{
+					// the issue is probably Request is not available in this context
+					// we can safely ignore this, at any rate
+				}
+				if (httpRequest != null)// running in IIS, let us figure out how
+				{
+					var url = httpRequest.Url;
 					return new UriBuilder(url)
 					{
-						Path = HttpContext.Current.Request.ApplicationPath,
+						Path = httpRequest.ApplicationPath,
 						Query = ""
 					}.Uri.ToString();
 				}
-				return new UriBuilder("http", (HostName ?? Environment.MachineName), Port).Uri.ToString();
+
+				return new UriBuilder("http", (HostName ?? Environment.MachineName), Port, VirtualDirectory).Uri.ToString();
+			}
+		}
+
+		public string VirtualDirectory
+		{
+			get { return virtualDirectory; }
+			set
+			{
+				virtualDirectory = value;
+
+				if (virtualDirectory.EndsWith("/"))
+					virtualDirectory = virtualDirectory.Substring(0, virtualDirectory.Length - 1);
+				if (virtualDirectory.StartsWith("/") == false)
+					virtualDirectory = "/" + virtualDirectory;
 			}
 		}
 
