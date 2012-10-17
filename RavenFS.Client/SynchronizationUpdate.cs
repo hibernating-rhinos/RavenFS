@@ -10,6 +10,8 @@ namespace RavenFS.Client
 
 		public Guid SourceServerId { get; set; }
 
+		public string SourceServerUrl { get; set; }
+
 		public SynchronizationType Type { get; set; }
 
 		public SynchronizationAction Action { get; set; }

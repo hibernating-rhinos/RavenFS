@@ -173,6 +173,7 @@
     <Compile Include="Synchronization\Rdc\Wrapper\RdcVersion.cs" />
     <Compile Include="Synchronization\Rdc\Wrapper\RdcVersionChecker.cs" />
     <Compile Include="Infrastructure\StorageOperationsTask.cs" />
+    <Compile Include="Synchronization\ServerInfo.cs" />
     <Compile Include="Util\Buffers.cs" />
     <Compile Include="Extensions\ByteExtensions.cs" />
     <Compile Include="Extensions\ConfigurationExtension.cs" />

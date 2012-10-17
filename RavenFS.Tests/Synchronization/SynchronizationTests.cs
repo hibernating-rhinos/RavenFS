@@ -598,7 +598,7 @@ namespace RavenFS.Tests.Synchronization
 			var id = Guid.NewGuid();
 			var etag = Guid.NewGuid();
 
-			client.Synchronization.IncrementLastETagAsync(id, etag).Wait();
+			client.Synchronization.IncrementLastETagAsync(id,  "http://localhost:12345", etag).Wait();
 
 			var lastSyncInfo = client.Synchronization.GetLastSynchronizationFromAsync(id).Result;
 

@@ -26,7 +26,11 @@
 			FileAndPages fileAndPages = null;
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0,0));
 			FileMetadata = fileAndPages.Metadata;
-			SourceServerUrl = sourceServerUrl;
+			ServerInfo = new ServerInfo
+				         {
+					         Id = Storage.Id,
+					         Url = sourceServerUrl
+				         };
 
 			conflictDetector = new ConflictDetector();
 			conflictResolver = new ConflictResolver();
@@ -42,9 +46,7 @@
 
 		protected NameValueCollection FileMetadata { get; set; }
 
-		protected Guid SourceServerId { get { return Storage.Id; } }
-
-		protected string SourceServerUrl { get; private set; }
+		protected ServerInfo ServerInfo { get; private set; }
 
 		public abstract SynchronizationType SynchronizationType { get; }
 

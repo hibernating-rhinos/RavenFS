@@ -5,6 +5,7 @@ namespace RavenFS.Client
 	public class SourceSynchronizationInformation
 	{
 		public Guid LastSourceFileEtag { get; set; }
+		public string SourceServerUrl { get; set; }
 		public Guid DestinationServerInstanceId { get; set; }
 
 		public override string ToString()

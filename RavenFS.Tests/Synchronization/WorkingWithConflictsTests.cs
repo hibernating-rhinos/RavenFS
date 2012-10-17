@@ -228,7 +228,8 @@
 
 			request.AddHeaders(conflictedMetadata);
 
-			request.Headers[SyncingMultipartConstants.SourceServerId] = Guid.Empty.ToString();
+			request.Headers[SyncingMultipartConstants.SourceServerInfo] =
+				new ServerInfo {Id = Guid.Empty, Url = "http://localhost:12345"}.AsJson();
 
 			var response = request.GetResponseAsync().Result;
 
@@ -311,7 +312,7 @@
 			webRequest.ContentLength = 0;
 			webRequest.Method = "POST";
 
-			webRequest.Headers.Add(SyncingMultipartConstants.SourceServerId, Guid.Empty.ToString());
+			webRequest.Headers.Add(SyncingMultipartConstants.SourceServerInfo, new ServerInfo { Id = Guid.Empty, Url = "http://localhost:12345" }.AsJson());
 			webRequest.Headers.Add("ETag", "\"" + new Guid() + "\"");
 			webRequest.Headers.Add("MetadataKey", "MetadataValue");
 

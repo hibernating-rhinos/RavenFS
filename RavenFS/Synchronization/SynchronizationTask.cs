@@ -259,7 +259,7 @@ namespace RavenFS.Synchronization
 					if (reason == NoSyncReason.ContainedInDestinationHistory)
 					{
 						var etag = localMetadata.Value<Guid>("ETag");
-						destinationClient.Synchronization.IncrementLastETagAsync(storage.Id, etag);
+						destinationClient.Synchronization.IncrementLastETagAsync(storage.Id, ServerUrl, etag);
 						RemoveSyncingConfiguration(file, destinationClient.ServerUrl);
 					}
 					

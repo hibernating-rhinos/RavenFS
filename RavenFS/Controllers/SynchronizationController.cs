@@ -27,7 +27,7 @@
 	{
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
 
-		private static readonly ConcurrentDictionary<string, ReaderWriterLockSlim> synchronizationFinishLocks = new ConcurrentDictionary<string, ReaderWriterLockSlim>();
+		private static readonly ConcurrentDictionary<Guid, ReaderWriterLockSlim> synchronizationFinishLocks = new ConcurrentDictionary<Guid, ReaderWriterLockSlim>();
 
 		[AcceptVerbs("POST")]
 		public Task<DestinationSyncResult[]> ToDestinations(bool forceSyncingAll)
@@ -54,14 +54,13 @@
 			var fileName = Request.Headers.GetValues(SyncingMultipartConstants.FileName).FirstOrDefault();
 			var tempFileName = RavenFileNameHelper.DownloadingFileName(fileName);
 
-			var sourceServerId = new Guid(Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault());
-			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault();
+			var sourceServerInfo = Request.Headers.Value<ServerInfo>(SyncingMultipartConstants.SourceServerInfo);
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
 			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.ContentUpdate);
 
 			log.Debug("Starting to process multipart synchronization request of a file '{0}' with ETag {1} from {2}", fileName,
-						sourceFileETag, sourceServerId);
+						sourceFileETag, sourceServerInfo);
 
 			StorageStream localFile = null;
 			var isNewFile = false;
@@ -72,10 +71,10 @@
 				Storage.Batch(accessor =>
 				{
 					AssertFileIsNotBeingSynced(fileName, accessor);
-					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
+					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerInfo, accessor);
 				});
 
-				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
+				PublishSynchronizationNotification(fileName, sourceServerInfo, report.Type, SynchronizationAction.Start);
 				
 				Storage.Batch(accessor => StartupProceed(fileName, accessor));
 
@@ -85,7 +84,7 @@
 
 				if (localMetadata != null)
 				{
-					AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, sourceServerUrl, out isConflictResolved);
+					AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerInfo, out isConflictResolved);
 					localFile = StorageStream.Reading(Storage, fileName);
 				}
 				else
@@ -154,30 +153,30 @@
 			{
 				log.Debug(
 					"File '{0}' was synchronized successfully from {1}. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
-					fileName, sourceServerId, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
+					fileName, sourceServerInfo, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
 			}
 			else
 			{
 				log.WarnException(
-					string.Format("Error has occured during synchronization of a file '{0}' from {1}", fileName,
-								  sourceServerId), report.Exception);
+					string.Format("Error has occured during synchronization of a file '{0}' from {1}", fileName, sourceServerInfo),
+					report.Exception);
 			}
 
-			FinishSynchronization(fileName, report, sourceServerId, sourceFileETag);
+			FinishSynchronization(fileName, report, sourceServerInfo, sourceFileETag);
 
 			PublishFileNotification(fileName, isNewFile ? FileChangeAction.Add : FileChangeAction.Update);
-			PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
+			PublishSynchronizationNotification(fileName, sourceServerInfo, report.Type, SynchronizationAction.Finish);
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
 		}
 
-		private void FinishSynchronization(string fileName, SynchronizationReport report, Guid sourceServerId, Guid sourceFileETag)
+		private void FinishSynchronization(string fileName, SynchronizationReport report, ServerInfo sourceServer, Guid sourceFileETag)
 		{
 			try
 			{
 				// we want to execute those operation in a single batch but we also have to ensure that
 				// Raven/Synchronization/Sources/sourceServerId config is modified only by one finishing synchronization at the same time
-				synchronizationFinishLocks.GetOrAdd(sourceServerId.ToString(), new ReaderWriterLockSlim()).EnterWriteLock();
+				synchronizationFinishLocks.GetOrAdd(sourceServer.Id, new ReaderWriterLockSlim()).EnterWriteLock();
 
 				Storage.Batch(accessor =>
 				{
@@ -186,24 +185,24 @@
 
 					if (report.Exception == null)
 					{
-						SaveSynchronizationSourceInformation(sourceServerId, sourceFileETag, accessor);
+						SaveSynchronizationSourceInformation(sourceServer, sourceFileETag, accessor);
 					}
 				});
 			}
 			catch (Exception ex)
 			{
 				log.ErrorException(
-					string.Format("Failed to finish synchronization of a file '{0}' from {1}", fileName, sourceServerId), ex);
+					string.Format("Failed to finish synchronization of a file '{0}' from {1}", fileName, sourceServer), ex);
 			}
 			finally
 			{
-				synchronizationFinishLocks.GetOrAdd(sourceServerId.ToString(), new ReaderWriterLockSlim()).ExitWriteLock();
+				synchronizationFinishLocks.GetOrAdd(sourceServer.Id, new ReaderWriterLockSlim()).ExitWriteLock();
 			}
 		}
 
-		private void AssertConflictDetection(string fileName, NameValueCollection localMetadata, NameValueCollection sourceMetadata, Guid sourceServerId, string sourceServerUrl, out bool isConflictResolved)
+		private void AssertConflictDetection(string fileName, NameValueCollection localMetadata, NameValueCollection sourceMetadata, ServerInfo sourceServer, out bool isConflictResolved)
 		{
-			var conflict = ConflictDetector.Check(fileName, localMetadata, sourceMetadata, sourceServerUrl);
+			var conflict = ConflictDetector.Check(fileName, localMetadata, sourceMetadata, sourceServer.Url);
 			isConflictResolved = ConflictResolver.IsResolved(localMetadata, conflict);
 
 			if (conflict != null && !isConflictResolved)
@@ -217,8 +216,8 @@
 				                  	});
 
 				log.Debug(
-					"File '{0}' is in conflict with synchronized version from {1}. File marked as conflicted, conflict configuration item created",
-					fileName, sourceServerId);
+					"File '{0}' is in conflict with synchronized version from {1} ({2}). File marked as conflicted, conflict configuration item created",
+					fileName, sourceServer.Url, sourceServer.Id);
 
 				throw new SynchronizationException(string.Format("File {0} is conflicted", fileName));
 			}
@@ -236,11 +235,10 @@
 		[AcceptVerbs("POST")]
 		public HttpResponseMessage UpdateMetadata(string fileName)
 		{
-			var sourceServerId = new Guid(Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault());
-			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault();
+			var sourceServerInfo = Request.Headers.Value<ServerInfo>(SyncingMultipartConstants.SourceServerInfo);
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
-			log.Debug("Starting to update a metadata of file '{0}' with ETag {1} from {2} bacause of synchronization", fileName, sourceServerId, sourceFileETag);
+			log.Debug("Starting to update a metadata of file '{0}' with ETag {1} from {2} bacause of synchronization", fileName, sourceFileETag, sourceServerInfo);
 
 			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.MetadataUpdate);
 
@@ -249,10 +247,10 @@
 				Storage.Batch(accessor =>
 				{
 					AssertFileIsNotBeingSynced(fileName, accessor);
-					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
+					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerInfo, accessor);
 				});
 
-				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
+				PublishSynchronizationNotification(fileName, sourceServerInfo, report.Type, SynchronizationAction.Start);
 				
 				Storage.Batch(accessor => StartupProceed(fileName, accessor));
 
@@ -261,7 +259,7 @@
 
 				bool isConflictResolved;
 
-				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, sourceServerUrl, out isConflictResolved);
+				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerInfo, out isConflictResolved);
 
 				Historian.UpdateLastModified(sourceMetadata);
 
@@ -281,18 +279,18 @@
 				report.Exception = ex;
 
 				log.WarnException(
-					string.Format("Error was occured during metadata synchronization of file '{0}' from {1}", fileName, sourceServerId), ex);
+					string.Format("Error was occured during metadata synchronization of file '{0}' from {1}", fileName, sourceServerInfo), ex);
 			}
 			finally
 			{
-				FinishSynchronization(fileName, report, sourceServerId, sourceFileETag);
+				FinishSynchronization(fileName, report, sourceServerInfo, sourceFileETag);
 
-				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
+				PublishSynchronizationNotification(fileName, sourceServerInfo, report.Type, SynchronizationAction.Finish);
 			}
 
 			if (report.Exception == null)
 			{
-				log.Debug("Metadata of file '{0}' was synchronized successfully from {1}", fileName, sourceServerId);
+				log.Debug("Metadata of file '{0}' was synchronized successfully from {1}", fileName, sourceServerInfo);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -301,10 +299,10 @@
 		[AcceptVerbs("DELETE")]
 		public HttpResponseMessage Delete(string fileName)
 		{
-			var sourceServerId = new Guid(Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault());
+			var sourceServerInfo = Request.Headers.Value<ServerInfo>(SyncingMultipartConstants.SourceServerInfo);
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
-			log.Debug("Starting to delete a file '{0}' with ETag {1} from {2} bacause of synchronization", fileName, sourceServerId, sourceFileETag);
+			log.Debug("Starting to delete a file '{0}' with ETag {1} from {2} bacause of synchronization", fileName, sourceFileETag, sourceServerInfo);
 
 			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.Delete);
 
@@ -313,10 +311,10 @@
 				Storage.Batch(accessor =>
 				{
 					AssertFileIsNotBeingSynced(fileName, accessor);
-					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
+					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerInfo, accessor);
 				});
 
-				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
+				PublishSynchronizationNotification(fileName, sourceServerInfo, report.Type, SynchronizationAction.Start);
 				
 				Storage.Batch(accessor => StartupProceed(fileName, accessor));
 
@@ -336,18 +334,18 @@
 				report.Exception = ex;
 
 				log.WarnException(
-					string.Format("Error was occured during deletion synchronization of file '{0}' from {1}", fileName, sourceServerId), ex);
+					string.Format("Error was occured during deletion synchronization of file '{0}' from {1}", fileName, sourceServerInfo), ex);
 			}
 			finally
 			{
-				FinishSynchronization(fileName, report, sourceServerId, sourceFileETag);
+				FinishSynchronization(fileName, report, sourceServerInfo, sourceFileETag);
 
-				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
+				PublishSynchronizationNotification(fileName, sourceServerInfo, report.Type, SynchronizationAction.Finish);
 			}
 
 			if (report.Exception == null)
 			{
-				log.Debug("File '{0}' was deleted during synchronization from {1}", fileName, sourceServerId);
+				log.Debug("File '{0}' was deleted during synchronization from {1}", fileName, sourceServerInfo);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -356,12 +354,12 @@
 		[AcceptVerbs("PATCH")]
 		public HttpResponseMessage Rename(string fileName, string rename)
 		{
-			var sourceServerId = new Guid(Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault());
-			var sourceServerUrl = Request.Headers.GetValues(SyncingMultipartConstants.SourceServerId).FirstOrDefault();
+			var sourceServerInfo = Request.Headers.Value<ServerInfo>(SyncingMultipartConstants.SourceServerInfo);
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 			var sourceMetadata = Request.Headers.FilterHeaders();
 
-			log.Debug("Starting to rename a file '{0}' to '{1}' with ETag {2} from {3} because of synchronization", fileName, rename, sourceServerId, sourceFileETag);
+			log.Debug("Starting to rename a file '{0}' to '{1}' with ETag {2} from {3} because of synchronization", fileName,
+			          rename, sourceFileETag, sourceServerInfo);
 
 			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.Rename);
 
@@ -370,10 +368,10 @@
 				Storage.Batch(accessor =>
 				{
 					AssertFileIsNotBeingSynced(fileName, accessor);
-					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerId, accessor);
+					FileLockManager.LockByCreatingSyncConfiguration(fileName, sourceServerInfo, accessor);
 				});
 
-				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Start);
+				PublishSynchronizationNotification(fileName, sourceServerInfo, report.Type, SynchronizationAction.Start);
 				
 				Storage.Batch(accessor => StartupProceed(fileName, accessor));
 
@@ -381,7 +379,7 @@
 
 				bool isConflictResolved;
 
-				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerId, sourceServerUrl, out isConflictResolved);
+				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerInfo, out isConflictResolved);
 
 				StorageOperationsTask.RenameFile(new RenameFileOperation()
 					                                 {
@@ -394,19 +392,19 @@
 			{
 				report.Exception = ex;
 				log.WarnException(
-					string.Format("Error was occured during renaming synchronization of file '{0}' from {1}", fileName, sourceServerId), ex);
+					string.Format("Error was occured during renaming synchronization of file '{0}' from {1}", fileName, sourceServerInfo), ex);
 			
 			}
 			finally
 			{
-				FinishSynchronization(fileName, report, sourceServerId, sourceFileETag);
+				FinishSynchronization(fileName, report, sourceServerInfo, sourceFileETag);
 
-				PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
+				PublishSynchronizationNotification(fileName, sourceServerInfo, report.Type, SynchronizationAction.Finish);
 			}
 
 			if (report.Exception == null)
 			{
-				log.Debug("File '{0}' was renamed to '{1}' during synchronization from {2}", fileName, rename, sourceServerId);
+				log.Debug("File '{0}' was renamed to '{1}' during synchronization from {2}", fileName, rename, sourceServerInfo);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -560,15 +558,18 @@
 		}
 
 		[AcceptVerbs("POST")]
-		public HttpResponseMessage IncrementLastETag(Guid sourceServerId, Guid sourceFileETag)
+		public HttpResponseMessage IncrementLastETag(Guid sourceServerId,string sourceServerUrl, Guid sourceFileETag)
 		{
 			try
 			{
 				// we want to execute those operation in a single batch but we also have to ensure that
 				// Raven/Synchronization/Sources/sourceServerId config is modified only by one finishing synchronization at the same time
-				synchronizationFinishLocks.GetOrAdd(sourceServerId.ToString(), new ReaderWriterLockSlim()).EnterWriteLock();
+				synchronizationFinishLocks.GetOrAdd(sourceServerId, new ReaderWriterLockSlim()).EnterWriteLock();
 
-				Storage.Batch(accessor => SaveSynchronizationSourceInformation(sourceServerId, sourceFileETag, accessor));
+				Storage.Batch(
+					accessor =>
+					SaveSynchronizationSourceInformation(new ServerInfo {Id = sourceServerId, Url = sourceServerUrl}, sourceFileETag,
+					                                     accessor));
 			}
 			catch (Exception ex)
 			{
@@ -577,7 +578,7 @@
 			}
 			finally
 			{
-				synchronizationFinishLocks.GetOrAdd(sourceServerId.ToString(), new ReaderWriterLockSlim()).ExitWriteLock();
+				synchronizationFinishLocks.GetOrAdd(sourceServerId, new ReaderWriterLockSlim()).ExitWriteLock();
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK);
@@ -592,12 +593,13 @@
 	                              });
 	    }
 
-	    private void PublishSynchronizationNotification(string fileName, Guid sourceServerId, SynchronizationType type, SynchronizationAction action)
+	    private void PublishSynchronizationNotification(string fileName, ServerInfo sourceServer, SynchronizationType type, SynchronizationAction action)
 		{
 			Publisher.Publish(new SynchronizationUpdate
 			{
 				FileName = fileName,
-				SourceServerId = sourceServerId,
+				SourceServerUrl = sourceServer.Url,
+				SourceServerId = sourceServer.Id,
 				Type = type,
 				Action = action,
 				SynchronizationDirection = SynchronizationDirection.Incoming
@@ -725,9 +727,9 @@
 							};
 		}
 
-		private void SaveSynchronizationSourceInformation(Guid sourceServerId, Guid lastSourceEtag, StorageActionsAccessor accessor)
+		private void SaveSynchronizationSourceInformation(ServerInfo sourceServer, Guid lastSourceEtag, StorageActionsAccessor accessor)
 		{
-			var lastSynchronizationInformation = GetLastSynchronization(sourceServerId, accessor);
+			var lastSynchronizationInformation = GetLastSynchronization(sourceServer.Id, accessor);
 			if (Buffers.Compare(lastSynchronizationInformation.LastSourceFileEtag.ToByteArray(), lastSourceEtag.ToByteArray()) > 0)
 			{
 				return;
@@ -736,13 +738,14 @@
 			var synchronizationSourceInfo = new SourceSynchronizationInformation
 			{
 				LastSourceFileEtag = lastSourceEtag,
+				SourceServerUrl = sourceServer.Url,
 				DestinationServerInstanceId = Storage.Id
 			};
 
-			var key = SynchronizationConstants.RavenSynchronizationSourcesBasePath + "/" + sourceServerId;
+			var key = SynchronizationConstants.RavenSynchronizationSourcesBasePath + "/" + sourceServer.Id;
 
 			accessor.SetConfigurationValue(key, synchronizationSourceInfo);
-			log.Debug("Saved last synchronized file ETag {0} from {1}", lastSourceEtag, sourceServerId);
+			log.Debug("Saved last synchronized file ETag {0} from {1} ({2})", lastSourceEtag, sourceServer.Url, sourceServer.Id);
 		}
 	}
 }

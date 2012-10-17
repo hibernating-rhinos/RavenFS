@@ -32,11 +32,11 @@ namespace RavenFS.Synchronization
 		{
 			AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
 
-			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata, SourceServerUrl);
+			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata, ServerInfo.Url);
 
 			if (conflict != null)
 			{
-				return await ApplyConflictOnDestinationAsync(conflict, destination, SourceServerUrl, log);
+				return await ApplyConflictOnDestinationAsync(conflict, destination, ServerInfo.Url, log);
 			}
 
 			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/updatemetadata/" + FileName);
@@ -45,8 +45,7 @@ namespace RavenFS.Synchronization
 			request.ContentLength = 0;
 			request.AddHeaders(FileMetadata);
 
-			request.Headers[SyncingMultipartConstants.SourceServerId] = SourceServerId.ToString();
-			request.Headers[SyncingMultipartConstants.SourceServerUrl] = SourceServerUrl;
+			request.Headers[SyncingMultipartConstants.SourceServerInfo] = ServerInfo.AsJson();
 
 			try
 			{
