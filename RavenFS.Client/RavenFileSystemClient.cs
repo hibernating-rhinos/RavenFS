@@ -845,10 +845,10 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
 			}
 
-			public Task IncrementLastETagAsync(Guid sourceServerId, Guid sourceFileETag)
+			public Task IncrementLastETagAsync(Guid sourceServerId, string sourceServerUrl, Guid sourceFileETag)
 			{
-				var requestUriString = String.Format("{0}/synchronization/IncrementLastETag?sourceServerId={1}&sourceFileETag={2}",
-				                                     ravenFileSystemClient.ServerUrl, sourceServerId, sourceFileETag);
+				var requestUriString = String.Format("{0}/synchronization/IncrementLastETag?sourceServerId={1}&sourceServerUrl={2}&sourceFileETag={3}",
+				                                     ravenFileSystemClient.ServerUrl, sourceServerId, sourceServerUrl, sourceFileETag);
 				var request = (HttpWebRequest) WebRequest.Create(requestUriString.NoCache());
 				request.ContentLength = 0;
 				request.Method = "POST";

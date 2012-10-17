@@ -32,8 +32,7 @@ namespace RavenFS.Synchronization
 			request.ContentLength = 0;
 			request.AddHeaders(fileAndPages.Metadata);
 
-			request.Headers[SyncingMultipartConstants.SourceServerId] = SourceServerId.ToString();
-			request.Headers[SyncingMultipartConstants.SourceServerUrl] = SourceServerUrl;
+			request.Headers[SyncingMultipartConstants.SourceServerInfo] = ServerInfo.AsJson();
 
 			try
 			{

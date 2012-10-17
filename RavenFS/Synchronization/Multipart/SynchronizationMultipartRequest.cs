@@ -17,24 +17,22 @@ namespace RavenFS.Synchronization.Multipart
 	public class SynchronizationMultipartRequest
 	{
 		private readonly string destinationUrl;
-		private readonly Guid sourceId;
+		private readonly ServerInfo serverInfo;
 		private readonly string fileName;
 		private readonly NameValueCollection sourceMetadata;
 		private readonly Stream sourceStream;
 		private readonly IList<RdcNeed> needList;
 		private readonly string syncingBoundary;
 		private HttpWebRequest request;
-		private readonly string sourceServerUrl;
 
-		public SynchronizationMultipartRequest(string destinationUrl, string sourceServerUrl, Guid sourceId, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList)
+		public SynchronizationMultipartRequest(string destinationUrl, ServerInfo serverInfo, string fileName, NameValueCollection sourceMetadata, Stream sourceStream, IList<RdcNeed> needList)
 		{
 			this.destinationUrl = destinationUrl;
-			this.sourceId = sourceId;
+			this.serverInfo = serverInfo;
 			this.fileName = fileName;
 			this.sourceMetadata = sourceMetadata;
 			this.sourceStream = sourceStream;
 			this.needList = needList;
-			this.sourceServerUrl = sourceServerUrl;
 			this.syncingBoundary = "syncing";
 		}
 
@@ -60,8 +58,7 @@ namespace RavenFS.Synchronization.Multipart
 			request.ContentType = "multipart/form-data; boundary=" + syncingBoundary;
 
 			request.Headers[SyncingMultipartConstants.FileName] = fileName;
-			request.Headers[SyncingMultipartConstants.SourceServerId] = sourceId.ToString();
-			request.Headers[SyncingMultipartConstants.SourceServerUrl] = sourceServerUrl;
+			request.Headers[SyncingMultipartConstants.SourceServerInfo] = serverInfo.AsJson();
 
 			try
 			{

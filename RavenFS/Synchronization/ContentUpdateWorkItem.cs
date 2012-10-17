@@ -62,11 +62,11 @@
                 throw new SynchronizationException("Incompatible RDC version detected on destination server");
             }
             
-			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata, SourceServerUrl);
+			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata, ServerInfo.Url);
 
 			if (conflict != null)
 			{
-				return await ApplyConflictOnDestinationAsync(conflict, destination, SourceServerUrl, log);
+				return await ApplyConflictOnDestinationAsync(conflict, destination, ServerInfo.Url, log);
 			}
 			
 			using (var localSignatureRepository = new StorageSignatureRepository(Storage, FileName))
@@ -154,7 +154,7 @@
 		{
 			cts.Token.ThrowIfCancellationRequested();
 
-			multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerUrl, SourceServerId, FileName, FileMetadata,
+			multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, ServerInfo, FileName, FileMetadata,
 																	   sourceFileStream, needList);
 
 			var bytesToTransferCount = needList.Where(x => x.BlockType == RdcNeedType.Source).Sum(x => (double) x.BlockLength);
