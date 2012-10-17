@@ -69,7 +69,7 @@
 			new Random().NextBytes(buffer);
 
 			var content = new MemoryStream(buffer);
-			var changedContent = new RandomlyModifiedStream(content, 0.01);
+			var changedContent = new RandomlyModifiedStream(content, 0.02);
 
 			var server1 = NewClient(0);
 			var server2 = NewClient(1);
