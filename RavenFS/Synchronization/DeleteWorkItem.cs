@@ -1,5 +1,6 @@
 namespace RavenFS.Synchronization
 {
+	using System;
 	using System.IO;
 	using System.Net;
 	using System.Threading.Tasks;
@@ -26,7 +27,7 @@ namespace RavenFS.Synchronization
 			FileAndPages fileAndPages = null;
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));
 
-			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/delete/" + FileName);
+			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/delete?fileName=" + Uri.EscapeDataString(FileName));
 
 			request.Method = "DELETE";
 			request.ContentLength = 0;

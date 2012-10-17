@@ -1,5 +1,6 @@
 namespace RavenFS.Synchronization
 {
+	using System;
 	using System.IO;
 	using System.Net;
 	using System.Threading.Tasks;
@@ -29,7 +30,7 @@ namespace RavenFS.Synchronization
 			FileAndPages fileAndPages = null;
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));
 
-			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/rename/" + FileName + "?rename=" + rename);
+			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/rename?filename=" + Uri.EscapeDataString(FileName) + "&rename=" + Uri.EscapeDataString(rename));
 
 			request.Method = "PATCH";
 			request.ContentLength = 0;

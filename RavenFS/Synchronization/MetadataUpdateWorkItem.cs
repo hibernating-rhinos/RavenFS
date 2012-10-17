@@ -1,5 +1,6 @@
 namespace RavenFS.Synchronization
 {
+	using System;
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Net;
@@ -39,7 +40,7 @@ namespace RavenFS.Synchronization
 				return await ApplyConflictOnDestinationAsync(conflict, destination, ServerInfo.Url, log);
 			}
 
-			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/updatemetadata/" + FileName);
+			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/updatemetadata?fileName=" + Uri.EscapeDataString(FileName));
 
 			request.Method = "POST";
 			request.ContentLength = 0;
