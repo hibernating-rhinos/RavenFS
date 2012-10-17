@@ -40,7 +40,7 @@
 			destinationContent.Position = 0;
 			destination.UploadAsync("test", destinationContent).Wait();
 
-			var contentUpdate = new ContentUpdateWorkItem("test", sourceRfs.Storage, sourceRfs.SigGenerator);
+			var contentUpdate = new ContentUpdateWorkItem("test", "http://localhost:12345", sourceRfs.Storage, sourceRfs.SigGenerator);
 
 			// force to upload entire file, we just want to check which pages will be reused
 			contentUpdate.UploadToAsync(destination.ServerUrl).Wait();
@@ -79,7 +79,7 @@
 			destinationContent.Position = 0;
 			destination.UploadAsync("test", destinationContent).Wait();
 
-			var contentUpdate = new ContentUpdateWorkItem("test", sourceRfs.Storage, sourceRfs.SigGenerator);
+			var contentUpdate = new ContentUpdateWorkItem("test", "http://localhost:12345", sourceRfs.Storage, sourceRfs.SigGenerator);
 
 			
 			sourceContent.Position = 0;
@@ -117,7 +117,7 @@
 			destinationContent.Position = 0;
 			destination.UploadAsync("test", destinationContent).Wait();
 
-			var contentUpdate = new ContentUpdateWorkItem("test", sourceRfs.Storage, sourceRfs.SigGenerator);
+			var contentUpdate = new ContentUpdateWorkItem("test", "http://localhost:12345", sourceRfs.Storage, sourceRfs.SigGenerator);
 
 
 			sourceContent.Position = 0;

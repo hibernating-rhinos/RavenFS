@@ -11,7 +11,8 @@ namespace RavenFS.Synchronization
 
 	public class DeleteWorkItem : SynchronizationWorkItem
 	{
-		public DeleteWorkItem(string fileName, TransactionalStorage storage) : base(fileName, storage)
+		public DeleteWorkItem(string fileName, string sourceServerUrl, TransactionalStorage storage)
+			: base(fileName, sourceServerUrl, storage)
 		{
 		}
 
@@ -20,7 +21,7 @@ namespace RavenFS.Synchronization
 			get { return SynchronizationType.Delete; }
 		}
 
-		public async override Task<SynchronizationReport> PerformAsync(string destination, string source)
+		public async override Task<SynchronizationReport> PerformAsync(string destination)
 		{
 			FileAndPages fileAndPages = null;
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));
@@ -32,7 +33,7 @@ namespace RavenFS.Synchronization
 			request.AddHeaders(fileAndPages.Metadata);
 
 			request.Headers[SyncingMultipartConstants.SourceServerId] = SourceServerId.ToString();
-			request.Headers[SyncingMultipartConstants.SourceServerUrl] = source;
+			request.Headers[SyncingMultipartConstants.SourceServerUrl] = SourceServerUrl;
 
 			try
 			{

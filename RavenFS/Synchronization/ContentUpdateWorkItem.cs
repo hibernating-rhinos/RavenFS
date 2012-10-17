@@ -20,10 +20,9 @@
 		private readonly SigGenerator sigGenerator;
 		private DataInfo fileDataInfo;
 		private SynchronizationMultipartRequest multipartRequest;
-		private string localServerUrl;
 
-		public ContentUpdateWorkItem(string file, TransactionalStorage storage, SigGenerator sigGenerator)
-			: base(file, storage)
+		public ContentUpdateWorkItem(string file, string sourceServerUrl, TransactionalStorage storage, SigGenerator sigGenerator)
+			: base(file, sourceServerUrl, storage)
 		{
 			this.sigGenerator = sigGenerator;
 		}
@@ -43,11 +42,9 @@
 			cts.Cancel();
 		}
 
-		public async override Task<SynchronizationReport> PerformAsync(string destination, string source)
+		public async override Task<SynchronizationReport> PerformAsync(string destination)
 		{
 			AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
-
-			localServerUrl = source;
 
 			var destinationRavenFileSystemClient = new RavenFileSystemClient(destination);
 
@@ -65,11 +62,11 @@
                 throw new SynchronizationException("Incompatible RDC version detected on destination server");
             }
             
-			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata, source);
+			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata, SourceServerUrl);
 
 			if (conflict != null)
 			{
-				return await ApplyConflictOnDestinationAsync(conflict, destination, source, log);
+				return await ApplyConflictOnDestinationAsync(conflict, destination, SourceServerUrl, log);
 			}
 			
 			using (var localSignatureRepository = new StorageSignatureRepository(Storage, FileName))
@@ -157,7 +154,7 @@
 		{
 			cts.Token.ThrowIfCancellationRequested();
 
-			multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, localServerUrl, SourceServerId, FileName, FileMetadata,
+			multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, SourceServerUrl, SourceServerId, FileName, FileMetadata,
 																	   sourceFileStream, needList);
 
 			var bytesToTransferCount = needList.Where(x => x.BlockType == RdcNeedType.Source).Sum(x => (double) x.BlockLength);

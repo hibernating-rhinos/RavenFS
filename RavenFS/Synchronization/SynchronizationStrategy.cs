@@ -60,7 +60,7 @@
 					x.Metadata[SynchronizationConstants.RavenRenameFile] == name);
 		}
 
-		public SynchronizationWorkItem DetermineWork(string file, NameValueCollection localMetadata, NameValueCollection destinationMetadata, out NoSyncReason reason)
+		public SynchronizationWorkItem DetermineWork(string file, NameValueCollection localMetadata, NameValueCollection destinationMetadata, string localServerUrl, out NoSyncReason reason)
 		{
 			reason = NoSyncReason.Unknown;
 
@@ -92,14 +92,14 @@
 				{
 					if(destinationMetadata != null)
 					{
-						return new RenameWorkItem(file, rename, storage);
+						return new RenameWorkItem(file, rename, localServerUrl, storage);
 					}
 					else
 					{
-						return new ContentUpdateWorkItem(rename, storage, sigGenerator); // we have a rename tombstone but file does not exists on destination
+						return new ContentUpdateWorkItem(rename, localServerUrl, storage, sigGenerator); // we have a rename tombstone but file does not exists on destination
 					}
 				}
-				return new DeleteWorkItem(file, storage);
+				return new DeleteWorkItem(file, localServerUrl, storage);
 			}
 
 			if (destinationMetadata != null && Historian.IsDirectChildOfCurrent(localMetadata, destinationMetadata))
@@ -113,14 +113,14 @@
 				// check metadata to detect if any synchronization is needed
 				if (localMetadata.AllKeys.Except(new[] { "ETag", "Last-Modified" }).Any(key => !destinationMetadata.AllKeys.Contains(key) || localMetadata[key] != destinationMetadata[key]))
 				{
-					return new MetadataUpdateWorkItem(file, destinationMetadata, storage);
+					return new MetadataUpdateWorkItem(file, localServerUrl, destinationMetadata, storage);
 				}
 
 				reason = NoSyncReason.SameContentAndMetadata;
 
 				return null; // the same content and metadata - no need to synchronize
 			}
-			return new ContentUpdateWorkItem(file, storage, sigGenerator);
+			return new ContentUpdateWorkItem(file, localServerUrl, storage, sigGenerator);
 		}
 	}
 }

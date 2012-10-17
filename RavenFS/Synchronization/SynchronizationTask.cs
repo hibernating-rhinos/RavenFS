@@ -106,7 +106,7 @@ namespace RavenFS.Synchronization
 			var localMetadata = GetLocalMetadata(fileName);
 
 			NoSyncReason reason;
-			var work = synchronizationStrategy.DetermineWork(fileName, localMetadata, destinationMetadata, out reason);
+			var work = synchronizationStrategy.DetermineWork(fileName, localMetadata, destinationMetadata, ServerUrl, out reason);
 
 			if (work == null)
 			{
@@ -253,7 +253,7 @@ namespace RavenFS.Synchronization
 				}
 
 				NoSyncReason reason;
-				var work = synchronizationStrategy.DetermineWork(file, localMetadata, destinationMetadata, out reason);
+				var work = synchronizationStrategy.DetermineWork(file, localMetadata, destinationMetadata, ServerUrl, out reason);
 
 				if (work == null)
 				{
@@ -339,7 +339,7 @@ namespace RavenFS.Synchronization
 			
 			try
 			{
-				report = await work.PerformAsync(destinationUrl, ServerUrl);
+				report = await work.PerformAsync(destinationUrl);
 			}
 			catch (Exception ex)
 			{

@@ -29,7 +29,7 @@ namespace RavenFS.Tests.Synchronization
 			transactionalStorage.Batch(accessor => accessor.PutFile(FileName, 0, EmptyETagMetadata));
 
 			queue.EnqueueSynchronization(Destination,
-			                             new MetadataUpdateWorkItem(FileName, new NameValueCollection(), transactionalStorage));
+			                             new MetadataUpdateWorkItem(FileName, "http://localhost:12345", new NameValueCollection(), transactionalStorage));
 
 			SynchronizationWorkItem work;
 
@@ -38,7 +38,7 @@ namespace RavenFS.Tests.Synchronization
 
 			// attempt to enqueue the same work
 			queue.EnqueueSynchronization(Destination,
-										 new MetadataUpdateWorkItem(FileName, new NameValueCollection(), transactionalStorage));
+										 new MetadataUpdateWorkItem(FileName, "http://localhost:12345", new NameValueCollection(), transactionalStorage));
 
 			Assert.Equal(1, queue.Active.Count());
 			Assert.Equal(0, queue.Pending.Count());
@@ -50,7 +50,7 @@ namespace RavenFS.Tests.Synchronization
 			transactionalStorage.Batch(accessor => accessor.PutFile(FileName, 0, EmptyETagMetadata));
 
 			queue.EnqueueSynchronization(Destination,
-										 new MetadataUpdateWorkItem(FileName, new NameValueCollection(), transactionalStorage));
+										 new MetadataUpdateWorkItem(FileName, "http://localhost:12345", new NameValueCollection(), transactionalStorage));
 
 			SynchronizationWorkItem work;
 
@@ -62,7 +62,7 @@ namespace RavenFS.Tests.Synchronization
 				                                                                               		{"ETag", "\"" + Guid.NewGuid() + "\""}
 				                                                                               	}));
 
-			var metadataUpdateWorkItem = new MetadataUpdateWorkItem(FileName, new NameValueCollection(), transactionalStorage);
+			var metadataUpdateWorkItem = new MetadataUpdateWorkItem(FileName, "http://localhost:12345", new NameValueCollection(), transactionalStorage);
 
 			metadataUpdateWorkItem.RefreshMetadata();
 
@@ -80,7 +80,7 @@ namespace RavenFS.Tests.Synchronization
 				transactionalStorage.Batch(accessor => accessor.PutFile(FileName, 0, EmptyETagMetadata));
 
 				queue.EnqueueSynchronization(Destination,
-											 new ContentUpdateWorkItem(FileName, transactionalStorage, sigGenerator));
+											 new ContentUpdateWorkItem(FileName, "http://localhost:12345", transactionalStorage, sigGenerator));
 
 				Assert.Equal(1, queue.Pending.Count());
 
@@ -92,7 +92,7 @@ namespace RavenFS.Tests.Synchronization
 				                                                                               	}));
 
 				queue.EnqueueSynchronization(Destination,
-											 new ContentUpdateWorkItem(FileName, transactionalStorage, new SigGenerator()));
+											 new ContentUpdateWorkItem(FileName, "http://localhost:12345", transactionalStorage, new SigGenerator()));
 
 				Assert.Equal(1, queue.Pending.Count());
 				Assert.Equal(greaterGuid, queue.Pending.ToArray()[0].FileETag);
@@ -106,13 +106,13 @@ namespace RavenFS.Tests.Synchronization
 			{
 				transactionalStorage.Batch(accessor => accessor.PutFile(FileName, 0, EmptyETagMetadata));
 
-				var contentUpdateWorkItem = new ContentUpdateWorkItem(FileName, transactionalStorage, sigGenerator);
+				var contentUpdateWorkItem = new ContentUpdateWorkItem(FileName, "http://localhost:12345", transactionalStorage, sigGenerator);
 				
 				queue.EnqueueSynchronization(Destination, contentUpdateWorkItem);
 				queue.SynchronizationStarted(contentUpdateWorkItem, Destination);
 
 				Assert.True(queue.IsDifferentWorkForTheSameFileBeingPerformed(
-					new RenameWorkItem(FileName, "rename.txt", transactionalStorage), Destination));
+					new RenameWorkItem(FileName, "rename.txt", "http://localhost:12345", transactionalStorage), Destination));
 			}
 		}
 
@@ -122,12 +122,12 @@ namespace RavenFS.Tests.Synchronization
 			transactionalStorage.Batch(accessor => accessor.PutFile(FileName, 0, EmptyETagMetadata));
 
 			queue.EnqueueSynchronization(Destination,
-										 new MetadataUpdateWorkItem(FileName, new NameValueCollection(), transactionalStorage));
-			queue.EnqueueSynchronization(Destination, new RenameWorkItem(FileName, "rename.txt", transactionalStorage));
+										 new MetadataUpdateWorkItem(FileName, "http://localhost:12345", new NameValueCollection(), transactionalStorage));
+			queue.EnqueueSynchronization(Destination, new RenameWorkItem(FileName, "rename.txt", "http://localhost:12345", transactionalStorage));
 
 			Assert.Equal(2, queue.Pending.Count());
 
-			queue.EnqueueSynchronization(Destination, new DeleteWorkItem(FileName, transactionalStorage));
+			queue.EnqueueSynchronization(Destination, new DeleteWorkItem(FileName, "http://localhost:12345", transactionalStorage));
 
 			Assert.Equal(1, queue.Pending.Count());
 			Assert.Equal(SynchronizationType.Delete, queue.Pending.ToArray()[0].Type);

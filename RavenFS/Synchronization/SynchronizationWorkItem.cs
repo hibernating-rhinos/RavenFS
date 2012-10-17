@@ -18,7 +18,7 @@
 		private readonly ConflictResolver conflictResolver;
 		protected readonly CancellationTokenSource cts = new CancellationTokenSource();
 
-		protected SynchronizationWorkItem(string fileName, TransactionalStorage storage)
+		protected SynchronizationWorkItem(string fileName, string sourceServerUrl, TransactionalStorage storage)
 		{
 			Storage = storage;
 			FileName = fileName;
@@ -26,6 +26,7 @@
 			FileAndPages fileAndPages = null;
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(fileName, 0,0));
 			FileMetadata = fileAndPages.Metadata;
+			SourceServerUrl = sourceServerUrl;
 
 			conflictDetector = new ConflictDetector();
 			conflictResolver = new ConflictResolver();
@@ -43,9 +44,11 @@
 
 		protected Guid SourceServerId { get { return Storage.Id; } }
 
+		protected string SourceServerUrl { get; private set; }
+
 		public abstract SynchronizationType SynchronizationType { get; }
 
-		public abstract Task<SynchronizationReport> PerformAsync(string destination, string sourceUrl);
+		public abstract Task<SynchronizationReport> PerformAsync(string destination);
 
 		public virtual void Cancel()
 		{
