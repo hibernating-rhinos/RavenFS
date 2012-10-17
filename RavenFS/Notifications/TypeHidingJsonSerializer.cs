@@ -8,7 +8,9 @@ using Newtonsoft.Json;
 
 namespace RavenFS.Notifications
 {
-    public class TypeHidingJsonSerializer 
+	using Client;
+
+	public class TypeHidingJsonSerializer 
     {
         private static JsonSerializerSettings settings;
 

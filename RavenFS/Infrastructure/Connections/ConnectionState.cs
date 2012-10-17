@@ -3,11 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using RavenFS.Notifications;
 using RavenFS.Util;
 
 namespace RavenFS.Infrastructure.Connections
 {
+	using Client;
+
 	public class ConnectionState
 	{
 		private readonly ConcurrentQueue<Notification> pendingMessages = new ConcurrentQueue<Notification>();

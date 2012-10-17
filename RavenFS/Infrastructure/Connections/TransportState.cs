@@ -6,10 +6,11 @@
 
 using System;
 using System.Collections.Concurrent;
-using RavenFS.Notifications;
 
 namespace RavenFS.Infrastructure.Connections
 {
+	using Client;
+
 	public class TransportState
 	{
 		readonly TimeSensitiveStore<string> timeSensitiveStore = new TimeSensitiveStore<string>(TimeSpan.FromSeconds(45));

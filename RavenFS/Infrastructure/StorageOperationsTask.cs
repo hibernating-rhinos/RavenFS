@@ -6,6 +6,7 @@
 	using System.Collections.Specialized;
 	using System.Reactive.Linq;
 	using System.Threading.Tasks;
+	using Client;
 	using Extensions;
 	using Microsoft.Isam.Esent.Interop;
 	using NLog;

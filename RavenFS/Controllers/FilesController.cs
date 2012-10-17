@@ -19,9 +19,6 @@ namespace RavenFS.Controllers
 	using Client;
 	using NLog;
 	using Synchronization;
-	using FileChange = Notifications.FileChange;
-	using FileChangeAction = Notifications.FileChangeAction;
-	using UploadFailed = Notifications.UploadFailed;
 
 	public class FilesController : RavenController
 	{

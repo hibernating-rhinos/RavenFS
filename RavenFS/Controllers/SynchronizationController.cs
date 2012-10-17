@@ -22,10 +22,6 @@
 	using Synchronization;
 	using Synchronization.Conflictuality;
 	using Synchronization.Multipart;
-	using ConflictDetected = Notifications.ConflictDetected;
-	using SynchronizationAction = Notifications.SynchronizationAction;
-	using SynchronizationDirection = Notifications.SynchronizationDirection;
-	using SynchronizationUpdate = Notifications.SynchronizationUpdate;
 
 	public class SynchronizationController : RavenController
 	{
@@ -169,7 +165,7 @@
 
 			FinishSynchronization(fileName, report, sourceServerId, sourceFileETag);
 
-			PublishFileNotification(fileName, isNewFile ? Notifications.FileChangeAction.Add : Notifications.FileChangeAction.Update);
+			PublishFileNotification(fileName, isNewFile ? FileChangeAction.Add : FileChangeAction.Update);
 			PublishSynchronizationNotification(fileName, sourceServerId, report.Type, SynchronizationAction.Finish);
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -278,7 +274,7 @@
 					ConflictArtifactManager.Delete(fileName);
 				}
 
-                PublishFileNotification(fileName, Notifications.FileChangeAction.Update);
+                PublishFileNotification(fileName, FileChangeAction.Update);
 			}
 			catch (Exception ex)
 			{
@@ -333,7 +329,7 @@
 					accessor.PutFile(fileName, 0, tombstoneMetadata, true);
 				});
 
-                PublishFileNotification(fileName, Notifications.FileChangeAction.Delete);
+                PublishFileNotification(fileName, FileChangeAction.Delete);
 			}
 			catch (Exception ex)
 			{
@@ -587,9 +583,9 @@
 			return Request.CreateResponse(HttpStatusCode.OK);
 		}
 
-	    private void PublishFileNotification(string fileName, Notifications.FileChangeAction action)
+	    private void PublishFileNotification(string fileName, FileChangeAction action)
 	    {
-	        Publisher.Publish(new Notifications.FileChange()
+	        Publisher.Publish(new FileChange()
 	                              {
 	                                  File = fileName,
 	                                  Action = action

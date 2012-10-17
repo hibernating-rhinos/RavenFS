@@ -16,9 +16,6 @@ namespace RavenFS.Synchronization
 	using RavenFS.Storage;
 	using RavenFS.Util;
 	using Rdc.Wrapper;
-	using SynchronizationAction = Notifications.SynchronizationAction;
-	using SynchronizationDirection = Notifications.SynchronizationDirection;
-	using SynchronizationUpdate = Notifications.SynchronizationUpdate;
 
 	public class SynchronizationTask
 	{

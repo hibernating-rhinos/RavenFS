@@ -166,7 +166,6 @@
     <Compile Include="Controllers\StorageController.cs" />
     <Compile Include="Infrastructure\NoBufferPolicySelector.cs" />
     <Compile Include="Notifications\INotificationPublisher.cs" />
-    <Compile Include="Notifications\UploadFailed.cs" />
     <Compile Include="Storage\DeleteFileOperation.cs" />
     <Compile Include="Storage\RenameFileOperation.cs" />
     <Compile Include="Storage\SignatureReadOnlyStream.cs" />
@@ -187,10 +186,7 @@
     <Compile Include="Infrastructure\Connections\TransportState.cs" />
     <Compile Include="Infrastructure\Historian.cs" />
     <Compile Include="Infrastructure\TempDirectoryTools.cs" />
-    <Compile Include="Notifications\ConfigChange.cs" />
-    <Compile Include="Notifications\ConflictDetected.cs" />
     <Compile Include="Notifications\Heartbeat.cs" />
-    <Compile Include="Notifications\Notification.cs" />
     <Compile Include="Controllers\RavenController.cs" />
     <Compile Include="Controllers\RdcController.cs" />
     <Compile Include="Controllers\SearchController.cs" />
@@ -212,7 +208,6 @@
     <Compile Include="Extensions\TaskExtensions.cs" />
     <Compile Include="NonAdminHttp.cs" />
     <Compile Include="Notifications\NotificationPublisher.cs" />
-    <Compile Include="Notifications\SynchronizationUpdate.cs" />
     <Compile Include="Notifications\TypeHidingJsonSerializer.cs" />
     <Compile Include="Infrastructure\DelegateDependencyResolver.cs" />
     <Compile Include="RavenFileSystem.cs" />
@@ -311,7 +306,6 @@
     <Compile Include="Search\LowerCaseKeywordAnalyzer.cs" />
     <Compile Include="Search\RavenQueryParser.cs" />
     <Compile Include="Storage\EsentExtension.cs" />
-    <Compile Include="Notifications\FileChange.cs" />
     <Compile Include="Storage\FileHeader.cs" />
     <Compile Include="Storage\FileAndPages.cs" />
     <Compile Include="Storage\PageInformation.cs" />

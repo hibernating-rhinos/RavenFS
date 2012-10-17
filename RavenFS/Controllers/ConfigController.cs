@@ -11,8 +11,6 @@ namespace RavenFS.Controllers
 	using Client;
 	using NLog;
 	using Util;
-	using ConfigChange = Notifications.ConfigChange;
-	using ConfigChangeAction = Notifications.ConfigChangeAction;
 	using NameValueCollectionJsonConverter = Util.NameValueCollectionJsonConverter;
 
 	public class ConfigController : RavenController

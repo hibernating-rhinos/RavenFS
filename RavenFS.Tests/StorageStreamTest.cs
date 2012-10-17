@@ -4,6 +4,7 @@ namespace RavenFS.Tests
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Linq;
+	using Client;
 	using Infrastructure;
 	using RavenFS.Notifications;
 	using RavenFS.Search;

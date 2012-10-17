@@ -20,7 +20,10 @@ using RavenFS.Util;
 
 namespace RavenFS.Infrastructure.Connections
 {
-    /// <summary>
+	using Client;
+	using Heartbeat = Notifications.Heartbeat;
+
+	/// <summary>
     /// Repsonsible for streaming events to an individual client
     /// </summary>
     /// <remarks>
