@@ -201,7 +201,6 @@ namespace RavenFS.Controllers
 				var headers = Request.Headers.FilterHeaders();
 				Historian.UpdateLastModified(headers);
 				Historian.Update(name, headers);
-				name = Uri.UnescapeDataString(name);
 
 				SynchronizationTask.Cancel(name);
 
