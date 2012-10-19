@@ -1,0 +1,17 @@
+*resharper.user
+[Dd]ebug/
+[Rr]elease/
+build/
+bin/
+obj/
+*.suo
+*.sln.cache
+_ReSharper.*/
+*.user
+[Dd]ata/
+_build/*
+*.log
+Markdown Viewer*
+html-compiled/
+site-compiled/
+html-images/
