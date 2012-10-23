@@ -37,7 +37,11 @@
     <None Include="http-api\index.markdown" />
     <None Include="index.markdown" />
     <None Include="intro\.docslist" />
+    <None Include="intro\files-in-ravenfs.markdown" />
     <None Include="intro\index.markdown" />
+    <None Include="intro\indexing.markdown" />
+    <None Include="intro\system-requirements.markdown" />
+    <None Include="intro\what-is-ravenfs.markdown" />
     <None Include="server\.docslist" />
     <None Include="server\index.markdown" />
     <None Include="studio\.docslist" />

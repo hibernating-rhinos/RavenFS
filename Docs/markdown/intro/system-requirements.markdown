@@ -2,7 +2,7 @@
 
 ## Client
 
-* Min: .NET Framework 4.0 Client Profile. 
+* Min: .NET Framework 4.0
 * Recommended: .NET Framework 4.0 Client Profile
 
 ## Silverlight client
