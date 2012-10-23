@@ -62,7 +62,7 @@
                 <Grid Grid.Column="0">
                     <Controls:WatermarkedTextBox Text="{Binding Query.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                                  HorizontalAlignment="Stretch"
-                                                 Watermark="E.g. __fileName:MyFile* AND __folder:/subfolder">
+                                                 Watermark="E.g. __fileName:MyFile* AND __directory:/subfolder">
                         <i:Interaction.Triggers>
                             <b:StudioKeyTrigger Key="Enter">
                                 <i:InvokeCommandAction Command="{Binding Search}"/>
