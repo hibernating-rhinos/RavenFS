@@ -20,7 +20,7 @@
         <Border Style="{StaticResource Style_Border_Header}">
             <toolkit:DockPanel Margin="4" LastChildFill="False">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Replication" Style="{StaticResource Style_TextBlock_Breadcrumb}"/>
+                    <TextBlock Text="Synchronization" Style="{StaticResource Style_TextBlock_Breadcrumb}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal"
                          VerticalAlignment="Center"
