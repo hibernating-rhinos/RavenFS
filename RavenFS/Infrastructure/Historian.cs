@@ -52,7 +52,7 @@ namespace RavenFS.Infrastructure
         public void UpdateLastModified(NameValueCollection nameValueCollection)
         {
 			// internally keep last modified date with milisecond precision
-            nameValueCollection["Last-Modified"] = DateTime.UtcNow.ToString("d MMM yyyy H:m:s.fffff 'GMT'", CultureInfo.InvariantCulture);
+            nameValueCollection["Last-Modified"] = DateTime.UtcNow.ToString("d MMM yyyy H:m:s.fffff 'UTC'", CultureInfo.InvariantCulture);
             nameValueCollection["ETag"] = "\"" + uuidGenerator.CreateSequentialUuid() + "\"";
         }
 
