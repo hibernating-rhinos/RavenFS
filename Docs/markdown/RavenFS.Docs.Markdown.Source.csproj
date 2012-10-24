@@ -40,6 +40,7 @@
     <None Include="http-api\index.markdown" />
     <None Include="index.markdown" />
     <None Include="intro\.docslist" />
+    <None Include="server\background-tasks.markdown" />
     <None Include="intro\files-in-ravenfs.markdown" />
     <None Include="intro\index.markdown" />
     <None Include="intro\indexing.markdown" />
@@ -50,7 +51,13 @@
     <None Include="studio\.docslist" />
     <None Include="studio\index.markdown" />
     <None Include="synchronization\.docslist" />
+    <None Include="synchronization\configurations.markdown" />
+    <None Include="synchronization\file-conflicts.markdown" />
     <None Include="synchronization\index.markdown" />
+    <None Include="synchronization\how-it-works.markdown" />
+    <None Include="synchronization\monitoring.markdown" />
+    <None Include="synchronization\synchronization-types\.docslist" />
+    <None Include="synchronization\synchronization-types\index.markdown" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
