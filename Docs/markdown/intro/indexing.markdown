@@ -30,7 +30,7 @@ The search supports sorting as well (ascending and descending), the possible opt
 * by size,
 * by date of modification.
 
-The easiest way to search for files from the code is to use Client API.
+The easiest way to search for files from the code is to use either Client API or HTTP API.
 
 Searching is also supported by The Studio, where you will find usefull predefined search filters:
 

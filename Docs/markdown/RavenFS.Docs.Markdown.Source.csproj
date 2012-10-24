@@ -32,7 +32,10 @@
   <ItemGroup>
     <None Include=".docslist" />
     <None Include="client-api\.docslist" />
+    <None Include="client-api\configuration-client.markdown" />
     <None Include="client-api\index.markdown" />
+    <None Include="client-api\notifications.markdown" />
+    <None Include="client-api\synchronization-client.markdown" />
     <None Include="http-api\.docslist" />
     <None Include="http-api\index.markdown" />
     <None Include="index.markdown" />

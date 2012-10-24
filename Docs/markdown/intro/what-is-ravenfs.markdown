@@ -2,7 +2,7 @@
 
 RavenFS is a distributed file system designated for large files handling. It offers a transactional data storage, supports a file indexing and an efficient synchronization accross WAN by minimizing the amount of transferred data.
 
-RavenFS is built on a client-server architecture. A server is a HTTP Web Server, responsible for storing and serving files as well as the synchronization of file updates to slibing servers. A client part communicates with the server by generating HTTP requests. There are two possible ways to perform an operation on the server - by using [Client API](../client-api) available to any .NET or Silverlight application, or by [directly accessing the server's RESTful API](../http-api).
+RavenFS is built on a client-server architecture. A server is a HTTP Web Server, responsible for storing and serving files as well as the synchronization of file updates to slibing servers. A client part communicates with the server by generating HTTP requests. There are two possible ways to perform an operation on the server - by using [Client API](../client-api) available to any .NET or Silverlight application, or by [directly accessing the server's RESTful API](../http-api). A server's response is always formatted as JSON.
 
 ## Basic concepts
 
@@ -28,7 +28,7 @@ RavenFS offers a great feature of a file synchronization between other RavenFS s
 * file deleted,
 * metadata changed.
 
-It is also run periodically to handle failures and restart scenarios. Each of the above operation is related with a different kind of synchronization work, in order to minimize the cost of transferred data across WAN. For example if you just modify a file content, only the file chunks that was changed will be sent across a network. In order to get more details about implemented synchronization solutions click here.
+It is also run periodically to handle failures and restart scenarios. Each of the above operation is related with a different kind of synchronization work, in order to minimize the cost of transferred data across WAN. For example if you just modify a file content, only the file chunks that was changed will be sent across a network. In order to get more details about implemented synchronization solutions [click here](../synchronization/how-it-works).
 
 ## Files management
 
