@@ -69,13 +69,25 @@ namespace RavenFS.Controllers
 			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
 			{
 				AssertFileIsNotBeingSynced(name, accessor, true);
+
+				var metadata = accessor.ReadFile(name).Metadata;
+
 				StorageOperationsTask.IndicateFileToDelete(name);
 
-				if(!name.EndsWith(RavenFileNameHelper.DownloadingFileSuffix)) // don't create a tombstone for .downloading file
+				if (!name.EndsWith(RavenFileNameHelper.DownloadingFileSuffix) && // don't create a tombstone for .downloading file
+					metadata != null) // and if file didn't exist
 				{
-					var tombstoneMetadata = new NameValueCollection().WithDeleteMarker();
+					var tombstoneMetadata = new NameValueCollection()
+						                        {
+							                        {SynchronizationConstants.RavenSynchronizationHistory, metadata[SynchronizationConstants.RavenSynchronizationHistory]},
+													{SynchronizationConstants.RavenSynchronizationVersion, metadata[SynchronizationConstants.RavenSynchronizationVersion]},
+													{SynchronizationConstants.RavenSynchronizationSource, metadata[SynchronizationConstants.RavenSynchronizationSource]}
+						                        }.WithDeleteMarker();
+
 					Historian.UpdateLastModified(tombstoneMetadata);
 					accessor.PutFile(name, 0, tombstoneMetadata, true);
+
+					accessor.DeleteConfig(RavenFileNameHelper.ConflictConfigNameForFile(name)); // delete conflict item too
 				}
 			}), ConcurrencyResponseException);
 

@@ -166,7 +166,7 @@
 			Assert.Null(secondServer2Synchronization[0].Exception);
 			Assert.Equal(SynchronizationType.Delete, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 
-			// On all servers should not be any file
+			// On all servers should not have any file
 			Assert.Equal(0, server1.BrowseAsync().Result.Count());
 
 			Assert.Equal(0, server2.BrowseAsync().Result.Count());

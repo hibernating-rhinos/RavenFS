@@ -418,5 +418,55 @@
 
 			Assert.Equal(new Uri(source.ServerUrl).Port, new Uri(remoteServerUrl).Port);
 		}
+
+		[Fact]
+		public void Should_create_a_conflict_when_attempt_to_synchronize_a_delete_while_documents_have_different_versions()
+		{
+			var server1 = NewClient(0);
+			var server2 = NewClient(1);
+
+			server1.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
+			server2.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
+
+			var shouldBeConflict = server1.Synchronization.StartSynchronizationToAsync("test", server2.ServerUrl).Result;
+
+			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
+
+			server2.DeleteAsync("test").Wait();
+
+			shouldBeConflict = server2.Synchronization.StartSynchronizationToAsync("test", server1.ServerUrl).Result;
+
+			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
+
+			// try to resolve and assert that synchronization went fine
+			server1.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion).Wait();
+
+			var shouldNotBeConflict = server1.Synchronization.StartSynchronizationToAsync("test", server2.ServerUrl).Result;
+
+			Assert.Null(shouldNotBeConflict.Exception);
+			Assert.Equal(server1.GetMetadataForAsync("test").Result["Content-Md5"], server2.GetMetadataForAsync("test").Result["Content-Md5"]);
+		}
+
+		[Fact]
+		public void Delete_conflicted_document_should_delete_conflict_items_as_well()
+		{
+			var source = NewClient(0);
+			var destination = NewClient(1);
+
+			source.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
+			destination.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
+
+			var shouldBeConflict = source.Synchronization.StartSynchronizationToAsync("test", destination.ServerUrl).Result;
+
+			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
+
+			var pages = destination.Synchronization.GetConflicts().Result;
+			Assert.Equal(1, pages.TotalCount);
+
+			destination.DeleteAsync("test").Wait();
+
+			pages = destination.Synchronization.GetConflicts().Result;
+			Assert.Equal(0, pages.TotalCount);
+		}
 	}
 }
