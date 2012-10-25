@@ -160,7 +160,7 @@
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			destinationClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationTimeout, new NameValueCollection()
+			destinationClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationLockTimeout, new NameValueCollection()
                                                                                         {
                                                                                             {"value", "\"00:00:00\""}
                                                                                         }).Wait();
@@ -201,7 +201,7 @@
 		{
 			destinationClient.Config.SetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin"), SynchronizationConfig(DateTime.MinValue)).Wait();
 
-			destinationClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationTimeout, new NameValueCollection()
+			destinationClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationLockTimeout, new NameValueCollection()
                                                                                         {
                                                                                             {"value", "\"00:00:00\""}
                                                                                         }).Wait();

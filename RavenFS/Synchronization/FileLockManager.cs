@@ -13,9 +13,9 @@ namespace RavenFS.Synchronization
 		private readonly TimeSpan defaultTimeout = TimeSpan.FromMinutes(10);
 		private TimeSpan configuredTimeout;
 
-		private TimeSpan ReplicationTimeout(StorageActionsAccessor accessor)
+		private TimeSpan SynchronizationTimeout(StorageActionsAccessor accessor)
 		{
-			bool timeoutConfigExists = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenSynchronizationTimeout, out configuredTimeout);
+			bool timeoutConfigExists = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenSynchronizationLockTimeout, out configuredTimeout);
 
 			return timeoutConfigExists ? configuredTimeout : defaultTimeout;
 		}
@@ -46,7 +46,7 @@ namespace RavenFS.Synchronization
 			if (!accessor.TryGetConfigurationValue(RavenFileNameHelper.SyncLockNameForFile(fileName), out syncOperationDetails))
 				return true;
 
-			return DateTime.UtcNow - syncOperationDetails.FileLockedAt > ReplicationTimeout(accessor);
+			return DateTime.UtcNow - syncOperationDetails.FileLockedAt > SynchronizationTimeout(accessor);
 		}
 
 		public bool TimeoutExceeded(string fileName, TransactionalStorage storage)
