@@ -32,17 +32,35 @@ Every file modification triggers the synchronization task on the source server i
 	* add an apropriate synchronization work to a pending synchronization queue
 3. Perform as many synchronizations as you can to the destination (RavenFS limits the number of the simultaneous synchronizations to the same destination, see `Raven-Synchronization-Limit` config). 
 
-{INFO According to the synchronization type different kind of data will be sent to the destination server. /}
+{INFO According to the determined synchronization type, different data will be sent to the destination server. /}
 
 {INFO Every finishing synchronization work always checks if there is any pending work that it could run. /}
 
 ##File lock and timeout
 
-A destination server during synchronization process denies to perform on the syncing file any operation. If you try to modify a file while the file is synchronized, you will get `PreconditionFailed - 412 HttpStatus` response. Internally the server creates a configuration `SyncingLock-[filename]`, and as long as it exists, the file is not available to use. In order to avoid potential deadlocks (e.g. when server restart in the middle of synchronization), there is `Raven-Synchronization-Timeout` configuration. If a synchronization lasts longer that the specified timeout, the file lock configuration is removed by any attempt to access the file.
+A destination server during synchronization process denies to perform on the syncing file any operation. Any attempt to modify a file will result `PreconditionFailed (412)` response. The file locking mechanism creates a configuration `SyncingLock-[filename]` at the very beggining of the synchronization and as long as it exists, the file is not accessible. It is removed at the end of the file synchronization process. 
+
+In order to avoid potential deadlocks (e.g. when server restarts in the middle of the synchronization) there is also a timeout mechanism. You can control its value that by specifying in `Raven-Synchronization-Lock-Timeout` configuration. If the timeout in locking the file is exceeded, any attempt to access the file will automatically unlock it. By default the synchronization has the timeout of 10 minutes.
+
+{INFO Checking whether a file is already locked and a lock operation are made in a single transaction. There is no option that two servers will synchronize the file with the same name to the same destination server. The first one will lock the file what will prevent the second one to perform any action. /}
 
 ##Synchronization aborting
 
-In contrast to a destination server, a source server does not lock file during synchronization. You are able to normally work with it. However if you modify a file in the middle of synchronization, it will abort an active synchronization and will try with a new version. 
+In contrast to a destination server, a source server does not lock a file during the synchronization. You are able to work with it, because it is just read and sent to a destination. However if you modify the file in the middle of synchronization, it will abort the active synchronization and will try with a new version.
 
-##What about failures and restarts?
+##Handling failures and restarts
 
+RavenFS has been designated to work with large files. By nature performing some synchronizations can take quite long time. Especially in the case when a new file has been uploaded and then the server has to transfer the entire file to other nodes.
+This makes that possible synchronization failures might be caused by network problems or restarts of destination servers. Also the destination server can go down for a long period of time. 
+
+RavenFS ensures that every file change will be reflected on the desination even though any failure has occured or the remote server has been not available. In order to make sure that no update was missed it uses the following mechanism:
+
+###Tracking last ETag
+Every successful synchronization on the destination side stores an ETag number of already synchronized file. If the source determines what files require the synchronization it ask the destination about last ETag seen from that server. 
+ETags used in RavenFS are sequential, so we just need to synchronize files with greater ETag that last seen.
+
+###Confirmations
+Every synchronization must be confirmed. After a synchronization cycle the source stores what files was synchronized. In next cycle it asks the destionation about status of the already acomplished synchronizations. If the synchronization failed the file is synchronized again.
+
+###Periodic running
+The synchronization task runs every 10 minutes.
