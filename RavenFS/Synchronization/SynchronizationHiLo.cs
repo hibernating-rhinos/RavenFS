@@ -4,7 +4,7 @@
 	using RavenFS.Extensions;
 	using RavenFS.Storage;
 
-	public class ReplicationHiLo
+	public class SynchronizationHiLo
     {
         private long _currentLo = Capacity + 1;
         private readonly object _generatorLock = new object();
@@ -13,7 +13,7 @@
 
         private readonly TransactionalStorage _storage;
 
-        public ReplicationHiLo(TransactionalStorage storage)
+        public SynchronizationHiLo(TransactionalStorage storage)
         {
             _storage = storage;
         }

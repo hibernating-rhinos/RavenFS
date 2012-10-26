@@ -15,14 +15,14 @@ namespace RavenFS.Infrastructure
 	public class Historian
     {
         private readonly TransactionalStorage storage;
-        private readonly ReplicationHiLo replicationHiLo;
+        private readonly SynchronizationHiLo synchronizationHiLo;
         private readonly UuidGenerator uuidGenerator;
 
-        public Historian(TransactionalStorage storage, ReplicationHiLo replicationHiLo, UuidGenerator uuidGenerator)
+        public Historian(TransactionalStorage storage, SynchronizationHiLo synchronizationHiLo, UuidGenerator uuidGenerator)
         {
             this.storage = storage;
             this.uuidGenerator = uuidGenerator;
-            this.replicationHiLo = replicationHiLo;
+            this.synchronizationHiLo = synchronizationHiLo;
         }
 
         public void Update(string fileName, NameValueCollection nameValueCollection)
@@ -44,7 +44,7 @@ namespace RavenFS.Infrastructure
 			}
 
             nameValueCollection[SynchronizationConstants.RavenSynchronizationHistory] = SerializeHistory(history);
-            nameValueCollection[SynchronizationConstants.RavenSynchronizationVersion] = replicationHiLo.NextId().ToString(CultureInfo.InvariantCulture);
+            nameValueCollection[SynchronizationConstants.RavenSynchronizationVersion] = synchronizationHiLo.NextId().ToString(CultureInfo.InvariantCulture);
             nameValueCollection[SynchronizationConstants.RavenSynchronizationSource] = storage.Id.ToString();
         }
 

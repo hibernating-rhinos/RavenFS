@@ -55,7 +55,7 @@ namespace RavenFS
 			storage = new TransactionalStorage(systemConfiguration.DataDirectory, systemConfiguration.Settings);
 			search = new IndexStorage(systemConfiguration.IndexStoragePath, systemConfiguration.Settings);
 			sigGenerator = new SigGenerator();
-			var replicationHiLo = new ReplicationHiLo(storage);
+			var replicationHiLo = new SynchronizationHiLo(storage);
 			var sequenceActions = new SequenceActions(storage);
 		    transportState = new TransportState();
 		    notificationPublisher = new NotificationPublisher(transportState);

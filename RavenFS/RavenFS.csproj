@@ -237,7 +237,7 @@
     <Compile Include="Synchronization\Rdc\RemoteRdcManager.cs" />
     <Compile Include="Synchronization\Rdc\RemoteSignaturePartialAccess.cs" />
     <Compile Include="Synchronization\SynchronizationConstants.cs" />
-    <Compile Include="Synchronization\ReplicationHiLo.cs" />
+    <Compile Include="Synchronization\SynchronizationHiLo.cs" />
     <Compile Include="Synchronization\Rdc\SignaturePartialAccess.cs" />
     <Compile Include="Synchronization\Rdc\LocalRdcManager.cs" />
     <Compile Include="Synchronization\Rdc\NeedListParser.cs" />
