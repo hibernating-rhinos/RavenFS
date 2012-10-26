@@ -749,5 +749,21 @@ namespace RavenFS.Tests.Synchronization
 			
 			Assert.NotEqual(Guid.Empty, report.FileETag);
 		}
+
+		[Fact]
+		public void Should_not_throw_if_file_does_not_exist_on_destination()
+		{
+			var source = NewClient(0);
+			var destination = NewClient(1);
+
+			source.UploadAsync("test.bin", new RandomStream(1)).Wait();
+
+			source.DeleteAsync("test.bin").Wait();
+
+			var synchronizationReport = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+
+			Assert.Equal(SynchronizationType.Delete, synchronizationReport.Type);
+			Assert.Null(synchronizationReport.Exception);
+		}
 	}
 }

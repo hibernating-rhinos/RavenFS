@@ -319,28 +319,41 @@
 				Storage.Batch(accessor => StartupProceed(fileName, accessor));
 
 				var localMetadata = GetLocalMetadata(fileName);
-				var sourceMetadata = Request.Headers.FilterHeaders();
 
-				bool isConflictResolved;
-
-				AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerInfo, out isConflictResolved);
-
-				Storage.Batch(accessor =>
+				if (localMetadata != null)
 				{
-					StorageOperationsTask.IndicateFileToDelete(fileName);
+					var sourceMetadata = Request.Headers.FilterHeaders();
 
-					var tombstoneMetadata = new NameValueCollection()
-						                        {
-							                        {SynchronizationConstants.RavenSynchronizationHistory, localMetadata[SynchronizationConstants.RavenSynchronizationHistory]},
-													{SynchronizationConstants.RavenSynchronizationVersion, localMetadata[SynchronizationConstants.RavenSynchronizationVersion]},
-													{SynchronizationConstants.RavenSynchronizationSource, localMetadata[SynchronizationConstants.RavenSynchronizationSource]}
-						                        }.WithDeleteMarker();
+					bool isConflictResolved;
 
-					Historian.UpdateLastModified(tombstoneMetadata);
-					accessor.PutFile(fileName, 0, tombstoneMetadata, true);
-				});
+					AssertConflictDetection(fileName, localMetadata, sourceMetadata, sourceServerInfo, out isConflictResolved);
 
-                PublishFileNotification(fileName, FileChangeAction.Delete);
+					Storage.Batch(accessor =>
+					{
+						StorageOperationsTask.IndicateFileToDelete(fileName);
+
+						var tombstoneMetadata = new NameValueCollection()
+							                        {
+								                        {
+									                        SynchronizationConstants.RavenSynchronizationHistory,
+									                        localMetadata[SynchronizationConstants.RavenSynchronizationHistory]
+								                        },
+								                        {
+									                        SynchronizationConstants.RavenSynchronizationVersion,
+									                        localMetadata[SynchronizationConstants.RavenSynchronizationVersion]
+								                        },
+								                        {
+									                        SynchronizationConstants.RavenSynchronizationSource,
+									                        localMetadata[SynchronizationConstants.RavenSynchronizationSource]
+								                        }
+							                        }.WithDeleteMarker();
+
+						Historian.UpdateLastModified(tombstoneMetadata);
+						accessor.PutFile(fileName, 0, tombstoneMetadata, true);
+					});
+
+					PublishFileNotification(fileName, FileChangeAction.Delete);
+				}
 			}
 			catch (Exception ex)
 			{
