@@ -1,6 +1,7 @@
 namespace RavenFS.Synchronization
 {
 	using System;
+	using System.IO;
 	using NLog;
 	using RavenFS.Extensions;
 	using RavenFS.Storage;
@@ -22,13 +23,13 @@ namespace RavenFS.Synchronization
 
 		public void LockByCreatingSyncConfiguration(string fileName, ServerInfo sourceServer, StorageActionsAccessor accessor)
 		{
-			var syncOperationDetails = new SynchronizationLock
+			var syncLock = new SynchronizationLock
 											{
 												SourceServer = sourceServer,
 												FileLockedAt = DateTime.UtcNow
 											};
 
-			accessor.SetConfigurationValue(RavenFileNameHelper.SyncLockNameForFile(fileName), syncOperationDetails);
+			accessor.SetConfig(RavenFileNameHelper.SyncLockNameForFile(fileName), syncLock.AsConfig());
 
 			log.Debug("File '{0}' was locked", fileName);
 		}
@@ -41,12 +42,19 @@ namespace RavenFS.Synchronization
 
 		public bool TimeoutExceeded(string fileName, StorageActionsAccessor accessor)
 		{
-			SynchronizationLock syncOperationDetails;
-			
-			if (!accessor.TryGetConfigurationValue(RavenFileNameHelper.SyncLockNameForFile(fileName), out syncOperationDetails))
-				return true;
+			SynchronizationLock syncLock;
 
-			return DateTime.UtcNow - syncOperationDetails.FileLockedAt > SynchronizationTimeout(accessor);
+			try
+			{
+				syncLock =
+					accessor.GetConfig(RavenFileNameHelper.SyncLockNameForFile(fileName)).AsObject<SynchronizationLock>();
+			}
+			catch (FileNotFoundException)
+			{
+				return true;
+			}
+
+			return DateTime.UtcNow - syncLock.FileLockedAt > SynchronizationTimeout(accessor);
 		}
 
 		public bool TimeoutExceeded(string fileName, TransactionalStorage storage)

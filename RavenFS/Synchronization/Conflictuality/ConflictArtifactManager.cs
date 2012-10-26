@@ -28,8 +28,7 @@ namespace RavenFS.Synchronization.Conflictuality
 				accessor =>
 				{
 					metadata = accessor.GetFile(fileName, 0, 0).Metadata;
-					accessor.SetConfigurationValue(
-						RavenFileNameHelper.ConflictConfigNameForFile(fileName), conflict);
+					accessor.SetConfig(RavenFileNameHelper.ConflictConfigNameForFile(fileName), conflict.AsConfig());
 					metadata[SynchronizationConstants.RavenSynchronizationConflict] = "True";
 					accessor.UpdateFileMetadata(fileName, metadata);
 				});

@@ -4,6 +4,12 @@
 
     public class SynchronizationReport
     {
+		public SynchronizationReport()
+		{
+			
+		}
+
+		[Newtonsoft.Json.JsonConstructor]
 		public SynchronizationReport(string fileName, Guid fileETag, SynchronizationType type)
 	    {
 		    FileName = fileName;

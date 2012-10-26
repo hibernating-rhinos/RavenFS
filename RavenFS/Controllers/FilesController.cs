@@ -185,7 +185,7 @@ namespace RavenFS.Controllers
 													  MetadataAfterOperation = metadata
 						                          };
 
-					accessor.SetConfigurationValue(RavenFileNameHelper.RenameOperationConfigNameForFile(name), operation);
+					accessor.SetConfig(RavenFileNameHelper.RenameOperationConfigNameForFile(name), operation.AsConfig());
 					accessor.PulseTransaction(); // commit rename operation config
 
 					StorageOperationsTask.RenameFile(operation);

@@ -203,11 +203,8 @@ namespace RavenFS.Tests.Synchronization
 
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
-			var savedRecord =
-				sourceClient.Config.GetConfig(RavenFileNameHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result
-					["value"];
-
-			var synchronizationDetails = new TypeHidingJsonSerializer().Parse<SynchronizationDetails>(savedRecord);
+			var synchronizationDetails =
+				sourceClient.Config.GetConfig(RavenFileNameHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result.AsObject<SynchronizationDetails>();
 
 			Assert.Equal("test.bin", synchronizationDetails.FileName);
 			Assert.Equal(destinationClient.ServerUrl, synchronizationDetails.DestinationUrl);
@@ -480,17 +477,18 @@ namespace RavenFS.Tests.Synchronization
 		{
 			var destinationClient = NewClient(0);
 
-			var sampleGuid = Guid.Empty;
+			var sampleGuid = Guid.NewGuid();
 
 			var failureSynchronization = new SynchronizationReport("test.bin",  sampleGuid, SynchronizationType.Unknown)
 			                             	{Exception = new Exception("There was an exception in last synchronization.")};
 
-			var sb = new StringBuilder();
-            var jw = new JsonTextWriter(new StringWriter(sb));
-            new JsonSerializer().Serialize(jw, failureSynchronization);
+			//var sb = new StringBuilder();
+			//var jw = new JsonTextWriter(new StringWriter(sb));
+			//new JsonSerializer().Serialize(jw, failureSynchronization);
 
-			destinationClient.Config.SetConfig(RavenFileNameHelper.SyncResultNameForFile("test.bin"),
-			                                   new NameValueCollection() {{"value", sb.ToString()}}).Wait();
+			//destinationClient.Config.SetConfig(RavenFileNameHelper.SyncResultNameForFile("test.bin"),
+			//								   new NameValueCollection() {{"value", sb.ToString()}}).Wait();
+			destinationClient.Config.SetConfig(RavenFileNameHelper.SyncResultNameForFile("test.bin"), failureSynchronization.AsConfig()).Wait();
 
 			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>> { new Tuple<string, Guid>("test.bin", sampleGuid) }).Result;
 

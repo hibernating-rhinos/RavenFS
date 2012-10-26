@@ -4,6 +4,7 @@
 	using System.Collections.Concurrent;
 	using System.Collections.Generic;
 	using System.Collections.Specialized;
+	using System.Linq;
 	using System.Reactive.Linq;
 	using System.Threading.Tasks;
 	using Client;
@@ -143,8 +144,9 @@
 											fileName, deletingFileName));
 
 					var configName = RavenFileNameHelper.DeleteOperationConfigNameForFile(deletingFileName);
-					accessor.SetConfigurationValue(configName,
-												   new DeleteFileOperation { OriginalFileName = fileName, CurrentFileName = deletingFileName });
+					accessor.SetConfig(configName,
+					                   new DeleteFileOperation {OriginalFileName = fileName, CurrentFileName = deletingFileName}.
+						                   AsConfig());
 
 					notificationPublisher.Publish(new ConfigChange { Name = configName, Action = ConfigChangeAction.Set });
 				}
@@ -168,7 +170,9 @@
 
 			storage.Batch(
 				accessor =>
-				filesToDelete = accessor.GetConfigsWithPrefix<DeleteFileOperation>(RavenFileNameHelper.DeleteOperationConfigPrefix, 0, 10));
+				filesToDelete =
+				accessor.GetConfigsStartWithPrefix(RavenFileNameHelper.DeleteOperationConfigPrefix, 0, 10).Select(
+					config => config.AsObject<DeleteFileOperation>()).ToList());
 
 			var tasks = new List<Task>();
 
@@ -227,8 +231,10 @@
 
 			storage.Batch(
 				accessor =>
-				filesToRename = accessor.GetConfigsWithPrefix<RenameFileOperation>(RavenFileNameHelper.RenameOperationConfigPrefix, 0, 10));
-
+				filesToRename =
+				accessor.GetConfigsStartWithPrefix(RavenFileNameHelper.RenameOperationConfigPrefix, 0, 10).Select(
+					config => config.AsObject<RenameFileOperation>()).ToList());
+				
 			var tasks = new List<Task>();
 
 			foreach (var item in filesToRename)

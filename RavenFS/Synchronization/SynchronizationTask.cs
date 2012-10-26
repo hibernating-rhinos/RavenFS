@@ -216,7 +216,7 @@ namespace RavenFS.Synchronization
 
 			var filteredFilesToSychronization =
 				filesToSynchronization.Where(
-					x => synchronizationStrategy.Filter(x, lastEtag.DestinationServerInstanceId, filesToSynchronization)).ToList();
+					x => synchronizationStrategy.Filter(x, lastEtag.DestinationServerId, filesToSynchronization)).ToList();
 
 			if(filesToSynchronization.Count > 0)
 			{
@@ -435,9 +435,11 @@ namespace RavenFS.Synchronization
 			{
 				storage.Batch(
 					accessor =>
-						{
-							configObjects = accessor.GetConfigsWithPrefix<SynchronizationDetails>(RavenFileNameHelper.SyncNamePrefix + Uri.EscapeUriString(destination), 0, 100);
-						});
+					{
+						configObjects =
+							accessor.GetConfigsStartWithPrefix(RavenFileNameHelper.SyncNamePrefix + Uri.EscapeUriString(destination), 0, 100)
+								.Select(config => config.AsObject<SynchronizationDetails>()).ToList();
+					});
 			}
 			catch (Exception e)
 			{
@@ -452,13 +454,13 @@ namespace RavenFS.Synchronization
 			try
 			{
 				var name = RavenFileNameHelper.SyncNameForFile(fileName, destination);
-				storage.Batch(accessor => accessor.SetConfigurationValue(name, new SynchronizationDetails
+				storage.Batch(accessor => accessor.SetConfig(name, new SynchronizationDetails
 				                                                               	{
 				                                                               		DestinationUrl = destination,
 				                                                               		FileName = fileName,
 																					FileETag = etag,
 																					Type = synchronizationType
-				                                                               	}));
+				                                                               	}.AsConfig()));
 			}
 			catch (Exception e)
 			{

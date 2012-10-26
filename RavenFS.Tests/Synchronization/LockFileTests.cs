@@ -4,6 +4,7 @@
 	using System.Collections.Specialized;
 	using System.IO;
 	using System.Text;
+	using Extensions;
 	using IO;
 	using Newtonsoft.Json;
 	using RavenFS.Client;
@@ -184,17 +185,7 @@
 
 		public static NameValueCollection SynchronizationConfig(DateTime fileLockedDate)
 		{
-			var foo = new SynchronizationLock() { FileLockedAt = fileLockedDate };
-
-			var sb = new StringBuilder();
-			var jw = new JsonTextWriter(new StringWriter(sb));
-			new JsonSerializer().Serialize(jw, foo);
-			var value = sb.ToString();
-
-			return new NameValueCollection()
-                                    {
-                                        {"value", value},
-                                    };
+			return new SynchronizationLock() { FileLockedAt = fileLockedDate }.AsConfig();
 		}
 
 		private static void ZeroTimeoutTest(RavenFileSystemClient destinationClient, Action action)
