@@ -48,9 +48,19 @@ It allows to control the default locking timeout during synchronization (if it d
 }
 {CODE-END /}
 
+##Raven-Synchronization-Limit
+
+It limits the number of concurrent file synchronizations to the same server (if it does not exists the default value is *5*).
+
+{CODE-START:json /}
+{
+	"value":"1"
+}
+{CODE-END /}
+
 ##Syncing-[destination-server-url]-[filename]
 
-A configuration stored on a source server for every already synchronized file to a destination. It is removed if the destination confirms that the synchronization succeeded.
+This configuration is stored on a source server for every already synchronized file to a destination. It is removed if the destination confirms that the synchronization succeeded.
 
 {CODE-START:json /}
 {
@@ -75,5 +85,22 @@ This configuration represents a result of the synchronization of the `[filename]
     "NeedListLength": "5",
     "Exception": "",
     "Type": "ContentUpdate"
+}
+{CODE-END /}
+
+##Conflicted-[filename]
+
+A conflict item is stored as a configuration. It contains histories of both conflicted files, a file name and a url of source server. The conflict is always detected and created on a destination server.
+
+{CODE-START:json /}
+{
+	"RemoteHistory":"[
+						{\"Version\":1,\"ServerId\":\"e3f140ed-68c7-4de0-a772-5dbeeeec7b69\"}
+					]",
+	"CurrentHistory":"[
+						{\"Version\":1,\"ServerId\":\"da6df02b-32b0-4802-bd86-643ca9eb8ee0\"}
+					]",
+	"FileName":"document.txt",
+	"RemoteServerUrl":"http://ravenfs:9090/"
 }
 {CODE-END /}

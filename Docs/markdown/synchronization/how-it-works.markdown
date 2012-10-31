@@ -25,12 +25,12 @@ RavenFS also supports *master/master* synchronization scenarios. Only need to do
 
 Every file modification triggers the synchronization task on the source server in the background. RavenFS looks up the list of synchronization destination. For each of destinations, the task will take the following actions:
 
-1. Query the remote instance for the last file (actually file ETag) that we synchronized to that instance (see `Raven/Replication/Sources/[server-id]` config)
+1. Query the remote instance for the last file (actually file ETag) that we synchronized to that instance ([see](configurations#ravensynchronizationsourcessource-server-id) `Raven/Replication/Sources/[server-id]` config)
 2. For each file that has changed since the last synchronization (based on returned ETag value):
 	* download file metadata from the destination server
 	* use this metadata to determine what kind of a synchronization type is needed (see [Synchronization types](synchronization-types))
 	* add an apropriate synchronization work to a pending synchronization queue
-3. Perform as many synchronizations as you can to the destination (RavenFS limits the number of the simultaneous synchronizations to the same destination, see `Raven-Synchronization-Limit` config). 
+3. Perform as many synchronizations as you can to the destination (RavenFS limits the number of the simultaneous synchronizations to the same destination, [see](#configuration#raven-synchronization-limit) `Raven-Synchronization-Limit` config). 
 
 {INFO According to the determined synchronization type, different data will be sent to the destination server. /}
 
