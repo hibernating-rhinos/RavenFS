@@ -12,7 +12,7 @@ namespace RavenFS.Server
 	[RunInstaller(true)]
 	public partial class ProjectInstaller : System.Configuration.Install.Installer
 	{
-		internal const string SERVICE_NAME = "Raven.FileSystem";
+		internal const string SERVICE_NAME = "RavenFS";
 
 		public ProjectInstaller()
 		{
