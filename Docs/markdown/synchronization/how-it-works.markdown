@@ -30,7 +30,7 @@ Every file modification triggers the synchronization task on the source server i
 	* download file metadata from the destination server
 	* use this metadata to determine what kind of a synchronization type is needed (see [Synchronization types](synchronization-types))
 	* add an apropriate synchronization work to a pending synchronization queue
-3. Perform as many synchronizations as you can to the destination (RavenFS limits the number of the simultaneous synchronizations to the same destination, [see](#configuration#raven-synchronization-limit) `Raven-Synchronization-Limit` config). 
+3. Perform as many synchronizations as you can to the destination (RavenFS limits the number of the simultaneous synchronizations to the same destination, [see](configuration#raven-synchronization-limit) `Raven-Synchronization-Limit` config). 
 
 {INFO According to the determined synchronization type, different data will be sent to the destination server. /}
 
