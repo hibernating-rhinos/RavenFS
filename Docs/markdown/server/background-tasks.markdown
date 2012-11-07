@@ -1,4 +1,9 @@
 ﻿#Background tasks
 
-##Synchronization
+##File delete
 
+##File rename
+
+only if user initiated
+
+##Synchronization
