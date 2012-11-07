@@ -57,7 +57,11 @@
     <None Include="synchronization\how-it-works.markdown" />
     <None Include="synchronization\monitoring.markdown" />
     <None Include="synchronization\synchronization-types\.docslist" />
+    <None Include="synchronization\synchronization-types\content-update.markdown" />
+    <None Include="synchronization\synchronization-types\delete.markdown" />
     <None Include="synchronization\synchronization-types\index.markdown" />
+    <None Include="synchronization\synchronization-types\metadata-update.markdown" />
+    <None Include="synchronization\synchronization-types\rename.markdown" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
