@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration.Install;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.ServiceProcess;
 
 
@@ -12,7 +7,7 @@ namespace RavenFS.Server
 	[RunInstaller(true)]
 	public partial class ProjectInstaller : System.Configuration.Install.Installer
 	{
-		internal const string SERVICE_NAME = "RavenFS";
+		internal static string SERVICE_NAME = "RavenFS";
 
 		public ProjectInstaller()
 		{

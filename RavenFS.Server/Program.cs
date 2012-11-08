@@ -141,13 +141,13 @@ Enjoy...
 			{
 				{"port=", port => ravenConfiguration.Port = int.Parse(port)},
 				{"path=", path => ravenConfiguration.DataDirectory = path},
-				//{"set={==}", "The configuration {0:option} to set to the specified {1:value}" , (key, value) =>
-				//{
-				//	ravenConfiguration.Settings[key] = value;
-				//	ravenConfiguration.Initialize();
-				//}},
+				{"set={==}", "The configuration {0:option} to set to the specified {1:value}" , (key, value) =>
+				{
+					ravenConfiguration.Settings[key] = value;
+					ravenConfiguration.Initialize();
+				}},
 				{"install", "Installs the RavenFS service", key => actionToTake= () => AdminRequired(InstallAndStart, key)},
-				//{"service-name=", "The {0:service name} to use when installing or uninstalling the service, default to RavenFS", name => ProjectInstaller.SERVICE_NAME = name},
+				{"service-name=", "The {0:service name} to use when installing or uninstalling the service, default to RavenFS", name => ProjectInstaller.SERVICE_NAME = name},
 				{"uninstall", "Uninstalls the RavenFS service", key => actionToTake= () => AdminRequired(EnsureStoppedAndUninstall, key)},
 				{"start", "Starts the RavenFS service", key => actionToTake= () => AdminRequired(StartService, key)},
 				{"restart", "Restarts the RavenFS service", key => actionToTake= () => AdminRequired(RestartService, key)},
