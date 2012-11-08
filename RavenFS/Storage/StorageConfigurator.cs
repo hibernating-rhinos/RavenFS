@@ -9,6 +9,7 @@ namespace RavenFS.Storage
 	using System;
 	using System.Collections.Specialized;
 	using System.IO;
+	using Extensions;
 	using Microsoft.Isam.Esent.Interop;
 	using NLog;
 	using Util;
@@ -30,15 +31,22 @@ namespace RavenFS.Storage
 		public void ConfigureInstance(JET_INSTANCE jetInstance, string path)
 		{
 			path = Path.GetFullPath(path);
+
+			var logsPath = path;
+			if (string.IsNullOrEmpty(settings["Raven/Esent/LogsPath"]) == false)
+			{
+				logsPath = settings["Raven/Esent/LogsPath"].ToFullPath();
+			}
+
 			var instanceParameters = new InstanceParameters(jetInstance)
 			{
-				CircularLog = true,
+				CircularLog = GetValueFromConfiguration("Raven/Esent/CircularLog", true),
 				Recovery = true,
 				NoInformationEvent = false,
 				CreatePathIfNotExist = true,
-				TempDirectory = Path.Combine(path, "temp"),
-				SystemDirectory = Path.Combine(path, "system"),
-				LogFileDirectory = Path.Combine(path, "logs"),
+				TempDirectory = Path.Combine(logsPath, "temp"),
+				SystemDirectory = Path.Combine(logsPath, "system"),
+				LogFileDirectory = Path.Combine(logsPath, "logs"),
 				MaxVerPages = TranslateToSizeInDatabasePages(GetValueFromConfiguration("Raven/Esent/MaxVerPages", 128)),
 				BaseName = "RFS",
 				EventSource = "RavenFS",
@@ -83,6 +91,17 @@ namespace RavenFS.Storage
 			int value;
 			if (string.IsNullOrEmpty(settings[name]) == false &&
 				int.TryParse(settings[name], out value))
+			{
+				return value;
+			}
+			return defaultValue;
+		}
+
+		private bool GetValueFromConfiguration(string name, bool defaultValue)
+		{
+			bool value;
+			if (string.IsNullOrEmpty(settings[name]) == false &&
+				bool.TryParse(settings[name], out value))
 			{
 				return value;
 			}
