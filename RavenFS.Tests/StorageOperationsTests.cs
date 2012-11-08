@@ -236,5 +236,40 @@
 			Assert.Equal(1, results.FileCount);
 			Assert.Equal(rename, results.Files[0].Name);
 		}
+
+		[Fact]
+		public void Should_resume_file_renaming_from_client()
+		{
+			var client = NewClient();
+			var rfs = GetRavenFileSystem();
+
+			const string fileName = "file.bin";
+			const string rename = "renamed.bin";
+
+			client.UploadAsync(fileName, new RandomStream(1)).Wait();
+
+			// create config to say to the server that rename operation performed last time were not finished
+			var renameOpConfig = RavenFileNameHelper.RenameOperationConfigNameForFile(fileName);
+			rfs.Storage.Batch(accessor => accessor.SetConfig(renameOpConfig,
+													new RenameFileOperation()
+													{
+														Name = fileName,
+														Rename = rename,
+														MetadataAfterOperation = new NameValueCollection()
+						                                                                {
+							                                                                {"ETag","\"" + Guid.Empty + "\""}
+						                                                                }
+													}.AsConfig()));
+
+			client.Storage.RetryRenaming().Wait();
+
+			IEnumerable<string> configNames = client.Config.GetConfigNames().Result;
+
+			Assert.DoesNotContain(renameOpConfig, configNames);
+
+			var renamedMetadata = client.GetMetadataForAsync(rename).Result;
+
+			Assert.NotNull(renamedMetadata);
+		}
 	}
 }

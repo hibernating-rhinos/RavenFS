@@ -892,6 +892,17 @@ namespace RavenFS.Client
 					.ContinueWith(task => task.Result.Close())
 					.TryThrowBetterError();
 			}
+
+			public Task RetryRenaming()
+			{
+				var requestUriString = String.Format("{0}/storage/retryrenaming", ravenFileSystemClient.ServerUrl);
+				var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
+				request.ContentLength = 0;
+				request.Method = "POST";
+				return request.GetResponseAsync()
+					.ContinueWith(task => task.Result.Close())
+					.TryThrowBetterError();
+			}
 		}
 
 	    public void Dispose()

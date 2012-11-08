@@ -10,5 +10,11 @@
 		{
 			return StorageOperationsTask.CleanupDeletedFilesAsync();
 		}
+
+		[AcceptVerbs("POST")]
+		public Task RetryRenaming()
+		{
+			return StorageOperationsTask.ResumeFileRenamingAsync();
+		}
 	}
 }
