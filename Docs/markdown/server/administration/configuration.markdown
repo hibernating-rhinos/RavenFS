@@ -30,12 +30,12 @@ This is the standard app.config XML file. The `appSettings` section is where the
 
 * **Raven/IndexStoragePath**  
     The path to the indexes that are kept on disk. Putting them in a different drive than the actual data will improve performance significantly.  
-    _Default_: ~/Data/Indexes
+    _Default_: ~/Data.ravenfs/Index.ravenfs
 ## Data settings:
 
 * **Raven/DataDir**  
     The directory for the RavenDB database. You can use the ~\ prefix to refer to RavenDB's base directory.  
-    _Default:_ ~\Data  
+    _Default:_ ~\Data.ravenfs 
 
 ## Http settings
 
@@ -45,7 +45,7 @@ This is the standard app.config XML file. The `appSettings` section is where the
 
 * **Raven/Port**
     The port to use when creating the http listener.  
-    _Default:_ 8080  
+    _Default:_ 9090  
 
 * **Raven/VirtualDirectory**  
     The virtual directory to use when creating the http listener.  
@@ -77,10 +77,10 @@ This is the standard app.config XML file. The `appSettings` section is where the
     The maximum number of cursors allowed concurrently.  
     _Default:_ 2048  
     
-* **Raven/Esent/LogsPath**  //TODO
+* **Raven/Esent/LogsPath**
     Where to keep the Esent transaction logs. Putting the logs in a different drive than the data and indexes will improve performance significantly.  
     _Default_: ~/Data/logs  
 
-* **Raven/Esent/CircularLog** //TODO 
+* **Raven/Esent/CircularLog**
     Whether or not to enable circular logging with Esent.  
     _Default_: true  

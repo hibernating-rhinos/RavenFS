@@ -40,6 +40,10 @@
     <None Include="http-api\index.markdown" />
     <None Include="index.markdown" />
     <None Include="intro\.docslist" />
+    <None Include="server\administration\.docslist" />
+    <None Include="server\administration\configuration.markdown" />
+    <None Include="server\administration\enable-rdc.markdown" />
+    <None Include="server\administration\index.markdown" />
     <None Include="server\background-tasks.markdown" />
     <None Include="intro\files-in-ravenfs.markdown" />
     <None Include="intro\index.markdown" />
@@ -47,6 +51,13 @@
     <None Include="intro\system-requirements.markdown" />
     <None Include="intro\what-is-ravenfs.markdown" />
     <None Include="server\.docslist" />
+    <None Include="server\deployment\.docslist" />
+    <None Include="server\deployment\as-a-service.markdown" />
+    <None Include="server\deployment\as-iis-application.markdown" />
+    <None Include="server\deployment\docs-debug-logging.markdown" />
+    <None Include="server\deployment\docs-deploy-debug.markdown" />
+    <None Include="server\deployment\index.markdown" />
+    <None Include="server\deployment\recommended-configuration.markdown" />
     <None Include="server\index.markdown" />
     <None Include="studio\.docslist" />
     <None Include="studio\index.markdown" />
