@@ -177,8 +177,7 @@
 			var guid = Guid.NewGuid().ToString();
 			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem>(), "http://localhost:12345").Wait());
 
-			Assert.IsType(typeof(InvalidOperationException), innerException);
-			Assert.Contains("404", innerException.Message);
+			Assert.IsType(typeof(FileNotFoundException), innerException);
 		}
 
 		[Fact]

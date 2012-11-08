@@ -48,6 +48,10 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<ConcurrencyException>(new JsonTextReader(new StreamReader(stream)));
 					}
 				}
+				else if (httpWebResponse.StatusCode == HttpStatusCode.NotFound)
+				{
+					return new FileNotFoundException();
+				}
 			}
 
 			using (var stream = webException.Response.GetResponseStream())
