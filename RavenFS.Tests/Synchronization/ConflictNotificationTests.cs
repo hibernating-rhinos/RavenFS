@@ -2,6 +2,7 @@ namespace RavenFS.Tests.Synchronization
 {
 	using System;
 	using System.Collections.Specialized;
+	using System.Net;
 	using System.Reactive.Linq;
 	using System.Reactive.Threading.Tasks;
 	using Client;
@@ -48,7 +49,7 @@ namespace RavenFS.Tests.Synchronization
             var conflictDetected = notificationTask.Result;
 
             Assert.Equal("abc.txt", conflictDetected.FileName);
-            Assert.Equal(destinationClient.ServerUrl, conflictDetected.ServerUrl);
+            Assert.Equal(new Uri(sourceClient.ServerUrl).Port, new Uri(conflictDetected.SourceServerUrl).Port);
 		}
 
 		public override void Dispose()

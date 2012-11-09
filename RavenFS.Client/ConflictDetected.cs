@@ -4,6 +4,6 @@ namespace RavenFS.Client
 	{
 		public string FileName { get; set; }
 
-		public string ServerUrl { get; set; }
+		public string SourceServerUrl { get; set; }
 	}
 }

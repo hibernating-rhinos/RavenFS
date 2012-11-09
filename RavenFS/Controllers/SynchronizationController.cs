@@ -212,7 +212,7 @@
 				Publisher.Publish(new ConflictDetected
 				                  	{
 				                  		FileName = fileName,
-				                  		ServerUrl = Request.GetServerUrl()
+				                  		SourceServerUrl = sourceServer.Url
 				                  	});
 
 				log.Debug(
@@ -567,7 +567,7 @@
 			Publisher.Publish(new ConflictDetected
 			{
 				FileName = filename,
-				ServerUrl = Request.GetServerUrl()
+				SourceServerUrl = remoteServerUrl
 			});
 
 			log.Debug(
