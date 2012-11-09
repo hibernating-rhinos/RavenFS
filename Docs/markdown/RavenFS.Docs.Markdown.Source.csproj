@@ -32,9 +32,17 @@
   <ItemGroup>
     <None Include=".docslist" />
     <None Include="client-api\.docslist" />
+    <None Include="client-api\basic-operations\.docslist" />
+    <None Include="client-api\basic-operations\connect-to-server.markdown" />
+    <None Include="client-api\basic-operations\index.markdown" />
+    <None Include="client-api\basic-operations\metadata.markdown" />
+    <None Include="client-api\basic-operations\rename-delete.markdown" />
+    <None Include="client-api\basic-operations\upload-download.markdown" />
     <None Include="client-api\configuration-client.markdown" />
+    <None Include="client-api\exceptions.markdown" />
     <None Include="client-api\index.markdown" />
     <None Include="client-api\notifications.markdown" />
+    <None Include="client-api\searching.markdown" />
     <None Include="client-api\synchronization-client.markdown" />
     <None Include="http-api\.docslist" />
     <None Include="http-api\index.markdown" />
