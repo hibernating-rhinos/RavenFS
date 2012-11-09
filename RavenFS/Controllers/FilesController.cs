@@ -66,30 +66,39 @@ namespace RavenFS.Controllers
 		{
 			name = Uri.UnescapeDataString(name);
 
-			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
+			try
 			{
-				AssertFileIsNotBeingSynced(name, accessor, true);
-
-				var metadata = accessor.ReadFile(name).Metadata;
-
-				StorageOperationsTask.IndicateFileToDelete(name);
-
-				if (!name.EndsWith(RavenFileNameHelper.DownloadingFileSuffix) && // don't create a tombstone for .downloading file
-					metadata != null) // and if file didn't exist
+				ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
 				{
-					var tombstoneMetadata = new NameValueCollection()
+					AssertFileIsNotBeingSynced(name, accessor, true);
+
+					var fileAndPages = accessor.GetFile(name, 0, 0);
+
+					var metadata = fileAndPages.Metadata;
+
+					StorageOperationsTask.IndicateFileToDelete(name);
+
+					if (!name.EndsWith(RavenFileNameHelper.DownloadingFileSuffix) && // don't create a tombstone for .downloading file
+						metadata != null) // and if file didn't exist
+					{
+						var tombstoneMetadata = new NameValueCollection()
 						                        {
 							                        {SynchronizationConstants.RavenSynchronizationHistory, metadata[SynchronizationConstants.RavenSynchronizationHistory]},
 													{SynchronizationConstants.RavenSynchronizationVersion, metadata[SynchronizationConstants.RavenSynchronizationVersion]},
 													{SynchronizationConstants.RavenSynchronizationSource, metadata[SynchronizationConstants.RavenSynchronizationSource]}
 						                        }.WithDeleteMarker();
 
-					Historian.UpdateLastModified(tombstoneMetadata);
-					accessor.PutFile(name, 0, tombstoneMetadata, true);
+						Historian.UpdateLastModified(tombstoneMetadata);
+						accessor.PutFile(name, 0, tombstoneMetadata, true);
 
-					accessor.DeleteConfig(RavenFileNameHelper.ConflictConfigNameForFile(name)); // delete conflict item too
-				}
-			}), ConcurrencyResponseException);
+						accessor.DeleteConfig(RavenFileNameHelper.ConflictConfigNameForFile(name)); // delete conflict item too
+					}
+				}), ConcurrencyResponseException);
+			}
+			catch (FileNotFoundException)
+			{
+				return new HttpResponseMessage(HttpStatusCode.NotFound);
+			}
 
 			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Delete });
 			log.Debug("File '{0}' was deleted", name);

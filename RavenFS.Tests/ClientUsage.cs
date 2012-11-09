@@ -6,6 +6,7 @@ using Xunit.Extensions;
 
 namespace RavenFS.Tests
 {
+	using Client;
 	using Extensions;
 	using Synchronization.IO;
 	using Util;
@@ -440,6 +441,48 @@ namespace RavenFS.Tests
 			client.UploadAsync("name#.bin", new MemoryStream(new byte[] {1, 2, 3})).Wait();
 
 			Assert.NotNull(client.GetMetadataForAsync("name#.bin").Result);
+		}
+
+		[Fact]
+		public void Should_throw_file_not_found_exception()
+		{
+			var client = NewClient();
+
+			try
+			{
+				client.DownloadAsync("not_existing_file", new MemoryStream()).Wait();
+			}
+			catch (AggregateException ex)
+			{
+				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+			}
+
+			try
+			{
+				client.RenameAsync("not_existing_file", "abc").Wait();
+			}
+			catch (AggregateException ex)
+			{
+				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+			}
+
+			try
+			{
+				client.DeleteAsync("not_existing_file").Wait();
+			}
+			catch (AggregateException ex)
+			{
+				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+			}
+
+			try
+			{
+				client.UpdateMetadataAsync("not_existing_file", new NameValueCollection()).Wait();
+			}
+			catch (AggregateException ex)
+			{
+				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+			}
 		}
 
         private static MemoryStream PrepareTextSourceStream()
