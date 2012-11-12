@@ -42,9 +42,12 @@
     <None Include="client-api\exceptions.markdown" />
     <None Include="client-api\index.markdown" />
     <None Include="client-api\notifications.markdown" />
-    <None Include="client-api\searching.markdown" />
+    <None Include="client-api\browsing-searching.markdown" />
     <None Include="client-api\synchronization-client.markdown" />
     <None Include="http-api\.docslist" />
+    <None Include="http-api\configurations-operations.markdown" />
+    <None Include="http-api\file-operations.markdown" />
+    <None Include="http-api\folders.markdown" />
     <None Include="http-api\index.markdown" />
     <None Include="index.markdown" />
     <None Include="intro\.docslist" />
@@ -67,8 +70,6 @@
     <None Include="server\deployment\index.markdown" />
     <None Include="server\deployment\recommended-configuration.markdown" />
     <None Include="server\index.markdown" />
-    <None Include="studio\.docslist" />
-    <None Include="studio\index.markdown" />
     <None Include="synchronization\.docslist" />
     <None Include="synchronization\configurations.markdown" />
     <None Include="synchronization\file-conflicts.markdown" />

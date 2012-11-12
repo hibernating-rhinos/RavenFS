@@ -1,11 +1,7 @@
-# HTTP API - Overview
+# HTTP API
 
-RavenDB provides an HTTP API for accessing and manipulating data on the server. This API sits next to the C# Client API, providing most of the same functionality, but with a platform agnostic, web friendly interface. Using the HTTP API, it's possible to write a fully functioning RavenDB application using just Javascript and HTML.
+RavenFS provides an HTTP API for managing file system via HTTP requests. It makes an access to the Raven file system client platform independed. The offered client APIs (C# API and HTTP) provide the same functionality.
 
-As part of being web friendly, the HTTP API follows commonly understood RESTful principles. For example, database documents are addressable resources via unique URLs and those resources can be acted upon using the HTTP verbs GET, PUT, POST and DELETE.
-
-However, while being RESTful is a goal of the HTTP API, it is secondary to the goal of exposing easy to use and powerful functionality such as batching and multi-document transactions.
-
-The remaining sections of this documentation explain how to use this HTTP API to build powerful web applications. Throughout these sections example request and responses are shown. These requests were created using the powerful command line tool, curl. More details about curl can be found at: [http://curl.haxx.se/docs/manual.html](http://curl.haxx.se/docs/manual.html)
+The documentation contained in this chapter explains how to use this HTTP API to communicate with RavenFS server. Examples show how to create appropriate requests and responses returned by the server. To create requests cURL tool has been used. More details about cURL can be found at: [http://curl.haxx.se/docs/manual.html](http://curl.haxx.se/docs/manual.html).
 
 {FILES-LIST/}
