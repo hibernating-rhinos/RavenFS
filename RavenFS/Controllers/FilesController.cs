@@ -76,6 +76,11 @@ namespace RavenFS.Controllers
 
 					var metadata = fileAndPages.Metadata;
 
+					if (metadata.AllKeys.Contains(SynchronizationConstants.RavenDeleteMarker))
+					{
+						throw new FileNotFoundException();
+					}
+
 					StorageOperationsTask.IndicateFileToDelete(name);
 
 					if (!name.EndsWith(RavenFileNameHelper.DownloadingFileSuffix) && // don't create a tombstone for .downloading file
@@ -188,7 +193,9 @@ namespace RavenFS.Controllers
 					var existingHeader = accessor.ReadFile(rename);
 					if (existingHeader != null && !existingHeader.Metadata.AllKeys.Contains(SynchronizationConstants.RavenDeleteMarker))
 					{
-						throw new InvalidOperationException("Cannot rename because file " + rename + " already exists");
+						throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.Forbidden,
+						                                                       new InvalidOperationException(
+							                                                       "Cannot rename because file " + rename + " already exists")));
 					}
 
 					Historian.UpdateLastModified(metadata);

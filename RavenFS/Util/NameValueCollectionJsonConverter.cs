@@ -70,7 +70,7 @@ namespace RavenFS.Client
 				}
 				else
 				{
-					collection.Add(key, (string)reader.Value);
+					collection.Add(key, reader.Value.ToString());
 				}
 			}
 

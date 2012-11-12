@@ -515,6 +515,27 @@ namespace RavenFS.Tests
 			});
 		}
 
+		[Fact]
+		public void Next_file_delete_should_throw_file_not_found_exception()
+		{
+			var client = NewClient();
+
+			client.UploadAsync("file.bin", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
+			client.DeleteAsync("file.bin").Wait();
+
+			Assert.Throws<FileNotFoundException>(() =>
+			{
+				try
+				{
+					client.DeleteAsync("file.bin").Wait();
+				}
+				catch (AggregateException ex)
+				{
+					throw ex.ExtractSingleInnerException();
+				}
+			});
+		}
+
         private static MemoryStream PrepareTextSourceStream()
         {
             var ms = new MemoryStream();
