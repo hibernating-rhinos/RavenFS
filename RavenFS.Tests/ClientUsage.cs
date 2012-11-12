@@ -448,6 +448,8 @@ namespace RavenFS.Tests
 		{
 			var client = NewClient();
 
+			var throwsCount = 0;
+
 			try
 			{
 				client.DownloadAsync("not_existing_file", new MemoryStream()).Wait();
@@ -455,6 +457,7 @@ namespace RavenFS.Tests
 			catch (AggregateException ex)
 			{
 				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+				throwsCount++;
 			}
 
 			try
@@ -464,6 +467,7 @@ namespace RavenFS.Tests
 			catch (AggregateException ex)
 			{
 				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+				throwsCount++;
 			}
 
 			try
@@ -473,16 +477,42 @@ namespace RavenFS.Tests
 			catch (AggregateException ex)
 			{
 				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+				throwsCount++;
 			}
 
 			try
 			{
 				client.UpdateMetadataAsync("not_existing_file", new NameValueCollection()).Wait();
+				throwsCount++;
 			}
 			catch (AggregateException ex)
 			{
 				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+				throwsCount++;
 			}
+
+			Assert.Equal(4, throwsCount);
+		}
+
+		[Fact]
+		public void Must_not_rename_tombstone()
+		{
+			var client = NewClient();
+
+			client.UploadAsync("file.bin", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
+			client.RenameAsync("file.bin", "newname.bin").Wait();
+
+			Assert.Throws<FileNotFoundException>(() =>
+			{
+				try
+				{
+					client.RenameAsync("file.bin", "file2.bin").Wait();
+				}
+				catch (AggregateException ex)
+				{
+					throw ex.ExtractSingleInnerException();
+				}
+			});
 		}
 
         private static MemoryStream PrepareTextSourceStream()
