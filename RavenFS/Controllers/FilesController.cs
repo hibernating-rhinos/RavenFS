@@ -178,13 +178,19 @@ namespace RavenFS.Controllers
 				{
 					AssertFileIsNotBeingSynced(name, accessor, true);
 					
+					var metadata = accessor.GetFile(name, 0, 0).Metadata;
+
+					if(metadata.AllKeys.Contains(SynchronizationConstants.RavenDeleteMarker))
+					{
+						throw new FileNotFoundException();
+					}
+
 					var existingHeader = accessor.ReadFile(rename);
 					if (existingHeader != null && !existingHeader.Metadata.AllKeys.Contains(SynchronizationConstants.RavenDeleteMarker))
 					{
 						throw new InvalidOperationException("Cannot rename because file " + rename + " already exists");
 					}
 
-					var metadata = accessor.GetFile(name, 0, 0).Metadata;
 					Historian.UpdateLastModified(metadata);
 
 					var operation = new RenameFileOperation()
