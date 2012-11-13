@@ -50,7 +50,7 @@ It allows to control the default locking timeout during synchronization (if it d
 
 ##Raven-Synchronization-Limit
 
-It limits the number of concurrent file synchronizations to the same server (if it does not exists the default value is *5*).
+It limits the number of concurrent file synchronizations to the same destination server (if it does not exists the default value is *5*).
 
 {CODE-START:json /}
 {

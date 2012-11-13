@@ -40,7 +40,7 @@ using (var client = new RavenFileSystemClient("http://localhost:9090"))
 	}
 	catch (InvalidOperationException ex)
 	{
-		log.ErrorException(ex.Message);
+		log.ErrorException("Exception occurred", ex);
 	}
 }
 {CODE-END /}

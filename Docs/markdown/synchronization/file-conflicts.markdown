@@ -32,4 +32,4 @@ We can resolve a conflict by using one of the following strategies:
 If RavenFS servers work in master/master model, after applying any of those strategies we can be sure than an apropriate version the the file will be synchronized in the next synchronization cycle.
 It we setup master/slave format, the resolution by *Remote* will synchronize the file from the source as well, but if we resolve by using *Current* strategy we have to manually invoke synchronization to the source server.
 
-More details about dealing with conflicts from the Client API you can find [here](../client-api).
+More details about dealing with conflicts from the Client API you can find [here](../client-api/synchronization-client#conflicts).

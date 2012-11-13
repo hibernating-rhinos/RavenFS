@@ -7,5 +7,5 @@ When you are coding .NET 4 or Silverlight 5 app consider to use [`AsyncTargeting
 ##What is the Client API?
 
 The communication between a client and a server is made via HTTP. The Client API is actually a HTTP requests generator to the RavenFS server instance.
-The Client API also takes care of deserializing a server's response formated as JSON into client object.
+The Client API also takes care of deserializing a server's response formated as JSON into .NET object.
 

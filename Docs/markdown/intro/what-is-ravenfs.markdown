@@ -32,6 +32,6 @@ It is also run periodically to handle failures and restart scenarios. Each of th
 
 ## Files management
 
-You can easily manage your files by using a built-in Silverlight application - The Studio. In order to access it hit the server url address (and the port) in a web browser. More details about how to use The Studio you will find here.
+You can easily manage your files by using a built-in Silverlight application - The Studio. In order to access it hit the server url address (and the port) in a web browser.
 
 ![Figure 1: The Studio UI](images\studio-main.png)
