@@ -185,7 +185,7 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal(sourceMd5, resultMd5);
 
-			var secondSynchronization = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+			var secondSynchronization = sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
 
 			using (var resultFileContent = new MemoryStream())
 			{
@@ -267,7 +267,7 @@ namespace RavenFS.Tests.Synchronization
 
 			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Wait();
+			sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Wait();
 
 			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
 
@@ -291,8 +291,8 @@ namespace RavenFS.Tests.Synchronization
 			sourceClient.UploadAsync("test1.bin", sourceMetadata, sourceContent).Wait();
 			sourceClient.UploadAsync("test2.bin", sourceMetadata, sourceContent).Wait();
 
-			sourceClient.Synchronization.StartSynchronizationToAsync("test2.bin", destinationClient.ServerUrl).Wait();
-			sourceClient.Synchronization.StartSynchronizationToAsync("test1.bin", destinationClient.ServerUrl).Wait();
+			sourceClient.Synchronization.StartAsync("test2.bin", destinationClient.ServerUrl).Wait();
+			sourceClient.Synchronization.StartAsync("test1.bin", destinationClient.ServerUrl).Wait();
 
 			var lastSourceETag = sourceClient.GetMetadataForAsync("test2.bin").Result.Value<Guid>("ETag");
 			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
@@ -324,7 +324,7 @@ namespace RavenFS.Tests.Synchronization
 
 			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-			var sourceSynchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+			var sourceSynchronizationReport = sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
 			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
 
 			Assert.Equal(sourceContent.Length, sourceSynchronizationReport.BytesCopied + sourceSynchronizationReport.BytesTransfered);
@@ -443,7 +443,7 @@ namespace RavenFS.Tests.Synchronization
 
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 
-			var synchronizationReport = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+			var synchronizationReport = sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
 
 			Assert.Equal("The limit of active synchronizations to " + destinationClient.ServerUrl + " server has been achieved. Cannot process a file 'test.bin'.", synchronizationReport.Exception.Message);
 		}
@@ -566,7 +566,7 @@ namespace RavenFS.Tests.Synchronization
 			var destination = NewClient(1);
 
 			source.UploadAsync("empty.test", new NameValueCollection() { {"should-be-transferred", "true"} }, new MemoryStream()).Wait();
-			var result = source.Synchronization.StartSynchronizationToAsync("empty.test", destination.ServerUrl).Result;
+			var result = source.Synchronization.StartAsync("empty.test", destination.ServerUrl).Result;
 
 			Assert.Null(result.Exception);
 
@@ -585,7 +585,7 @@ namespace RavenFS.Tests.Synchronization
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
-			var result = source.Synchronization.StartSynchronizationToAsync("file_which_doesnt_exist", destination.ServerUrl).Result;
+			var result = source.Synchronization.StartAsync("file_which_doesnt_exist", destination.ServerUrl).Result;
 
 			Assert.Equal("File did not exist locally", result.Exception.Message);
 		}
@@ -718,12 +718,12 @@ namespace RavenFS.Tests.Synchronization
 			sourceContent.Position = 0;
 			source.UploadAsync("test.bin", sourceContent).Wait();
 
-			var report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+			var report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
 			Assert.Null(report.Exception);
 
 			destination.DeleteAsync("test.bin").Wait();
 
-			report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+			report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
 			Assert.Null(report.Exception);
 
 			var destContent = new MemoryStream();
@@ -745,7 +745,7 @@ namespace RavenFS.Tests.Synchronization
 			sourceContent.Position = 0;
 			source.UploadAsync("test.bin", sourceContent).Wait();
 
-			var report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+			var report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
 			
 			Assert.NotEqual(Guid.Empty, report.FileETag);
 		}
@@ -760,7 +760,7 @@ namespace RavenFS.Tests.Synchronization
 
 			source.DeleteAsync("test.bin").Wait();
 
-			var synchronizationReport = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+			var synchronizationReport = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
 
 			Assert.Equal(SynchronizationType.Delete, synchronizationReport.Type);
 			Assert.Null(synchronizationReport.Exception);

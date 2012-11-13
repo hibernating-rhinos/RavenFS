@@ -20,7 +20,7 @@ namespace RavenFS.Tests.Bugs
 
 			string fileName = "abc.txt";
 			sourceClient.UploadAsync(fileName, ms).Wait();
-			sourceClient.Synchronization.StartSynchronizationToAsync(fileName, destinationClient.ServerUrl).Wait();
+			sourceClient.Synchronization.StartAsync(fileName, destinationClient.ServerUrl).Wait();
 
 			var destinationFiles = destinationClient.GetFilesAsync("/").Result;
 			Assert.True(destinationFiles.FileCount == 1, "count not one");

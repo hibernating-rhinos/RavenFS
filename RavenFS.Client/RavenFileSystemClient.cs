@@ -648,7 +648,7 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
 			}
 
-			public Task<SynchronizationReport> StartSynchronizationToAsync(string fileName, string destinationServerUrl)
+			public Task<SynchronizationReport> StartAsync(string fileName, string destinationServerUrl)
 			{
 				var requestUriString = String.Format("{0}/synchronization/start/{1}?destinationServerUrl={2}", ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(fileName), Uri.EscapeDataString(destinationServerUrl));
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);

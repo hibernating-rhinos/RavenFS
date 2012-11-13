@@ -35,7 +35,7 @@ namespace RavenFS.Tests.Synchronization
             source.Notifications.WhenSubscriptionsActive().Wait();
 
             var report =
-                source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+                source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
 
             Assert.Null(report.Exception);
 
@@ -58,7 +58,7 @@ namespace RavenFS.Tests.Synchronization
                     ToTask();
             source.Notifications.WhenSubscriptionsActive().Wait();
 
-            report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+            report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
 
             Assert.Null(report.Exception);
 
@@ -81,7 +81,7 @@ namespace RavenFS.Tests.Synchronization
                     ToTask();
             source.Notifications.WhenSubscriptionsActive().Wait();
 
-            report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+            report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
 
             Assert.Null(report.Exception);
 
@@ -104,7 +104,7 @@ namespace RavenFS.Tests.Synchronization
                     ToTask();
             source.Notifications.WhenSubscriptionsActive().Wait();
 
-            report = source.Synchronization.StartSynchronizationToAsync("rename.bin", destination.ServerUrl).Result;
+            report = source.Synchronization.StartAsync("rename.bin", destination.ServerUrl).Result;
 
             Assert.Null(report.Exception);
 
@@ -133,7 +133,7 @@ namespace RavenFS.Tests.Synchronization
             source.Notifications.WhenSubscriptionsActive().Wait();
 
             var report =
-                source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+                source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
 
             Assert.Null(report.Exception);
 
@@ -152,7 +152,7 @@ namespace RavenFS.Tests.Synchronization
                     ToTask();
             source.Notifications.WhenSubscriptionsActive().Wait();
 
-            report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+            report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
 
             Assert.Null(report.Exception);
 
@@ -171,7 +171,7 @@ namespace RavenFS.Tests.Synchronization
                     ToTask();
             source.Notifications.WhenSubscriptionsActive().Wait();
 
-            report = source.Synchronization.StartSynchronizationToAsync("test.bin", destination.ServerUrl).Result;
+            report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
 
             Assert.Null(report.Exception);
 
@@ -190,7 +190,7 @@ namespace RavenFS.Tests.Synchronization
                     ToTask();
             source.Notifications.WhenSubscriptionsActive().Wait();
 
-            report = source.Synchronization.StartSynchronizationToAsync("rename.bin", destination.ServerUrl).Result;
+            report = source.Synchronization.StartAsync("rename.bin", destination.ServerUrl).Result;
 
             Assert.Null(report.Exception);
 

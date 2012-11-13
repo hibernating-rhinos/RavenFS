@@ -24,7 +24,7 @@
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl);
+			sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl);
 			var config = destinationClient.Config.GetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin")).Result;
 
 			Assert.Null(config);

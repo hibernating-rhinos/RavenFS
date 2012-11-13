@@ -62,12 +62,12 @@
 			sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
 
-			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test.txt", destinationClient.ServerUrl).Result;
+			var shouldBeConflict = sourceClient.Synchronization.StartAsync("test.txt", destinationClient.ServerUrl).Result;
 
 			Assert.Equal("File test.txt is conflicted", shouldBeConflict.Exception.Message);
 
 			destinationClient.Synchronization.ResolveConflictAsync("test.txt", ConflictResolutionStrategy.CurrentVersion).Wait();
-			var result = destinationClient.Synchronization.StartSynchronizationToAsync("test.txt", sourceClient.ServerUrl).Result;
+			var result = destinationClient.Synchronization.StartAsync("test.txt", sourceClient.ServerUrl).Result;
 			Assert.Equal(destinationContent.Length, result.BytesCopied + result.BytesTransfered);
 
 			// check if conflict resolution has been properly set on the source
@@ -105,7 +105,7 @@
 				source.UploadAsync(filename, new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
 				destination.UploadAsync(filename, new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
 
-				var result = source.Synchronization.StartSynchronizationToAsync(filename, destination.ServerUrl).Result;
+				var result = source.Synchronization.StartAsync(filename, destination.ServerUrl).Result;
 
 				if (i % 3 == 0) // sometimes insert other configs
 				{
@@ -143,7 +143,7 @@
 
 			sourceClient.UploadAsync("test.bin", sourceMetadataWithConflict, sourceContent).Wait();
 
-			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+			var shouldBeConflict = sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
 
 			Assert.NotNull(shouldBeConflict.Exception);
 			Assert.Equal("File was conflicted on our side", shouldBeConflict.Exception.Message);
@@ -195,7 +195,7 @@
 			destinationClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
 			var synchronizationReport =
-				sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+				sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
 
 			Assert.NotNull(synchronizationReport.Exception);
 			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
@@ -251,7 +251,7 @@
 			content.Position = 0;
 			destinationClient.UploadAsync("test.bin", content).Wait();
 
-			var report = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+			var report = sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
 
 			Assert.Equal(SynchronizationType.MetadataUpdate, report.Type);
 			Assert.Equal("File test.bin is conflicted", report.Exception.Message);
@@ -272,7 +272,7 @@
 			sourceClient.RenameAsync("test.bin", "renamed.bin").Wait();
 
 			// we need to indicate old file name, otherwise content update would be performed because renamed file does not exist on dest
-			var report = sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destinationClient.ServerUrl).Result;
+			var report = sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
 
 			Assert.Equal(SynchronizationType.Rename, report.Type);
 			Assert.Equal("File test.bin is conflicted", report.Exception.Message);
@@ -287,13 +287,13 @@
 			sourceClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
 			destinationClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
 
-			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test", destinationClient.ServerUrl).Result;
+			var shouldBeConflict = sourceClient.Synchronization.StartAsync("test", destinationClient.ServerUrl).Result;
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 
 			destinationClient.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion).Wait();
 
-			var report = sourceClient.Synchronization.StartSynchronizationToAsync("test", destinationClient.ServerUrl).Result;
+			var report = sourceClient.Synchronization.StartAsync("test", destinationClient.ServerUrl).Result;
 
 			Assert.Equal("Destination server had this file in the past", report.Exception.Message);
 		}
@@ -348,7 +348,7 @@
 			sourceClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
 			destinationClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
 
-			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test", destinationClient.ServerUrl).Result;
+			var shouldBeConflict = sourceClient.Synchronization.StartAsync("test", destinationClient.ServerUrl).Result;
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 
@@ -378,7 +378,7 @@
 			sourceClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
 			destinationClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
 
-			var shouldBeConflict = sourceClient.Synchronization.StartSynchronizationToAsync("test", destinationClient.ServerUrl).Result;
+			var shouldBeConflict = sourceClient.Synchronization.StartAsync("test", destinationClient.ServerUrl).Result;
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 
@@ -405,7 +405,7 @@
 			source.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
 			destination.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
 
-			var shouldBeConflict = source.Synchronization.StartSynchronizationToAsync("test", destination.ServerUrl).Result;
+			var shouldBeConflict = source.Synchronization.StartAsync("test", destination.ServerUrl).Result;
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 
@@ -426,20 +426,20 @@
 			server1.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
 			server2.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
 
-			var shouldBeConflict = server1.Synchronization.StartSynchronizationToAsync("test", server2.ServerUrl).Result;
+			var shouldBeConflict = server1.Synchronization.StartAsync("test", server2.ServerUrl).Result;
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 
 			server2.DeleteAsync("test").Wait();
 
-			shouldBeConflict = server2.Synchronization.StartSynchronizationToAsync("test", server1.ServerUrl).Result;
+			shouldBeConflict = server2.Synchronization.StartAsync("test", server1.ServerUrl).Result;
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 
 			// try to resolve and assert that synchronization went fine
 			server1.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion).Wait();
 
-			var shouldNotBeConflict = server1.Synchronization.StartSynchronizationToAsync("test", server2.ServerUrl).Result;
+			var shouldNotBeConflict = server1.Synchronization.StartAsync("test", server2.ServerUrl).Result;
 
 			Assert.Null(shouldNotBeConflict.Exception);
 			Assert.Equal(server1.GetMetadataForAsync("test").Result["Content-Md5"], server2.GetMetadataForAsync("test").Result["Content-Md5"]);
@@ -454,7 +454,7 @@
 			source.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
 			destination.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
 
-			var shouldBeConflict = source.Synchronization.StartSynchronizationToAsync("test", destination.ServerUrl).Result;
+			var shouldBeConflict = source.Synchronization.StartAsync("test", destination.ServerUrl).Result;
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 

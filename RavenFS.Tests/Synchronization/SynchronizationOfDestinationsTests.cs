@@ -382,8 +382,8 @@ namespace RavenFS.Tests.Synchronization
 
 			// upload file to first server and synchronize to others
 			sourceClient.UploadAsync("test.bin", new RandomStream(10)).Wait();
-			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destination1Client.ServerUrl).Wait();
-			sourceClient.Synchronization.StartSynchronizationToAsync("test.bin", destination2Client.ServerUrl).Wait();
+			sourceClient.Synchronization.StartAsync("test.bin", destination1Client.ServerUrl).Wait();
+			sourceClient.Synchronization.StartAsync("test.bin", destination2Client.ServerUrl).Wait();
 
 			// delete file on source
 			sourceClient.DeleteAsync("test.bin").Wait();
