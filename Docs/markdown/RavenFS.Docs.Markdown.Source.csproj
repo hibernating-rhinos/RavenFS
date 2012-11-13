@@ -49,6 +49,7 @@
     <None Include="http-api\file-operations.markdown" />
     <None Include="http-api\folders.markdown" />
     <None Include="http-api\index.markdown" />
+    <None Include="http-api\search.markdown" />
     <None Include="index.markdown" />
     <None Include="intro\.docslist" />
     <None Include="server\administration\.docslist" />
