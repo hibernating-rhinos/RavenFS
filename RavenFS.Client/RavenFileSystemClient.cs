@@ -389,11 +389,6 @@ namespace RavenFS.Client
             get { return notifications; }
         }
 
-	    public Task DownloadSignatureAsync(string sigName, Stream destination, long? from = null, long? to = null)
-		{
-			return DownloadAsync("/rdc/signatures/", sigName, destination, from, to);
-		}
-
 		private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
 		{
 			foreach (var key in metadata.AllKeys)
@@ -616,7 +611,12 @@ namespace RavenFS.Client
 				this.ravenFileSystemClient = ravenFileSystemClient;
 			}
 
-			public Task<SignatureManifest> GetRdcManifestAsync(string path)
+			internal Task DownloadSignatureAsync(string sigName, Stream destination, long? from = null, long? to = null)
+			{
+				return ravenFileSystemClient.DownloadAsync("/rdc/signatures/", sigName, destination, from, to);
+			}
+
+			internal Task<SignatureManifest> GetRdcManifestAsync(string path)
 			{
 				var requestUriString = ravenFileSystemClient.ServerUrl + "/rdc/manifest/" + StringUtils.UrlEncode(path);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
@@ -692,7 +692,7 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
             }
 
-			public Task ApplyConflictAsync(string filename, long remoteVersion, string remoteServerId, IList<HistoryItem> remoteHistory, string remoteServerUrl)
+			internal Task ApplyConflictAsync(string filename, long remoteVersion, string remoteServerId, IList<HistoryItem> remoteHistory, string remoteServerUrl)
             {
 				var requestUriString = String.Format("{0}/synchronization/applyConflict/{1}?remoteVersion={2}&remoteServerId={3}&remoteServerUrl={4}",
                     ravenFileSystemClient.ServerUrl, Uri.EscapeDataString(filename), remoteVersion, Uri.EscapeDataString(remoteServerId), Uri.EscapeDataString(remoteServerUrl));
@@ -828,7 +828,7 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
 			}
 
-			public Task<ListPage<ConflictItem>> GetConflicts(int page = 0, int pageSize = 25)
+			public Task<ListPage<ConflictItem>> GetConflictsAsync(int page = 0, int pageSize = 25)
 			{
 				var requestUriString = String.Format("{0}/synchronization/conflicts?start={1}&pageSize={2}", ravenFileSystemClient.ServerUrl, page, pageSize);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
@@ -845,7 +845,7 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
 			}
 
-			public Task IncrementLastETagAsync(Guid sourceServerId, string sourceServerUrl, Guid sourceFileETag)
+			internal Task IncrementLastETagAsync(Guid sourceServerId, string sourceServerUrl, Guid sourceFileETag)
 			{
 				var requestUriString = String.Format("{0}/synchronization/IncrementLastETag?sourceServerId={1}&sourceServerUrl={2}&sourceFileETag={3}",
 				                                     ravenFileSystemClient.ServerUrl, sourceServerId, sourceServerUrl, sourceFileETag);

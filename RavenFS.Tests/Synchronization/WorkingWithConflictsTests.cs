@@ -95,7 +95,7 @@
 			var destination = NewClient(1);
 
 			// make sure that returns empty list if there are no conflicts yet
-			var pages = destination.Synchronization.GetConflicts().Result;
+			var pages = destination.Synchronization.GetConflictsAsync().Result;
 			Assert.Equal(0, pages.TotalCount);
 
 			for (int i = 0; i < 25; i++)
@@ -116,16 +116,16 @@
 				Assert.Equal(string.Format("File {0} is conflicted", filename), result.Exception.Message);
 			}
 
-			pages = destination.Synchronization.GetConflicts().Result;
+			pages = destination.Synchronization.GetConflictsAsync().Result;
 			Assert.Equal(25, pages.TotalCount);
 
-			pages = destination.Synchronization.GetConflicts(1, 10).Result;
+			pages = destination.Synchronization.GetConflictsAsync(1, 10).Result;
 			Assert.Equal(10, pages.TotalCount);
 
-			pages = destination.Synchronization.GetConflicts(2, 10).Result;
+			pages = destination.Synchronization.GetConflictsAsync(2, 10).Result;
 			Assert.Equal(5, pages.TotalCount);
 
-			pages = destination.Synchronization.GetConflicts(10).Result;
+			pages = destination.Synchronization.GetConflictsAsync(10).Result;
 			Assert.Equal(0, pages.TotalCount);
 		}
 
@@ -409,7 +409,7 @@
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 
-			var pages = destination.Synchronization.GetConflicts().Result;
+			var pages = destination.Synchronization.GetConflictsAsync().Result;
 			var remoteServerUrl = pages.Items[0].RemoteServerUrl;
 
 			Assert.NotNull(remoteServerUrl);
@@ -458,12 +458,12 @@
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 
-			var pages = destination.Synchronization.GetConflicts().Result;
+			var pages = destination.Synchronization.GetConflictsAsync().Result;
 			Assert.Equal(1, pages.TotalCount);
 
 			destination.DeleteAsync("test").Wait();
 
-			pages = destination.Synchronization.GetConflicts().Result;
+			pages = destination.Synchronization.GetConflictsAsync().Result;
 			Assert.Equal(0, pages.TotalCount);
 		}
 	}

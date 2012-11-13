@@ -44,7 +44,7 @@
 				var highestSigName = sigPairs.First().Remote;
 				using (var highestSigContent = remoteCacheSignatureRepository.CreateContent(highestSigName))
 				{
-					await ravenFileSystemClient.DownloadSignatureAsync(highestSigName, highestSigContent);
+					await ravenFileSystemClient.Synchronization.DownloadSignatureAsync(highestSigName, highestSigContent);
 					await SynchronizePairAsync(sigPairs, token);
 				}	
 			}

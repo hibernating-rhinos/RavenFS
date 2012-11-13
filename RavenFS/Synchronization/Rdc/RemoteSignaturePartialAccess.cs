@@ -17,7 +17,7 @@
 
         public Task CopyToAsync(Stream target, long from, long length)
         {
-			return _ravenFileSystemClient.DownloadSignatureAsync(_fileName, target, from, from + length);
+			return _ravenFileSystemClient.Synchronization.DownloadSignatureAsync(_fileName, target, from, from + length);
         }
     }
 }

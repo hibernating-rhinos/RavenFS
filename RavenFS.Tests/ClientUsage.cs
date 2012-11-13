@@ -201,7 +201,7 @@ namespace RavenFS.Tests
             foreach (var item in result.Signatures)
             {
                 var ms = new MemoryStream();
-                client.DownloadSignatureAsync(item.Name, ms).Wait();
+                client.Synchronization.DownloadSignatureAsync(item.Name, ms).Wait();
                 Assert.True(ms.Length == item.Length);
             }
         }
@@ -217,7 +217,7 @@ namespace RavenFS.Tests
 			var signatureManifest = client.Synchronization.GetRdcManifestAsync("mb.bin").Result;
 
             var ms = new MemoryStream();
-            client.DownloadSignatureAsync(signatureManifest.Signatures[0].Name, ms, 5, 10).Wait();
+            client.Synchronization.DownloadSignatureAsync(signatureManifest.Signatures[0].Name, ms, 5, 10).Wait();
             Assert.Equal(5, ms.Length);
         }
 
