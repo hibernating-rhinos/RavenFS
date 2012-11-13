@@ -790,7 +790,7 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
 			}
 
-			public Task<IEnumerable<SynchronizationConfirmation>> ConfirmFilesAsync(IEnumerable<Tuple<string, Guid>> sentFiles)
+			internal Task<IEnumerable<SynchronizationConfirmation>> ConfirmFilesAsync(IEnumerable<Tuple<string, Guid>> sentFiles)
 			{
 				var requestUriString = String.Format("{0}/synchronization/Confirm", ravenFileSystemClient.ServerUrl);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString);
