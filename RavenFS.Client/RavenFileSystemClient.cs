@@ -773,7 +773,7 @@ namespace RavenFS.Client
 					.TryThrowBetterError();
 			}
 
-			public Task<SourceSynchronizationInformation> GetLastSynchronizationFromAsync(Guid serverId)
+			internal Task<SourceSynchronizationInformation> GetLastSynchronizationFromAsync(Guid serverId)
 			{
 				var requestUriString = String.Format("{0}/synchronization/LastSynchronization?from={1}", ravenFileSystemClient.ServerUrl, serverId);
 				var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
