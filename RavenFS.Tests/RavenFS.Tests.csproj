@@ -97,6 +97,7 @@
     <Compile Include="CompleteUsage.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="FileHandling.cs" />
+    <Compile Include="FileNamingTests.cs" />
     <Compile Include="Folders.cs" />
     <Compile Include="StorageOperationsTests.cs" />
     <Compile Include="MtaFactAttribute.cs" />

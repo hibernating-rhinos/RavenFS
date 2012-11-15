@@ -38,7 +38,7 @@ namespace RavenFS.Controllers
 
 		public HttpResponseMessage Get(string name)
 		{
-			name = Uri.UnescapeDataString(name);
+			name = RavenFileNameHelper.RavenPath(name);
 			FileAndPages fileAndPages = null;
 			try
 			{
@@ -64,7 +64,7 @@ namespace RavenFS.Controllers
 
 		public HttpResponseMessage Delete(string name)
 		{
-			name = Uri.UnescapeDataString(name);
+			name = RavenFileNameHelper.RavenPath(name);
 
 			try
 			{
@@ -116,7 +116,7 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("HEAD")]
 		public HttpResponseMessage Head(string name)
 		{
-			name = Uri.UnescapeDataString(name);
+			name = RavenFileNameHelper.RavenPath(name);
 			FileAndPages fileAndPages = null;
 			try
 			{
@@ -141,7 +141,7 @@ namespace RavenFS.Controllers
 
 		public HttpResponseMessage Post(string name)
 		{
-			name = Uri.UnescapeDataString(name);
+			name = RavenFileNameHelper.RavenPath(name);
 
 			var headers = Request.Headers.FilterHeaders();
 			Historian.UpdateLastModified(headers);
@@ -176,6 +176,9 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("PATCH")]
 		public HttpResponseMessage Patch(string name, string rename)
 		{
+			name = RavenFileNameHelper.RavenPath(name);
+			rename = RavenFileNameHelper.RavenPath(rename);
+
 			try
 			{
 				ConcurrencyAwareExecutor.Execute(() =>
@@ -230,7 +233,7 @@ namespace RavenFS.Controllers
 		{
 			try
 			{
-				name = Uri.UnescapeDataString(name);
+				name = RavenFileNameHelper.RavenPath(name);
 
 				var headers = Request.Headers.FilterHeaders();
 				Historian.UpdateLastModified(headers);

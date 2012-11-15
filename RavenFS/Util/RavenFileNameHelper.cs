@@ -2,9 +2,32 @@ namespace RavenFS.Util
 {
 	using System;
 	using System.Globalization;
+	using System.Text;
 
 	public static class RavenFileNameHelper
 	{
+		public static string RavenPath(string fileName)
+		{
+			fileName = Uri.UnescapeDataString(fileName);
+
+			if(fileName.StartsWith("/"))
+			{
+				if (fileName.LastIndexOf("/", StringComparison.InvariantCulture) != 0)
+				{
+					return fileName;
+				}
+
+				return fileName.TrimStart('/');
+			}
+
+			if(fileName.Contains("/"))
+			{
+				return new StringBuilder("/").Append(fileName).ToString();
+			}
+
+			return fileName;
+		}
+
 	    public const string SyncNamePrefix = "Syncing-";
 		public static string SyncNameForFile(string fileName, string destination)
 		{

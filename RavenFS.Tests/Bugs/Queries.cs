@@ -95,7 +95,7 @@ namespace RavenFS.Tests.Bugs
 			var fileInfos = client.SearchAsync("Item:10*").Result;
 
 			Assert.Equal(1, fileInfos.Files.Length);
-			Assert.Equal(filename, fileInfos.Files[0].Name);
+			Assert.Equal("/" + filename, fileInfos.Files[0].Name);
 		}
 	}
 }
