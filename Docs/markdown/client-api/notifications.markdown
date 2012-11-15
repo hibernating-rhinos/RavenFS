@@ -7,7 +7,7 @@ RavenFS offers a notification mechanism to allow track the client what is curren
 * synchronization start/end,
 * conflict detections.
 
-Every avaliable notification in the Client API that you can subscribe returns `IObservable<T>` where `T` is notification type. To work conveniently and efficiently with notifications add and use [Reactive Extensions](http://nuget.org/packages/Rx-Main) library in you project.
+Every available notification in the Client API that you can subscribe returns `IObservable<T>` where `T` is notification type. To work conveniently and efficiently with notifications add and use [Reactive Extensions](http://nuget.org/packages/Rx-Main) library in you project.
 
 ##Folder changes
 
@@ -53,7 +53,7 @@ You can also subscribe notifications which relate to synchronization operations.
 	* starts to process synchronization request,
 	* a synchronization is done.
 
-The notification mechanism does not take into account wheter there were any errors during synchronization or not, the notification is always send.
+The notification mechanism does not take into account whether there were any errors during synchronization or not, the notification is always send.
 
 {CODE-START:csharp/}
 client.Notifications.SynchronizationUpdates().Subscribe(syncNotification =>

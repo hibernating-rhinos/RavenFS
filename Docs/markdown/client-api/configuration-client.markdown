@@ -1,6 +1,6 @@
 ﻿#Configuration
 
-RavenFS has a contept of configuration to save not binary data items. In the Client API a config data is a `NameValueCollection` object (the same like file's metadata). 
+RavenFS has a concept of configuration to save not binary data items. In the Client API a config data is a `NameValueCollection` object (the same like file's metadata). 
 The client has a basic  methods to access and manage configuration items. All methods you will find under `RavenFileSystemClient.Config` property.
 
 ##Create

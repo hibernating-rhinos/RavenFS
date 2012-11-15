@@ -1,6 +1,6 @@
 ﻿#Content update
 
-There are two types of modifications of the file system that are considered as file content update:
+There are two types of modifications of the file system that are considered as a file content update:
 
 * upload a new file,
 * upload a file with changed content.
@@ -10,7 +10,7 @@ In the first case we have to transfer entire file of course. The second case is 
 ##How to detect that content has changed?
 
 Every time that we upload a file RavenFS calculates its hash on the fly. It uses MD5 algorithm and after a successful upload the value is stored in metadata as *Content-MD5*.
-It allows to determine whether contents of the files are different or not just by compare metadata. Note that after the synchronization of file content the hash is calculated as well.
+It allows to determine whether contents of the files are different or not just by metadata comparison. Note that after the synchronization of file content the hash is calculated as well.
 
 ##Remote Differential Compression
 
@@ -20,16 +20,16 @@ To explore RDC in much more detail take a look [here](http://msdn.microsoft.com/
 
 ###Overview
 
-Remote Differential Compression takes care of detection what parts of the file are different and which ones are the same. There is created a list called *need list* whose items describe how to construct the final file on the desination server.
-Each item consists of accurate byte range and information which version of the file ('source' or 'seed') it concerns. Based on the need list the source server pushes all file parts marked as 'source' to the destination. 
+Remote Differential Compression takes care of detection what parts of the file are different and which ones are the same. There is a list created called *need list* whose items describe how to construct the final file on the destination server.
+Each item consists of an accurate byte range and information which version of the file ('source' or 'seed') it concerns. Based on the need list the source server pushes all file parts marked as 'source' to the destination. 
 There transferred data and existing file data (marked as 'seed' on the list) are combined in the order they appear on the need list to create the synchronized file.
 
 RDC is able to calculate the mentioned byte ranges very precisely what allows to reduce the amount of sent data, especially when a small changes of file content were made or just some new data was appended.
 
 ###Signatures
 
-RDC breaks a file into chunks. Each chunk has an assigned hash value that together with the chunk size create *a signature*. A collection of file signatures has the full information about file content. 
-The source server retrieve the information about the file on the destination by downloading *a signature file* that contains all destination file signatures. By using own signature file and downloaded from destination the source is able to generate need list.
+RDC breaks a file into chunks. Each chunk has an assigned hash value that together with the chunk size create a *signature*. A collection of file signatures has full information about file content. 
+The source server retrieves the information about the file on the destination by downloading a *signature file* that contains all destination file signatures. By using own signature file and the one downloaded from destination, the source is able to generate need list.
 
 {INFO For a really large file a signature file may be quite big too. Therefore it is not downloaded as a whole. RavenFS internally also synchronizes the signatures to speed up the entire operation and reduce exchanged data. /}
 
@@ -61,5 +61,5 @@ If the file does not exist on the destination the message consists of only one `
 
 ##Temporary downloading file
 
-RavenFS assumes that an error during the synchronization operation might happen an any time. Hence to avoid a situation where the failed synchronization broke your file, in the middle of executing the synchronization
+RavenFS assumes that an error during the synchronization operation might happen at any time. Hence to avoid a situation where the failed synchronization brakes your file, in the middle of executing the synchronization
 on a destination server we build the final file without removing the old one. The synchronized file is constucted as `filename.downloading`. If the synchronization finishes without any errors `filename` will be deleted and `filename.downloading` renamed to `filename`.

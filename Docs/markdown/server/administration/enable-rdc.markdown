@@ -9,9 +9,9 @@ RavenFS relies on built-in Windows *Remote Differential Compression* feature. Yo
 
 ![Figure 1: Enable RDC in Windows Server](images\enable-rdc-windows-server.png)
 
-##Windows 7
+##Windows 7 and Windows 8
 
 1. Go to `Control Panel -> Programs and Features -> Turn Windows features on or off `
 2. Check `Remote Differential Compression` and click OK. 
 
-![Figure 2: Enable RDC in Windows 7](images\enable-rdc-windows-7.png)
+![Figure 2: Enable RDC in Windows 7 and Windows 8](images\enable-rdc-windows-7.png)

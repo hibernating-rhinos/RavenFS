@@ -1,6 +1,6 @@
 ﻿##Synchronization configurations
 
-RavenFS uses configuration items during a file synchronization process. This section desribes their meaning and format.
+RavenFS uses configuration items during a file synchronization process. This section describes their meaning and format.
 
 ##Raven/Synchronization/VersionHilo
 
@@ -14,7 +14,7 @@ Used by HiLo algorithm to store *"Hi"* value. HiLo method is used to generate a 
 
 ##Raven/Synchronization/Sources/[source-server-id]
 
-The configuration stored on a destination server after a successfull file synchronization, with ETag *LastSourceFileEtag*. There is one configuration per a source server instance.
+The configuration stored on a destination server after a successful file synchronization, with ETag *LastSourceFileEtag*. There is one configuration per a source server instance.
 
 {CODE-START:json /}
 {
@@ -73,7 +73,7 @@ This configuration is stored on a source server for every already synchronized f
 
 ##SyncResult-[filename]
 
-This configuration represents a result of the synchronization of the `[filename]` file. It's saved by destination server. If any exception was throw during synchronization, it is stored in *Exception* property. 
+This configuration represents a result of the synchronization of the `[filename]` file. It's saved by destination server. If any exception was thrown during synchronization, it is stored in *Exception* property. 
 *BytesTransfered, BytesCopied and NeedListLength* are filled up only if [the content has changed](synchronization-types).
 
 {CODE-START:json /}
@@ -90,7 +90,7 @@ This configuration represents a result of the synchronization of the `[filename]
 
 ##Conflicted-[filename]
 
-A conflict item is stored as a configuration. It contains histories of both conflicted files, a file name and a url of source server. The conflict is always detected and created on a destination server.
+A conflict item is stored as a configuration. It contains histories of both conflicted files, a file name and a url of source server. The conflict is always created on a destination server.
 
 {CODE-START:json /}
 {

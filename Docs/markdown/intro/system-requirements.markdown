@@ -2,8 +2,8 @@
 
 ## Client
 
-* Min: .NET Framework 4.0
-* Recommended: .NET Framework 4.0 Client Profile
+* Min: .NET Framework 4.0 Client Profile
+* Recommended: .NET Framework 4.0
 
 ## Silverlight client
 
@@ -11,6 +11,6 @@
 
 ## RavenFS server
 
-* .NET framework 4
+* .NET Framework 4
 * Windows (Windows Server 2003 R2 or later)
-* Remote Differential Compression feature enabled
+* Remote Differential Compression feature [enabled](../server/administration/enable-rdc)

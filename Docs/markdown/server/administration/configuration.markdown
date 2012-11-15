@@ -10,7 +10,7 @@ If RavenFS is running as an IIS application, touching the web.config file will c
 
 This is the standard app.config XML file. The `appSettings` section is where the configuration options go, also for web applications which have a web.config file instead.
 
-{CODE-START:xml /}
+{CODE-START:json /}
 <?xml version="1.0" encoding="utf-8" ?> 
 <configuration> 
   <appSettings> 
@@ -79,8 +79,8 @@ This is the standard app.config XML file. The `appSettings` section is where the
     
 * **Raven/Esent/LogsPath**
     Where to keep the Esent transaction logs. Putting the logs in a different drive than the data and indexes will improve performance significantly.  
-    _Default_: ~/Data/logs  
+    _Default:_ ~/Data/logs  
 
 * **Raven/Esent/CircularLog**
     Whether or not to enable circular logging with Esent.  
-    _Default_: true  
+    _Default:_ true  

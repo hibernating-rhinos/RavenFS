@@ -27,7 +27,7 @@ using (var client = new RavenFileSystemClient("http://localhost:9090"))
 There are a few things to notice in this example:
 
 * file name is the full path,
-* metadata is stored in code as `NameValueCollection` which can have a multiple the same key,
+* metadata is stored in code as `NameValueCollection` which can have multiple values under one key,
 * file content passing as last argument can be any readable `Stream`.
 
 ##Download
@@ -44,7 +44,7 @@ using (var client = new RavenFileSystemClient("http://localhost:9090"))
 }
 {CODE-END /}
 
-In the example above when aync download finishes, file content will be loaded into a stream (memory in this case) and as result of this operation file metadata are returned.
+In the example above when async download finishes, file content will be loaded into a stream (memory in this case) and as result of this operation file metadata are returned.
 
 ##Partial download
 

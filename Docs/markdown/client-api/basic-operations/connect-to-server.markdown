@@ -1,6 +1,6 @@
 ﻿#Connecting to server
 
-No matter which deplyment options has been chosen to run RavenFS server instance (IIS or Windows service), the only thing that the client needs to know is the server address.
+No matter which deployment options has been chosen to run RavenFS server instance (IIS or Windows service), the only thing that the client needs to know is the server address.
 In order to connect to the server use the following code:
 
 {CODE-START:csharp/}

@@ -10,7 +10,7 @@ In order to download a single file and save it locally perform a GET request wit
 > curl -X GET http://localhost:9090/files/filename.bin -o C:\localfilename.bin
 {CODE-END /}
 
-If the file exists the following reponse headers you will get:
+If the file exists the following response headers you will get:
 
 	HTTP/1.1 200 OK
 	Cache-Control: no-cache
@@ -53,7 +53,7 @@ Each item from the returned collection has the information:
 
 ##PUT
 
-Perform a PUT request to upload a file that exist on local machine:
+Perform a PUT request to upload a file that exists on local machine:
 
 {CODE-START:csharp/}
 > curl -X PUT http://localhost:9090/files/filename.bin -T C:\localfile.bin
@@ -88,7 +88,7 @@ curl -X PATCH http://localhost:9090/files/pictures/picture.jpg?rename=wallpapers
 will move *picture.jpg* from *pictures* directory to *wallpapers*.
 
 There are two ways where this operation can fail. The first one is when a file does not exist, then `404 Not Found` will be the result. 
-The second case is when "rename" paramteter indicate a file name that already exist in the file system, then `HTTP/1.1 403 Forbidden` will be resulted.
+The second case is when "rename" parameter indicate a file name that already exists in the file system, then `HTTP/1.1 403 Forbidden` will be resulted.
 
 ##HEAD
 
@@ -108,7 +108,7 @@ Perform a POST request to set new metadata of a file:
 > curl -X POST --header "Content-Length:0" --header "Genre:Pop" --header "Artist:Unknown" http://localhost:9090/music/song.wmv
 {CODE-END /}
 
-In this sample metadata *"Genre"* is set to *"Pop"* and *"Artist"* to *"Unknown"*. All metadata are sent in request headers, note that *Content-Length* is *0*.
+In this sample metadata *"Genre"* is set to *"Pop"* and *"Artist"* to *"Unknown"*. All metadata is sent in request headers, note that *Content-Length* is *0*.
 
 ##DELETE
 

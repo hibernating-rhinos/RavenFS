@@ -18,7 +18,7 @@ using (var client = new RavenFileSystemClient("http://ravenfs-1:9090"))
 Performing this action will cause that files changed since last synchronization cycle will be propagated. Note the optional *forceSyncingAll* parameter. When is set to *true* each finished synchronization work checks if there is any pending file synchronization, if yes and the server has available synchronization slots (controlled by [`Raven-Synchronization-Limit`](../synchronization/configurations#raven-synchronization-limit) config) starts to do it. 
 If this parameter value is *false* the mentioned condition is not even checked.
 
-The second oportunity to force synchronization to an another server is to call:
+The second opportunity to force synchronization to an another server is to call:
 {CODE-START:csharp/}
 using (var client = new RavenFileSystemClient("http://ravenfs-1:9090"))
 {
@@ -34,7 +34,7 @@ The returned result is `SynchronizationReport` that contains the following field
 * an ETag file value,
 * an exception if something went wrong during the operation,
 * a type of the synchronization (ContentUpdate, MetadataUpdate, Rename, Delete),
-* numbers of transfered and copied bytes and a length of need list (filled only if [RDC stuff](../synchronization/synchronization-types/content-update) was performed).
+* numbers of transferred and copied bytes and a length of need list (filled only if [RDC stuff](../synchronization/synchronization-types/content-update) was performed).
 
 ##Monitoring
 
@@ -62,7 +62,7 @@ SynchronizationReport synchronizationReport =
 ##Conflicts
 
 Conflicts appear when an attempt to synchronize files with different version and history is taken. Below is a sample code that shows how we can create a conflict. First we upload two files with the same name to both servers and next try to synchronize from the first one to the second one. 
-Files have independent versions so conflict is created on the destination server. We call `StartAsync` method manually but the same whould happen if a synchronization between the servers would be configured and the source would try to synchronize after file upload.
+Files have independent versions so conflict is created on the destination server. We call `StartAsync` method manually but the same would happen if a synchronization between the servers would be configured and the source would try to synchronize after file upload.
 {CODE-START:csharp/}
 using (var sourceClient = new RavenFileSystemClient("http://ravenfs-1:9091"))
 using (var destinationClient = new RavenFileSystemClient("http://ravenfs-2:9092"))
@@ -127,7 +127,7 @@ The output of this conflict resolving code is:
 
 what means that source server succeeded in synchronization to the destination.
 
-If you want to keep the destination server file resolve by `CurrentVersion`. Then if your configuration is master-master next synchronizatin cycle will transfer the file according to the direction of conflict resolution that is to "the source" in our case. 
+If you want to keep the destination server file resolve by `CurrentVersion`. Then if your configuration is master-master next synchronization cycle will transfer the file according to the direction of conflict resolution that is to "the source" in our case. 
 You can also force the synchronization from the destination like in example below:
 
 {CODE-START:csharp/}

@@ -16,4 +16,4 @@ client.UpdateMetadataAsync("directory/file.bin", new NameValueCollection()
 												});
 {CODE-END /}
 
-Note that if you upload a new metadata the old one will be overrided. If you want to just edit you should update previously downloaded metadata, edit it and pass to `UpdateMetadataAsync` method.
+Note that if you upload a new metadata the old one will be overriden. If you want to just edit you should update previously downloaded metadata, edit it and pass to `UpdateMetadataAsync` method.

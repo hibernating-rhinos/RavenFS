@@ -8,7 +8,7 @@ RavenFS allows you to look for files by using [Lucene query syntax](http://lucen
 * date of modification
 * any metadata.
 
-The more files and corresponed metadata you add the more search terms you can use to build your search query. All available search fields you will find under `search/terms` endpoint. Here is an explanation of built-in search fields: 
+The more files and corresponded metadata you add the more search terms you can use to build your search query. All available search fields you will find under `search/terms` endpoint. Here is an explanation of built-in search fields: 
 (let's assume that we have a file *documents/pictures/wallpaper.jpg*)
 
 * __key - the full name of the file (*"documents/pictures/wallpaper.jpg"*),
@@ -30,8 +30,8 @@ The search supports sorting as well (ascending and descending), the possible opt
 * by size,
 * by date of modification.
 
-The easiest way to search for files from the code is to use either Client API or HTTP API.
+The easiest way to search for files from the code is to use either [Client API](../client-api/index) or [HTTP API](../http-api/index).
 
-Searching is also supported by The Studio, where you will find usefull predefined search filters:
+Searching is also supported by The Studio, where you will find useful predefined search filters:
 
 ![Figure 1: Search filters](images\studio-search-filters.png)

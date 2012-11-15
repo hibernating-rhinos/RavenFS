@@ -2,7 +2,7 @@
 
 ##Browse all files
 
-The simpliest way to browse files is to use `BrowseAsync` method. It will list all files stored on the server, just note the built-in paging functionality.
+The simplest way to browse files is to use `BrowseAsync` method. It will list all files stored on the server, just note the built-in paging functionality.
 
 {CODE-START:csharp/}
 using (var client = new RavenFileSystemClient("http://localhost:9090"))
@@ -18,7 +18,7 @@ using (var client = new RavenFileSystemClient("http://localhost:9090"))
 Each item from returned array of `FileInfo` contain:
 
 * a full path of a file,
-* a size in a humaneable format (e.g. 10GBytes),
+* a size in a human readable format (e.g. 10GBytes),
 * a size in bytes.
 
 ##Search
@@ -58,7 +58,7 @@ SearchResults searchResult =
 
 ###Search Terms
 
-To retrieve all available search terms that you can use to look for files use the instuction:
+To retrieve all available search terms that you can use to look for files use the instruction:
 
 {CODE-START:csharp/}
 string[] searchTerms = await client.GetSearchFieldsAsync();

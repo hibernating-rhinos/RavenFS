@@ -34,7 +34,7 @@ A file has an associated collection of properties called metadata. A user can at
 * *Raven-Synchronization-Source* is an unique identifier of the origin server (where a file was changed last time).
 * *Raven-Synchronization-History* is a list that consists of *{Version, ServerId}* pairs, where *Version* is a previous *Raven-Synchronization-Version* value and *ServerId* is a previous *Raven-Synchronization-Source* identifier.
 
-{INFO *Raven-Synchronization-Version*, *Raven-Synchronization-Source* and *Raven-Synchronization-History* are always updated together when a file is uploaded or metadata changed. Then the existing *Raven-Synchronization-Version, Raven-Synchronization-Source* values are added as a new history item to the *Raven-Synchronization-History* list and new values are assigned to them. All of those propetries, according to their names, are utilized for synchronization purposes./}
+{INFO *Raven-Synchronization-Version*, *Raven-Synchronization-Source* and *Raven-Synchronization-History* are always updated together when a file is uploaded or metadata changed. Then the existing *Raven-Synchronization-Version, Raven-Synchronization-Source* values are added as a new history item to the *Raven-Synchronization-History* list and new values are assigned to them. All of those properties, according to their names, are utilized for synchronization purposes./}
 
 ## Directories
 	
@@ -47,5 +47,5 @@ Internally each file is divided into pages. The page is a sequence of bytes, its
 * stored pages are unique
 * file content is an ordered list of page references
 * each page might be a part of multiple files
-* pages are imutable, once they are written to storage, they cannot be modified (but they can be removed if no file is referencing this page)
+* pages are immutable, once they are written to storage, they cannot be modified (but they can be removed if no file is referencing this page)
 * taken disk space is reduced by reusing pages if files share the same information

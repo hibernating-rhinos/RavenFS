@@ -5,7 +5,7 @@
 The rename operation requires to pass an existing file name and a new name:
 
 {CODE-START:csharp/}
-client.RenameAsync("one.bin", "two.bin");
+client.RenameAsync("documents/one.bin", "documents/two.bin");
 {CODE-END /}
 
 ##Delete
