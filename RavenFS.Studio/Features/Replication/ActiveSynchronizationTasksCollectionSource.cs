@@ -19,21 +19,16 @@ namespace RavenFS.Studio.Features.Replication
 {
     public class ActiveSynchronizationTasksCollectionSource : VirtualCollectionSource<SynchronizationDetails>
     {
-        protected override Task<int> GetCount()
-        {
-            return GetResultAsync(0, 0).ContinueOnSuccess(r => r.TotalCount);
-        }
-
         protected override Task<IList<SynchronizationDetails>> GetPageAsyncOverride(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
-            return GetResultAsync(start, pageSize).ContinueOnSuccess(r => r.Items);
-        }
-
-        private Task<ListPage<SynchronizationDetails>> GetResultAsync(int start, int pageSize)
-        {
             return ApplicationModel.Current.Client.Synchronization
-                .GetActiveAsync(start, pageSize)
-                .Catch("Could not fetch list of synchronization tasks from server");
-        } 
+                                   .GetActiveAsync(start, pageSize)
+                                   .Catch("Could not fetch list of synchronization tasks from server")
+                                   .ContinueOnSuccess(r =>
+                                       {
+                                           SetCount(r.TotalCount);
+                                           return r.Items;
+                                       });
+        }
     }
 }

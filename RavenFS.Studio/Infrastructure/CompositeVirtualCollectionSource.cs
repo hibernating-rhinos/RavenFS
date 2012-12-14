@@ -18,6 +18,7 @@ namespace RavenFS.Studio.Infrastructure
     public class CompositeVirtualCollectionSource<T> : IVirtualCollectionSource<T>, INotifyBusyness
     {
         public event EventHandler<VirtualCollectionSourceChangedEventArgs> CollectionChanged;
+        public event EventHandler<EventArgs> CountChanged;
         public event EventHandler<EventArgs> IsBusyChanged;
 
         private readonly IVirtualCollectionSource<T> source1;
@@ -31,6 +32,8 @@ namespace RavenFS.Studio.Infrastructure
             source1.CollectionChanged += HandleChildCollectionChanged;
             source2.CollectionChanged += HandleChildCollectionChanged;
 
+            source1.CountChanged += HandleCountChanged;
+            source2.CountChanged += HandleCountChanged;
             if (source1 is INotifyBusyness)
             {
                 ((INotifyBusyness) source1).IsBusyChanged += HandleIsBusyChanged;
@@ -40,6 +43,11 @@ namespace RavenFS.Studio.Infrastructure
             {
                 ((INotifyBusyness)source2).IsBusyChanged += HandleIsBusyChanged;
             }
+        }
+
+        private void HandleCountChanged(object sender, EventArgs e)
+        {
+            OnCountChanged(EventArgs.Empty);
         }
 
         private void HandleIsBusyChanged(object sender, EventArgs e)
@@ -58,13 +66,19 @@ namespace RavenFS.Studio.Infrastructure
             if (handler != null) handler(this, e);
         }
 
+        protected void OnCountChanged(EventArgs e)
+        {
+            EventHandler<EventArgs> handler = CountChanged;
+            if (handler != null) handler(this, e);
+        }
+
         protected void OnIsBusyChanged(EventArgs e)
         {
             EventHandler<EventArgs> handler = IsBusyChanged;
             if (handler != null) handler(this, e);
         }
 
-        public int Count
+        public int? Count
         {
             get { return Source1.Count + Source2.Count; }
         }
@@ -79,22 +93,29 @@ namespace RavenFS.Studio.Infrastructure
             get { return source2; }
         }
 
-        public Task<IList<T>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
+        public async Task<IList<T>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
-            var source1Count = Source1.Count;
+            await EnsureChildCollectionCountsInitialised();
 
-            if (start < source1Count - pageSize)
+            var source1Count = Source1.Count;
+            while (!source1Count.HasValue)
             {
-                return Source1.GetPageAsync(start, pageSize, sortDescriptions);
+                await EnsureChildCollectionCountsInitialised();
+                source1Count = Source1.Count;
+            }
+
+            if (start < source1Count.Value - pageSize)
+            {
+                return await Source1.GetPageAsync(start, pageSize, sortDescriptions);
             }
             else if (start > source1Count)
             {
-                var source2Start = start - source1Count;
-                return Source2.GetPageAsync(source2Start, pageSize, sortDescriptions);
+                var source2Start = start - source1Count.Value;
+                return await Source2.GetPageAsync(source2Start, pageSize, sortDescriptions);
             }
             else
             {
-                var source1PageSize = source1Count - start;
+                var source1PageSize = source1Count.Value - start;
                 var source2PageSize = pageSize - source1PageSize;
 
                 // we need to mash up the two sources to provide a full page
@@ -102,10 +123,29 @@ namespace RavenFS.Studio.Infrastructure
                 var source2Results = Source2.GetPageAsync(0, source2PageSize, sortDescriptions);
 
                 var result =
-                    TaskEx.WhenAll(source1Results, source2Results)
+                    await TaskEx.WhenAll(source1Results, source2Results)
                         .ContinueWith(_ => (IList<T>)source1Results.Result.Concat(source2Results.Result).ToArray());
 
                 return result;
+            }
+        }
+
+        private async Task EnsureChildCollectionCountsInitialised()
+        {
+            var forceInitialiseCountTasks = new List<Task>();
+
+            if (!source1.Count.HasValue)
+            {
+                forceInitialiseCountTasks.Add(Source1.GetPageAsync(0, 0, null));
+            }
+            if (!source2.Count.HasValue)
+            {
+                forceInitialiseCountTasks.Add(Source2.GetPageAsync(0, 0, null));
+            }
+
+            if (forceInitialiseCountTasks.Count > 0)
+            {
+                await TaskEx.WhenAll(forceInitialiseCountTasks);
             }
         }
 

@@ -19,21 +19,16 @@ namespace RavenFS.Studio.Features.Replication
 {
     public class IncomingCompletedSynchronizationTasksCollectionSource : VirtualCollectionSource<SynchronizationReport>
     {
-        protected override Task<int> GetCount()
-        {
-            return GetResultAsync(0, 0).ContinueOnSuccess(r => r.TotalCount);
-        }
 
         protected override Task<IList<SynchronizationReport>> GetPageAsyncOverride(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
-            return GetResultAsync(start, pageSize).ContinueOnSuccess(r => r.Items);
-        }
-
-        private Task<ListPage<SynchronizationReport>> GetResultAsync(int start, int pageSize)
-        {
             return ApplicationModel.Current.Client.Synchronization
-                .GetFinishedAsync(start, pageSize)
-                .Catch("Could not fetch completed tasks from server");
-        } 
+                                   .GetFinishedAsync(start, pageSize)
+                                   .Catch("Could not fetch completed tasks from server").ContinueOnSuccess(r =>
+                                       {
+                                           SetCount(r.TotalCount);
+                                           return r.Items;
+                                       });
+        }
     }
 }

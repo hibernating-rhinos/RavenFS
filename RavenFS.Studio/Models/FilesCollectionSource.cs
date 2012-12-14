@@ -54,12 +54,6 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        protected override Task<int> GetCount()
-        {
-            return DoQuery(0, 0, null).ContinueWith(t => t.Result.FileCount,
-                TaskContinuationOptions.ExecuteSynchronously);
-        }
-
         protected override Task<IList<FileSystemModel>> GetPageAsyncOverride(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
             return DoQuery(start, pageSize, sortDescriptions)

@@ -112,20 +112,6 @@ namespace RavenFS.Studio.Models
                                   });
         }
 
-
-        protected override Task<int> GetCount()
-        {
-            if (searchPattern.IsNullOrEmpty())
-            {
-                return TaskEx.FromResult(0);
-            }
-            else
-            {
-                return DoQuery(0, 0, null)
-                    .ContinueWith(t => t.Result.FileCount, TaskContinuationOptions.ExecuteSynchronously);
-            }
-        }
-
         protected void OnSearchError(SearchErrorEventArgs e)
         {
             var handler = SearchError;

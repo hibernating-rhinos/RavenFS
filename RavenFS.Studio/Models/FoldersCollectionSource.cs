@@ -19,7 +19,7 @@ using RavenFS.Studio.Extensions;
 
 namespace RavenFS.Studio.Models
 {
-    public class FoldersCollectionSource : VirtualCollectionSource<FileSystemModel>
+    public class FoldersCollectionSource : IVirtualCollectionSource<FileSystemModel>
     {
         private const int MaximumNumberOfFolders = 1024;
         private readonly object _lock = new object();
@@ -30,7 +30,8 @@ namespace RavenFS.Studio.Models
         private bool isPruningFolders;
         private string searchPattern;
         private string searchPatternRegEx;
-        private IList<FileSystemModel> combinedFilteredList = new List<FileSystemModel>(); 
+        private IList<FileSystemModel> combinedFilteredList = new List<FileSystemModel>();
+        private int? count;
 
         public FoldersCollectionSource()
         {
@@ -60,6 +61,7 @@ namespace RavenFS.Studio.Models
 
         private void UpdateCombinedFilteredList()
         {
+            int folderCount;
             lock (_lock)
             {
                 combinedFilteredList.Clear();
@@ -67,7 +69,10 @@ namespace RavenFS.Studio.Models
                 var items = virtualFolders.EmptyIfNull().Concat(folders.EmptyIfNull()).Where(f => MatchesSearchPattern(f.Name));
 
                 combinedFilteredList.AddRange(items);
+                folderCount = combinedFilteredList.Count;
             }
+
+            Count = folderCount;
         }
 
         private bool MatchesSearchPattern(string name)
@@ -91,14 +96,6 @@ namespace RavenFS.Studio.Models
                 SetFolders(null);
                 UpdateVirtualFolders();
                 BeginGetFolders();
-            }
-        }
-
-        protected override Task<int> GetCount()
-        {
-            lock (_lock)
-            {
-                return TaskEx.FromResult(combinedFilteredList.Count);
             }
         }
 
@@ -127,7 +124,8 @@ namespace RavenFS.Studio.Models
             Replace("\\?", ".") + "$";
         }
 
-        protected override Task<IList<FileSystemModel>> GetPageAsyncOverride(int start, int pageSize, IList<SortDescription> sortDescriptions)
+
+        public Task<IList<FileSystemModel>> GetPageAsync(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
             lock (_lock)
             {
@@ -136,7 +134,7 @@ namespace RavenFS.Studio.Models
                     return TaskEx.FromResult((IList<FileSystemModel>) (new FileSystemModel[0]));
                 }
 
-                var count = Math.Min(Math.Max(Count- start,0), pageSize);
+                var count = Math.Min(Math.Max(Count.Value- start,0), pageSize);
 
                 return TaskEx.FromResult((IList<FileSystemModel>)(combinedFilteredList.Apply(e => ApplySort(e, sortDescriptions)).Skip(start).Take(count).ToArray()));
             }
@@ -182,7 +180,7 @@ namespace RavenFS.Studio.Models
                                 SetFolders(new DirectoryModel[0]);
                             }
 
-                            Refresh(RefreshMode.ClearStaleData);
+                            OnCollectionChanged(new VirtualCollectionSourceChangedEventArgs(ChangeType.Reset));
 
                         }, synchronizationContextScheduler)
                         .Catch("Could not get folders from server");
@@ -205,6 +203,49 @@ namespace RavenFS.Studio.Models
             }
 
             UpdateCombinedFilteredList();
+        }
+
+        public event EventHandler<VirtualCollectionSourceChangedEventArgs> CollectionChanged;
+
+        protected virtual void OnCollectionChanged(VirtualCollectionSourceChangedEventArgs e)
+        {
+            var handler = CollectionChanged;
+            if (handler != null) handler(this, e);
+        }
+
+        public event EventHandler<EventArgs> CountChanged;
+
+        protected virtual void OnCountChanged()
+        {
+            var handler = CountChanged;
+            if (handler != null) handler(this, EventArgs.Empty);
+        }
+
+        public int? Count
+        {
+            get { return count; }
+            private set
+            {
+                bool wasChanged = false;
+                lock (_lock)
+                {
+                    if (count != value)
+                    {
+                        count = value;
+                        wasChanged = true;
+                    }
+                }
+
+                if (wasChanged)
+                {
+                    OnCountChanged();
+                }
+            }
+        }
+
+        public void Refresh(RefreshMode mode)
+        {
+            BeginGetFolders();
         }
     }
 }
