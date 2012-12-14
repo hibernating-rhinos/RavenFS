@@ -7,36 +7,40 @@
                      xmlns:Models="clr-namespace:RavenFS.Studio.Models"
                      xmlns:Replication="clr-namespace:RavenFS.Studio.Features.Replication"
                      xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
-                     xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors" mc:Ignorable="d"
+                     xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors"
+                     xmlns:Client="clr-namespace:RavenFS.Client;assembly=RavenFS.Client.Silverlight"
+                     xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+                     mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="400"
     Infrastructure:ModelResolver.AttachModel="ReplicationConflictsModel" d:DataContext="{d:DesignInstance Models:ReplicationConflictsModel}">
 
     <Grid x:Name="LayoutRoot" >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*" MinHeight="30"/>
         </Grid.RowDefinitions>
         <TextBlock Text="Conflicts"  Style="{StaticResource Style_TextBlock_PagePartHeader}" Grid.Row="0" Margin="0,10"/>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Top">
+        <StackPanel Orientation="Horizontal" Grid.Row="2" VerticalAlignment="Top">
             <Image Source="{StaticResource Image_Tick_Tiny}" Stretch="None" VerticalAlignment="Center"/>
             <TextBlock Text="There are no conflicts" Margin="5,0,0,0" FontSize="12" VerticalAlignment="Center"/>
         </StackPanel>
 
-        <ListBox ItemsSource="{Binding ConflictedFiles}"
-                 Grid.Row="1"
-                 Visibility="{Binding ConflictedFiles.Count, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,5" Visibility="{Binding ConflictedFiles.Count, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}">
+            <Button Content="Resolve with Local" Command="{Binding ResolveWithLocalVersionCommand}"/>
+            <Button Content="Resolve with Remote" Command="{Binding ResolveWithRemoteVersionCommand}" Margin="5,0,0,0"/>
+        </StackPanel>
         
         <sdk:DataGrid ItemsSource="{Binding ConflictedFiles}" IsReadOnly="True" RowHeight="25" AutoGenerateColumns="False" 
-                              Grid.Row="1"
+                              Grid.Row="2"
                               Visibility="{Binding ConflictedFiles.Count, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}">
-                    <sdk:DataGrid.Columns>
+            <i:Interaction.Behaviors>
+                <Behaviors:SelectRowOnRightClickBehavior/>
+                <Behaviors:BindSelectedItemsBehavior Target="{Binding SelectedItems}"/>
+                <Infrastructure:ProvideVisibleItemRangeFromDataGridBehavior/>
+            </i:Interaction.Behaviors>       
+            <sdk:DataGrid.Columns>
                 <sdk:DataGridTemplateColumn CanUserReorder="False" CanUserResize="False" CanUserSort="False">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -47,7 +51,7 @@
                 <sdk:DataGridTemplateColumn Header="File Name">
                             <sdk:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Item.Name}" 
+                                    <TextBlock Text="{Binding Item.FileName}" 
                                        Behaviors:FadeTrimming.IsEnabled="True" 
                                        Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
                                        VerticalAlignment="Center"
@@ -55,10 +59,10 @@
                                 </DataTemplate>
                             </sdk:DataGridTemplateColumn.CellTemplate>
                         </sdk:DataGridTemplateColumn>
-                <sdk:DataGridTemplateColumn Header="Folder">
+                <sdk:DataGridTemplateColumn Header="Source">
                     <sdk:DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Item.Folder}" 
+                            <TextBlock Text="{Binding Item.RemoteServerUrl}" 
                                        Behaviors:FadeTrimming.IsEnabled="True" 
                                        Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
                                        VerticalAlignment="Center"

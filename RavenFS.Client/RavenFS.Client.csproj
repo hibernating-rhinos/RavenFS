@@ -99,8 +99,10 @@
     <Compile Include="ConcurrencyException.cs" />
     <Compile Include="ConfigChange.cs" />
     <Compile Include="ConflictItem.cs" />
+    <Compile Include="ConflictNotification.cs" />
     <Compile Include="ConflictResolutionStrategy.cs" />
     <Compile Include="ConflictDetected.cs" />
+    <Compile Include="ConflictResolved.cs" />
     <Compile Include="Connections\HttpWebRequestExtensions.cs" />
     <Compile Include="Connections\ObservableLineStream.cs" />
     <Compile Include="Connections\WebResponseExtensions.cs" />

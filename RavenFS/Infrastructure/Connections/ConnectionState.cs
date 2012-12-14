@@ -48,7 +48,7 @@ namespace RavenFS.Infrastructure.Connections
                 return true;
             }
 
-            if (notification is ConflictDetected && watchConflicts > 0)
+            if (notification is ConflictNotification && watchConflicts > 0)
             {
                 return true;
             }

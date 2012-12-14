@@ -112,16 +112,16 @@ namespace RavenFS.Client.Changes
 	        task.ContinueWith(_ => pendingConnectionTasks.TryRemove(task));
 	    }
 
-	    public IObservable<ConflictDetected> ConflictDetected()
+	    public IObservable<ConflictNotification> Conflicts()
         {
             EnsureConnectionInitiated();
 
-            var observable = subjects.GetOrAdd("conflicts", s => new NotificationSubject<ConflictDetected>(
+            var observable = subjects.GetOrAdd("conflicts", s => new NotificationSubject<ConflictNotification>(
                                                                () => ConfigureConnection("watch-conflicts"), 
                                                                () => ConfigureConnection("unwatch-conflicts"), 
                                                                item => true));
 
-            return (IObservable<ConflictDetected>)observable;
+            return (IObservable<ConflictNotification>)observable;
         }
 
         public IObservable<FileChange> FolderChanges(string folder)

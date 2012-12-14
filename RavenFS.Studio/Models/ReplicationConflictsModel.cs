@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,26 +10,52 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using RavenFS.Client;
+using RavenFS.Studio.Commands;
+using RavenFS.Studio.Features.Replication;
 using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Models
 {
     public class ReplicationConflictsModel : ViewModel
     {
-        public VirtualCollection<FileSystemModel> ConflictedFiles { get; private set; }
+        private ICommand _resolveWithLocalCommand;
+        private ICommand _resolveWithRemoteCommand;
+        public VirtualCollection<ConflictItem> ConflictedFiles { get; private set; }
 
         public ReplicationConflictsModel()
         {
             ConflictedFiles =
-                new VirtualCollection<FileSystemModel>(
-                    new SearchResultsCollectionSource() {SearchPattern = "Raven-Synchronization-Conflict:True"}, 30, 30);
+                new VirtualCollection<ConflictItem>(new ConflictedFilesCollectionSource(), 30, 30);
+
+            SelectedItems = new ItemSelection<VirtualItem<ConflictItem>>();
         }
 
+        public ICommand ResolveWithLocalVersionCommand
+        {
+            get
+            {
+                return _resolveWithLocalCommand ??
+                       (_resolveWithLocalCommand = new ResolveConflictWithLocalVersionCommand(SelectedItems));
+            }
+        }
+
+        public ICommand ResolveWithRemoteVersionCommand
+        {
+            get
+            {
+                return _resolveWithRemoteCommand ??
+                       (_resolveWithRemoteCommand = new ResolveConflictWithRemoteVersionCommand(SelectedItems));
+            }
+        }
+
+        public ItemSelection<VirtualItem<ConflictItem>> SelectedItems { get; private set; }
+ 
         protected override void OnViewLoaded()
         {
             ConflictedFiles.Refresh();
 
-            ApplicationModel.Current.Client.Notifications.ConflictDetected()
+            ApplicationModel.Current.Client.Notifications.Conflicts()
                 .Throttle(TimeSpan.FromSeconds(1))
                 .TakeUntil(Unloaded)
                 .ObserveOnDispatcher()

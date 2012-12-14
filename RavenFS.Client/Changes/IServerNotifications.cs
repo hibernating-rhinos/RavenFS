@@ -9,7 +9,7 @@ namespace RavenFS.Client.Changes
         Task WhenSubscriptionsActive();
 
 	    IObservable<ConfigChange> ConfigurationChanges();
-	    IObservable<ConflictDetected> ConflictDetected();
+	    IObservable<ConflictNotification> Conflicts();
 	    IObservable<FileChange> FolderChanges(string folder);
         IObservable<SynchronizationUpdate> SynchronizationUpdates();
 	}

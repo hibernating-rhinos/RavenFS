@@ -115,11 +115,17 @@
     <Compile Include="..\RavenFS.Client\ConflictItem.cs">
       <Link>ConflictItem.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\ConflictNotification.cs">
+      <Link>ConflictNotification.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\ConflictResolutionStrategy.cs">
       <Link>ConflictResolutionStrategy.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\ConflictDetected.cs">
       <Link>ConflictDetected.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\ConflictResolved.cs">
+      <Link>ConflictResolved.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\Connections\HttpWebRequestExtensions.cs">
       <Link>Connection\HttpWebRequestExtensions.cs</Link>

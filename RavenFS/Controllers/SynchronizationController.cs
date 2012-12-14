@@ -135,6 +135,7 @@
 				if (isConflictResolved)
 				{
 					ConflictArtifactManager.Delete(fileName);
+                    Publisher.Publish(new ConflictResolved() { FileName = fileName});
 				}
 			}
 			catch (Exception ex)
@@ -270,6 +271,7 @@
 				if (isConflictResolved)
 				{
 					ConflictArtifactManager.Delete(fileName);
+                    Publisher.Publish(new ConflictResolved() { FileName = fileName });
 				}
 
                 PublishFileNotification(fileName, FileChangeAction.Update);
@@ -656,6 +658,7 @@
 				accessor.UpdateFileMetadata(fileName, localMetadata);
 
 				ConflictArtifactManager.Delete(fileName, accessor);
+                Publisher.Publish(new ConflictResolved() { FileName = fileName });
 			});
 		}
 

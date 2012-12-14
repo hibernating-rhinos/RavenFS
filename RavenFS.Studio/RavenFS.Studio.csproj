@@ -166,9 +166,11 @@
     <Compile Include="Commands\AddFolderCommand.cs" />
     <Compile Include="Commands\AddSynchronizationDestinationCommand.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
+    <Compile Include="Commands\ResolveConflictWithRemoteVersionCommand.cs" />
     <Compile Include="Commands\NavigateToExternalUrlCommand.cs" />
     <Compile Include="Commands\NavigateToFileSystemModelCommand.cs" />
     <Compile Include="Commands\RemoveReplicationDestinationCommand.cs" />
+    <Compile Include="Commands\ResolveConflictWithLocalVersionCommand.cs" />
     <Compile Include="Commands\RunSynchronizationCommand.cs" />
     <Compile Include="Commands\ShowErrorListWindowCommand.cs" />
     <Compile Include="Commands\ToggleOperationsPaneVisibilityCommand.cs" />
@@ -330,6 +332,7 @@
     <Compile Include="Models\AsyncOperationStatus.cs" />
     <Compile Include="Models\AsyncOperationsViewModel.cs" />
     <Compile Include="Models\ConfigurationModel.cs" />
+    <Compile Include="Features\Replication\ConflictedFilesCollectionSource.cs" />
     <Compile Include="Models\Notification.cs" />
     <Compile Include="Models\NotificationLevel.cs" />
     <Compile Include="Models\ReplicationConflictsModel.cs" />

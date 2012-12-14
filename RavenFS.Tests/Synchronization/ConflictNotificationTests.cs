@@ -41,7 +41,7 @@ namespace RavenFS.Tests.Synchronization
             sourceClient.UploadAsync("abc.txt", sourceMetadata, sourceContent).Wait();
 
             var notificationTask =
-                destinationClient.Notifications.ConflictDetected().Timeout(TimeSpan.FromSeconds(5)).Take(1).ToTask();
+                destinationClient.Notifications.Conflicts().OfType<ConflictDetected>().Timeout(TimeSpan.FromSeconds(5)).Take(1).ToTask();
             destinationClient.Notifications.WhenSubscriptionsActive().Wait();
 
             sourceClient.Synchronization.StartAsync("abc.txt", destinationClient.ServerUrl).Wait();
