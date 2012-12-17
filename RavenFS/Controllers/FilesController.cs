@@ -105,7 +105,7 @@ namespace RavenFS.Controllers
 				return new HttpResponseMessage(HttpStatusCode.NotFound);
 			}
 
-			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Delete });
+			Publisher.Publish(new FileChange { File = FilePathTools.Cannoicalise(name), Action = FileChangeAction.Delete });
 			log.Debug("File '{0}' was deleted", name);
 			
 			StartSynchronizeDestinationsInBackground();
@@ -165,7 +165,7 @@ namespace RavenFS.Controllers
 
 			Search.Index(name, headers);
 
-			Publisher.Publish(new FileChange { File = name, Action = FileChangeAction.Update });
+			Publisher.Publish(new FileChange { File = FilePathTools.Cannoicalise(name), Action = FileChangeAction.Update });
 
 			StartSynchronizeDestinationsInBackground();
 
@@ -273,7 +273,7 @@ namespace RavenFS.Controllers
 					Storage.Batch(accessor => accessor.UpdateFileMetadata(name, headers));
 					headers["Content-Length"] = readFileToDatabase.TotalSizeRead.ToString(CultureInfo.InvariantCulture);
 					Search.Index(name, headers);
-					Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = name });
+					Publisher.Publish(new FileChange { Action = FileChangeAction.Add, File = FilePathTools.Cannoicalise(name) });
 
 					log.Debug("Updates of '{0}' metadata and indexes were finished. New file ETag is {1}", name,
 							  headers.Value<Guid>("ETag"));

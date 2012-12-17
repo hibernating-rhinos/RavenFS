@@ -620,7 +620,7 @@
 	    {
 	        Publisher.Publish(new FileChange()
 	                              {
-	                                  File = fileName,
+                                      File = FilePathTools.Cannoicalise(fileName),
 	                                  Action = action
 	                              });
 	    }

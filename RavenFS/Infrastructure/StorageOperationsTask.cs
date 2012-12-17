@@ -52,7 +52,7 @@
 		public void RenameFile(RenameFileOperation operation)
 		{
 			var configName = RavenFileNameHelper.RenameOperationConfigNameForFile(operation.Name);
-			notificationPublisher.Publish(new FileChange { File = operation.Name, Action = FileChangeAction.Renaming });
+			notificationPublisher.Publish(new FileChange { File = FilePathTools.Cannoicalise(operation.Name), Action = FileChangeAction.Renaming });
 
 			storage.Batch(accessor =>
 			{
@@ -79,7 +79,7 @@
 			});
 
 			notificationPublisher.Publish(new ConfigChange { Name = configName, Action = ConfigChangeAction.Set });
-			notificationPublisher.Publish(new FileChange { File = operation.Rename, Action = FileChangeAction.Renamed });
+			notificationPublisher.Publish(new FileChange { File = FilePathTools.Cannoicalise(operation.Rename), Action = FileChangeAction.Renamed });
 		}
 
 		public void IndicateFileToDelete(string fileName)

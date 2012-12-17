@@ -325,6 +325,7 @@
     <Compile Include="Util\DispsableAction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\BufferPool.cs" />
+    <Compile Include="Util\FilePathTools.cs" />
     <Compile Include="Util\HashKey.cs" />
     <Compile Include="Util\HttpEndpointRegistration.cs" />
     <Compile Include="Util\IBufferPool.cs" />

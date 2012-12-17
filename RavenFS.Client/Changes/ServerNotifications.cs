@@ -136,9 +136,9 @@ namespace RavenFS.Client.Changes
             EnsureConnectionInitiated();
 
             var observable = subjects.GetOrAdd("folder/" + canonicalisedFolder, s => new NotificationSubject<FileChange>(
-                                                               () => ConfigureConnection("watch-folder", canonicalisedFolder), 
-                                                               () => ConfigureConnection("unwatch-folder", canonicalisedFolder), 
-                                                               f => f.File.StartsWith(canonicalisedFolder, StringComparison.InvariantCultureIgnoreCase)));
+                                                               () => ConfigureConnection("watch-folder", folder), 
+                                                               () => ConfigureConnection("unwatch-folder", folder), 
+                                                               f => f.File.StartsWith(folder, StringComparison.InvariantCultureIgnoreCase)));
 
             return (IObservable<FileChange>)observable;
         }
