@@ -96,6 +96,7 @@ namespace RavenFS.Studio.Models
                 SetFolders(null);
                 UpdateVirtualFolders();
                 BeginGetFolders();
+                OnCollectionChanged(new VirtualCollectionSourceChangedEventArgs(ChangeType.Reset));
             }
         }
 
@@ -180,7 +181,7 @@ namespace RavenFS.Studio.Models
                                 SetFolders(new DirectoryModel[0]);
                             }
 
-                            OnCollectionChanged(new VirtualCollectionSourceChangedEventArgs(ChangeType.Reset));
+                            OnCollectionChanged(new VirtualCollectionSourceChangedEventArgs(ChangeType.Refresh));
 
                         }, synchronizationContextScheduler)
                         .Catch("Could not get folders from server");

@@ -2,6 +2,7 @@ using System;
 using System.Reactive.Linq;
 using System.Reactive;
 using RavenFS.Client;
+using RavenFS.Studio.Extensions;
 using RavenFS.Studio.Features.Replication;
 using RavenFS.Studio.Infrastructure;
 
@@ -28,20 +29,18 @@ namespace RavenFS.Studio.Models
             IncomingItems.Refresh();
 
             ApplicationModel.Current.Client.Notifications.SynchronizationUpdates()
-                .Throttle(TimeSpan.FromSeconds(1))
+                .Where(notification => notification.SynchronizationDirection == SynchronizationDirection.Outgoing)
+                .SampleResponsive(TimeSpan.FromSeconds(5.0))
                 .TakeUntil(Unloaded)
                 .ObserveOnDispatcher()
-                .Subscribe(notification =>
-                               {
-                                   if (notification.SynchronizationDirection == SynchronizationDirection.Outgoing)
-                                   {
-                                       OutgoingQueue.Refresh(RefreshMode.PermitStaleDataWhilstRefreshing);
-                                   }
-                                   else
-                                   {
-                                       IncomingItems.Refresh(RefreshMode.PermitStaleDataWhilstRefreshing);
-                                   }
-                               });
+                .Subscribe(notification => OutgoingQueue.Refresh(RefreshMode.PermitStaleDataWhilstRefreshing));
+
+            ApplicationModel.Current.Client.Notifications.SynchronizationUpdates()
+                .Where(notification => notification.SynchronizationDirection == SynchronizationDirection.Incoming)
+                .SampleResponsive(TimeSpan.FromSeconds(5.0))
+                .TakeUntil(Unloaded)
+                .ObserveOnDispatcher()
+                .Subscribe(notification => IncomingItems.Refresh(RefreshMode.PermitStaleDataWhilstRefreshing));
         }
     }
 }

@@ -96,9 +96,9 @@ namespace RavenFS.Studio.Models
                                                      ApplicationModel.Current.Client.Notifications.FolderChanges(
                                                          CurrentFolder.Value)
                                                          .TakeUntil(Unloaded.Amb(CurrentFolder.ObserveChanged().Select(_ => Unit.Default)))
-                                                         .Throttle(TimeSpan.FromSeconds(0.25))
+                                                         .SampleResponsive(TimeSpan.FromSeconds(5.0))
                                                          .ObserveOn(DispatcherScheduler.Instance)
-                                                         .Subscribe(_ => Files.Refresh());
+                                                         .Subscribe(_ => Files.Refresh(RefreshMode.PermitStaleDataWhilstRefreshing));
                                                  };
 
             SearchPattern = new Observable<string>() { Value=""};

@@ -14,6 +14,7 @@ using RavenFS.Client;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Features.Replication;
 using RavenFS.Studio.Infrastructure;
+using RavenFS.Studio.Extensions;
 
 namespace RavenFS.Studio.Models
 {
@@ -56,7 +57,7 @@ namespace RavenFS.Studio.Models
             ConflictedFiles.Refresh();
 
             ApplicationModel.Current.Client.Notifications.Conflicts()
-                .Throttle(TimeSpan.FromSeconds(1))
+                .SampleResponsive(TimeSpan.FromSeconds(5))
                 .TakeUntil(Unloaded)
                 .ObserveOnDispatcher()
                 .Subscribe(notification => ConflictedFiles.Refresh(RefreshMode.PermitStaleDataWhilstRefreshing));
