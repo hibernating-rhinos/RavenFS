@@ -21,7 +21,18 @@
             <sdk:TabItem Header="Outgoing">
                 <sdk:DataGrid ItemsSource="{Binding OutgoingQueue}" IsReadOnly="True" RowHeight="25" AutoGenerateColumns="False" >
                     <sdk:DataGrid.Columns>
-                        <sdk:DataGridTemplateColumn Header="Destination">
+                        <sdk:DataGridTemplateColumn Header="File Name" Width="200">
+                            <sdk:DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Item.FileName}" 
+                                       Behaviors:FadeTrimming.IsEnabled="True" 
+                                       Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
+                                       VerticalAlignment="Center"
+                                       Margin="4"/>
+                                </DataTemplate>
+                            </sdk:DataGridTemplateColumn.CellTemplate>
+                        </sdk:DataGridTemplateColumn>
+                        <sdk:DataGridTemplateColumn Header="Destination" Width="150">
                             <sdk:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Item.DestinationUrl}" 
@@ -32,10 +43,11 @@
                                 </DataTemplate>
                             </sdk:DataGridTemplateColumn.CellTemplate>
                         </sdk:DataGridTemplateColumn>
-                        <sdk:DataGridTemplateColumn Header="File Name">
+          
+                        <sdk:DataGridTemplateColumn Header="Type">
                             <sdk:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Item.FileName}" 
+                                    <TextBlock Text="{Binding Item.Type}" 
                                        Behaviors:FadeTrimming.IsEnabled="True" 
                                        Behaviors:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
                                        VerticalAlignment="Center"
@@ -49,7 +61,7 @@
             <sdk:TabItem Header="Incoming">
                 <sdk:DataGrid ItemsSource="{Binding IncomingItems}" IsReadOnly="True" RowHeight="25" AutoGenerateColumns="False" >
                     <sdk:DataGrid.Columns>
-                        <sdk:DataGridTemplateColumn Header="File Name">
+                        <sdk:DataGridTemplateColumn Header="File Name" Width="200">
                             <sdk:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Item.FileName}" 
