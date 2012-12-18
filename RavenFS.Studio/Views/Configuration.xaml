@@ -79,7 +79,7 @@
                 <Button VerticalAlignment="Stretch"
                             Command="{Binding ShowSearch}" 
                             Margin="5,0,0,-7" 
-                            ToolTipService.ToolTip="Filter Files by Name"
+                            ToolTipService.ToolTip="Filter Configurations by Name"
                             Style="{StaticResource Style_Button_Chromeless}">
                     <Grid>
                         <!-- We put this toggle button inside another button and cover

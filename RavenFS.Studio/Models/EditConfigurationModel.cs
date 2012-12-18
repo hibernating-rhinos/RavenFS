@@ -57,7 +57,19 @@ namespace RavenFS.Studio.Models
         private void BeginLoadConfig(string configName)
         {
             ApplicationModel.Current.Client.Config.GetConfig(configName)
-                            .ContinueOnUIThread(t => EditConfigurationValues(t.Result));
+                            .ContinueOnUIThread(t =>
+                                {
+                                    if (t.Exception != null || t.Result == null)
+                                    {
+                                        ApplicationModel.Current.AddErrorNotification(t.Exception,
+                                                                                      string.Format("Configuration '{0}' could not be loaded",configName));
+                                        UrlUtil.Navigate("/configuration");
+                                    }
+                                    else
+                                    {
+                                        EditConfigurationValues(t.Result);
+                                    }
+                                });
         }
 
         private void EditConfigurationValues(NameValueCollection settings)
