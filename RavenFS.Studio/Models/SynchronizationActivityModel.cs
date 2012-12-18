@@ -30,14 +30,14 @@ namespace RavenFS.Studio.Models
 
             ApplicationModel.Current.Client.Notifications.SynchronizationUpdates()
                 .Where(notification => notification.SynchronizationDirection == SynchronizationDirection.Outgoing)
-                .SampleResponsive(TimeSpan.FromSeconds(5.0))
+                .SampleResponsive(TimeSpan.FromSeconds(1.0))
                 .TakeUntil(Unloaded)
                 .ObserveOnDispatcher()
                 .Subscribe(notification => OutgoingQueue.Refresh(RefreshMode.PermitStaleDataWhilstRefreshing));
 
             ApplicationModel.Current.Client.Notifications.SynchronizationUpdates()
                 .Where(notification => notification.SynchronizationDirection == SynchronizationDirection.Incoming)
-                .SampleResponsive(TimeSpan.FromSeconds(5.0))
+                .SampleResponsive(TimeSpan.FromSeconds(1.0))
                 .TakeUntil(Unloaded)
                 .ObserveOnDispatcher()
                 .Subscribe(notification => IncomingItems.Refresh(RefreshMode.PermitStaleDataWhilstRefreshing));

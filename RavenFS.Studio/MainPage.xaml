@@ -8,7 +8,9 @@
              xmlns:Views="clr-namespace:RavenFS.Studio.Views"
              xmlns:RavenControls="clr-namespace:RavenFS.Studio.Controls"
              xmlns:MarkupExtensions="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
-             xmlns:Models="clr-namespace:RavenFS.Studio.Models" FontFamily="Segoe UI"
+             xmlns:Models="clr-namespace:RavenFS.Studio.Models"
+             xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors"
+             xmlns:System="clr-namespace:System;assembly=mscorlib" FontFamily="Segoe UI"
              FontSize="12">
 
     <Grid x:Name="LayoutRoot"
@@ -128,6 +130,11 @@
 								 Command="{StaticResource NavigateToCommand}"
 								 CommandParameter="/configuration"
 								 Style="{StaticResource Style_Text_HeaderLink}">
+                    <Behaviors:LinkHighlighter.AlternativeUris>
+                        <Behaviors:StringCollection>
+                            <System:String>/EditConfiguration</System:String>
+                        </Behaviors:StringCollection>
+                    </Behaviors:LinkHighlighter.AlternativeUris>
                 </HyperlinkButton>
                 <toolkit:Separator Style="{StaticResource Style_Separator_HeaderLink}" />
             </StackPanel>

@@ -14,14 +14,31 @@
                  xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
                      xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
                     xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
-            Title="Configuration - RavenFS"
+                         xmlns:Controls="clr-namespace:RavenFS.Studio.Controls"
+                         Title="Configuration - RavenFS"
             Style="{StaticResource Style_Page}"
             Infrastructure:ModelResolver.AttachModel="ConfigurationPageModel" d:DataContext="{d:DesignInstance Models:ConfigurationPageModel}">
+    <UserControl.Resources>
+        <Storyboard x:Key="HideSearchBar">
+            <DoubleAnimation Storyboard.TargetName="SearchBar" Storyboard.TargetProperty="Height" To="0" Duration="0:0:0.1"/>
+        </Storyboard>
+        <Storyboard x:Key="ShowSearchBar">
+            <DoubleAnimation Storyboard.TargetName="SearchBar" Storyboard.TargetProperty="Height" To="36" Duration="0:0:0.1"/>
+        </Storyboard>
+    </UserControl.Resources>
+    <i:Interaction.Triggers>
+        <b:StudioKeyTrigger Key="F" Modifiers="Control">
+            <i:InvokeCommandAction Command="{Binding ShowSearch}"/>
+        </b:StudioKeyTrigger>
+    </i:Interaction.Triggers>
     <Grid Margin="{StaticResource Margin_ContentPage}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Border Style="{StaticResource Style_Border_Header}"
                 Grid.ColumnSpan="3">
@@ -41,160 +58,132 @@
                 Grid.ColumnSpan="3"
                 Style="{StaticResource Style_Border_Toolbar}">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6">
-                <Button ToolTipService.ToolTip="Save Configuration"
-                            VerticalAlignment="Center"
-                            Command="{Binding SaveConfiguration}" Margin="5,0,0,0"
-                            Style="{StaticResource Style_Button_MouseOverChrome}">
-                    <Image Source="{StaticResource Image_Save_Tiny}" Stretch="None"/>
-                </Button>
-
-                <Button ToolTipService.ToolTip="Discard Changes"
-                            VerticalAlignment="Center"
-                            Command="{Binding DiscardChanges}" Margin="5,0,0,0"
-                            Style="{StaticResource Style_Button_MouseOverChrome}">
-                    <Image Source="{StaticResource Image_Undo_Tiny}" Stretch="None"/>
-                </Button>
-
-                <toolkit:Separator Style="{StaticResource Style_Separator_Toolbar}"/>
-
-                <Button ToolTipService.ToolTip="Add Configuration"
+                <Button ToolTipService.ToolTip="New Configuration"
                             VerticalAlignment="Center"
                             Command="{Binding AddNewConfiguration}" Margin="5,0,0,0"
                             Style="{StaticResource Style_Button_MouseOverChrome}">
-                    <Image Source="{StaticResource Image_Add_Tiny}" Stretch="None"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{StaticResource Image_Add_Tiny}" Stretch="None" Margin="0,0,2,0"/>
+                        <TextBlock Text="New" VerticalAlignment="Center"/>
+                    </StackPanel>
                 </Button>
-                <Button ToolTipService.ToolTip="Delete Configuration"
+                <Button ToolTipService.ToolTip="Delete Selected Configurations"
                             VerticalAlignment="Center"
-                            Command="{Binding DeleteConfiguration}" Margin="5,0,0,0"
+                            Command="{Binding DeleteSelectedItemsCommand}" Margin="5,0,0,0"
                             Style="{StaticResource Style_Button_MouseOverChrome}">
-                    <Image Source="{StaticResource Image_Remove_Tiny}" Stretch="None"/>
+                    <StackPanel Orientation="Horizontal">
+                    <Image Source="{StaticResource Image_Remove_Tiny}" Stretch="None" Margin="0,0,2,0"/>
+                        <TextBlock Text="Delete" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button VerticalAlignment="Stretch"
+                            Command="{Binding ShowSearch}" 
+                            Margin="5,0,0,-7" 
+                            ToolTipService.ToolTip="Filter Files by Name"
+                            Style="{StaticResource Style_Button_Chromeless}">
+                    <Grid>
+                        <!-- We put this toggle button inside another button and cover
+                            it up with a transparent rectangle so that the user can't actually click it.
+                            We just use it for displaying the checked state, not for toggling it-->
+                        <ToggleButton IsChecked="{Binding IsSearchVisible.Value}"
+                                    Style="{StaticResource Style_ToggleButton_Search}"
+                                    VerticalAlignment="Stretch"
+                                    Padding="3,3,3,10">
+                            <Image Source="{StaticResource Image_Search_Small}" Stretch="None" VerticalAlignment="Center"/>
+                        </ToggleButton>
+                        <Rectangle Fill="Transparent"/>
+                    </Grid>
                 </Button>
             </StackPanel>
             
         </Border>
-
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="4*"/>
-            </Grid.ColumnDefinitions>
-            <Grid Grid.Row="2" Grid.Column="0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <TextBlock Text="Configurations" Foreground="{StaticResource Brush_HeaderText}" Margin="5,4" Grid.Row="0"/>
-            <ListBox ItemsSource="{Binding AvailableConfigurations}"
-                     SelectedItem="{Binding SelectedConfiguration.Value, Mode=TwoWay}"
-                     Grid.Row="1">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock x:Name="TextBlock">
-                            <Run Text="{Binding Name}"/>
-                            <Run x:Name="NeedsSavingGlyph" Text=""/>
-                            <i:Interaction.Triggers>
-                                <b:DataTriggerEvaluateOnLoad Binding="{Binding IsModified}" Value="True" Comparison="Equal">
-                                    <ei:ChangePropertyAction TargetName="TextBlock" PropertyName="FontWeight" Value="{z:Static Member=FontWeights.Bold}"/>
-                                    <ei:ChangePropertyAction TargetName="NeedsSavingGlyph" PropertyName="Text" Value=" *"/>
-                                </b:DataTriggerEvaluateOnLoad>
-                                <b:DataTriggerEvaluateOnLoad Binding="{Binding IsModified}" Value="False" Comparison="Equal">
-                                    <ei:ChangePropertyAction TargetName="TextBlock" PropertyName="FontWeight" Value="{z:Static Member=FontWeights.Normal}"/>
-                                    <ei:ChangePropertyAction TargetName="NeedsSavingGlyph" PropertyName="Text" Value=""/>
-                                </b:DataTriggerEvaluateOnLoad>
-                            </i:Interaction.Triggers>
-                        </TextBlock>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Grid>
-
-        <controls:GridSplitter Grid.Row="0"
-              Grid.Column="1"
-              VerticalAlignment="Stretch" Width="10" HorizontalAlignment="Center"/>
-        
-        <Grid Grid.Row="2"
-              Grid.Column="2"
-              Margin="0,0,0,0">
-            <Border Background="White">
-                <RichTextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="15">
-                    <Paragraph>
-                        Select a configuration to view and edit it, or <Hyperlink Command="{Binding AddNewConfiguration}">Add a New Configuration</Hyperlink>
-                    </Paragraph>
-                </RichTextBlock>
+        <Border x:Name="SearchBar" Grid.Row="2" Style="{StaticResource Style_Border_SearchBar}" Height="0">
+            <i:Interaction.Triggers>
+                <ei:DataTrigger Binding="{Binding IsSearchVisible.Value}" Value="True" Comparison="Equal">
+                    <ei:ControlStoryboardAction Storyboard="{StaticResource ShowSearchBar}" ControlStoryboardOption="Play"/>
+                </ei:DataTrigger>
+                <ei:DataTrigger Binding="{Binding IsSearchVisible.Value}" Value="False" Comparison="Equal">
+                    <ei:ControlStoryboardAction Storyboard="{StaticResource HideSearchBar}" ControlStoryboardOption="Play"/>
+                </ei:DataTrigger>
+            </i:Interaction.Triggers>
+            <Border VerticalAlignment="Top" Height="36">
+                <toolkit:DockPanel Margin="4" LastChildFill="False" >
+                    <TextBlock Text="Starts with:" VerticalAlignment="Center" FontWeight="Bold" Margin="5,0,5,0"/>
+                    <TextBox Text="{Binding SearchPattern.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="220" Margin="5,0,5,0">
+                        <i:Interaction.Triggers>
+                            <b:StudioKeyTrigger Key="Escape">
+                                <i:InvokeCommandAction Command="{Binding ClearSearch}"/>
+                            </b:StudioKeyTrigger>
+                            <b:UIMessageTrigger SourceObject="{Binding}" Message="{z:Static Member=Models:ConfigurationPageModel.SearchStartedMessage}">
+                                <b:FocusElementAction/>
+                                <b:SelectAllAction/>
+                            </b:UIMessageTrigger>
+                        </i:Interaction.Triggers>
+                    </TextBox>
+                    <Button Command="{Binding ClearSearch}"
+                            ToolTipService.ToolTip="Clear Search"
+                            VerticalAlignment="Center"
+                                Style="{StaticResource Style_Button_MouseOverChrome}">
+                        <Image Source="{StaticResource Image_Close}" Stretch="None" VerticalAlignment="Center"/>
+                    </Button>
+                </toolkit:DockPanel>
             </Border>
-            <sdk:DataGrid 
+        </Border>
+        <sdk:DataGrid 
                       x:Name="DataGrid"
-                      ItemsSource="{Binding ConfigurationSettings.Value.EditableValues}" 
+                      ItemsSource="{Binding Configurations}" 
+                    Grid.Row="3"
                       Margin="0" 
-                      IsReadOnly="False" 
+                      IsReadOnly="True" 
                       AutoGenerateColumns="False"
-                      CanUserReorderColumns="False"
-                      CanUserSortColumns="True"
-                      VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Auto"
-                      FrozenColumnCount="1"
-                      Visibility="{Binding ConfigurationSettings.Value, Converter={StaticResource Converter_CollapsedWhenNull}}"
                 >
                 <i:Interaction.Triggers>
                     <b:StudioKeyTrigger Key="Delete" SourceObject="{Binding ElementName=DataGrid}">
-                        <i:InvokeCommandAction Command="{Binding ConfigurationSettings.Value.DeleteMetadataItemCommand}" CommandParameter="{Binding ElementName=DataGrid, Path=SelectedItem}"/>
+                        <i:InvokeCommandAction Command="{Binding DeleteSelectedItemsCommand}"/>
                     </b:StudioKeyTrigger>
                 </i:Interaction.Triggers>
-                <i:Interaction.Behaviors>
-                    <b:PreventEditingReadOnlyRows IsReadOnlyBinding="{Binding IsReadOnly}"/>
-                    <b:SelectRowOnRightClickBehavior/>
+            <i:Interaction.Behaviors>
+                <b:DataGridRowDoubleClickCommandBehavior Command="{Binding EditConfiguration}"/>
+                <b:SelectRowOnRightClickBehavior/>
+                <b:BindSelectedItemsBehavior Target="{Binding SelectedItems}"/>
+                <Infrastructure:ProvideVisibleItemRangeFromDataGridBehavior/>
                 </i:Interaction.Behaviors>
-                <sdk:DataGrid.Columns>
-                    <sdk:DataGridTemplateColumn Header="Key" Width="Auto" IsReadOnly="False">
+            <toolkit:ContextMenuService.ContextMenu>
+                <toolkit:ContextMenu>
+                    <toolkit:MenuItem Header="Delete"
+                                    Command="{Binding DeleteSelectedItemsCommand}">
+                        <toolkit:MenuItem.Icon>
+                            <Image Source="{StaticResource Image_Remove_Tiny}"/>
+                        </toolkit:MenuItem.Icon>
+                    </toolkit:MenuItem>
+                </toolkit:ContextMenu>
+            </toolkit:ContextMenuService.ContextMenu>
+            <sdk:DataGrid.Columns>
+                    <sdk:DataGridTemplateColumn Header="Name" Width="*" IsReadOnly="True">
                         <sdk:DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid>
-                                    <TextBlock Text="{Binding Key}" 
-                                           Visibility="{Binding Key, Converter={StaticResource Converter_CollapsedWhenStringIsNullOrEmpty}}"
+                                    <TextBlock Text="{Binding Item.Name}" 
                                            b:FadeTrimming.IsEnabled="True" 
                                            b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
                                            VerticalAlignment="Center"
                                            Margin="4"/>
-                                    <TextBlock Text="[New Key]" 
-                                           Visibility="{Binding Key, Converter={StaticResource Converter_VisibleWhenStringIsNullOrEmpty}}"
-                                           b:FadeTrimming.IsEnabled="True" 
-                                           ToolTipService.ToolTip="Double-click to edit"
-                                           VerticalAlignment="Center"
-                                           Foreground="Gray"
-                                           Margin="4"/>
                                 </Grid>
                             </DataTemplate>
                         </sdk:DataGridTemplateColumn.CellTemplate>
-                        <sdk:DataGridTemplateColumn.CellEditingTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <TextBox Text="{Binding Key, Mode=TwoWay}"/>
-                                </Grid>
-                            </DataTemplate>
-                        </sdk:DataGridTemplateColumn.CellEditingTemplate>
+                        
                     </sdk:DataGridTemplateColumn>
-                    <sdk:DataGridTemplateColumn Header="Value" Width="Auto" IsReadOnly="False">
-                        <sdk:DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Value}" 
-                                       b:FadeTrimming.IsEnabled="True" 
-                                       b:FadeTrimming.ShowTextInToolTipWhenTrimmed="True"
-                                       VerticalAlignment="Center"
-                                       Margin="4"/>
-                            </DataTemplate>
-                        </sdk:DataGridTemplateColumn.CellTemplate>
-                        <sdk:DataGridTemplateColumn.CellEditingTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <TextBox Text="{Binding Value, Mode=TwoWay}"/>
-                                </Grid>
-                            </DataTemplate>
-                        </sdk:DataGridTemplateColumn.CellEditingTemplate>
-                    </sdk:DataGridTemplateColumn>
+                    
                 </sdk:DataGrid.Columns>
             </sdk:DataGrid>
-        </Grid>
-        </Grid>
+        
+        <Controls:BusynessIndicator BusyBody="{Binding Configurations.Source}" Grid.Row="4"/>
+
+        <Border Grid.Row="5" Style="{StaticResource Style_Border_Footer}" Margin="0,3,0,0">
+            <TextBlock Margin="3">
+                <Run Text="{Binding Configurations.Count}"/>
+                <Run Text=" Configurations"/>
+            </TextBlock>
+        </Border>
     </Grid>
 </Infrastructure:PageView>

@@ -57,7 +57,7 @@ namespace RavenFS.Studio.Models
             ConflictedFiles.Refresh();
 
             ApplicationModel.Current.Client.Notifications.Conflicts()
-                .SampleResponsive(TimeSpan.FromSeconds(5))
+                .SampleResponsive(TimeSpan.FromSeconds(1))
                 .TakeUntil(Unloaded)
                 .ObserveOnDispatcher()
                 .Subscribe(notification => ConflictedFiles.Refresh(RefreshMode.PermitStaleDataWhilstRefreshing));

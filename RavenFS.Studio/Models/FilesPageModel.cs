@@ -96,7 +96,7 @@ namespace RavenFS.Studio.Models
                                                      ApplicationModel.Current.Client.Notifications.FolderChanges(
                                                          CurrentFolder.Value)
                                                          .TakeUntil(Unloaded.Amb(CurrentFolder.ObserveChanged().Select(_ => Unit.Default)))
-                                                         .SampleResponsive(TimeSpan.FromSeconds(5.0))
+                                                         .SampleResponsive(TimeSpan.FromSeconds(1))
                                                          .ObserveOn(DispatcherScheduler.Instance)
                                                          .Subscribe(_ => Files.Refresh(RefreshMode.PermitStaleDataWhilstRefreshing));
                                                  };

@@ -157,6 +157,7 @@
     <Compile Include="Behaviors\SelectItemOnRightClick.cs" />
     <Compile Include="Behaviors\SelectRowOnRightClickBehavior.cs" />
     <Compile Include="Behaviors\ShowAutoCompleteDropDown.cs" />
+    <Compile Include="Behaviors\StringCollection.cs" />
     <Compile Include="Behaviors\StudioKeyTrigger.cs" />
     <Compile Include="Behaviors\UIMessageEventArgs.cs" />
     <Compile Include="Behaviors\UIMessageTrigger.cs" />
@@ -166,6 +167,7 @@
     <Compile Include="Commands\AddFolderCommand.cs" />
     <Compile Include="Commands\AddSynchronizationDestinationCommand.cs" />
     <Compile Include="Commands\ClearCompletedOperationsCommand.cs" />
+    <Compile Include="Commands\DeleteConfigurationsCommand.cs" />
     <Compile Include="Commands\ResolveConflictWithRemoteVersionCommand.cs" />
     <Compile Include="Commands\NavigateToExternalUrlCommand.cs" />
     <Compile Include="Commands\NavigateToFileSystemModelCommand.cs" />
@@ -219,6 +221,9 @@
     <Compile Include="External\MultiBinding\MultiBinding.cs" />
     <Compile Include="External\MultiBinding\MultiBindingExpression.cs" />
     <Compile Include="External\MultiBinding\MultiBindingValidationError.cs" />
+    <Compile Include="Features\Configuration\ConfigurationsCollectionSource.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Features\Replication\ActiveSynchronizationTasksCollectionSource.cs" />
     <Compile Include="Features\Replication\IncomingCompletedSynchronizationTasksCollectionSource.cs">
       <SubType>Code</SubType>
