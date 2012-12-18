@@ -738,5 +738,78 @@ namespace RavenFS.Storage
 
 			return configs;
 		}
+
+	    public IList<string> GetConfigNamesStartingWithPrefix(string prefix, int start, int take, out int total)
+	    {
+	        var configs = new List<string>();
+
+	        Api.JetSetCurrentIndex(session, Config, "by_name");
+
+	        if (!string.IsNullOrEmpty(prefix))
+	        {
+	            Api.MakeKey(session, Config, prefix, Encoding.Unicode, MakeKeyGrbit.NewKey);
+	            if (Api.TrySeek(session, Config, SeekGrbit.SeekGE) == false)
+	            {
+	                total = 0;
+	                return configs;
+	            }
+
+	            Api.MakeKey(session, Config, prefix, Encoding.Unicode,
+	                        MakeKeyGrbit.NewKey | MakeKeyGrbit.PartialColumnEndLimit);
+	            try
+	            {
+	                Api.JetMove(session, Config, start, MoveGrbit.MoveKeyNE);
+	            }
+	            catch (EsentNoCurrentRecordException)
+	            {
+	                total = 0;
+	                return configs;
+	            }
+
+	            if (!Api.TrySetIndexRange(session, Config,
+	                                      SetIndexRangeGrbit.RangeInclusive | SetIndexRangeGrbit.RangeUpperLimit))
+	            {
+	                total = 0;
+	                return configs;
+	            }
+	        }
+	        else
+	        {
+	            if (!Api.TryMoveFirst(session, Config))
+	            {
+                    total = 0;
+                    return configs;
+	            }
+	        }
+
+	        var skippedCount = 0;
+
+	        for (int i = 0; i < start; i++)
+	        {
+	            if (Api.TryMoveNext(session, Config) == false)
+	            {
+                    total = skippedCount;
+	                return configs;
+	            }
+	            skippedCount++;
+	        }
+
+	        var hasNextRecord = false;
+	        do
+	        {
+	            var configName = Api.RetrieveColumnAsString(session, Config,tableColumnsCache.ConfigColumns["name"]);
+	            configs.Add(configName);
+	            hasNextRecord = Api.TryMoveNext(session, Config);
+	        } while (hasNextRecord && configs.Count < take);
+
+	        int extraRecords = 0;
+	        if (hasNextRecord)
+	        {
+	            Api.JetIndexRecordCount(session, Config, out extraRecords, 0);
+	        }
+	        total = skippedCount + configs.Count + extraRecords;
+
+	        return configs;
+	    }
 	}
 }

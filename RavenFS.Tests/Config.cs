@@ -73,8 +73,29 @@ namespace RavenFS.Tests
 			client.Config.DeleteConfig("test").Wait();
 
 			Assert.Null(client.Config.GetConfig("test").Result);
-
-
 		}
+
+	    [Fact]
+	    public void CanGetTotalConfigCount()
+	    {
+	        var client = NewClient();
+
+	        client.Config.SetConfig("TestConfigA", new NameValueCollection()).Wait();
+	        client.Config.SetConfig("TestConfigB", new NameValueCollection()).Wait();
+
+	        Assert.Equal(2, client.Config.SearchAsync(prefix: "Test").Result.TotalCount);
+	    }
+
+        [Fact]
+        public void SearchResultsOnlyIncludeConfigsWithPrefix()
+        {
+            var client = NewClient();
+
+            client.Config.SetConfig("TestConfigA", new NameValueCollection()).Wait();
+            client.Config.SetConfig("TestConfigB", new NameValueCollection()).Wait();
+            client.Config.SetConfig("AnotherB", new NameValueCollection()).Wait();
+
+            Assert.Equal(2, client.Config.SearchAsync(prefix: "Test").Result.TotalCount);
+        }
 	}
 }

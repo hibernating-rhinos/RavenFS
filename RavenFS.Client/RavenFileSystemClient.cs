@@ -600,6 +600,30 @@ namespace RavenFS.Client
 						}
 					});
 			}
+
+            public Task<ConfigSearchResults> SearchAsync(string prefix, int start = 0, int pageSize = 25)
+            {
+                var requestUriBuilder = new StringBuilder(ravenFileSystemClient.ServerUrl)
+                    .Append("/config/search/?prefix=")
+                    .Append(Uri.EscapeUriString(prefix))
+                    .Append("&start=")
+                    .Append(start)
+                    .Append("&pageSize=")
+                    .Append(pageSize);
+
+                var request = (HttpWebRequest)WebRequest.Create(requestUriBuilder.ToString().NoCache());
+                return request.GetResponseAsync()
+                    .ContinueWith(task =>
+                    {
+                        using (var responseStream = task.Result.GetResponseStream())
+                        using (var streamReader = new StreamReader(responseStream))
+                        using (var jsonTextReader = new JsonTextReader(streamReader))
+                        {
+                            return new JsonSerializer().Deserialize<ConfigSearchResults>(jsonTextReader);
+                        }
+                    })
+                    .TryThrowBetterError();
+            }
 		}
 
 		public class SynchronizationClient

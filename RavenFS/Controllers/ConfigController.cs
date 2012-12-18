@@ -4,7 +4,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web.Http;
 using Newtonsoft.Json;
+using RavenFS.Storage;
 
 namespace RavenFS.Controllers
 {
@@ -26,7 +28,7 @@ namespace RavenFS.Controllers
 			});
 			return names;
 		}
-
+        
 		public HttpResponseMessage Get(string name)
 		{
 			try
@@ -44,6 +46,28 @@ namespace RavenFS.Controllers
 			}
 
 		}
+
+        [AcceptVerbs("GET")]
+        public ConfigSearchResults ConfigNamesStartingWith(string prefix = "")
+        {
+            ConfigSearchResults results = null;
+            Storage.Batch(accessor =>
+                {
+                    int totalResults;
+                    var names = accessor.GetConfigNamesStartingWithPrefix(prefix, Paging.Start, Paging.PageSize,
+                                                                          out totalResults);
+
+                    results = new ConfigSearchResults()
+                        {
+                            ConfigNames = names,
+                            PageSize = Paging.PageSize,
+                            Start = Paging.Start,
+                            TotalCount = totalResults
+                        };
+                });
+
+            return results;
+        }
 
 		public async Task<HttpResponseMessage> Put(string name)
 		{
