@@ -28,7 +28,7 @@
     <BitmapImage x:Key="Image_Remove_Tiny"
                  UriSource="Remove.png" />
     <BitmapImage x:Key="Image_Save_Tiny"
-                 UriSource="Save.png" />
+                 UriSource="save_tiny.png" />
     <BitmapImage x:Key="Image_Undo_Tiny"
                  UriSource="Undo.png" />
     <BitmapImage x:Key="Image_Query_Small"

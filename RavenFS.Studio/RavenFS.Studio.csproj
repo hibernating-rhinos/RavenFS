@@ -333,6 +333,7 @@
     <Compile Include="Models\AsyncOperationsViewModel.cs" />
     <Compile Include="Models\ConfigurationModel.cs" />
     <Compile Include="Features\Replication\ConflictedFilesCollectionSource.cs" />
+    <Compile Include="Models\EditConfigurationModel.cs" />
     <Compile Include="Models\Notification.cs" />
     <Compile Include="Models\NotificationLevel.cs" />
     <Compile Include="Models\ReplicationConflictsModel.cs" />
@@ -359,6 +360,9 @@
     <Compile Include="Models\VirtualFoldersManager.cs" />
     <Compile Include="Views\AsyncOperationsView.xaml.cs">
       <DependentUpon>AsyncOperationsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\EditConfiguration.xaml.cs">
+      <DependentUpon>EditConfiguration.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Replication.xaml.cs">
       <DependentUpon>Replication.xaml</DependentUpon>
@@ -459,6 +463,10 @@
     <Page Include="Themes\Generic.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\EditConfiguration.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\Replication.xaml">
       <SubType>Designer</SubType>
@@ -562,6 +570,7 @@
     <Resource Include="Assets\Images\file_conflict_tiny.png" />
     <Resource Include="Assets\Images\add_folder_tiny.png" />
     <Resource Include="Assets\Images\folder_open_tiny.png" />
+    <Resource Include="Assets\Images\save_tiny.png" />
     <Content Include="Impl\PopupPlacement\Credit.txt" />
     <Content Include="Impl\SplitButton\Credits.txt" />
     <Content Include="Impl\WatermarkedTextBox\Credits.txt" />
@@ -597,7 +606,6 @@
     <Resource Include="Assets\Images\Query.png" />
     <Resource Include="Assets\Images\RefreshSmall.png" />
     <Resource Include="Assets\Images\Remove.png" />
-    <Resource Include="Assets\Images\Save.png" />
     <Resource Include="Assets\Images\Shortcut.png" />
     <Resource Include="Assets\Images\Undo.png" />
     <Resource Include="Assets\Images\Warning.png" />
