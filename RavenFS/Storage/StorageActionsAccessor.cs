@@ -758,7 +758,7 @@ namespace RavenFS.Storage
 	                        MakeKeyGrbit.NewKey | MakeKeyGrbit.PartialColumnEndLimit);
 	            try
 	            {
-	                Api.JetMove(session, Config, start, MoveGrbit.MoveKeyNE);
+	                Api.JetMove(session, Config, 0, MoveGrbit.MoveKeyNE);
 	            }
 	            catch (EsentNoCurrentRecordException)
 	            {
