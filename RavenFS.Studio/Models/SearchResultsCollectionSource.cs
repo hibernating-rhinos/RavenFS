@@ -34,29 +34,29 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        protected override Task<IList<FileSystemModel>> GetPageAsyncOverride(int start, int pageSize, IList<SortDescription> sortDescriptions)
-        {
-            return DoQuery(start, pageSize, sortDescriptions)
-                        .ContinueWith(t =>
-                                          {
-                                              var result = (IList<FileSystemModel>) ToFileSystemModels(t.Result.Files).Take(pageSize).ToArray();
-                                              SetCount(t.Result.FileCount);
-                                              return result;
-                                          });
-        }
+	    protected override async Task<IList<FileSystemModel>> GetPageAsyncOverride(int start, int pageSize,
+	                                                                               IList<SortDescription> sortDescriptions)
+	    {
+		    var results = await DoQuery(start, pageSize, sortDescriptions);
 
-        private Task<SearchResults> DoQuery(int start, int pageSize, IList<SortDescription> sortDescriptions)
-        {
-            return ApplicationModel.Current.Client.SearchAsync(searchPattern, MapSortDescription(sortDescriptions), start: start, pageSize: pageSize)
-                .ContinueWith(t =>
-                                  {
-                                      if (t.IsFaulted)
-                                      {
-                                          OnSearchError(new SearchErrorEventArgs() { Exception = t.Exception});
-                                      }
+		    var result = (IList<FileSystemModel>) ToFileSystemModels(results.Files).Take(pageSize).ToArray();
+		    SetCount(results.FileCount);
+		    return result;
+	    }
 
-                                      return t.Result;
-                                  });
+	    private async Task<SearchResults> DoQuery(int start, int pageSize, IList<SortDescription> sortDescriptions)
+        {
+		    try
+		    {
+			    return await ApplicationModel.Current.Client.SearchAsync(searchPattern, MapSortDescription(sortDescriptions),
+			                                                             start: start, pageSize: pageSize);
+
+		    }
+		    catch (Exception exception)
+		    {
+			    OnSearchError(new SearchErrorEventArgs {Exception = exception});
+			    return null;
+		    }
         }
 
         private string[] MapSortDescription(IList<SortDescription> sortDescriptions)

@@ -11,17 +11,17 @@ namespace RavenFS.Client.Changes
 {
 	internal static class TaskErrorExtensions
 	{
-		 public static Task ObserveException(this Task self)
+		 public static async Task ObserveException(this Task self)
 		 {
 			 // this merely observe the exception task, nothing else
-		 	self.ContinueWith(task =>
-		 	                  	{
-		 	                  		if (task.IsFaulted)
-		 	                  		{
-		 	                  			GC.KeepAlive(task.Exception);
-		 	                  		}
-		 	                  	});
-		 	return self;
+			 try
+			 {
+				 await self;
+			 }
+			 catch (Exception e)
+			 {
+				 GC.KeepAlive(e);
+			 }
 		 }
 	}
 }

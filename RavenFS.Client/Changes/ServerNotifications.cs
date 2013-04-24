@@ -27,26 +27,30 @@ namespace RavenFS.Client.Changes
 			this.url = url;
 		}
 
-		private Task EstablishConnection()
+		private async Task EstablishConnection()
 		{
 			var request= (HttpWebRequest) WebRequest.Create(url + "/changes/events?id=" + id);
 		    request.Method = "GET";
 
-			return request
-				.ServerPullAsync()
-				.ContinueWith(task =>
-								{
-									if (task.IsFaulted && reconnectAttemptsRemaining > 0)
-									{
-										reconnectAttemptsRemaining--;
-										return EstablishConnection();
-									}
-									reconnectAttemptsRemaining = 3; // after the first successful try, we will retry 3 times before giving up
-									connection = (IDisposable)task.Result;
-									task.Result.Subscribe(this);
-									return task;
-								})
-				.Unwrap();
+			IObservable<string> result;
+			while (true)
+			{
+				try
+				{
+					result = await request.ServerPullAsync();
+					reconnectAttemptsRemaining = 3; // after the first successful try, we will retry 3 times before giving up
+					connection = (IDisposable)result;
+					result.Subscribe(this);
+					return;
+				}
+				catch (Exception e)
+				{
+					if (reconnectAttemptsRemaining <= 0)
+						throw;
+
+					reconnectAttemptsRemaining--;
+				}
+			}
 		}
 
 	    public Task ConnectionTask
@@ -77,14 +81,17 @@ namespace RavenFS.Client.Changes
             }
         }
 
-		private Task AfterConnection(Func<Task> action)
+		private async Task AfterConnection(Func<Task> action)
 		{
-			return ConnectionTask.ContinueWith(task =>
+			try
 			{
-				task.AssertNotFailed();
-				return action();
-			})
-			.Unwrap();
+				await ConnectionTask;
+				action();
+			}
+			catch (Exception)
+			{
+				
+			}
 		}
 
 	    public Task WhenSubscriptionsActive()
@@ -104,12 +111,13 @@ namespace RavenFS.Client.Changes
             return (IObservable<ConfigChange>)observable;
         }
 
-	    private void ConfigureConnection(string command, string value = "")
+	    private async void ConfigureConnection(string command, string value = "")
 	    {
-	        var task = AfterConnection(() => Send(command, value));
+	        var afterConnection = AfterConnection(() => Send(command, value));
 
-            pendingConnectionTasks.Add(task);
-	        task.ContinueWith(_ => pendingConnectionTasks.TryRemove(task));
+            pendingConnectionTasks.Add(afterConnection);
+		    await afterConnection;
+			pendingConnectionTasks.TryRemove(afterConnection);
 	    }
 
 	    public IObservable<ConflictNotification> Conflicts()
@@ -194,37 +202,40 @@ namespace RavenFS.Client.Changes
 		}
 
 		private bool disposed;
-		public Task DisposeAsync()
+
+		public async Task DisposeAsync()
 		{
 			if (disposed)
-				return TaskEx.FromResult(true);
+			{
+				await TaskEx.FromResult(true);
+				return;
+			}
 			disposed = true;
 			reconnectAttemptsRemaining = 0;
 
 			if (connection == null)
 			{
-                return TaskEx.FromResult(true);
+				await TaskEx.FromResult(true);
+				return;
 			}
 
-            foreach (var subject in subjects)
-            {
-                subject.Value.OnCompleted();
-            }
+			foreach (var subject in subjects)
+			{
+				subject.Value.OnCompleted();
+			}
 
-			return Send("disconnect", null).
-				ContinueWith(_ =>
-								{
-									try
-									{
-										connection.Dispose();
-									}
-									catch (Exception)
-									{
-									}
-								});
+			await Send("disconnect", null);
+
+			try
+			{
+				connection.Dispose();
+			}
+			catch (Exception)
+			{
+			}
 		}
 
-        public void OnNext(string dataFromConnection)
+		public void OnNext(string dataFromConnection)
         {
             var notification = NotificationJSonUtilities.Parse<Notification>(dataFromConnection);
 
@@ -240,24 +251,23 @@ namespace RavenFS.Client.Changes
 
         }
 
-	    public void OnError(Exception error)
+		public async void OnError(Exception error)
 		{
 			if (reconnectAttemptsRemaining <= 0)
 				return;
 
-			EstablishConnection()
-				.ObserveException()
-				.ContinueWith(task =>
-								{
-									if (task.IsFaulted == false)
-										return;
-
-                                    foreach (var subject in subjects)
-                                    {
-                                        subject.Value.OnError(task.Exception);
-                                    }
-                                    subjects.Clear();
-								});
+			try
+			{
+				await EstablishConnection().ObserveException();
+			}
+			catch (Exception exception)
+			{
+				foreach (var subject in subjects)
+				{
+					subject.Value.OnError(exception);
+				}
+				subjects.Clear();
+			}
 		}
 
 		public void OnCompleted()

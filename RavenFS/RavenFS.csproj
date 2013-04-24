@@ -207,7 +207,6 @@
     <Compile Include="Infrastructure\LimitedStream.cs" />
     <Compile Include="Infrastructure\RedirectHandler.cs" />
     <Compile Include="Infrastructure\RedirectRouteHandler.cs" />
-    <Compile Include="Extensions\TaskExtensions.cs" />
     <Compile Include="NonAdminHttp.cs" />
     <Compile Include="Notifications\NotificationPublisher.cs" />
     <Compile Include="Notifications\TypeHidingJsonSerializer.cs" />

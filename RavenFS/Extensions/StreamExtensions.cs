@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using RavenFS.Infrastructure;
 using RavenFS.Util;
 
 namespace RavenFS.Extensions
@@ -11,27 +10,22 @@ namespace RavenFS.Extensions
 
 	public static class StreamExtensions
     {
-		private static Task ReadAsync(this Stream self, byte[] buffer, int start, List<int> reads)
+		private static async Task ReadAsync(this Stream self, byte[] buffer, int start, List<int> reads)
 		{
-			return self.ReadAsync(buffer, start, buffer.Length - start)
-				.ContinueWith(task =>
-				{
-					reads.Add(task.Result);
-					if (task.Result == 0 || task.Result + start >= buffer.Length)
-						return task;
-					return self.ReadAsync(buffer, start + task.Result, reads);
-				})
-				.Unwrap();
+			var item = await self.ReadAsync(buffer, start, buffer.Length - start);
+
+			reads.Add(item);
+			if (item == 0 || item + start >= buffer.Length)
+				return;
+			await self.ReadAsync(buffer, start + item, reads);
 		}
-        private static Task<int> ReadAsync(this Stream self, byte[] buffer, int start)
+
+		private async static Task<int> ReadAsync(this Stream self, byte[] buffer, int start)
         {
         	var reads = new List<int>();
-        	return self.ReadAsync(buffer, start, reads)
-        		.ContinueWith(task =>
-        		{
-					task.AssertNotFaulted();
-        			return reads.Sum();
-        		});
+			await self.ReadAsync(buffer, start, reads);
+
+			return reads.Sum();
         }
 
     	public static Task<int> ReadAsync(this Stream self, byte[] buffer)

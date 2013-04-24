@@ -35,21 +35,24 @@ namespace RavenFS.Client.Changes
 			}
 		}
 
-		public void Add(Task<IDisposable> disposableTask)
+		public async void Add(Task<IDisposable> disposableTask)
 		{
 			if (value == 0)
 			{
-				disposableTask.ContinueWith(_ => { using (_.Result) { } });
+				var disposable = await disposableTask;
+				using (disposable) { }
 				return;
 			}
+
 			toDispose.Add(disposableTask);
 		}
 
-		public void Dispose()
+		public async void Dispose()
 		{
 			foreach (var disposableTask in toDispose)
 			{
-				disposableTask.ContinueWith(_ => { using (_.Result) { } });
+				var disposable = await disposableTask;
+				using (disposable) { }
 			}
 			onZero();
 		}

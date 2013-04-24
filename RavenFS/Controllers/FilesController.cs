@@ -86,7 +86,7 @@ namespace RavenFS.Controllers
 					if (!name.EndsWith(RavenFileNameHelper.DownloadingFileSuffix) && // don't create a tombstone for .downloading file
 						metadata != null) // and if file didn't exist
 					{
-						var tombstoneMetadata = new NameValueCollection()
+						var tombstoneMetadata = new NameValueCollection
 						                        {
 							                        {SynchronizationConstants.RavenSynchronizationHistory, metadata[SynchronizationConstants.RavenSynchronizationHistory]},
 													{SynchronizationConstants.RavenSynchronizationVersion, metadata[SynchronizationConstants.RavenSynchronizationVersion]},
@@ -203,7 +203,7 @@ namespace RavenFS.Controllers
 
 					Historian.UpdateLastModified(metadata);
 
-					var operation = new RenameFileOperation()
+					var operation = new RenameFileOperation
 						                          {
 							                          Name = name,
 													  Rename = rename,
@@ -288,7 +288,7 @@ namespace RavenFS.Controllers
 					Guid uploadIdentifier;
 					if (Guid.TryParse(uploadId, out uploadIdentifier))
 					{
-						Publisher.Publish(new UploadFailed() { UploadId = uploadIdentifier, File = name });
+						Publisher.Publish(new UploadFailed { UploadId = uploadIdentifier, File = name });
 					}
 				}
 
@@ -328,35 +328,32 @@ namespace RavenFS.Controllers
 
 			public string FileHash { get; private set; }
 
-			public Task Execute()
+			public async Task Execute()
 			{
-				return inputStream.ReadAsync(buffer)
-					.ContinueWith(task =>
+				var totalSizeRead = await inputStream.ReadAsync(buffer);
+
+				TotalSizeRead += totalSizeRead;
+
+				if (totalSizeRead == 0) // nothing left to read
+				{
+					storage.Batch(accessor => accessor.CompleteFileUpload(filename));
+					md5Hasher.TransformFinalBlock(new byte[0], 0, 0);
+
+					FileHash = md5Hasher.Hash.ToStringHash();
+
+					return; // task is done
+				}
+
+				ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor =>
 					{
-						TotalSizeRead += task.Result;
+						var hashKey = accessor.InsertPage(buffer, totalSizeRead);
+						accessor.AssociatePage(filename, hashKey, pos, totalSizeRead);
+					}));
 
-						if (task.Result == 0) // nothing left to read
-						{
-							storage.Batch(accessor => accessor.CompleteFileUpload(filename));
-							md5Hasher.TransformFinalBlock(new byte[0], 0, 0);
+				md5Hasher.TransformBlock(buffer, 0, totalSizeRead, null, 0);
 
-							FileHash = md5Hasher.Hash.ToStringHash();
-
-							return task; // task is done
-						}
-
-						ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor =>
-						{
-							var hashKey = accessor.InsertPage(buffer, task.Result);
-							accessor.AssociatePage(filename, hashKey, pos, task.Result);
-						}));
-						
-						md5Hasher.TransformBlock(buffer, 0, task.Result, null, 0);
-
-						pos++;
-						return Execute();
-					})
-					.Unwrap();
+				pos++;
+				await Execute();
 			}
 
 			public void Dispose()
@@ -368,8 +365,8 @@ namespace RavenFS.Controllers
 
 		private void StartSynchronizeDestinationsInBackground()
 		{
-			Task.Factory.StartNew(() => SynchronizationTask.SynchronizeDestinationsAsync()
-				.ContinueWith(t => t.AssertNotFaulted()), CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Default);
+			Task.Factory.StartNew(async () => await SynchronizationTask.SynchronizeDestinationsAsync(), CancellationToken.None,
+			                      TaskCreationOptions.None, TaskScheduler.Default);
 		}
 	}
 }

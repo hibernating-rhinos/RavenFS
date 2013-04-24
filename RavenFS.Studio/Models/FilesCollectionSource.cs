@@ -54,18 +54,16 @@ namespace RavenFS.Studio.Models
             }
         }
 
-        protected override Task<IList<FileSystemModel>> GetPageAsyncOverride(int start, int pageSize, IList<SortDescription> sortDescriptions)
-        {
-            return DoQuery(start, pageSize, sortDescriptions)
-                        .ContinueWith(t =>
-                                          {
-                                              var result = (IList<FileSystemModel>) ToFileSystemModels(t.Result.Files).Take(pageSize).ToArray();
-                                              SetCount(t.Result.FileCount);
-                                              return result;
-                                          });
-        }
+	    protected override async Task<IList<FileSystemModel>> GetPageAsyncOverride(int start, int pageSize,
+	                                                                               IList<SortDescription> sortDescriptions)
+	    {
+		    var results = await DoQuery(start, pageSize, sortDescriptions);
+		    var result = (IList<FileSystemModel>) ToFileSystemModels(results.Files).Take(pageSize).ToArray();
+		    SetCount(results.FileCount);
+		    return result;
+	    }
 
-        private Task<SearchResults> DoQuery(int start, int pageSize, IList<SortDescription> sortDescriptions)
+	    private Task<SearchResults> DoQuery(int start, int pageSize, IList<SortDescription> sortDescriptions)
         {
             return ApplicationModel.Current.Client
                 .GetFilesAsync(currentFolder, MapSortDescription(sortDescriptions), fileNameSearchPattern:searchPattern, start: start, pageSize: pageSize)

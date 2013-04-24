@@ -14,8 +14,6 @@ namespace RavenFS.Infrastructure.Connections
 		private readonly ConcurrentQueue<Notification> pendingMessages = new ConcurrentQueue<Notification>();
 
 		private EventsTransport eventsTransport;
-
-
 	    private int watchConfig;
 	    private int watchConflicts;
 	    private int watchSync;
@@ -27,7 +25,6 @@ namespace RavenFS.Infrastructure.Connections
 			this.eventsTransport = eventsTransport;
 		}
 
-		
 		public void Send(Notification notification)
 		{
             if (ShouldSend(notification))
@@ -66,24 +63,25 @@ namespace RavenFS.Infrastructure.Connections
 	        return false;
 	    }
 
-	    private void Enqueue(Notification msg)
+	    private async void Enqueue(Notification msg)
 		{
 			if (eventsTransport == null || eventsTransport.Connected == false)
 			{
 				pendingMessages.Enqueue(msg);
 				return;
 			}
-
-			eventsTransport.SendAsync(msg)
-				.ContinueWith(task =>
-								{
-									if (task.IsFaulted == false)
-										return;
-									pendingMessages.Enqueue(msg);
-								});
+		    try
+		    {
+			    await eventsTransport.SendAsync(msg);
+			    pendingMessages.Enqueue(msg);
+		    }
+		    catch (Exception)
+		    {
+				
+		    }
 		}
 
-		public void Reconnect(EventsTransport transport)
+		public async void Reconnect(EventsTransport transport)
 		{
 			eventsTransport = transport;
 			var items = new List<Notification>();
@@ -93,16 +91,17 @@ namespace RavenFS.Infrastructure.Connections
 				items.Add(result);
 			}
 
-			eventsTransport.SendManyAsync(items)
-				.ContinueWith(task =>
-								{
-									if (task.IsFaulted == false)
-										return;
-									foreach (var item in items)
-									{
-										pendingMessages.Enqueue(item);
-									}
-								});
+			try
+			{
+				await eventsTransport.SendManyAsync(items);
+				foreach (var item in items)
+				{
+					pendingMessages.Enqueue(item);
+				}
+			}
+			catch (Exception)
+			{
+			}
 		}
 
         public void WatchConflicts()

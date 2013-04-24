@@ -79,6 +79,15 @@ namespace RavenFS.Client
 			.Unwrap();
 		}
 
+		public static void TryThrowBetterError(this AggregateException aggregateException)
+		{
+			var webException = aggregateException.ExtractSingleInnerException() as WebException;
+			if (webException == null || webException.Response == null)
+				throw aggregateException;
+
+			throw webException.BetterWebExceptionError();
+		}
+
 		/// <summary>
 		/// Recursively examines the inner exceptions of an <see cref="AggregateException"/> and returns a single child exception.
 		/// </summary>

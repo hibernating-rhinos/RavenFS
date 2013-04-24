@@ -27,90 +27,87 @@ namespace RavenFS.Client.Connections
 			this.onDispose = onDispose;
 		}
 
-		public void Start()
+		public async void Start()
 		{
-			ReadAsync()
-				.ContinueWith(task =>
-				              	{
-				              		var read = task.Result;
-									if(read == 0)// will force reopening of the connection
-										throw new EndOfStreamException();
-				              		// find \r\n in newly read range
+			try
+			{
+				var read = await ReadAsync();
 
-				              		var startPos = 0;
-				              		byte prev = 0;
-				              		bool foundLines = false;
-				              		for (int i = posInBuffer; i < posInBuffer + read; i++)
-				              		{
-				              			if (prev == '\r' && buffer[i] == '\n')
-				              			{
-				              				foundLines = true;
-				              				var oldStartPos = startPos;
-											// yeah, we found a line, let us give it to the users
-											startPos = i + 1;
+				if (read == 0) // will force reopening of the connection
+					throw new EndOfStreamException();
+				// find \r\n in newly read range
 
-				              				// is it an empty line?
-											if (oldStartPos == i - 2)
-				              				{
-				              					continue; // ignore and continue
-				              				}
+				var startPos = 0;
+				byte prev = 0;
+				var foundLines = false;
+				for (var i = posInBuffer; i < posInBuffer + read; i++)
+				{
+					if (prev == '\r' && buffer[i] == '\n')
+					{
+						foundLines = true;
+						var oldStartPos = startPos;
+						// yeah, we found a line, let us give it to the users
+						startPos = i + 1;
 
-				              				// first 5 bytes should be: 'd','a','t','a',':'
-											// if it isn't, ignore and continue
-											if (buffer.Length - oldStartPos < 5 ||
-												buffer[oldStartPos] != 'd' ||
-												buffer[oldStartPos + 1] != 'a' ||
-												buffer[oldStartPos + 2] != 't' ||
-												buffer[oldStartPos + 3] != 'a' ||
-												buffer[oldStartPos + 4] != ':')
-				              				{
-												continue;
-				              				}
-											var data = Encoding.UTF8.GetString(buffer, oldStartPos + 5, i - (oldStartPos + 6));
-				              				foreach (var subscriber in subscribers)
-				              				{
-				              					subscriber.OnNext(data);
-				              				}
-				              			}
-				              			prev = buffer[i];
-				              		}
-				              		posInBuffer += read;
-									if(startPos >= posInBuffer) // read to end
-									{
-										posInBuffer = 0;
-										return;
-									}
-									if (foundLines == false)
-										return;
+						// is it an empty line?
+						if (oldStartPos == i - 2)
+						{
+							continue; // ignore and continue
+						}
 
-									// move remaining to the start of buffer, then reset
-				              		Array.Copy(buffer, startPos, buffer, 0, posInBuffer - startPos);
-				              		posInBuffer -= startPos;
-				              	})
-								.ContinueWith(task =>
-								{
-									if(task.IsFaulted)
-									{
-										try
-										{
-											stream.Dispose();
-										}
-										catch (Exception)
-										{
-											// explicitly ignoring this
-										}
-										var aggregateException = task.Exception;
-										if (aggregateException.ExtractSingleInnerException() is ObjectDisposedException)
-											return; // this isn't an error
-										foreach (var subscriber in subscribers)
-										{
-											subscriber.OnError(aggregateException);
-										}
-										return;
-									}
+						// first 5 bytes should be: 'd','a','t','a',':'
+						// if it isn't, ignore and continue
+						if (buffer.Length - oldStartPos < 5 ||
+						    buffer[oldStartPos] != 'd' ||
+						    buffer[oldStartPos + 1] != 'a' ||
+						    buffer[oldStartPos + 2] != 't' ||
+						    buffer[oldStartPos + 3] != 'a' ||
+						    buffer[oldStartPos + 4] != ':')
+						{
+							continue;
+						}
+						var data = Encoding.UTF8.GetString(buffer, oldStartPos + 5, i - (oldStartPos + 6));
+						foreach (var subscriber in subscribers)
+						{
+							subscriber.OnNext(data);
+						}
+					}
+					prev = buffer[i];
+				}
+				posInBuffer += read;
+				if (startPos >= posInBuffer) // read to end
+				{
+					posInBuffer = 0;
+					return;
+				}
+				if (foundLines == false)
+					return;
 
-									Start(); // read more lines
-								});
+				// move remaining to the start of buffer, then reset
+				Array.Copy(buffer, startPos, buffer, 0, posInBuffer - startPos);
+				posInBuffer -= startPos;
+			}
+			catch (AggregateException e)
+			{
+				try
+				{
+					stream.Dispose();
+				}
+				catch (Exception)
+				{
+					// explicitly ignoring this
+				}
+				
+				if (e.ExtractSingleInnerException() is ObjectDisposedException)
+					return; // this isn't an error
+				foreach (var subscriber in subscribers)
+				{
+					subscriber.OnError(e);
+				}
+				return;
+			}
+		
+			Start(); // read more lines						
 		}
 
 		private Task<int> ReadAsync()
