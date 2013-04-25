@@ -122,7 +122,7 @@ namespace RavenFS.Storage
 				grbit = ColumndefGrbit.ColumnEscrowUpdate | ColumndefGrbit.ColumnNotNULL
 			}, one, one.Length, out columnid);
 
-			string indexDef = "+id\0\0";
+			var indexDef = "+id\0\0";
 			Api.JetCreateIndex(session, tableid, "by_id", CreateIndexGrbit.IndexPrimary, indexDef, indexDef.Length,
 							   80);
 

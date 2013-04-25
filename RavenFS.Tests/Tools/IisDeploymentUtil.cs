@@ -13,9 +13,7 @@ namespace RavenFS.Tests.Tools
 		    var webDirectory = String.Format(WebDirectoryTemplate, port);
 			var fullPath = Path.GetFullPath(webDirectory);
 			if (Directory.Exists(fullPath))
-			{
 				IOExtensions.DeleteDirectory(fullPath);
-			}
 
 			IOExtensions.CopyDirectory(GetRavenWebSource(), webDirectory, new[]{"Data.ravenfs", "Index.ravenfs"});
 

@@ -1,20 +1,19 @@
-﻿namespace RavenFS.Config
-{
-	using System;
-	using System.Globalization;
-	using System.IO;
-	using System.Linq;
-	using System.Net.NetworkInformation;
-	using System.Text;
-	using System.Web;
-	using System.Xml;
-	using NLog;
+﻿using System;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net.NetworkInformation;
+using System.Text;
+using System.Web;
+using System.Xml;
+using NLog;
 
+namespace RavenFS.Config
+{
 	public static class PortUtil
 	{
+		private const int DefaultPort = 9090;
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-
-		const int DefaultPort = 9090;
 
 		public static int GetPort(string portStr)
 		{
@@ -24,8 +23,8 @@
 				{
 					var url = HttpContext.Current.Request.Url;
 					if (url.IsDefaultPort)
-						return string.Equals("https", url.Scheme, StringComparison.InvariantCultureIgnoreCase) ?
-						 443 : 80;
+						return string.Equals("https", url.Scheme, StringComparison.InvariantCultureIgnoreCase)
+							       ? 443 : 80;
 					return url.Port;
 				}
 			}
@@ -47,9 +46,8 @@
 				TrySaveAutoPortForNextTime(autoPort);
 
 				if (autoPort != DefaultPort)
-				{
 					logger.Info("Default port {0} was not available, so using available port {1}", DefaultPort, autoPort);
-				}
+
 				return autoPort;
 			}
 
@@ -66,10 +64,10 @@
 			{
 				using (var localConfig = File.Create(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "local.config")))
 				using (var writer = XmlWriter.Create(localConfig, new XmlWriterSettings
-				{
-					Indent = true,
-					Encoding = Encoding.UTF8
-				}))
+					                                                  {
+						                                                  Indent = true,
+						                                                  Encoding = Encoding.UTF8
+					                                                  }))
 				{
 					writer.WriteStartElement("LocalConfig");
 					writer.WriteAttributeString("Port", autoPort.ToString(CultureInfo.InvariantCulture));
@@ -85,11 +83,10 @@
 		private static bool TryReadPreviouslySelectAutoPort(out int port)
 		{
 			port = 0;
-			string localConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "local.config");
+			var localConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "local.config");
 			if (File.Exists(localConfigPath) == false)
-			{
 				return false;
-			}
+
 			var doc = new XmlDocument();
 			doc.Load(localConfigPath);
 			if (doc.DocumentElement == null)

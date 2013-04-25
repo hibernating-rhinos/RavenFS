@@ -1,7 +1,7 @@
-﻿namespace RavenFS.Extensions
-{
-	using System.Text;
+﻿using System.Text;
 
+namespace RavenFS.Extensions
+{
 	public static class ByteExtensions
 	{
 		public static string ToStringHash(this byte[] hash)

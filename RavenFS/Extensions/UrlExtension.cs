@@ -24,6 +24,7 @@ namespace RavenFS.Extensions
 				if (localPath.Length == 0)
 					localPath = "/";
 			}
+
 			return localPath;
 		}
 

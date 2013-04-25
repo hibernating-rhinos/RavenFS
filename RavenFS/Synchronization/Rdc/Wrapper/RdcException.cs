@@ -1,21 +1,23 @@
-﻿namespace RavenFS.Synchronization.Rdc.Wrapper
+﻿using System;
+using RavenFS.Synchronization.Rdc.Wrapper.Unmanaged;
+
+namespace RavenFS.Synchronization.Rdc.Wrapper
 {
-	using System;
-	using Unmanaged;
-
 	public class RdcException : Exception
-    {
+	{
+		public RdcException(string message, Exception innerException) :
+			base(message, innerException)
+		{
+		}
 
-        public RdcException(string message, Exception innerException) :
-            base(message, innerException) { }
+		public RdcException(string format, params object[] args) :
+			base(String.Format(format, args))
+		{
+		}
 
-        public RdcException(string format, params object[] args) :
-            base(String.Format(format, args)) { }
-
-        public RdcException(string message, int hr, RdcError? rdcError = null) :
-            base(String.Format("{0} hr: {1} rdcError: {2}", message, hr, rdcError))
-        {
-        }
-    }
-        
+		public RdcException(string message, int hr, RdcError? rdcError = null) :
+			base(String.Format("{0} hr: {1} rdcError: {2}", message, hr, rdcError))
+		{
+		}
+	}
 }

@@ -59,7 +59,7 @@ namespace RavenFS.Studio.Models
 		    }
         }
 
-        private string[] MapSortDescription(IList<SortDescription> sortDescriptions)
+        private string[] MapSortDescription(IEnumerable<SortDescription> sortDescriptions)
         {
             if (sortDescriptions == null)
             {
@@ -68,36 +68,27 @@ namespace RavenFS.Studio.Models
 
             var sortDescription = sortDescriptions.FirstOrDefault();
 
-            FilesSortOptions sort = FilesSortOptions.Default;
+            var sort = FilesSortOptions.Default;
 
-            string sortField = "";
+            var sortField = "";
 
-            if (sortDescription.PropertyName == "Name")
+            switch (sortDescription.PropertyName)
             {
-                sortField = "__fileName";
-            }
-            else if (sortDescription.PropertyName == "Size")
-            {
-                sortField = "__size";
-            }
-            else if (sortDescription.PropertyName == "LastModified")
-            {
-                sortField = "__modified";
-            }
-
-            if (sortField.Length > 0 && sortDescription.Direction == ListSortDirection.Descending)
-            {
-                sortField = "-" + sortField;
+	            case "Name":
+		            sortField = "__fileName";
+		            break;
+	            case "Size":
+		            sortField = "__size";
+		            break;
+	            case "LastModified":
+		            sortField = "__modified";
+		            break;
             }
 
-            if (!sortField.IsNullOrEmpty())
-            {
-                return new[] {sortField};
-            }
-            else
-            {
-                return new string[0];
-            }
+	        if (sortField.Length > 0 && sortDescription.Direction == ListSortDirection.Descending)
+		        sortField = "-" + sortField;
+
+	        return !sortField.IsNullOrEmpty() ? new[] {sortField} : new string[0];
         }
 
         private static IEnumerable<FileSystemModel> ToFileSystemModels(IEnumerable<FileInfo> files)

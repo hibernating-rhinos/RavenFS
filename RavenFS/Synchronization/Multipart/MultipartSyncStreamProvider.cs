@@ -1,17 +1,17 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using RavenFS.Storage;
+using RavenFS.Util;
+
 namespace RavenFS.Synchronization.Multipart
 {
-	using System;
-	using System.IO;
-	using System.Linq;
-	using System.Net.Http;
-	using System.Net.Http.Headers;
-	using Storage;
-	using Util;
-
 	public class MultipartSyncStreamProvider : MultipartStreamProvider
 	{
-		private readonly SynchronizingFileStream synchronizingFile;
 		private readonly StorageStream localFile;
+		private readonly SynchronizingFileStream synchronizingFile;
 
 		public MultipartSyncStreamProvider(SynchronizingFileStream synchronizingFile, StorageStream localFile)
 		{
@@ -28,14 +28,10 @@ namespace RavenFS.Synchronization.Multipart
 		public override Stream GetStream(HttpContent parent, HttpContentHeaders headers)
 		{
 			if (parent == null)
-			{
 				throw new ArgumentNullException("parent");
-			}
 
 			if (headers == null)
-			{
 				throw new ArgumentNullException("headers");
-			}
 
 			var parameters = headers.ContentDisposition.Parameters.ToDictionary(t => t.Name);
 

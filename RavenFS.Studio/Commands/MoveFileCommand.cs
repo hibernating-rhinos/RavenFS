@@ -1,20 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using RavenFS.Studio.Infrastructure;
 using RavenFS.Studio.Infrastructure.Input;
 using RavenFS.Studio.Models;
-using RavenFS.Studio.Views;
 
 namespace RavenFS.Studio.Commands
 {
@@ -50,12 +40,10 @@ namespace RavenFS.Studio.Commands
                     if (!t.IsCanceled)
                     {
                         string newPath = t.Result;
-                        if (newPath == originalFolderPath)
-                        {
-                            return;
-                        }
+	                    if (newPath == originalFolderPath)
+		                    return;
 
-                        if (!newPath.EndsWith("/"))
+	                    if (!newPath.EndsWith("/"))
                         {
                             newPath += "/";
                         }
@@ -79,48 +67,28 @@ namespace RavenFS.Studio.Commands
 
         private string GetFolderName(string path)
         {
-            var lastSlash = path.LastIndexOf("/", StringComparison.InvariantCulture);
-            if (lastSlash <= 0)
-            {
-                return "";
-            }
-            else
-            {
-                return path.Substring(0, lastSlash);
-            }
+	        var lastSlash = path.LastIndexOf("/", StringComparison.InvariantCulture);
+	        return lastSlash <= 0 ? "" : path.Substring(0, lastSlash);
         }
 
-        private string GetFileName(string path)
-        {
-            var lastSlash = path.LastIndexOf("/", StringComparison.InvariantCulture);
-            if (lastSlash < 0)
-            {
-                return path;
-            }
-            else
-            {
-                return path.Substring(lastSlash + 1);
-            }
-        }
+	    private string GetFileName(string path)
+	    {
+		    var lastSlash = path.LastIndexOf("/", StringComparison.InvariantCulture);
+		    return lastSlash < 0 ? path : path.Substring(lastSlash + 1);
+	    }
 
-        private string ValidateFolderPath(string folderPath)
-        {
-            if (string.IsNullOrWhiteSpace(folderPath))
-            {
-                return "You must enter a path";
-            }
-            else if (!folderPath.StartsWith("/"))
-            {
-                return "The path must start with /";
-            }
-            else if (!Regex.IsMatch(folderPath, FolderPathRegEx))
-            {
-                return "Folder path contains invalid characters";
-            }
-            else
-            {
-                return "";
-            }
-        }
+	    private string ValidateFolderPath(string folderPath)
+	    {
+		    if (string.IsNullOrWhiteSpace(folderPath))
+			    return "You must enter a path";
+
+		    if (!folderPath.StartsWith("/"))
+			    return "The path must start with /";
+
+		    if (!Regex.IsMatch(folderPath, FolderPathRegEx))
+			    return "Folder path contains invalid characters";
+		    
+			return "";
+	    }
     }
 }

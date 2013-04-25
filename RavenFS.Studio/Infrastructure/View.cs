@@ -1,13 +1,5 @@
-﻿using System;
-using System.Net;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using System.ComponentModel;
 
 namespace RavenFS.Studio.Infrastructure
@@ -28,20 +20,16 @@ namespace RavenFS.Studio.Infrastructure
 
 	    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs args)
 	    {
-            if (isLoaded)
-            {
-                NotifyModelLoaded();
-            }
+		    if (isLoaded)
+			    NotifyModelLoaded();
 	    }
 
 	    private void OnUnloaded(object sender, RoutedEventArgs args)
 	    {
-            if (Model != null)
-            {
-                Model.NotifyViewUnloaded();
-            }
+		    if (Model != null)
+			    Model.NotifyViewUnloaded();
 
-            isLoaded = false;
+		    isLoaded = false;
 	    }
 
 	    private void OnLoaded(object sender, RoutedEventArgs args)
@@ -52,10 +40,8 @@ namespace RavenFS.Studio.Infrastructure
 
 	    private void NotifyModelLoaded()
 	    {
-	        if (Model != null)
-	        {
-	            Model.NotifyViewLoaded();
-	        }
+		    if (Model != null)
+			    Model.NotifyViewLoaded();
 	    }
 
 	    protected ViewModel Model {get { return DataContext as ViewModel; }}

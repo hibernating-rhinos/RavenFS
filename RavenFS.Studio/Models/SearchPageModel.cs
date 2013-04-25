@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+// ReSharper disable RedundantUsingDirective
 using System.Reflection;
+// ReSharper restore RedundantUsingDirective
 using System.Windows.Input;
 using Newtonsoft.Json.Linq;
 using RavenFS.Client;
@@ -154,20 +156,14 @@ namespace RavenFS.Studio.Models
         {
             var query = Query.Value;
 
-            if (query.IsNullOrEmpty())
-            {
-                Query.Value = clause;
-            }
-            else if (query.Contains(" OR "))
-            {
-                Query.Value = query + " OR " + clause;
-            }
-            else
-            {
-                Query.Value = query + " AND " + clause;
-            }
+	        if (query.IsNullOrEmpty())
+		        Query.Value = clause;
+	        else if (query.Contains(" OR "))
+		        Query.Value = query + " OR " + clause;
+	        else
+		        Query.Value = query + " AND " + clause;
 
-            HandleSearch();
+	        HandleSearch();
         }
 
         private void HandleSearch()

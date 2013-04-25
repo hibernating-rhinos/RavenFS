@@ -1,31 +1,33 @@
-﻿namespace RavenFS.Tests.Synchronization
-{
-	using System.Collections.Specialized;
-	using RavenFS.Client;
-	using System;
-	using System.IO;
-	using RavenFS.Synchronization;
-	using Storage;
-	using Xunit;
+﻿using System;
+using System.Collections.Specialized;
+using System.IO;
+using RavenFS.Client;
+using RavenFS.Storage;
+using RavenFS.Synchronization;
+using Xunit;
 
+namespace RavenFS.Tests.Synchronization
+{
 	public class SyncTestUtils
-    {
-		public static SynchronizationReport ResolveConflictAndSynchronize(RavenFileSystemClient sourceClient, RavenFileSystemClient destinationClient, string fileName)
-        {
+	{
+		public static SynchronizationReport ResolveConflictAndSynchronize(RavenFileSystemClient sourceClient,
+		                                                                  RavenFileSystemClient destinationClient,
+		                                                                  string fileName)
+		{
 			var shouldBeConflict = sourceClient.Synchronization.StartAsync(fileName, destinationClient.ServerUrl).Result;
 
 			Assert.NotNull(shouldBeConflict.Exception);
 
 			destinationClient.Synchronization.ResolveConflictAsync(fileName, ConflictResolutionStrategy.RemoteVersion).Wait();
 			return sourceClient.Synchronization.StartAsync(fileName, destinationClient.ServerUrl).Result;
-        }
+		}
 
 		public static void TurnOnSynchronization(RavenFileSystemClient source, RavenFileSystemClient destination)
 		{
 			source.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-				                                                                                    {
-					                                                                                    {"url", destination.ServerUrl},
-				                                                                                    }).Wait();
+				                                                                                   {
+					                                                                                   {"url", destination.ServerUrl},
+				                                                                                   }).Wait();
 		}
 
 		public static void TurnOffSynchronization(RavenFileSystemClient source)
@@ -81,5 +83,5 @@
 
 			return ms;
 		}
-    }
+	}
 }

@@ -1,12 +1,12 @@
-﻿namespace RavenFS.Config
-{
-	using System;
-	using System.Globalization;
-	using System.IO;
-	using System.Text;
-	using System.Xml;
-	using NLog;
+﻿using System;
+using System.Globalization;
+using System.IO;
+using System.Text;
+using System.Xml;
+using NLog;
 
+namespace RavenFS.Config
+{
 	public class ServerUrlUtil
 	{
 		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
@@ -17,10 +17,10 @@
 			{
 				using (var localConfig = File.Create(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "local.config")))
 				using (var writer = XmlWriter.Create(localConfig, new XmlWriterSettings
-				{
-					Indent = true,
-					Encoding = Encoding.UTF8
-				}))
+					                                                  {
+						                                                  Indent = true,
+						                                                  Encoding = Encoding.UTF8
+					                                                  }))
 				{
 					writer.WriteStartElement("LocalConfig");
 					writer.WriteAttributeString("ServerUrl", serverUrl.ToString(CultureInfo.InvariantCulture));
@@ -40,22 +40,18 @@
 		public static bool TryReadPreviouslySavedServerUrl(out string serverUrl)
 		{
 			serverUrl = string.Empty;
-			string localConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "local.config");
+			var localConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "local.config");
 			if (File.Exists(localConfigPath) == false)
-			{
 				return false;
-			}
+
 			var doc = new XmlDocument();
 			doc.Load(localConfigPath);
 			if (doc.DocumentElement == null)
 				return false;
 
 			serverUrl = doc.DocumentElement.GetAttribute("ServerUrl");
-			
-			if (!Uri.IsWellFormedUriString(serverUrl, UriKind.Absolute))
-				return false;
 
-			return true;
-		} 
+			return Uri.IsWellFormedUriString(serverUrl, UriKind.Absolute);
+		}
 	}
 }

@@ -1,22 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using RavenFS.Client;
-using RavenFS.Studio.Extensions;
 using RavenFS.Studio.Infrastructure;
-using RavenFS.Extensions;
 
 namespace RavenFS.Studio.Models
 {
@@ -45,11 +32,10 @@ namespace RavenFS.Studio.Models
             get { return searchPattern; }
             set
             {
-                if (searchPattern == value)
-                {
-                    return;
-                }
-                searchPattern = value;
+	            if (searchPattern == value)
+		            return;
+	           
+				searchPattern = value;
                 Refresh(RefreshMode.ClearStaleData);
             }
         }
@@ -72,34 +58,30 @@ namespace RavenFS.Studio.Models
 
         private FilesSortOptions MapSortDescription(IList<SortDescription> sortDescriptions)
         {
-            if (sortDescriptions == null)
-            {
-                return FilesSortOptions.Default;
-            }
+	        if (sortDescriptions == null)
+		        return FilesSortOptions.Default;
 
-            var sortDescription = sortDescriptions.FirstOrDefault();
+	        var sortDescription = sortDescriptions.FirstOrDefault();
 
-            FilesSortOptions sort = FilesSortOptions.Default;
+            var sort = FilesSortOptions.Default;
 
-            if (sortDescription.PropertyName == "Name")
-            {
-                sort = FilesSortOptions.Name;
-            }
-            else if (sortDescription.PropertyName == "Size")
-            {
-                sort = FilesSortOptions.Size;
-            }
-            else if (sortDescription.PropertyName == "LastModified")
-            {
-                sort = FilesSortOptions.LastModified;
-            }
+	        switch (sortDescription.PropertyName)
+	        {
+		        case "Name":
+			        sort = FilesSortOptions.Name;
+			        break;
+		        case "Size":
+			        sort = FilesSortOptions.Size;
+			        break;
+		        case "LastModified":
+			        sort = FilesSortOptions.LastModified;
+			        break;
+	        }
 
-            if (sortDescription.Direction == ListSortDirection.Descending)
-            {
-                sort |= FilesSortOptions.Desc;
-            }
+	        if (sortDescription.Direction == ListSortDirection.Descending)
+		        sort |= FilesSortOptions.Desc;
 
-            return sort;
+	        return sort;
         }
 
         private static IEnumerable<FileSystemModel> ToFileSystemModels(IEnumerable<FileInfo> files)

@@ -54,18 +54,14 @@ namespace RavenFS.Studio.Infrastructure
         public void RemoveRange(int firstIndex, int count)
         {
             var firstItem = new PageAndSubIndex(firstIndex / _pageSize, firstIndex % _pageSize);
-            if (firstItem.SubIndex + count > _pageSize)
-            {
-                throw new NotImplementedException("RemoveRange is only implemented to work within page boundaries");
-            }
+	        if (firstItem.SubIndex + count > _pageSize)
+		        throw new NotImplementedException("RemoveRange is only implemented to work within page boundaries");
 
-            if (_allocatedPages.Contains(firstItem.PageIndex))
-            {
-                if (_allocatedPages[firstItem.PageIndex].Trim(firstItem.SubIndex, count))
-                {
-                    _allocatedPages.Remove(firstItem.PageIndex);
-                }
-            }
+	        if (!_allocatedPages.Contains(firstItem.PageIndex)) 
+				return;
+
+	        if (_allocatedPages[firstItem.PageIndex].Trim(firstItem.SubIndex, count))
+		        _allocatedPages.Remove(firstItem.PageIndex);
         }
 
         private struct PageAndSubIndex
@@ -127,10 +123,8 @@ namespace RavenFS.Studio.Infrastructure
 
                 for (int i = 0; i < _items.Length; i++)
                 {
-                    if (_items[i] != null)
-                    {
-                        return false;
-                    }
+	                if (_items[i] != null)
+		                return false;
                 }
 
                 return true;

@@ -1,13 +1,5 @@
 ﻿using System;
-using System.Net;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using EventTrigger = System.Windows.Interactivity.EventTrigger;
 
 namespace RavenFS.Studio.Behaviors
@@ -31,12 +23,10 @@ namespace RavenFS.Studio.Behaviors
         protected override void OnEvent(EventArgs eventArgs)
         {
             var messageEventArgs = eventArgs as UIMessageEventArgs;
-            if (messageEventArgs == null || !string.Equals(messageEventArgs.Message, Message))
-            {
-                return;
-            }
+	        if (messageEventArgs == null || !string.Equals(messageEventArgs.Message, Message))
+		        return;
 
-            InvokeActions(null);
+	        InvokeActions(null);
         }
     }
 }

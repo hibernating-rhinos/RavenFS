@@ -2,19 +2,17 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
+using System.Web.Http;
+using NLog;
 using RavenFS.Client;
+using RavenFS.Storage;
+using RavenFS.Synchronization;
+using RavenFS.Synchronization.Rdc;
+using RavenFS.Synchronization.Rdc.Wrapper;
 
 namespace RavenFS.Controllers
 {
-	using System.Threading.Tasks;
-	using System.Web.Http;
-	using NLog;
-	using Storage;
-	using Synchronization;
-	using Synchronization.Rdc;
-	using Synchronization.Rdc.Wrapper;
-	using Synchronization.Rdc.Wrapper.Unmanaged;
-
 	public class RdcController : RavenController
 	{
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
@@ -37,15 +35,15 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("GET")]
 		public RdcStats Stats()
 		{
-            using (var rdcVersionChecker = new RdcVersionChecker())
-            {
-                RdcVersion rdcVersion = rdcVersionChecker.GetRdcVersion();
-                return new RdcStats
-                {
-                    CurrentVersion = rdcVersion.CurrentVersion,
-                    MinimumCompatibileAppVersion = rdcVersion.MinimumCompatibleAppVersion
-                };
-            }
+			using (var rdcVersionChecker = new RdcVersionChecker())
+			{
+				var rdcVersion = rdcVersionChecker.GetRdcVersion();
+				return new RdcStats
+					       {
+						       CurrentVersion = rdcVersion.CurrentVersion,
+						       MinimumCompatibileAppVersion = rdcVersion.MinimumCompatibleAppVersion
+					       };
+			}
 		}
 
 		[AcceptVerbs("GET")]
@@ -53,7 +51,6 @@ namespace RavenFS.Controllers
 		{
 			filename = Uri.UnescapeDataString(filename);
 			FileAndPages fileAndPages = null;
-			long? fileLength = null;
 			try
 			{
 				Storage.Batch(accessor => fileAndPages = accessor.GetFile(filename, 0, 0));
@@ -64,25 +61,26 @@ namespace RavenFS.Controllers
 				return Request.CreateResponse(HttpStatusCode.NotFound);
 			}
 
-			fileLength = fileAndPages.TotalSize;
+			long? fileLength = fileAndPages.TotalSize;
 
 			using (var signatureRepository = new StorageSignatureRepository(Storage, filename))
 			{
 				var rdcManager = new LocalRdcManager(signatureRepository, Storage, SigGenerator);
 				var signatureManifest =
 					await rdcManager.GetSignatureManifestAsync(new DataInfo
-					                                	{
-					                                		Name = filename,
-					                                		CreatedAt =
-					                                			Convert.ToDateTime(fileAndPages.Metadata["Last-Modified"]).ToUniversalTime()
-					                                	});
+						                                           {
+							                                           Name = filename,
+							                                           CreatedAt =
+								                                           Convert.ToDateTime(fileAndPages.Metadata["Last-Modified"])
+								                                                  .ToUniversalTime()
+						                                           });
 				signatureManifest.FileLength = fileLength ?? 0;
 
-				log.Debug("Signature manifest for a file '{0}' was downloaded. Signatures count was {1}", filename, signatureManifest.Signatures.Count);
+				log.Debug("Signature manifest for a file '{0}' was downloaded. Signatures count was {1}", filename,
+				          signatureManifest.Signatures.Count);
 
 				return Request.CreateResponse(HttpStatusCode.OK, signatureManifest);
 			}
 		}
-
 	}
 }

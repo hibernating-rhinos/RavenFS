@@ -3,6 +3,7 @@
 //     Copyright (c) Hibernating Rhinos LTD. All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
+
 using System;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -10,23 +11,22 @@ using System.IO;
 using System.Runtime.ConstrainedExecution;
 using System.Threading;
 using Microsoft.Isam.Esent.Interop;
+using RavenFS.Client;
 using RavenFS.Extensions;
 
 namespace RavenFS.Storage
 {
-	using Client;
-
 	public class TransactionalStorage : CriticalFinalizerObject, IDisposable
 	{
 		private readonly ThreadLocal<StorageActionsAccessor> current = new ThreadLocal<StorageActionsAccessor>();
 		private readonly string database;
-		private readonly NameValueCollection settings;
 		private readonly ReaderWriterLockSlim disposerLock = new ReaderWriterLockSlim();
 		private readonly string path;
+		private readonly NameValueCollection settings;
+		private readonly TableColumnsCache tableColumnsCache = new TableColumnsCache();
 		private bool disposed;
 
 		private JET_INSTANCE instance;
-		private readonly TableColumnsCache tableColumnsCache = new TableColumnsCache();
 
 		static TransactionalStorage()
 		{
@@ -45,7 +45,7 @@ namespace RavenFS.Storage
 		{
 			this.settings = settings;
 			this.path = path.ToFullPath();
-			this.database = Path.Combine(this.path, "Data.ravenfs");
+			database = Path.Combine(this.path, "Data.ravenfs");
 
 			new StorageConfigurator(settings).LimitSystemCache();
 
@@ -115,26 +115,30 @@ namespace RavenFS.Storage
 			try
 			{
 				instance.WithDatabase(database, (session, dbid) =>
-				{
-					using (var details = new Table(session, dbid, "details", OpenTableGrbit.ReadOnly))
-					{
-						Api.JetMove(session, details, JET_Move.First, MoveGrbit.None);
-						var columnids = Api.GetColumnDictionary(session, details);
-						var column = Api.RetrieveColumn(session, details, columnids["id"]);
-						Id = new Guid(column);
-						var schemaVersion = Api.RetrieveColumnAsString(session, details, columnids["schema_version"]);
-						if (schemaVersion == SchemaCreator.SchemaVersion)
-							return;
-						throw new InvalidOperationException(string.Format("The version on disk ({0}) is different that the version supported by this library: {1}{2}You need to migrate the disk version to the library version, alternatively, if the data isn't important, you can delete the file and it will be re-created (with no data) with the library version.", schemaVersion, SchemaCreator.SchemaVersion, Environment.NewLine));
-					}
-				});
+					                                {
+						                                using (var details = new Table(session, dbid, "details", OpenTableGrbit.ReadOnly))
+						                                {
+							                                Api.JetMove(session, details, JET_Move.First, MoveGrbit.None);
+							                                var columnids = Api.GetColumnDictionary(session, details);
+							                                var column = Api.RetrieveColumn(session, details, columnids["id"]);
+							                                Id = new Guid(column);
+							                                var schemaVersion = Api.RetrieveColumnAsString(session, details,
+							                                                                               columnids["schema_version"]);
+							                                if (schemaVersion == SchemaCreator.SchemaVersion)
+								                                return;
+							                                throw new InvalidOperationException(
+								                                string.Format(
+									                                "The version on disk ({0}) is different that the version supported by this library: {1}{2}You need to migrate the disk version to the library version, alternatively, if the data isn't important, you can delete the file and it will be re-created (with no data) with the library version.",
+									                                schemaVersion, SchemaCreator.SchemaVersion, Environment.NewLine));
+						                                }
+					                                });
 			}
 			catch (Exception e)
 			{
 				throw new InvalidOperationException(
 					"Could not read db details from disk. It is likely that there is a version difference between the library and the db on the disk." +
-						Environment.NewLine +
-							"You need to migrate the disk version to the library version, alternatively, if the data isn't important, you can delete the file and it will be re-created (with no data) with the library version.",
+					Environment.NewLine +
+					"You need to migrate the disk version to the library version, alternatively, if the data isn't important, you can delete the file and it will be re-created (with no data) with the library version.",
 					e);
 			}
 		}
@@ -161,7 +165,7 @@ namespace RavenFS.Storage
 								{
 									new StorageConfigurator(settings).ConfigureInstance(recoverInstance.JetInstance, path);
 									Api.JetAttachDatabase(recoverSession, database,
-														  AttachDatabaseGrbit.DeleteCorruptIndexes);
+									                      AttachDatabaseGrbit.DeleteCorruptIndexes);
 									Api.JetDetachDatabase(recoverSession, database);
 								}
 							}
@@ -203,10 +207,10 @@ namespace RavenFS.Storage
 			}
 		}
 
-	    [DebuggerHidden, DebuggerNonUserCode, DebuggerStepThrough]
+		[DebuggerHidden, DebuggerNonUserCode, DebuggerStepThrough]
 		public void Batch(Action<StorageActionsAccessor> action)
 		{
-			if(Id == Guid.Empty)
+			if (Id == Guid.Empty)
 				throw new InvalidOperationException("Cannot use Storage before Initialize was called");
 			if (disposed)
 			{
@@ -245,7 +249,7 @@ namespace RavenFS.Storage
 		[DebuggerHidden, DebuggerNonUserCode, DebuggerStepThrough]
 		private void ExecuteBatch(Action<StorageActionsAccessor> action)
 		{
-			if(current.Value != null)
+			if (current.Value != null)
 			{
 				action(current.Value);
 				return;
@@ -253,7 +257,7 @@ namespace RavenFS.Storage
 
 			try
 			{
-				using(var storageActionsAccessor = new StorageActionsAccessor(tableColumnsCache, instance, database))
+				using (var storageActionsAccessor = new StorageActionsAccessor(tableColumnsCache, instance, database))
 				{
 					current.Value = storageActionsAccessor;
 

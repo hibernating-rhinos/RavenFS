@@ -52,9 +52,8 @@ namespace RavenFS.Controllers
 		{
 			var ravenStudioStream = GetRavenStudioStream();
 			if (ravenStudioStream == null)
-			{
 				return new HttpResponseMessage(HttpStatusCode.NotFound);
-			}
+
 			return new HttpResponseMessage(HttpStatusCode.OK)
 			{
 				Content = new StreamContent(ravenStudioStream)

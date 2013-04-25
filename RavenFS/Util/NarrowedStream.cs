@@ -70,11 +70,10 @@ namespace RavenFS.Util
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (Position >= Length)
-            {
-                return 0;
-            }
-            var startingPosition = Position;
+	        if (Position >= Length)
+		        return 0;
+
+	        var startingPosition = Position;
             var read = Source.Read(buffer, offset, count);
             var preResult = Math.Min(Length - startingPosition, read);
             return Convert.ToInt32(preResult);
@@ -110,11 +109,10 @@ namespace RavenFS.Util
             get { return Source.Position - From; }
             set
             {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException("value", "Non-negative number required");
-                }
-                Seek(value, SeekOrigin.Begin);
+	            if (value < 0)
+		            throw new ArgumentOutOfRangeException("value", "Non-negative number required");
+
+	            Seek(value, SeekOrigin.Begin);
             }
         }
     }

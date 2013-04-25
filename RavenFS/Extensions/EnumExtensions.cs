@@ -1,8 +1,8 @@
-﻿namespace RavenFS.Extensions
-{
-	using System;
-	using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 
+namespace RavenFS.Extensions
+{
 	public static class EnumExtensions
 	{
 		public static string GetDescription(this object enumerationValue)
@@ -16,11 +16,11 @@
 			var memberInfo = type.GetMember(enumerationValue.ToString());
 			if (memberInfo.Length > 0)
 			{
-				var attrs = memberInfo[0].GetCustomAttributes(typeof(DescriptionAttribute), false);
+				var attrs = memberInfo[0].GetCustomAttributes(typeof (DescriptionAttribute), false);
 
 				if (attrs.Length > 0)
 				{
-					return ((DescriptionAttribute)attrs[0]).Description;
+					return ((DescriptionAttribute) attrs[0]).Description;
 				}
 			}
 

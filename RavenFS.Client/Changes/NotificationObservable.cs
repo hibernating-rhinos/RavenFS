@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using RavenFS.Client.Util;
 
 namespace RavenFS.Client.Changes
@@ -41,13 +38,14 @@ namespace RavenFS.Client.Changes
                     observer.OnError(exception);
                     return new DisposableAction(() => { });
                 }
-                else if (isComplete)
-                {
-                    observer.OnCompleted();
-                    return new DisposableAction(() => { });
-                }
+	            
+				if (isComplete)
+	            {
+		            observer.OnCompleted();
+		            return new DisposableAction(() => { });
+	            }
 
-                firstSubscriber = subscribers.Count == 0;
+	            firstSubscriber = subscribers.Count == 0;
                 subscribers = subscribers.Add(observer);
             }
 
@@ -66,21 +64,17 @@ namespace RavenFS.Client.Changes
                         lastSubscriber = subscribers.Count == 0;
                     }
 
-                    if (lastSubscriber)
-                    {
-                        onAllUnsubscribed();
-                    }
+	                if (lastSubscriber)
+		                onAllUnsubscribed();
                 });
         }
 
         public override void OnNext(Notification item)
         {
-            if (!(item is T) || !filter((T)item))
-            {
-                return;
-            }
+	        if (!(item is T) || !filter((T) item))
+		        return;
 
-            ImmutableList<IObserver<T>> subscribers;
+	        ImmutableList<IObserver<T>> subscribers;
             lock (gate)
             {
                 subscribers = this.subscribers;
@@ -97,12 +91,10 @@ namespace RavenFS.Client.Changes
             ImmutableList<IObserver<T>> subscribers;
             lock (gate)
             {
-                if (exception != null)
-                {
-                    return;
-                }
+	            if (exception != null)
+		            return;
 
-                exception = ex;
+	            exception = ex;
                 subscribers = this.subscribers;
                 this.subscribers = new ImmutableList<IObserver<T>>();
             }
@@ -118,12 +110,10 @@ namespace RavenFS.Client.Changes
             ImmutableList<IObserver<T>> subscribers;
             lock (gate)
             {
-                if (isComplete)
-                {
-                    return;
-                }
+	            if (isComplete)
+		            return;
 
-                isComplete = true;
+	            isComplete = true;
                 subscribers = this.subscribers;
                 this.subscribers = new ImmutableList<IObserver<T>>();
             }

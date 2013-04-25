@@ -1,8 +1,8 @@
+using System.IO;
+using Xunit;
+
 namespace RavenFS.Tests.Bugs
 {
-	using System.IO;
-	using Xunit;
-
 	public class GettingListOfFilesAfterSynchronization : MultiHostTestBase
 	{
 		[Fact]

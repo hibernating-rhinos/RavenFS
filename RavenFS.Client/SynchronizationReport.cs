@@ -1,28 +1,28 @@
-﻿namespace RavenFS.Client
-{
-	using System;
+﻿using System;
+using Newtonsoft.Json;
 
-    public class SynchronizationReport
-    {
+namespace RavenFS.Client
+{
+	public class SynchronizationReport
+	{
 		public SynchronizationReport()
 		{
-			
 		}
 
-		[Newtonsoft.Json.JsonConstructor]
+		[JsonConstructor]
 		public SynchronizationReport(string fileName, Guid fileETag, SynchronizationType type)
-	    {
-		    FileName = fileName;
+		{
+			FileName = fileName;
 			FileETag = fileETag;
 			Type = type;
-	    }
+		}
 
-        public string FileName { get; private set; }
+		public string FileName { get; private set; }
 		public Guid FileETag { get; private set; }
-        public long BytesTransfered { get; set; }
-        public long BytesCopied { get; set; }
-        public long NeedListLength { get; set; }
-        public Exception Exception { get; set; }
+		public long BytesTransfered { get; set; }
+		public long BytesCopied { get; set; }
+		public long NeedListLength { get; set; }
+		public Exception Exception { get; set; }
 		public SynchronizationType Type { get; private set; }
-    }
+	}
 }

@@ -1,24 +1,24 @@
+using System;
+using System.Collections.Specialized;
+using System.IO;
+using System.Net;
+using System.Threading.Tasks;
+using NLog;
+using Newtonsoft.Json;
+using RavenFS.Client;
+using RavenFS.Extensions;
+using RavenFS.Storage;
+using RavenFS.Synchronization.Multipart;
+
 namespace RavenFS.Synchronization
 {
-	using System;
-	using System.Collections.Specialized;
-	using System.IO;
-	using System.Net;
-	using System.Threading.Tasks;
-	using Extensions;
-	using Multipart;
-	using Newtonsoft.Json;
-	using NLog;
-	using RavenFS.Client;
-	using Storage;
-
 	public class MetadataUpdateWorkItem : SynchronizationWorkItem
 	{
+		private readonly NameValueCollection destinationMetadata;
 		private readonly Logger log = LogManager.GetCurrentClassLogger();
 
-		private readonly NameValueCollection destinationMetadata;
-
-		public MetadataUpdateWorkItem(string fileName, string sourceServerUrl, NameValueCollection destinationMetadata, TransactionalStorage storage)
+		public MetadataUpdateWorkItem(string fileName, string sourceServerUrl, NameValueCollection destinationMetadata,
+		                              TransactionalStorage storage)
 			: base(fileName, sourceServerUrl, storage)
 		{
 			this.destinationMetadata = destinationMetadata;
@@ -29,18 +29,18 @@ namespace RavenFS.Synchronization
 			get { return SynchronizationType.MetadataUpdate; }
 		}
 
-		public async override Task<SynchronizationReport> PerformAsync(string destination)
+		public override async Task<SynchronizationReport> PerformAsync(string destination)
 		{
 			AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
 
 			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata, ServerInfo.Url);
 
 			if (conflict != null)
-			{
 				return await ApplyConflictOnDestinationAsync(conflict, destination, ServerInfo.Url, log);
-			}
 
-			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/updatemetadata?fileName=" + Uri.EscapeDataString(FileName));
+			var request =
+				(HttpWebRequest)
+				WebRequest.Create(destination + "/synchronization/updatemetadata?fileName=" + Uri.EscapeDataString(FileName));
 
 			request.Method = "POST";
 			request.ContentLength = 0;
@@ -68,8 +68,8 @@ namespace RavenFS.Synchronization
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != typeof(MetadataUpdateWorkItem)) return false;
-			return Equals((MetadataUpdateWorkItem)obj);
+			if (obj.GetType() != typeof (MetadataUpdateWorkItem)) return false;
+			return Equals((MetadataUpdateWorkItem) obj);
 		}
 
 		public bool Equals(MetadataUpdateWorkItem other)

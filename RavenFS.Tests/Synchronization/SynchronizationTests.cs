@@ -1,20 +1,19 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using RavenFS.Client;
+using RavenFS.Extensions;
+using RavenFS.Synchronization;
+using RavenFS.Tests.Synchronization.IO;
+using RavenFS.Util;
+using Xunit;
+using Xunit.Extensions;
+
 namespace RavenFS.Tests.Synchronization
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Collections.Specialized;
-	using System.IO;
-	using System.Threading.Tasks;
-	using IO;
-	using Newtonsoft.Json;
-	using RavenFS.Client;
-	using RavenFS.Extensions;
-	using RavenFS.Synchronization;
-	using RavenFS.Util;
-	using Xunit;
-	using Xunit.Extensions;
-
 	public class SynchronizationTests : MultiHostTestBase
 	{
 		[Theory]
@@ -35,19 +34,19 @@ namespace RavenFS.Tests.Synchronization
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
-                               {
-                                   {"SomeTest-metadata", "some-value"}
-                               };
+				                     {
+					                     {"SomeTest-metadata", "some-value"}
+				                     };
 			var destinationMetadata = new NameValueCollection
-                               {
-                                   {"SomeTest-metadata", "should-be-overwritten"}
-                               };
+				                          {
+					                          {"SomeTest-metadata", "should-be-overwritten"}
+				                          };
 
 			destinationClient.UploadAsync("test.txt", destinationMetadata, destinationContent).Wait();
 			sourceContent.Position = 0;
 			sourceClient.UploadAsync("test.txt", sourceMetadata, sourceContent).Wait();
 
-			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
+			var result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
 
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
@@ -89,7 +88,7 @@ namespace RavenFS.Tests.Synchronization
 			sourceContent.Position = 0;
 			sourceClient.UploadAsync("test.txt", sourceContent).Wait();
 
-			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
+			var result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
 
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
@@ -122,7 +121,7 @@ namespace RavenFS.Tests.Synchronization
 			sourceContent.Position = 0;
 			sourceClient.UploadAsync("test.txt", new NameValueCollection(), sourceContent).Wait();
 
-			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
+			var result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.txt");
 
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
@@ -141,20 +140,13 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Theory]
-		[InlineData(1024 * 1024, 1)] // this pair of parameters heleped to discover storage reading issue 
-		[InlineData(1024 * 1024, null)]
+		[InlineData(1024*1024, 1)] // this pair of parameters heleped to discover storage reading issue 
+		[InlineData(1024*1024, null)]
 		public void Synchronization_of_already_synchronized_file_should_detect_that_no_work_is_needed(int size, int? seed)
 		{
 			Random r;
 
-			if (seed != null)
-			{
-				r = new Random(seed.Value);
-			}
-			else
-			{
-				r = new Random();
-			}
+			r = seed != null ? new Random(seed.Value) : new Random();
 
 			var bytes = new byte[size];
 
@@ -172,7 +164,7 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal(sourceContent.Length, firstSynchronization.BytesCopied + firstSynchronization.BytesTransfered);
 
-			string resultMd5 = null;
+			string resultMd5;
 			using (var resultFileContent = new MemoryStream())
 			{
 				destinationClient.DownloadAsync("test.bin", resultFileContent).Wait();
@@ -206,7 +198,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Theory]
-		[InlineData(1024 * 1024 * 10)]
+		[InlineData(1024*1024*10)]
 		public void Big_file_test(long size)
 		{
 			var sourceContent = new RandomStream(size);
@@ -214,23 +206,24 @@ namespace RavenFS.Tests.Synchronization
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
-                               {
-                                   {"SomeTest-metadata", "some-value"}
-                               };
+				                     {
+					                     {"SomeTest-metadata", "some-value"}
+				                     };
 			var destinationMetadata = new NameValueCollection
-                               {
-                                   {"SomeTest-metadata", "should-be-overwritten"}
-                               };
+				                          {
+					                          {"SomeTest-metadata", "should-be-overwritten"}
+				                          };
 
 			destinationClient.UploadAsync("test.bin", destinationMetadata, destinationContent).Wait();
 			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient,
+			                                                                           "test.bin");
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 		}
 
 		[Theory]
-		[InlineData(1024 * 1024 * 10)]
+		[InlineData(1024*1024*10)]
 		public void Big_character_file_test(long size)
 		{
 			var sourceContent = new RandomCharacterStream(size);
@@ -238,18 +231,19 @@ namespace RavenFS.Tests.Synchronization
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
-                               {
-                                   {"SomeTest-metadata", "some-value"}
-                               };
+				                     {
+					                     {"SomeTest-metadata", "some-value"}
+				                     };
 			var destinationMetadata = new NameValueCollection
-                               {
-                                   {"SomeTest-metadata", "should-be-overwritten"}
-                               };
+				                          {
+					                          {"SomeTest-metadata", "should-be-overwritten"}
+				                          };
 
 			destinationClient.UploadAsync("test.bin", destinationMetadata, destinationContent).Wait();
 			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
+			SynchronizationReport result = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient,
+			                                                                           "test.bin");
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 		}
 
@@ -258,9 +252,9 @@ namespace RavenFS.Tests.Synchronization
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
-			                   {
-			                       {"SomeTest-metadata", "some-value"}
-			                   };
+				                     {
+					                     {"SomeTest-metadata", "some-value"}
+				                     };
 
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
@@ -269,7 +263,8 @@ namespace RavenFS.Tests.Synchronization
 
 			sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Wait();
 
-			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
+			var lastSynchronization =
+				destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
 
 			var sourceMetadataWithEtag = sourceClient.GetMetadataForAsync("test.bin").Result;
 
@@ -281,9 +276,9 @@ namespace RavenFS.Tests.Synchronization
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
-			                   {
-			                       {"SomeTest-metadata", "some-value"}
-			                   };
+				                     {
+					                     {"SomeTest-metadata", "some-value"}
+				                     };
 
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
@@ -295,7 +290,8 @@ namespace RavenFS.Tests.Synchronization
 			sourceClient.Synchronization.StartAsync("test1.bin", destinationClient.ServerUrl).Wait();
 
 			var lastSourceETag = sourceClient.GetMetadataForAsync("test2.bin").Result.Value<Guid>("ETag");
-			var lastSynchronization = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
+			var lastSynchronization =
+				destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
 
 			Assert.Equal(lastSourceETag, lastSynchronization.LastSourceFileEtag);
 		}
@@ -315,19 +311,21 @@ namespace RavenFS.Tests.Synchronization
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
-		                       {
-		                           {"SomeTest-metadata", "some-value"}
-		                       };
+				                     {
+					                     {"SomeTest-metadata", "some-value"}
+				                     };
 
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
 			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
 
-			var sourceSynchronizationReport = sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
+			var sourceSynchronizationReport =
+				sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
 			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
 
-			Assert.Equal(sourceContent.Length, sourceSynchronizationReport.BytesCopied + sourceSynchronizationReport.BytesTransfered);
+			Assert.Equal(sourceContent.Length,
+			             sourceSynchronizationReport.BytesCopied + sourceSynchronizationReport.BytesTransfered);
 			Assert.Equal("some-value", resultFileMetadata["SomeTest-metadata"]);
 		}
 
@@ -337,13 +335,16 @@ namespace RavenFS.Tests.Synchronization
 			var sourceContent1 = new RandomStream(10);
 			var sourceClient = NewClient(1);
 			sourceClient.UploadAsync("test.bin", sourceContent1).Wait();
-			var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenSynchronizationHistory];
-			var history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
+			var historySerialized =
+				sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenSynchronizationHistory];
+			var history =
+				new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
 			Assert.Equal(0, history.Count);
 
 			sourceClient.UploadAsync("test.bin", sourceContent1).Wait();
-			historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenSynchronizationHistory];
+			historySerialized =
+				sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenSynchronizationHistory];
 			history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
 			Assert.Equal(1, history.Count);
@@ -356,13 +357,15 @@ namespace RavenFS.Tests.Synchronization
 		{
 			var sourceContent1 = new RandomStream(10);
 			var sourceClient = NewClient(1);
-			sourceClient.UploadAsync("test.bin", new NameValueCollection { { "test", "Change me" } }, sourceContent1).Wait();
-			var historySerialized = sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenSynchronizationHistory];
-			var history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
+			sourceClient.UploadAsync("test.bin", new NameValueCollection {{"test", "Change me"}}, sourceContent1).Wait();
+			var historySerialized =
+				sourceClient.GetMetadataForAsync("test.bin").Result[SynchronizationConstants.RavenSynchronizationHistory];
+			var history =
+				new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
 
 			Assert.Equal(0, history.Count);
 
-			sourceClient.UpdateMetadataAsync("test.bin", new NameValueCollection { { "test", "Changed" } }).Wait();
+			sourceClient.UpdateMetadataAsync("test.bin", new NameValueCollection {{"test", "Changed"}}).Wait();
 			var metadata = sourceClient.GetMetadataForAsync("test.bin").Result;
 			historySerialized = metadata[SynchronizationConstants.RavenSynchronizationHistory];
 			history = new JsonSerializer().Deserialize<List<HistoryItem>>(new JsonTextReader(new StringReader(historySerialized)));
@@ -396,7 +399,7 @@ namespace RavenFS.Tests.Synchronization
 		{
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
-			var files = new[] { "test1.bin", "test2.bin", "test3.bin" };
+			var files = new[] {"test1.bin", "test2.bin", "test3.bin"};
 
 			// make sure that returns empty list if there are no finished synchronizations yet
 			var result = destinationClient.Synchronization.GetFinishedAsync().Result;
@@ -422,7 +425,7 @@ namespace RavenFS.Tests.Synchronization
 
 				Task.WaitAll(
 					destinationClient.UploadAsync(item, destinationContent),
-					sourceClient.UploadAsync(item,  sourceContent));
+					sourceClient.UploadAsync(item, sourceContent));
 
 				SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, item);
 			}
@@ -445,7 +448,9 @@ namespace RavenFS.Tests.Synchronization
 
 			var synchronizationReport = sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
 
-			Assert.Equal("The limit of active synchronizations to " + destinationClient.ServerUrl + " server has been achieved. Cannot process a file 'test.bin'.", synchronizationReport.Exception.Message);
+			Assert.Equal(
+				"The limit of active synchronizations to " + destinationClient.ServerUrl +
+				" server has been achieved. Cannot process a file 'test.bin'.", synchronizationReport.Exception.Message);
 		}
 
 		[Fact]
@@ -468,7 +473,7 @@ namespace RavenFS.Tests.Synchronization
 		[Fact]
 		public void Should_calculate_and_save_content_hash_after_synchronization()
 		{
-			var buffer = new byte[1024 * 1024 * 5 + 10];
+			var buffer = new byte[1024*1024*5 + 10];
 			new Random().NextBytes(buffer);
 
 			var sourceContent = new MemoryStream(buffer);
@@ -481,9 +486,9 @@ namespace RavenFS.Tests.Synchronization
 			destinationClient.UploadAsync("test.bin", new RandomlyModifiedStream(sourceContent, 0.01)).Wait();
 			sourceContent.Position = 0;
 
-			SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin"); 
+			SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
-			
+
 			Assert.Contains("Content-MD5", resultFileMetadata.AllKeys);
 			Assert.Equal(sourceContent.GetMD5Hash(), resultFileMetadata["Content-MD5"]);
 		}
@@ -498,7 +503,7 @@ namespace RavenFS.Tests.Synchronization
 			var sourceClient = NewClient(0);
 
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
-			sourceClient.UpdateMetadataAsync("test.bin", new NameValueCollection() { { "someKey", "someValue" } }).Wait();
+			sourceClient.UpdateMetadataAsync("test.bin", new NameValueCollection {{"someKey", "someValue"}}).Wait();
 
 			sourceContent.Position = 0;
 			var resultFileMetadata = sourceClient.GetMetadataForAsync("test.bin").Result;
@@ -510,12 +515,12 @@ namespace RavenFS.Tests.Synchronization
 		[Fact]
 		public void Should_synchronize_just_metadata()
 		{
-			var content = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+			var content = new MemoryStream(new byte[] {1, 2, 3, 4});
 
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection { { "difference", "metadata" } }, content).Wait();
+			sourceClient.UploadAsync("test.bin", new NameValueCollection {{"difference", "metadata"}}, content).Wait();
 			content.Position = 0;
 			destinationClient.UploadAsync("test.bin", content).Wait();
 
@@ -525,20 +530,20 @@ namespace RavenFS.Tests.Synchronization
 
 			var destinationMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
 
-			Assert.Equal("metadata",destinationMetadata["difference"]);
+			Assert.Equal("metadata", destinationMetadata["difference"]);
 		}
 
 		[Fact]
 		public void Should_just_rename_file_in_synchronization_process()
 		{
-			var content = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+			var content = new MemoryStream(new byte[] {1, 2, 3, 4});
 
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection { { "key", "value" } }, content).Wait();
+			sourceClient.UploadAsync("test.bin", new NameValueCollection {{"key", "value"}}, content).Wait();
 			content.Position = 0;
-			destinationClient.UploadAsync("test.bin", new NameValueCollection { { "key", "value" } }, content).Wait();
+			destinationClient.UploadAsync("test.bin", new NameValueCollection {{"key", "value"}}, content).Wait();
 
 			sourceClient.RenameAsync("test.bin", "renamed.bin").Wait();
 
@@ -565,7 +570,8 @@ namespace RavenFS.Tests.Synchronization
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
-			source.UploadAsync("empty.test", new NameValueCollection() { {"should-be-transferred", "true"} }, new MemoryStream()).Wait();
+			source.UploadAsync("empty.test", new NameValueCollection {{"should-be-transferred", "true"}}, new MemoryStream())
+			      .Wait();
 			var result = source.Synchronization.StartAsync("empty.test", destination.ServerUrl).Result;
 
 			Assert.Null(result.Exception);
@@ -598,7 +604,7 @@ namespace RavenFS.Tests.Synchronization
 			var id = Guid.NewGuid();
 			var etag = Guid.NewGuid();
 
-			client.Synchronization.IncrementLastETagAsync(id,  "http://localhost:12345", etag).Wait();
+			client.Synchronization.IncrementLastETagAsync(id, "http://localhost:12345", etag).Wait();
 
 			var lastSyncInfo = client.Synchronization.GetLastSynchronizationFromAsync(id).Result;
 
@@ -608,20 +614,20 @@ namespace RavenFS.Tests.Synchronization
 		[Fact]
 		public void Can_synchronize_file_with_greater_number_of_signatures()
 		{
-			const int size5Mb = 1024 * 1024 * 5;
-			const int size1Mb = 1024 * 1024;
+			const int size5Mb = 1024*1024*5;
+			const int size1Mb = 1024*1024;
 
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
 			var buffer = new byte[size5Mb]; // 5Mb file should have 2 signatures
-            new Random().NextBytes(buffer);
+			new Random().NextBytes(buffer);
 
 			var sourceContent = new MemoryStream(buffer);
 			source.UploadAsync("test.bin", sourceContent).Wait();
 
 			buffer = new byte[size1Mb]; // while 1Mb file has only 1 signature
-            new Random().NextBytes(buffer);
+			new Random().NextBytes(buffer);
 
 			destination.UploadAsync("test.bin", new MemoryStream(buffer)).Wait();
 
@@ -629,7 +635,8 @@ namespace RavenFS.Tests.Synchronization
 			var destinationSigCount = destination.Synchronization.GetRdcManifestAsync("test.bin").Result.Signatures.Count;
 
 			// ensure that file on source has more signatures than file on destination
-			Assert.True(sourceSigCount > destinationSigCount, "File on source should be much bigger in order to have more signatures");
+			Assert.True(sourceSigCount > destinationSigCount,
+			            "File on source should be much bigger in order to have more signatures");
 
 			var result = SyncTestUtils.ResolveConflictAndSynchronize(source, destination, "test.bin");
 
@@ -642,8 +649,8 @@ namespace RavenFS.Tests.Synchronization
 		[Fact]
 		public void Can_synchronize_file_with_less_number_of_signatures()
 		{
-			const int size5Mb = 1024 * 1024 * 5;
-			const int size1Mb = 1024 * 1024;
+			const int size5Mb = 1024*1024*5;
+			const int size1Mb = 1024*1024;
 
 			var source = NewClient(0);
 			var destination = NewClient(1);
@@ -678,7 +685,7 @@ namespace RavenFS.Tests.Synchronization
 		public void Can_synchronize_file_that_doesnt_have_any_signature_while_file_on_destination_has()
 		{
 			const int size1b = 1;
-			const int size5Mb = 1024 * 1024 * 5;
+			const int size5Mb = 1024*1024*5;
 
 			var source = NewClient(0);
 			var destination = NewClient(1);
@@ -729,7 +736,8 @@ namespace RavenFS.Tests.Synchronization
 			var destContent = new MemoryStream();
 			var destMetadata = destination.DownloadAsync("test.bin", destContent).Result;
 
-			Assert.True(destMetadata[SynchronizationConstants.RavenDeleteMarker] == null, "Metedata should not containt Raven-Delete-Marker");
+			Assert.True(destMetadata[SynchronizationConstants.RavenDeleteMarker] == null,
+			            "Metedata should not containt Raven-Delete-Marker");
 
 			sourceContent.Position = destContent.Position = 0;
 			Assert.Equal(sourceContent.GetMD5Hash(), destContent.GetMD5Hash());
@@ -741,12 +749,12 @@ namespace RavenFS.Tests.Synchronization
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
-			var sourceContent = new MemoryStream(new byte[] { 5, 10, 15 });
+			var sourceContent = new MemoryStream(new byte[] {5, 10, 15});
 			sourceContent.Position = 0;
 			source.UploadAsync("test.bin", sourceContent).Wait();
 
 			var report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
-			
+
 			Assert.NotEqual(Guid.Empty, report.FileETag);
 		}
 

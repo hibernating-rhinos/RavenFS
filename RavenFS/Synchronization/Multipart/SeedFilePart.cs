@@ -1,21 +1,24 @@
+using System.Globalization;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
+using RavenFS.Infrastructure;
+
 namespace RavenFS.Synchronization.Multipart
 {
-	using System.Globalization;
-	using System.IO;
-	using System.Net;
-	using System.Net.Http;
-	using System.Net.Http.Headers;
-	using System.Threading.Tasks;
-	using RavenFS.Infrastructure;
-
 	public class SeedFilePart : HttpContent
 	{
 		public SeedFilePart(long from, long to)
 		{
 			Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data");
-			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.NeedType, SyncingNeedType));
-			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeFrom, @from.ToString(CultureInfo.InvariantCulture)));
-			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeTo, to.ToString(CultureInfo.InvariantCulture)));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.NeedType,
+			                                                                   SyncingNeedType));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeFrom,
+			                                                                   @from.ToString(CultureInfo.InvariantCulture)));
+			Headers.ContentDisposition.Parameters.Add(new NameValueHeaderValue(SyncingMultipartConstants.RangeTo,
+			                                                                   to.ToString(CultureInfo.InvariantCulture)));
 
 			Headers.ContentType = new MediaTypeHeaderValue("plain/text");
 		}

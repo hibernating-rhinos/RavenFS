@@ -9,6 +9,7 @@ namespace RavenFS.Controllers
 			{
 				count = accessor.GetFileCount();
 			});
+
 			return new Stats
 			{
 				FileCount = count

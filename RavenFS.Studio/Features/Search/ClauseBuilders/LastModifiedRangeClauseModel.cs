@@ -1,15 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.Net;
-using System.Threading;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Features.Search.ClauseBuilders
@@ -83,10 +73,8 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             {
                 upperLimitDate = value;
                 OnPropertyChanged(() => UpperLimitDate);
-                if (!_isSettingDate && upperLimitDate.HasValue)
-                {
-                    UpperLimit = upperLimitDate.Value.ToString("d", CultureInfo.CurrentCulture);
-                }
+	            if (!_isSettingDate && upperLimitDate.HasValue)
+		            UpperLimit = upperLimitDate.Value.ToString("d", CultureInfo.CurrentCulture);
             }
         }
     }

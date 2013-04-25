@@ -20,12 +20,10 @@ namespace RavenFS.Controllers
         [AcceptVerbs("GET")]
         public HttpResponseMessage Config(string id, string command, string value = "")
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                throw BadRequestException("id query string parameter is mandatory when using changes/config endpoint");
-            }
+	        if (string.IsNullOrEmpty(id))
+		        throw BadRequestException("id query string parameter is mandatory when using changes/config endpoint");
 
-            var connectionState = RavenFileSystem.TransportState.For(id);
+	        var connectionState = RavenFileSystem.TransportState.For(id);
 
             if (Match(command, "disconnect"))
             {

@@ -1,12 +1,12 @@
-﻿namespace RavenFS.Tests.Bugs
-{
-	using System.IO;
-	using System.Linq;
-	using Client;
-	using Extensions;
-	using Synchronization;
-	using Xunit;
+﻿using System.IO;
+using System.Linq;
+using RavenFS.Client;
+using RavenFS.Extensions;
+using RavenFS.Tests.Synchronization;
+using Xunit;
 
+namespace RavenFS.Tests.Bugs
+{
 	public class SynchronizationAfterSetUpDestinations : MultiHostTestBase
 	{
 		[Fact]

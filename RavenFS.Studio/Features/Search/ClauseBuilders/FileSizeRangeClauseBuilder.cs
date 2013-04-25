@@ -1,16 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.Net;
 using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using RavenFS.Studio.Infrastructure;
 using RavenFS.Studio.Extensions;
 
@@ -42,18 +33,14 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
 
         private string ConvertInputStringToRangeValue(string input)
         {
-            if (input.IsNullOrEmpty())
-            {
-                return "*";
-            }
+	        if (input.IsNullOrEmpty())
+		        return "*";
 
-            var match = Regex.Match(input, InputRegEx);
-            if (!match.Success)
-            {
-                return "*";
-            }
+	        var match = Regex.Match(input, InputRegEx);
+	        if (!match.Success)
+		        return "*";
 
-            var value = long.Parse(match.Groups[1].Value);
+	        var value = long.Parse(match.Groups[1].Value);
             var multiplier = GetMultiplier(match.Groups[2].Value);
 
             value *= multiplier;
@@ -63,26 +50,19 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
 
         private long GetMultiplier(string value)
         {
-            if (value.IsNullOrEmpty())
-            {
-                return 1;
-            }
-            else if (value.IndexOf("k", StringComparison.InvariantCultureIgnoreCase) > -1)
-            {
-                return 1024;
-            }
-            else if (value.IndexOf("m", StringComparison.InvariantCultureIgnoreCase) > - 1)
-            {
-                return 1024*1024;
-            }
-            else if (value.IndexOf("g", StringComparison.InvariantCultureIgnoreCase) > -1)
-            {
-                return 1024 * 1024 * 1024;
-            }
-            else
-            {
-                return 1;
-            }
+	        if (value.IsNullOrEmpty())
+		        return 1;
+
+	        if (value.IndexOf("k", StringComparison.InvariantCultureIgnoreCase) > -1)
+		        return 1024;
+	        
+			if (value.IndexOf("m", StringComparison.InvariantCultureIgnoreCase) > - 1)
+		        return 1024*1024;
+
+	        if (value.IndexOf("g", StringComparison.InvariantCultureIgnoreCase) > -1)
+		        return 1024*1024*1024;
+	        
+			return 1;
         }
     }
 }

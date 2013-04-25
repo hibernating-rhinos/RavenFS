@@ -1,8 +1,8 @@
-﻿namespace RavenFS.Synchronization.Rdc.Wrapper.Unmanaged
-{
-	using System;
-	using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
+namespace RavenFS.Synchronization.Rdc.Wrapper.Unmanaged
+{
 	[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 	[Guid("96236A7D-9DBC-11DA-9E3F-0011114AE311")]
 	[ComImport]
@@ -21,6 +21,6 @@
 		Int32 GetPageSize(out uint pageSize);
 
 		Int32 CreateView(uint minimumMappedPages, RdcMappingAccessMode accessMode,
-		                   out ISimilarityTraitsMappedView mappedView);
+		                 out ISimilarityTraitsMappedView mappedView);
 	}
 }

@@ -1,23 +1,22 @@
-﻿namespace RavenFS.Tests.Synchronization
-{
-	using System;
-	using System.Collections.Generic;
-	using System.Collections.Specialized;
-	using System.IO;
-	using System.Linq;
-	using System.Net;
-	using System.Text;
-	using Client;
-	using Extensions;
-	using IO;
-	using Newtonsoft.Json;
-	using RavenFS.Notifications;
-	using RavenFS.Synchronization;
-	using RavenFS.Synchronization.Multipart;
-	using Tools;
-	using Util;
-	using Xunit;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using Newtonsoft.Json;
+using RavenFS.Client;
+using RavenFS.Extensions;
+using RavenFS.Synchronization;
+using RavenFS.Synchronization.Multipart;
+using RavenFS.Tests.Synchronization.IO;
+using RavenFS.Tests.Tools;
+using RavenFS.Util;
+using Xunit;
 
+namespace RavenFS.Tests.Synchronization
+{
 	public class WorkingWithConflictsTests : MultiHostTestBase
 	{
 		[Fact]
@@ -26,7 +25,8 @@
 			var client = NewClient(0);
 
 			client.UploadAsync("conflict.test", new MemoryStream(1)).Wait();
-			client.Synchronization.ApplyConflictAsync("conflict.test", 1, "blah", new List<HistoryItem>(), "http://localhost:12345").Wait();
+			client.Synchronization.ApplyConflictAsync("conflict.test", 1, "blah", new List<HistoryItem>(),
+			                                          "http://localhost:12345").Wait();
 
 			var results = client.SearchAsync("Raven-Synchronization-Conflict:true").Result;
 
@@ -49,13 +49,13 @@
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
-		                       {
-		                           {"SomeTest-metadata", "some-value"}
-		                       };
+				                     {
+					                     {"SomeTest-metadata", "some-value"}
+				                     };
 			var destinationMetadata = new NameValueCollection
-		                       {
-		                           {"SomeTest-metadata", "shouldnt-be-overwritten"}
-		                       };
+				                          {
+					                          {"SomeTest-metadata", "shouldnt-be-overwritten"}
+				                          };
 
 			destinationClient.UploadAsync("test.txt", destinationMetadata, destinationContent).Wait();
 			sourceContent.Position = 0;
@@ -102,14 +102,14 @@
 			{
 				var filename = string.Format("test{0}.bin", i);
 
-				source.UploadAsync(filename, new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
-				destination.UploadAsync(filename, new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
+				source.UploadAsync(filename, new MemoryStream(new byte[] {1, 2, 3})).Wait();
+				destination.UploadAsync(filename, new MemoryStream(new byte[] {1, 2, 3})).Wait();
 
 				var result = source.Synchronization.StartAsync(filename, destination.ServerUrl).Result;
 
-				if (i % 3 == 0) // sometimes insert other configs
+				if (i%3 == 0) // sometimes insert other configs
 				{
-					destination.Config.SetConfig("test" + i, new NameValueCollection() { { "foo", "bar" } }).Wait();
+					destination.Config.SetConfig("test" + i, new NameValueCollection {{"foo", "bar"}}).Wait();
 				}
 
 				// make sure that conflicts indeed are created
@@ -134,9 +134,9 @@
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadataWithConflict = new NameValueCollection
-		                       {
-		                           {SynchronizationConstants.RavenSynchronizationConflict, "true"}
-		                       };
+				                                 {
+					                                 {SynchronizationConstants.RavenSynchronizationConflict, "true"}
+				                                 };
 
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
@@ -156,9 +156,12 @@
 			var client = NewClient(1);
 			client.UploadAsync("test.bin", content).Wait();
 			var guid = Guid.NewGuid().ToString();
-			client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem> { new HistoryItem() { ServerId = guid, Version = 3 } }, "http://localhost:12345").Wait();
+			client.Synchronization.ApplyConflictAsync("test.bin", 8, guid,
+			                                          new List<HistoryItem> {new HistoryItem {ServerId = guid, Version = 3}},
+			                                          "http://localhost:12345").Wait();
 			var resultFileMetadata = client.GetMetadataForAsync("test.bin").Result;
-			var conflict = client.Config.GetConfig(RavenFileNameHelper.ConflictConfigNameForFile("test.bin")).Result.AsObject<ConflictItem>();
+			var conflict =
+				client.Config.GetConfig(RavenFileNameHelper.ConflictConfigNameForFile("test.bin")).Result.AsObject<ConflictItem>();
 
 			Assert.Equal(true.ToString(), resultFileMetadata[SynchronizationConstants.RavenSynchronizationConflict]);
 			Assert.Equal(guid, conflict.RemoteHistory.Last().ServerId);
@@ -175,9 +178,13 @@
 			var client = NewClient(1);
 
 			var guid = Guid.NewGuid().ToString();
-			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem>(), "http://localhost:12345").Wait());
+			var innerException =
+				SyncTestUtils.ExecuteAndGetInnerException(
+					() =>
+					client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem>(), "http://localhost:12345")
+					      .Wait());
 
-			Assert.IsType(typeof(FileNotFoundException), innerException);
+			Assert.IsType(typeof (FileNotFoundException), innerException);
 		}
 
 		[Fact]
@@ -185,9 +192,9 @@
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
-		                       {
-		                           {"SomeTest-metadata", "some-value"}
-		                       };
+				                     {
+					                     {"SomeTest-metadata", "some-value"}
+				                     };
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
@@ -209,20 +216,21 @@
 
 			const string fileName = "test.txt";
 
-			destination.UploadAsync(fileName, new MemoryStream(new byte[] { 1 })).Wait();
+			destination.UploadAsync(fileName, new MemoryStream(new byte[] {1})).Wait();
 
-			var request = (HttpWebRequest)WebRequest.Create(destination.ServerUrl + "/synchronization/updatemetadata/" + fileName);
+			var request =
+				(HttpWebRequest) WebRequest.Create(destination.ServerUrl + "/synchronization/updatemetadata/" + fileName);
 
 			request.Method = "POST";
 			request.ContentLength = 0;
 
-			var conflictedMetadata = new NameValueCollection()
-				{
-					{"ETag", "\"" + Guid.Empty + "\""},
-					{SynchronizationConstants.RavenSynchronizationVersion, "1"},
-					{SynchronizationConstants.RavenSynchronizationSource,Guid.Empty.ToString()},
-					{SynchronizationConstants.RavenSynchronizationHistory, "[]"}
-				};
+			var conflictedMetadata = new NameValueCollection
+				                         {
+					                         {"ETag", "\"" + Guid.Empty + "\""},
+					                         {SynchronizationConstants.RavenSynchronizationVersion, "1"},
+					                         {SynchronizationConstants.RavenSynchronizationSource, Guid.Empty.ToString()},
+					                         {SynchronizationConstants.RavenSynchronizationHistory, "[]"}
+				                         };
 
 			request.AddHeaders(conflictedMetadata);
 
@@ -242,12 +250,12 @@
 		[Fact]
 		public void Should_detect_conflict_on_metadata_synchronization()
 		{
-			var content = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+			var content = new MemoryStream(new byte[] {1, 2, 3, 4});
 
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection { { "difference", "metadata" } }, content).Wait();
+			sourceClient.UploadAsync("test.bin", new NameValueCollection {{"difference", "metadata"}}, content).Wait();
 			content.Position = 0;
 			destinationClient.UploadAsync("test.bin", content).Wait();
 
@@ -260,14 +268,14 @@
 		[Fact]
 		public void Should_detect_conflict_on_renaming_synchronization()
 		{
-			var content = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+			var content = new MemoryStream(new byte[] {1, 2, 3, 4});
 
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection { { "key", "value" } }, content).Wait();
+			sourceClient.UploadAsync("test.bin", new NameValueCollection {{"key", "value"}}, content).Wait();
 			content.Position = 0;
-			destinationClient.UploadAsync("test.bin", new NameValueCollection { { "key", "value" } }, content).Wait();
+			destinationClient.UploadAsync("test.bin", new NameValueCollection {{"key", "value"}}, content).Wait();
 
 			sourceClient.RenameAsync("test.bin", "renamed.bin").Wait();
 
@@ -284,8 +292,8 @@
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			sourceClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
-			destinationClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
+			sourceClient.UploadAsync("test", new MemoryStream(new byte[] {1, 2, 3})).Wait();
+			destinationClient.UploadAsync("test", new MemoryStream(new byte[] {1, 2})).Wait();
 
 			var shouldBeConflict = sourceClient.Synchronization.StartAsync("test", destinationClient.ServerUrl).Result;
 
@@ -303,27 +311,29 @@
 		{
 			var destinationClient = NewClient(1);
 
-			destinationClient.UploadAsync("test.bin", new NameValueCollection { { "key", "value" } }, new MemoryStream(new byte[] { 1, 2, 3, 4 })).Wait();
+			destinationClient.UploadAsync("test.bin", new NameValueCollection {{"key", "value"}},
+			                              new MemoryStream(new byte[] {1, 2, 3, 4})).Wait();
 
 			var webRequest =
-				(HttpWebRequest)WebRequest.Create(destinationClient.ServerUrl + "/synchronization/updatemetadata/test.bin");
+				(HttpWebRequest) WebRequest.Create(destinationClient.ServerUrl + "/synchronization/updatemetadata/test.bin");
 			webRequest.ContentLength = 0;
 			webRequest.Method = "POST";
 
-			webRequest.Headers.Add(SyncingMultipartConstants.SourceServerInfo, new ServerInfo { Id = Guid.Empty, Url = "http://localhost:12345" }.AsJson());
+			webRequest.Headers.Add(SyncingMultipartConstants.SourceServerInfo,
+			                       new ServerInfo {Id = Guid.Empty, Url = "http://localhost:12345"}.AsJson());
 			webRequest.Headers.Add("ETag", "\"" + new Guid() + "\"");
 			webRequest.Headers.Add("MetadataKey", "MetadataValue");
 
 			var sb = new StringBuilder();
 			new JsonSerializer().Serialize(new JsonTextWriter(new StringWriter(sb)),
-										   new List<HistoryItem>
-			                               	{
-			                               		new HistoryItem
-			                               			{
-			                               				ServerId = new Guid().ToString(),
-			                               				Version = 1
-			                               			}
-			                               	});
+			                               new List<HistoryItem>
+				                               {
+					                               new HistoryItem
+						                               {
+							                               ServerId = new Guid().ToString(),
+							                               Version = 1
+						                               }
+				                               });
 
 			webRequest.Headers.Add(SynchronizationConstants.RavenSynchronizationHistory, sb.ToString());
 			webRequest.Headers.Add(SynchronizationConstants.RavenSynchronizationVersion, "1");
@@ -345,8 +355,8 @@
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			sourceClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
-			destinationClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
+			sourceClient.UploadAsync("test", new MemoryStream(new byte[] {1, 2, 3})).Wait();
+			destinationClient.UploadAsync("test", new MemoryStream(new byte[] {1, 2})).Wait();
 
 			var shouldBeConflict = sourceClient.Synchronization.StartAsync("test", destinationClient.ServerUrl).Result;
 
@@ -355,16 +365,21 @@
 			destinationClient.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl },
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         },
+				                                                                                         }).Wait();
 
 			var report = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
 			Assert.Equal(1, report.Count());
 			Assert.Null(report.First().Reports);
 
-			var lastEtag = destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
+			var lastEtag =
+				destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
 
 			Assert.Equal(sourceClient.GetMetadataForAsync("test").Result.Value<Guid>("ETag"), lastEtag.LastSourceFileEtag);
 		}
@@ -375,8 +390,8 @@
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			sourceClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
-			destinationClient.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
+			sourceClient.UploadAsync("test", new MemoryStream(new byte[] {1, 2, 3})).Wait();
+			destinationClient.UploadAsync("test", new MemoryStream(new byte[] {1, 2})).Wait();
 
 			var shouldBeConflict = sourceClient.Synchronization.StartAsync("test", destinationClient.ServerUrl).Result;
 
@@ -385,14 +400,19 @@
 			destinationClient.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl },
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         },
+				                                                                                         }).Wait();
 
 			var report = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 			Assert.Null(report.ToArray()[0].Exception);
 
-			var syncingItem = sourceClient.Config.GetConfig(RavenFileNameHelper.SyncNameForFile("test", destinationClient.ServerUrl)).Result;
+			var syncingItem =
+				sourceClient.Config.GetConfig(RavenFileNameHelper.SyncNameForFile("test", destinationClient.ServerUrl)).Result;
 			Assert.Null(syncingItem);
 		}
 
@@ -402,8 +422,8 @@
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
-			source.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
-			destination.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
+			source.UploadAsync("test", new MemoryStream(new byte[] {1, 2, 3})).Wait();
+			destination.UploadAsync("test", new MemoryStream(new byte[] {1, 2})).Wait();
 
 			var shouldBeConflict = source.Synchronization.StartAsync("test", destination.ServerUrl).Result;
 
@@ -423,8 +443,8 @@
 			var server1 = NewClient(0);
 			var server2 = NewClient(1);
 
-			server1.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
-			server2.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
+			server1.UploadAsync("test", new MemoryStream(new byte[] {1, 2, 3})).Wait();
+			server2.UploadAsync("test", new MemoryStream(new byte[] {1, 2})).Wait();
 
 			var shouldBeConflict = server1.Synchronization.StartAsync("test", server2.ServerUrl).Result;
 
@@ -442,7 +462,8 @@
 			var shouldNotBeConflict = server1.Synchronization.StartAsync("test", server2.ServerUrl).Result;
 
 			Assert.Null(shouldNotBeConflict.Exception);
-			Assert.Equal(server1.GetMetadataForAsync("test").Result["Content-Md5"], server2.GetMetadataForAsync("test").Result["Content-Md5"]);
+			Assert.Equal(server1.GetMetadataForAsync("test").Result["Content-Md5"],
+			             server2.GetMetadataForAsync("test").Result["Content-Md5"]);
 		}
 
 		[Fact]
@@ -451,8 +472,8 @@
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
-			source.UploadAsync("test", new MemoryStream(new byte[] { 1, 2, 3 })).Wait();
-			destination.UploadAsync("test", new MemoryStream(new byte[] { 1, 2 })).Wait();
+			source.UploadAsync("test", new MemoryStream(new byte[] {1, 2, 3})).Wait();
+			destination.UploadAsync("test", new MemoryStream(new byte[] {1, 2})).Wait();
 
 			var shouldBeConflict = source.Synchronization.StartAsync("test", destination.ServerUrl).Result;
 

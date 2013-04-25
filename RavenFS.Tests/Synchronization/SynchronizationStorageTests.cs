@@ -1,20 +1,20 @@
-﻿namespace RavenFS.Tests.Synchronization
-{
-	using System.IO;
-	using Client;
-	using Extensions;
-	using RavenFS.Synchronization;
-	using Storage;
-	using Util;
-	using Xunit;
-	using Xunit.Extensions;
+﻿using System.IO;
+using RavenFS.Client;
+using RavenFS.Extensions;
+using RavenFS.Storage;
+using RavenFS.Synchronization;
+using RavenFS.Util;
+using Xunit;
+using Xunit.Extensions;
 
+namespace RavenFS.Tests.Synchronization
+{
 	public class SynchronizationStorageTests : MultiHostTestBase
 	{
-		private readonly RavenFileSystemClient source;
 		private readonly RavenFileSystemClient destination;
-		private readonly RavenFileSystem sourceRfs;
 		private readonly RavenFileSystem destinationRfs;
+		private readonly RavenFileSystemClient source;
+		private readonly RavenFileSystem sourceRfs;
 
 		public SynchronizationStorageTests()
 		{
@@ -32,7 +32,8 @@
 		{
 			var file = SyncTestUtils.PreparePagesStream(numberOfPages);
 
-			var sourceContent = new CombinedStream(file, SyncTestUtils.PreparePagesStream(numberOfPages)); // add new pages at the end
+			var sourceContent = new CombinedStream(file, SyncTestUtils.PreparePagesStream(numberOfPages));
+				// add new pages at the end
 			var destinationContent = file;
 
 			sourceContent.Position = 0;
@@ -40,21 +41,23 @@
 			destinationContent.Position = 0;
 			destination.UploadAsync("test", destinationContent).Wait();
 
-			var contentUpdate = new ContentUpdateWorkItem("test", "http://localhost:12345", sourceRfs.Storage, sourceRfs.SigGenerator);
+			var contentUpdate = new ContentUpdateWorkItem("test", "http://localhost:12345", sourceRfs.Storage,
+			                                              sourceRfs.SigGenerator);
 
 			// force to upload entire file, we just want to check which pages will be reused
 			contentUpdate.UploadToAsync(destination.ServerUrl).Wait();
 			destination.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.RemoteVersion).Wait();
 			contentUpdate.UploadToAsync(destination.ServerUrl).Wait();
-			
-			FileAndPages fileAndPages = null;
-			destinationRfs.Storage.Batch(accessor => fileAndPages = accessor.GetFile("test", 0, 2 * numberOfPages));
 
-			Assert.Equal(2 * numberOfPages, fileAndPages.Pages.Count);
-			
-			for (var i = 0; i < numberOfPages; i++)
+			FileAndPages fileAndPages = null;
+			destinationRfs.Storage.Batch(accessor => fileAndPages = accessor.GetFile("test", 0, 2*numberOfPages));
+
+			Assert.Equal(2*numberOfPages, fileAndPages.Pages.Count);
+
+			for(var i = 0; i < numberOfPages; i++)
 			{
-				Assert.Equal(i + 1, fileAndPages.Pages[i].Id); // if page ids are in the original order it means that they were used the existing pages
+				Assert.Equal(i + 1, fileAndPages.Pages[i].Id);
+					// if page ids are in the original order it means that they were used the existing pages
 			}
 
 			sourceContent.Position = 0;
@@ -70,7 +73,7 @@
 			var sourceContent = new MemoryStream();
 			file.CopyTo(sourceContent);
 			sourceContent.Position = 0;
-			sourceContent.Write(new byte[] { 0, 0, 0, 0 }, 0, 4); // change content of the 1st page
+			sourceContent.Write(new byte[] {0, 0, 0, 0}, 0, 4); // change content of the 1st page
 
 			var destinationContent = file;
 
@@ -79,9 +82,10 @@
 			destinationContent.Position = 0;
 			destination.UploadAsync("test", destinationContent).Wait();
 
-			var contentUpdate = new ContentUpdateWorkItem("test", "http://localhost:12345", sourceRfs.Storage, sourceRfs.SigGenerator);
+			var contentUpdate = new ContentUpdateWorkItem("test", "http://localhost:12345", sourceRfs.Storage,
+			                                              sourceRfs.SigGenerator);
 
-			
+
 			sourceContent.Position = 0;
 			// force to upload entire file, we just want to check which pages will be reused
 			contentUpdate.UploadToAsync(destination.ServerUrl).Wait();
@@ -108,7 +112,7 @@
 			var sourceContent = new MemoryStream();
 			file.CopyTo(sourceContent);
 			sourceContent.Position = StorageConstants.MaxPageSize + 1;
-			sourceContent.Write(new byte[] { 0, 0, 0, 0 }, 0, 4); // change content of the 2nd page
+			sourceContent.Write(new byte[] {0, 0, 0, 0}, 0, 4); // change content of the 2nd page
 
 			var destinationContent = file;
 
@@ -117,7 +121,8 @@
 			destinationContent.Position = 0;
 			destination.UploadAsync("test", destinationContent).Wait();
 
-			var contentUpdate = new ContentUpdateWorkItem("test", "http://localhost:12345", sourceRfs.Storage, sourceRfs.SigGenerator);
+			var contentUpdate = new ContentUpdateWorkItem("test", "http://localhost:12345", sourceRfs.Storage,
+			                                              sourceRfs.SigGenerator);
 
 
 			sourceContent.Position = 0;

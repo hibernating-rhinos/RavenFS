@@ -1,24 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration.Install;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Security.Principal;
 using System.ServiceProcess;
+using System.Xml;
 using NDesk.Options;
+using NLog;
+using NLog.Config;
+using RavenFS.Config;
+using RavenFS.Util;
 
 namespace RavenFS.Server
 {
-	using System.Configuration.Install;
-	using System.IO;
-	using System.Reflection;
-	using System.Security.Principal;
-	using System.Xml;
-	using Config;
-	using NLog.Config;
-	using Util;
-
-	class Program
+	internal class Program
 	{
-		static void Main(string[] args)
+		private static void Main(string[] args)
 		{
 			HttpEndpointRegistration.RegisterHttpEndpointTarget();
 			if (RunningInInteractiveMode())
@@ -53,9 +53,9 @@ namespace RavenFS.Server
 			{
 				// no try catch here, we want the exception to be logged by Windows
 				var hostingService = new HostingService
-				{
-					Configuration = new RavenFileSystemConfiguration()
-				};
+					                     {
+						                     Configuration = new RavenFileSystemConfiguration()
+					                     };
 
 				ServiceBase.Run(hostingService);
 			}
@@ -68,26 +68,28 @@ namespace RavenFS.Server
 
 		private static void InteractiveRun()
 		{
-			bool done = false;
+			var done = false;
 			var actions = new Dictionary<string, Action>
-			{
-				{"cls", () => Console.Clear()},
-				{
-					"gc", () =>
-					{
-						long before = Process.GetCurrentProcess().WorkingSet64;
-						Console.WriteLine("Starting garbage collection, current memory is: {0:#,#.##;;0} MB", before/1024d/1024d);
-						GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-						var after = Process.GetCurrentProcess().WorkingSet64;
-						Console.WriteLine("Done garbage collection, current memory is: {0:#,#.##;;0} MB, saved: {1:#,#.##;;0} MB",
-						                  after/1024d/1024d,
-						                  (before - after)/1024d/1024d);
-					}
-				},
-				{
-					"q", () => done = true
-				}
-			};
+				              {
+					              {"cls", () => Console.Clear()},
+					              {
+						              "gc", () =>
+							                    {
+								                    long before = Process.GetCurrentProcess().WorkingSet64;
+								                    Console.WriteLine("Starting garbage collection, current memory is: {0:#,#.##;;0} MB",
+								                                      before/1024d/1024d);
+								                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+								                    var after = Process.GetCurrentProcess().WorkingSet64;
+								                    Console.WriteLine(
+									                    "Done garbage collection, current memory is: {0:#,#.##;;0} MB, saved: {1:#,#.##;;0} MB",
+									                    after/1024d/1024d,
+									                    (before - after)/1024d/1024d);
+							                    }
+					              },
+					              {
+						              "q", () => done = true
+					              }
+				              };
 
 			WriteInteractiveOptions(actions);
 			while (done == false)
@@ -138,33 +140,54 @@ Enjoy...
 
 			OptionSet optionSet = null;
 			optionSet = new OptionSet
-			{
-				{"port=", port => ravenConfiguration.Port = int.Parse(port)},
-				{"path=", path => ravenConfiguration.DataDirectory = path},
-				{"set={==}", "The configuration {0:option} to set to the specified {1:value}" , (key, value) =>
-				{
-					ravenConfiguration.Settings[key] = value;
-					ravenConfiguration.Initialize();
-				}},
-				{"install", "Installs the RavenFS service", key => actionToTake= () => AdminRequired(InstallAndStart, key)},
-				{"service-name=", "The {0:service name} to use when installing or uninstalling the service, default to RavenFS", name => ProjectInstaller.SERVICE_NAME = name},
-				{"uninstall", "Uninstalls the RavenFS service", key => actionToTake= () => AdminRequired(EnsureStoppedAndUninstall, key)},
-				{"start", "Starts the RavenFS service", key => actionToTake= () => AdminRequired(StartService, key)},
-				{"restart", "Restarts the RavenFS service", key => actionToTake= () => AdminRequired(RestartService, key)},
-				{"stop", "Stops the RavenFS service", key => actionToTake= () => AdminRequired(StopService, key)},
-				{"debug", "Runs RavenDB in debug mode", key => actionToTake = () => RunInDebugMode(ravenConfiguration, launchBrowser)},
-				{"browser|launchbrowser", "After the server starts, launches the browser", key => launchBrowser = true},
-				{"help", "Help about the command line interface", key =>
-				{
-					actionToTake = () => PrintUsage(optionSet);
-				}},
-			};
+				            {
+					            {"port=", port => ravenConfiguration.Port = int.Parse(port)},
+					            {"path=", path => ravenConfiguration.DataDirectory = path},
+					            {
+						            "set={==}", "The configuration {0:option} to set to the specified {1:value}", (key, value) =>
+							                                                                                          {
+								                                                                                          ravenConfiguration
+									                                                                                          .Settings[key] =
+									                                                                                          value;
+								                                                                                          ravenConfiguration
+									                                                                                          .Initialize();
+							                                                                                          }
+					            },
+					            {
+						            "install", "Installs the RavenFS service",
+						            key => actionToTake = () => AdminRequired(InstallAndStart, key)
+					            },
+					            {
+						            "service-name=",
+						            "The {0:service name} to use when installing or uninstalling the service, default to RavenFS",
+						            name => ProjectInstaller.SERVICE_NAME = name
+					            },
+					            {
+						            "uninstall", "Uninstalls the RavenFS service",
+						            key => actionToTake = () => AdminRequired(EnsureStoppedAndUninstall, key)
+					            },
+					            {"start", "Starts the RavenFS service", key => actionToTake = () => AdminRequired(StartService, key)},
+					            {
+						            "restart", "Restarts the RavenFS service",
+						            key => actionToTake = () => AdminRequired(RestartService, key)
+					            },
+					            {"stop", "Stops the RavenFS service", key => actionToTake = () => AdminRequired(StopService, key)},
+					            {
+						            "debug", "Runs RavenDB in debug mode",
+						            key => actionToTake = () => RunInDebugMode(ravenConfiguration, launchBrowser)
+					            },
+					            {"browser|launchbrowser", "After the server starts, launches the browser", key => launchBrowser = true},
+					            {
+						            "help", "Help about the command line interface",
+						            key => { actionToTake = () => PrintUsage(optionSet); }
+					            },
+				            };
 
 
 			try
 			{
 				if (args.Length == 0) // we default to executing in debug mode 
-					args = new[] { "--debug" };
+					args = new[] {"--debug"};
 
 				optionSet.Parse(args);
 			}
@@ -186,13 +209,13 @@ Enjoy...
 			ConfigureLogging();
 
 			NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(ravenConfiguration.Port);
-			
+
 			var sp = Stopwatch.StartNew();
 
 			var hostingService = new HostingService
-			{
-				Configuration = ravenConfiguration
-			};
+				                     {
+					                     Configuration = ravenConfiguration
+				                     };
 
 			hostingService.Start();
 
@@ -222,12 +245,12 @@ Enjoy...
 		{
 			var nlogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "NLog.config");
 			if (File.Exists(nlogPath))
-				return;// that overrides the default config
+				return; // that overrides the default config
 
-			using (var stream = typeof(Program).Assembly.GetManifestResourceStream("RavenFS.Server.DefaultLogging.config"))
+			using (var stream = typeof (Program).Assembly.GetManifestResourceStream("RavenFS.Server.DefaultLogging.config"))
 			using (var reader = XmlReader.Create(stream))
 			{
-				NLog.LogManager.Configuration = new XmlLoggingConfiguration(reader, "default-config");
+				LogManager.Configuration = new XmlLoggingConfiguration(reader, "default-config");
 			}
 		}
 
@@ -247,11 +270,11 @@ Enjoy...
 			try
 			{
 				var process = Process.Start(new ProcessStartInfo
-				{
-					Arguments = "--" + cmdLine,
-					FileName = Assembly.GetExecutingAssembly().Location,
-					Verb = "runas",
-				});
+					                            {
+						                            Arguments = "--" + cmdLine,
+						                            FileName = Assembly.GetExecutingAssembly().Location,
+						                            Verb = "runas",
+					                            });
 				process.WaitForExit();
 				return true;
 			}
@@ -269,7 +292,7 @@ Enjoy...
 			}
 			else
 			{
-				ManagedInstallerClass.InstallHelper(new[] { Assembly.GetExecutingAssembly().Location });
+				ManagedInstallerClass.InstallHelper(new[] {Assembly.GetExecutingAssembly().Location});
 				SetRecoveryOptions(ProjectInstaller.SERVICE_NAME);
 				var startController = new ServiceController(ProjectInstaller.SERVICE_NAME);
 				startController.Start();
@@ -294,7 +317,7 @@ Enjoy...
 				if (stopController.Status == ServiceControllerStatus.Running)
 					stopController.Stop();
 
-				ManagedInstallerClass.InstallHelper(new[] { "/u", Assembly.GetExecutingAssembly().Location });
+				ManagedInstallerClass.InstallHelper(new[] {"/u", Assembly.GetExecutingAssembly().Location});
 			}
 		}
 
@@ -337,7 +360,7 @@ Enjoy...
 			}
 		}
 
-		static void SetRecoveryOptions(string serviceName)
+		private static void SetRecoveryOptions(string serviceName)
 		{
 			int exitCode;
 			var arguments = string.Format("failure {0} reset= 500 actions= restart/60000", serviceName);
@@ -360,7 +383,8 @@ Enjoy...
 
 			if (exitCode != 0)
 				throw new InvalidOperationException(
-					"Failed to set the service recovery policy. Command: " + Environment.NewLine + "sc " + arguments + Environment.NewLine + "Exit code: " + exitCode);
+					"Failed to set the service recovery policy. Command: " + Environment.NewLine + "sc " + arguments +
+					Environment.NewLine + "Exit code: " + exitCode);
 		}
 
 		private static void WaitForUserInputAndExitWithError()
@@ -381,7 +405,8 @@ Enjoy...
 		{
 			var old = Console.ForegroundColor;
 			Console.ForegroundColor = ConsoleColor.Red;
-			Console.WriteLine("A critical error occurred while starting the server. Please see the exception details bellow for more details:");
+			Console.WriteLine(
+				"A critical error occurred while starting the server. Please see the exception details bellow for more details:");
 			Console.ForegroundColor = old;
 		}
 	}

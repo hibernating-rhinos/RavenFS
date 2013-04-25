@@ -1,15 +1,15 @@
-﻿namespace RavenFS.Synchronization.Rdc.Wrapper
-{
-	using System;
-	using System.Collections.Generic;
-	using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 
+namespace RavenFS.Synchronization.Rdc.Wrapper
+{
 	public interface ISignatureRepository : IDisposable
-    {
-        Stream GetContentForReading(string sigName);        
-        Stream CreateContent(string sigName);       
-        void Flush(IEnumerable<SignatureInfo> signatureInfos);
-        IEnumerable<SignatureInfo> GetByFileName();
-        DateTime? GetLastUpdate();
-    }
+	{
+		Stream GetContentForReading(string sigName);
+		Stream CreateContent(string sigName);
+		void Flush(IEnumerable<SignatureInfo> signatureInfos);
+		IEnumerable<SignatureInfo> GetByFileName();
+		DateTime? GetLastUpdate();
+	}
 }

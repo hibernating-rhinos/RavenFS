@@ -10,20 +10,11 @@ namespace RavenFS.Util
 		{
 			fileName = Uri.UnescapeDataString(fileName);
 
-			if(fileName.StartsWith("/"))
-			{
-				if (fileName.LastIndexOf("/", StringComparison.InvariantCulture) != 0)
-				{
-					return fileName;
-				}
+			if (fileName.StartsWith("/"))
+				return fileName.LastIndexOf("/", StringComparison.InvariantCulture) != 0 ? fileName : fileName.TrimStart('/');
 
-				return fileName.TrimStart('/');
-			}
-
-			if(fileName.Contains("/"))
-			{
+			if (fileName.Contains("/"))
 				return new StringBuilder("/").Append(fileName).ToString();
-			}
 
 			return fileName;
 		}

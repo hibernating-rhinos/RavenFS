@@ -260,7 +260,7 @@ namespace RavenFS.Studio.Infrastructure
                 var startIndex = page * _pageSize;
                 var endIndex = (page + 1) * _pageSize;
 
-                for (int i = startIndex; i < endIndex; i++)
+                for (var i = startIndex; i < endIndex; i++)
                 {
                     if (_virtualItems[i] != null)
                         _virtualItems[i].IsStale = true;
@@ -329,7 +329,7 @@ namespace RavenFS.Studio.Infrastructure
 
             var startIndex = page * _pageSize;
 
-            for (int i = 0; i < _pageSize; i++)
+            for (var i = 0; i < _pageSize; i++)
             {
                 var index = startIndex + i;
                 var virtualItem = _virtualItems[index];
@@ -351,7 +351,7 @@ namespace RavenFS.Studio.Infrastructure
                 return;
             }
 
-            bool stillRelevant = _requestedPages.Remove(page);
+            var stillRelevant = _requestedPages.Remove(page);
             if (!stillRelevant)
                 return;
 
@@ -362,7 +362,7 @@ namespace RavenFS.Studio.Infrastructure
             // guard against rogue collection sources returning too many results
             var count = Math.Min(results.Count, _pageSize);
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 var index = startIndex + i;
                 var virtualItem = _virtualItems[index] ?? (_virtualItems[index] = new VirtualItem<T>(this, index));
@@ -393,10 +393,10 @@ namespace RavenFS.Studio.Infrastructure
                 var firstVisiblePage = queryItemVisibilityArgs.FirstVisibleIndex.Value / _pageSize;
                 var lastVisiblePage = queryItemVisibilityArgs.LastVisibleIndex.Value / _pageSize;
 
-                int numberOfVisiblePages = lastVisiblePage - firstVisiblePage + 1;
+                var numberOfVisiblePages = lastVisiblePage - firstVisiblePage + 1;
                 EnsurePageCacheSize(numberOfVisiblePages);
 
-                for (int i = firstVisiblePage; i <= lastVisiblePage; i++)
+                for (var i = firstVisiblePage; i <= lastVisiblePage; i++)
                 {
                     BeginGetPage(i);
                 }
@@ -429,7 +429,7 @@ namespace RavenFS.Studio.Infrastructure
                 var startIndex = page * _pageSize;
                 var endIndex = (page + 1) * _pageSize;
 
-                for (int i = startIndex; i < endIndex; i++)
+                for (var i = startIndex; i < endIndex; i++)
                 {
                     if (_virtualItems[i] != null)
                         _virtualItems[i].ClearValue();
@@ -477,7 +477,7 @@ namespace RavenFS.Studio.Infrastructure
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             else if (delta > 0)
             {
-                for (int i = 0; i < delta; i++)
+                for (var i = 0; i < delta; i++)
                 {
                     OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, null,
                                                                              originalItemCount + i));
@@ -485,7 +485,7 @@ namespace RavenFS.Studio.Infrastructure
             }
             else if (delta < 0)
             {
-                for (int i = 1; i <= Math.Abs(delta); i++)
+                for (var i = 1; i <= Math.Abs(delta); i++)
                 {
                     OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove,
                                                                              _virtualItems[originalItemCount - i],
@@ -572,12 +572,10 @@ namespace RavenFS.Studio.Infrastructure
 
             OnCurrentChanging(changingEventArgs);
 
-            if (!changingEventArgs.Cancel)
-            {
-                CurrentPosition = newCurrentPosition;
-            }
+	        if (!changingEventArgs.Cancel)
+		        CurrentPosition = newCurrentPosition;
 
-            return !IsCurrentBeforeFirst && !IsCurrentAfterLast;
+	        return !IsCurrentBeforeFirst && !IsCurrentAfterLast;
         }
 
         protected void OnCurrentChanging(CurrentChangingEventArgs e)

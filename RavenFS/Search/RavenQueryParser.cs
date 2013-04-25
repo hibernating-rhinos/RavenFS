@@ -22,17 +22,13 @@ namespace RavenFS.Search
                 long lower;
 				long upper;
 
-				if (!long.TryParse(part1, out lower))
-				{
-				    lower = long.MinValue;
-				}
+	            if (!long.TryParse(part1, out lower))
+		            lower = long.MinValue;
 
-				if (!long.TryParse(part2, out upper))
-				{
-				    upper = long.MaxValue;
-				}
+	            if (!long.TryParse(part2, out upper))
+		            upper = long.MaxValue;
 
-                var rangeQuery = NumericRangeQuery.NewLongRange(field, lower, upper, inclusive, inclusive);
+	            var rangeQuery = NumericRangeQuery.NewLongRange(field, lower, upper, inclusive, inclusive);
 
                 return rangeQuery;
             }

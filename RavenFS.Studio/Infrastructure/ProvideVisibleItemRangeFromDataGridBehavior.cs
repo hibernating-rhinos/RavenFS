@@ -34,10 +34,8 @@ namespace RavenFS.Studio.Infrastructure
 
         private void HandleQueryItemVisibility(object sender, QueryItemVisibilityEventArgs e)
         {
-            if (_loadedRows.Count > 0)
-            {
-                e.SetVisibleRange(_loadedRows.Min(), _loadedRows.Max());
-            }
+	        if (_loadedRows.Count > 0)
+		        e.SetVisibleRange(_loadedRows.Min(), _loadedRows.Max());
         }
 
         protected override void OnAttached()
@@ -72,10 +70,8 @@ namespace RavenFS.Studio.Infrastructure
         private void AttachToEnquirer()
         {
             _cachedEnquirer = GetValue(ItemsSourceProperty) as IEnquireAboutItemVisibility;
-            if (_cachedEnquirer != null)
-            {
-                _cachedEnquirer.QueryItemVisibility += HandleQueryItemVisibility;
-            }
+	        if (_cachedEnquirer != null)
+		        _cachedEnquirer.QueryItemVisibility += HandleQueryItemVisibility;
         }
 
         private void HandleUnloaded(object sender, RoutedEventArgs e)
@@ -100,10 +96,8 @@ namespace RavenFS.Studio.Infrastructure
 
         private void DetachFromCachedEnquirer()
         {
-            if (_cachedEnquirer != null)
-            {
-                _cachedEnquirer.QueryItemVisibility -= HandleQueryItemVisibility;
-            }
+	        if (_cachedEnquirer != null)
+		        _cachedEnquirer.QueryItemVisibility -= HandleQueryItemVisibility;
         }
     }
 }

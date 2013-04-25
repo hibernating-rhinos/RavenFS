@@ -1,24 +1,24 @@
-﻿namespace RavenFS.Tests
-{
-	using System;
-	using System.Collections.Generic;
-	using System.Collections.Specialized;
-	using System.IO;
-	using System.Linq;
-	using Extensions;
-	using Storage;
-	using Synchronization;
-	using Synchronization.IO;
-	using Util;
-	using Xunit;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
+using System.Linq;
+using RavenFS.Extensions;
+using RavenFS.Storage;
+using RavenFS.Tests.Synchronization;
+using RavenFS.Tests.Synchronization.IO;
+using RavenFS.Util;
+using Xunit;
 
+namespace RavenFS.Tests
+{
 	public class StorageOperationsTests : WebApiTest
 	{
 		[Fact]
 		public void Can_force_storage_cleanup_from_client()
 		{
 			var client = NewClient();
-			client.UploadAsync("toDelete.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+			client.UploadAsync("toDelete.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5})).Wait();
 
 			client.DeleteAsync("toDelete.bin").Wait();
 
@@ -26,7 +26,9 @@
 
 			var configNames = client.Config.GetConfigNames().Result;
 
-			Assert.DoesNotContain(RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin")), configNames);
+			Assert.DoesNotContain(
+				RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin")),
+				configNames);
 		}
 
 		[Fact]
@@ -44,7 +46,7 @@
 				accessor =>
 				deleteFile = accessor.GetConfig(
 					RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin"))).
-					             AsObject<DeleteFileOperation>());
+				                      AsObject<DeleteFileOperation>());
 
 			Assert.Equal(RavenFileNameHelper.DeletingFileName("toDelete.bin"), deleteFile.CurrentFileName);
 			Assert.Equal("toDelete.bin", deleteFile.OriginalFileName);
@@ -56,7 +58,7 @@
 			var client = NewClient();
 			var rfs = GetRavenFileSystem();
 
-			client.UploadAsync("toDelete.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+			client.UploadAsync("toDelete.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5})).Wait();
 
 			rfs.StorageOperationsTask.IndicateFileToDelete("toDelete.bin");
 
@@ -65,7 +67,9 @@
 			IEnumerable<string> configNames = null;
 			rfs.Storage.Batch(accessor => configNames = accessor.GetConfigNames(0, 10).ToArray());
 
-			Assert.DoesNotContain(RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin")), configNames);
+			Assert.DoesNotContain(
+				RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin")),
+				configNames);
 		}
 
 		[Fact]
@@ -74,7 +78,7 @@
 			var client = NewClient();
 			var rfs = GetRavenFileSystem();
 
-			client.UploadAsync("toDelete.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+			client.UploadAsync("toDelete.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5})).Wait();
 
 			rfs.StorageOperationsTask.IndicateFileToDelete("toDelete.bin");
 
@@ -94,7 +98,7 @@
 			var client = NewClient();
 			var rfs = GetRavenFileSystem();
 
-			var bytes = new byte[numberOfPages * StorageConstants.MaxPageSize];
+			var bytes = new byte[numberOfPages*StorageConstants.MaxPageSize];
 			new Random().NextBytes(bytes);
 
 			client.UploadAsync("toDelete.bin", new MemoryStream(bytes)).Wait();
@@ -105,11 +109,12 @@
 
 			Assert.Throws(typeof (FileNotFoundException),
 			              () =>
-						  rfs.Storage.Batch(accessor => accessor.GetFile(RavenFileNameHelper.DeletingFileName("toDelete.bin"), 0, 10)));
+			              rfs.Storage.Batch(
+				              accessor => accessor.GetFile(RavenFileNameHelper.DeletingFileName("toDelete.bin"), 0, 10)));
 
-			for (int i = 1; i <= numberOfPages; i++)
+			for (var i = 1; i <= numberOfPages; i++)
 			{
-				int pageId = 0;
+				var pageId = 0;
 				rfs.Storage.Batch(accessor => pageId = accessor.ReadPage(i, null));
 				Assert.Equal(-1, pageId); // if page does not exist we return -1
 			}
@@ -121,11 +126,14 @@
 			var client = NewClient();
 			var rfs = GetRavenFileSystem();
 
-			client.UploadAsync("file.bin", new MemoryStream(new byte[] { 1, 2, 3, 4, 5 })).Wait();
+			client.UploadAsync("file.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5})).Wait();
 
 			rfs.StorageOperationsTask.IndicateFileToDelete("file.bin");
 
-			rfs.Storage.Batch(accessor => accessor.SetConfig(RavenFileNameHelper.SyncLockNameForFile("file.bin"), LockFileTests.SynchronizationConfig(DateTime.UtcNow)));
+			rfs.Storage.Batch(
+				accessor =>
+				accessor.SetConfig(RavenFileNameHelper.SyncLockNameForFile("file.bin"),
+				                   LockFileTests.SynchronizationConfig(DateTime.UtcNow)));
 
 			rfs.StorageOperationsTask.CleanupDeletedFilesAsync().Wait();
 
@@ -149,7 +157,7 @@
 			var rfs = GetRavenFileSystem();
 
 			client.UploadAsync(fileName, new RandomStream(1)).Wait();
-			
+
 			client.UploadAsync(downloadingFileName, new RandomStream(1)).Wait();
 
 			rfs.StorageOperationsTask.IndicateFileToDelete(downloadingFileName);
@@ -164,7 +172,7 @@
 			DeleteFileOperation deleteFile = null;
 			rfs.Storage.Batch(accessor => deleteFile = accessor.GetConfig(
 				RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName(downloadingFileName))).
-				                                           AsObject<DeleteFileOperation>());
+			                                                    AsObject<DeleteFileOperation>());
 
 			Assert.Equal(RavenFileNameHelper.DeletingFileName(downloadingFileName), deleteFile.CurrentFileName);
 			Assert.Equal(downloadingFileName, deleteFile.OriginalFileName);
@@ -183,16 +191,21 @@
 
 			// upload again - note that actual file delete was not performed yet
 			client.UploadAsync("file.bin", new RandomStream(1)).Wait();
-			
+
 			IEnumerable<string> configNames = null;
-			rfs.Storage.Batch(accessor => configNames = accessor.GetConfigNames(0, 10).ToArray().Where(x => x.StartsWith(RavenFileNameHelper.DeleteOperationConfigPrefix)));
+			rfs.Storage.Batch(
+				accessor =>
+				configNames =
+				accessor.GetConfigNames(0, 10).ToArray().Where(x => x.StartsWith(RavenFileNameHelper.DeleteOperationConfigPrefix)));
 
 			Assert.Equal(2, configNames.Count());
 
 			foreach (var configName in configNames)
 			{
-				Assert.True(RavenFileNameHelper.DeleteOperationConfigPrefix + "file.bin" + RavenFileNameHelper.DeletingFileSuffix == configName ||
-					RavenFileNameHelper.DeleteOperationConfigPrefix + "file.bin1" + RavenFileNameHelper.DeletingFileSuffix == configName); // 1 indicate delete version
+				Assert.True(RavenFileNameHelper.DeleteOperationConfigPrefix + "file.bin" + RavenFileNameHelper.DeletingFileSuffix ==
+				            configName ||
+				            RavenFileNameHelper.DeleteOperationConfigPrefix + "file.bin1" + RavenFileNameHelper.DeletingFileSuffix ==
+				            configName); // 1 indicate delete version
 			}
 		}
 
@@ -210,15 +223,15 @@
 			// create config to say to the server that rename operation performed last time were not finished
 			var renameOpConfig = RavenFileNameHelper.RenameOperationConfigNameForFile(fileName);
 			rfs.Storage.Batch(accessor => accessor.SetConfig(renameOpConfig,
-			                                        new RenameFileOperation()
-				                                        {
-					                                        Name = fileName,
-					                                        Rename = rename,
-					                                        MetadataAfterOperation = new NameValueCollection()
-						                                                                {
-							                                                                {"ETag","\"" + Guid.Empty + "\""}
-						                                                                }
-				                                        }.AsConfig()));
+			                                                 new RenameFileOperation
+				                                                 {
+					                                                 Name = fileName,
+					                                                 Rename = rename,
+					                                                 MetadataAfterOperation = new NameValueCollection
+						                                                                          {
+							                                                                          {"ETag", "\"" + Guid.Empty + "\""}
+						                                                                          }
+				                                                 }.AsConfig()));
 
 			rfs.StorageOperationsTask.ResumeFileRenamingAsync().Wait();
 
@@ -251,15 +264,15 @@
 			// create config to say to the server that rename operation performed last time were not finished
 			var renameOpConfig = RavenFileNameHelper.RenameOperationConfigNameForFile(fileName);
 			rfs.Storage.Batch(accessor => accessor.SetConfig(renameOpConfig,
-													new RenameFileOperation()
-													{
-														Name = fileName,
-														Rename = rename,
-														MetadataAfterOperation = new NameValueCollection()
-						                                                                {
-							                                                                {"ETag","\"" + Guid.Empty + "\""}
-						                                                                }
-													}.AsConfig()));
+			                                                 new RenameFileOperation
+				                                                 {
+					                                                 Name = fileName,
+					                                                 Rename = rename,
+					                                                 MetadataAfterOperation = new NameValueCollection
+						                                                                          {
+							                                                                          {"ETag", "\"" + Guid.Empty + "\""}
+						                                                                          }
+				                                                 }.AsConfig()));
 
 			client.Storage.RetryRenaming().Wait();
 

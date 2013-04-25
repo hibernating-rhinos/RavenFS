@@ -2,17 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
-using RavenFS.Client;
-using System.Linq;
 
 namespace RavenFS.Studio.Models
 {
@@ -60,7 +49,7 @@ namespace RavenFS.Studio.Models
 
         protected void OnKeyValueChanged(EventArgs e)
         {
-            EventHandler<EventArgs> handler = KeyValueChanged;
+            var handler = KeyValueChanged;
             if (handler != null) handler(this, e);
         }
     }

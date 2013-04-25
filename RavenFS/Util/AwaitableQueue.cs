@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace RavenFS.Util
 {
@@ -40,11 +37,9 @@ namespace RavenFS.Util
                     item = _queue.Dequeue();
                     return true;
                 }
-                else
-                {
-                    item = default(T);
-                    return false;
-                }
+	            
+				item = default(T);
+	            return false;
             }
         }
 
@@ -65,12 +60,10 @@ namespace RavenFS.Util
                 }
             }
 
-            if (wasEnqueued)
-            {
-                FulfillWaitingTasks();
-            }
+	        if (wasEnqueued)
+		        FulfillWaitingTasks();
 
-            return tcs.Task;
+	        return tcs.Task;
         }
 
         public void SignalCompletion()
@@ -104,14 +97,10 @@ namespace RavenFS.Util
         {
             lock(_gate)
             {
-                if (_queue.Count > 0 && _waitingTasks.Count > 0)
-                {
-                    return Tuple.Create(_queue.Dequeue(), _waitingTasks.Dequeue());
-                }
-                else
-                {
-                    return Tuple.Create(default(T), default(TaskCompletionSource<T>));
-                }
+	            if (_queue.Count > 0 && _waitingTasks.Count > 0)
+		            return Tuple.Create(_queue.Dequeue(), _waitingTasks.Dequeue());
+
+	            return Tuple.Create(default(T), default(TaskCompletionSource<T>));
             }
         }
     }

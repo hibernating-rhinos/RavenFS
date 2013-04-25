@@ -1,10 +1,10 @@
-﻿namespace RavenFS.Synchronization
-{
-	using System;
-	using System.IO;
-	using System.Text;
-	using Newtonsoft.Json;
+﻿using System;
+using System.IO;
+using System.Text;
+using Newtonsoft.Json;
 
+namespace RavenFS.Synchronization
+{
 	public class ServerInfo
 	{
 		public string Url { get; set; }

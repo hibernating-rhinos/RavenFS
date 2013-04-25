@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Threading;
 
 namespace RavenFS.Studio.Infrastructure
 {
@@ -25,20 +20,16 @@ namespace RavenFS.Studio.Infrastructure
 
 	    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs args)
 	    {
-            if (isLoaded)
-            {
-                NotifyModelLoaded();
-            }
+		    if (isLoaded)
+			    NotifyModelLoaded();
 	    }
 
 	    private void OnUnloaded(object sender, RoutedEventArgs args)
 	    {
-            if (Model != null)
-            {
-                Model.NotifyViewUnloaded();
-            }
+		    if (Model != null)
+			    Model.NotifyViewUnloaded();
 
-            isLoaded = false;
+		    isLoaded = false;
 	    }
 
 	    private void OnLoaded(object sender, RoutedEventArgs args)
@@ -51,12 +42,10 @@ namespace RavenFS.Studio.Infrastructure
 	    {
 	        if (Model != null)
 	        {
-	            if (Model is PageModel)
-	            {
-	                (Model as PageModel).QueryParameters = NavigationContext.QueryString;
-	            }
+		        if (Model is PageModel)
+			        (Model as PageModel).QueryParameters = NavigationContext.QueryString;
 
-	            Model.NotifyViewLoaded();
+		        Model.NotifyViewLoaded();
 	        }
 	    }
 

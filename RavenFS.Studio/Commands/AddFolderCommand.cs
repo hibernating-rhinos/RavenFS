@@ -1,14 +1,4 @@
-﻿using System;
-using System.Net;
-using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
+﻿using System.Text.RegularExpressions;
 using RavenFS.Studio.Infrastructure;
 using RavenFS.Studio.Infrastructure.Input;
 using RavenFS.Studio.Models;
@@ -34,7 +24,7 @@ namespace RavenFS.Studio.Commands
                                         {
                                             if (!t.IsCanceled)
                                             {
-                                                string path = folder + (folder.EndsWith("/") ? "" : "/") + t.Result;
+                                                var path = folder + (folder.EndsWith("/") ? "" : "/") + t.Result;
                                                 ApplicationModel.Current.State.VirtualFolders.Add(path);
                                             }
                                         });
@@ -42,18 +32,10 @@ namespace RavenFS.Studio.Commands
 
         private string ValidateFolderName(string folderName)
         {
-            if (string.IsNullOrWhiteSpace(folderName))
-            {
-                return "You must enter a name";
-            }
-            else if (!Regex.IsMatch(folderName, FolderNameRegEx))
-            {
-                return "Folder name must consist of letters, digits, underscores or dashes";
-            }
-            else
-            {
-                return "";
-            }
+	        if (string.IsNullOrWhiteSpace(folderName))
+		        return "You must enter a name";
+
+	        return !Regex.IsMatch(folderName, FolderNameRegEx) ? "Folder name must consist of letters, digits, underscores or dashes" : "";
         }
     }
 }

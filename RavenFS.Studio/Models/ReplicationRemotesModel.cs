@@ -1,17 +1,9 @@
 ﻿using System;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
+using System.Reactive.Linq;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using RavenFS.Client;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Infrastructure;
-using System.Reactive.Linq;
 
 namespace RavenFS.Studio.Models
 {
@@ -47,32 +39,29 @@ namespace RavenFS.Studio.Models
 
         private void HandleConfigChange(ConfigChange change)
         {
-            if (change.Action != ConfigChangeAction.Set)
-            {
-                return;
-            }
+	        if (change.Action != ConfigChangeAction.Set)
+		        return;
 
-            if (change.Name == SynchronizationConstants.RavenSynchronizationDestinations)
-            {
-                BeginDestinationServersUpdate();
-            }
-            else if (change.Name == SynchronizationConstants.RavenSynchronizationSourcesBasePath)
-            {
-                BeginSourceServersUpdate();
-            }
+	        switch (change.Name)
+	        {
+		        case SynchronizationConstants.RavenSynchronizationDestinations:
+			        BeginDestinationServersUpdate();
+			        break;
+		        case SynchronizationConstants.RavenSynchronizationSourcesBasePath:
+			        BeginSourceServersUpdate();
+			        break;
+	        }
         }
 
-        private void BeginDestinationServersUpdate()
+	    private void BeginDestinationServersUpdate()
         {
             ApplicationModel.Current.Client.Config.GetConfig(SynchronizationConstants.RavenSynchronizationDestinations)
                 .ContinueOnUIThread(t =>
                 {
-                    if (t.IsFaulted)
-                    {
-                        ApplicationModel.Current.AddErrorNotification(t.Exception, "Could not load Replication configuration");
-                    }
+	                if (t.IsFaulted)
+		                ApplicationModel.Current.AddErrorNotification(t.Exception, "Could not load Replication configuration");
 
-                    if (t.Result != null)
+	                if (t.Result != null)
                     {
                         var destinations = t.Result.GetValues("url");
                         DestinationServers.Match(destinations);
@@ -85,12 +74,11 @@ namespace RavenFS.Studio.Models
             ApplicationModel.Current.Client.Config.GetConfig(SynchronizationConstants.RavenSynchronizationSourcesBasePath)
                 .ContinueOnUIThread(t =>
                                         {
-                                            if (t.IsFaulted)
-                                            {
-                                                ApplicationModel.Current.AddErrorNotification(t.Exception, "Could not load Replication configuration");
-                                            }
+	                                        if (t.IsFaulted)
+		                                        ApplicationModel.Current.AddErrorNotification(t.Exception,
+		                                                                                      "Could not load Replication configuration");
 
-                                            if (t.Result != null)
+	                                        if (t.Result != null)
                                             {
                                                 var sources = t.Result.GetValues("url");
                                                 SourceServers.Match(sources);

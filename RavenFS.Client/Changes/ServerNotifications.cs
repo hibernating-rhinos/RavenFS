@@ -64,19 +64,15 @@ namespace RavenFS.Client.Changes
 
 	    private void EnsureConnectionInitiated()
         {
-            if (connectionTask != null)
-            {
-                return;
-            }
+		    if (connectionTask != null)
+			    return;
 
-            lock(gate)
+		    lock(gate)
             {
-                if (connectionTask != null)
-                {
-                    return;
-                }
+	            if (connectionTask != null)
+		            return;
 
-                connectionTask = EstablishConnection()
+	            connectionTask = EstablishConnection()
                 .ObserveException();
             }
         }

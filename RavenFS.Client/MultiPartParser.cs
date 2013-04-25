@@ -19,7 +19,7 @@ namespace RavenFS.Client
 		{
 			InputStream = inputStream;
 			var headers = ReadHeaders(); // TODO - need to be smarter about parsing things here
-			string boundary = GetParameter(headers["Content-Type"], "; boundary=");
+			var boundary = GetParameter(headers["Content-Type"], "; boundary=");
 			if (boundary == null)
 				throw new InvalidOperationException("Could not figure out what the boundary is");
 
@@ -35,9 +35,7 @@ namespace RavenFS.Client
 				var headers = ReadHeaders();
 				var contentDisposition = headers.Get("Content-Disposition");
 				if (contentDisposition == null || !contentDisposition.Contains("filename="))
-				{
 					continue;
-				}
 
 				return Tuple.Create<Stream,NameValueCollection>(new BoundedStream(InputStream, boundaryBytes), headers);
 			}
@@ -49,9 +47,10 @@ namespace RavenFS.Client
 			var _ = ReadLine(); // consume crlf after boundary
 			while (true)
 			{
-				string line = ReadLine();
+				var line = ReadLine();
 				if (string.IsNullOrEmpty(line))
 					break;
+
 				var indexOfColon = line.IndexOf(": ");
 				if (indexOfColon == -1)
 					throw new InvalidOperationException("Header without : field");
@@ -65,7 +64,7 @@ namespace RavenFS.Client
 		private string ReadLine()
 		{
 			currentLine.Length = 0;
-			int lastChar = -1;
+			var lastChar = -1;
 			while (true)
 			{
 				int currentChar = InputStream.ReadByte();
@@ -89,7 +88,7 @@ namespace RavenFS.Client
 
 		private bool ReadUntilBoundary()
 		{
-			int boundaryPosition = 0;
+			var boundaryPosition = 0;
 			int ch;
 			while ((ch = InputStream.ReadByte()) != -1)
 			{
@@ -110,7 +109,7 @@ namespace RavenFS.Client
 
 		static internal string GetParameter(string header, string attr)
 		{
-			int ap = header.IndexOf(attr);
+			var ap = header.IndexOf(attr);
 			if (ap == -1)
 				return null;
 
@@ -118,11 +117,11 @@ namespace RavenFS.Client
 			if (ap >= header.Length)
 				return null;
 
-			char ending = header[ap];
+			var ending = header[ap];
 			if (ending != '"')
 				ending = ' ';
 
-			int end = header.IndexOf(ending, ap + 1);
+			var end = header.IndexOf(ending, ap + 1);
 			if (end == -1)
 				return (ending == '"') ? null : header.Substring(ap);
 
@@ -179,7 +178,7 @@ namespace RavenFS.Client
 				if (read == 0)
 					return read;
 
-				int boundaryIndex = 0;
+				var boundaryIndex = 0;
 				for (var i = offset; i < count; i++)
 				{
 					if (boundary[boundaryIndex] != buffer[i])
@@ -205,7 +204,7 @@ namespace RavenFS.Client
 				// accidental match
 
 				var remainingBuffer = new List<byte>();
-				for (int i = boundaryIndex; i < boundary.Length; i++)
+				for (var i = boundaryIndex; i < boundary.Length; i++)
 				{
 					var nextByte = inner.ReadByte();
 					if(nextByte != -1)

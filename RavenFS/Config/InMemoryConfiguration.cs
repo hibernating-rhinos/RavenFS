@@ -1,17 +1,17 @@
+using System;
+using System.Collections.Specialized;
+using System.IO;
+using System.Web;
+using RavenFS.Extensions;
+
 namespace RavenFS.Config
 {
-	using System;
-	using System.Collections.Specialized;
-	using System.IO;
-	using System.Web;
-	using Extensions;
-
 	public class InMemoryConfiguration
 	{
 		private string dataDirectory;
 		private string indexStoragePath;
-		private string virtualDirectory;
 		private string serverUrl;
+		private string virtualDirectory;
 
 		public InMemoryConfiguration()
 		{
@@ -19,39 +19,6 @@ namespace RavenFS.Config
 		}
 
 		public NameValueCollection Settings { get; set; }
-
-		public void Initialize()
-		{
-			// Data settings
-			DataDirectory = Settings["Raven/DataDir"] ?? @"~\Data.ravenfs";
-
-			if (string.IsNullOrEmpty(Settings["Raven/IndexStoragePath"]) == false)
-			{
-				IndexStoragePath = Settings["Raven/IndexStoragePath"];
-			}
-
-			// HTTP Settings
-			HostName = Settings["Raven/HostName"];
-
-			Port = PortUtil.GetPort(Settings["Raven/Port"]);
-			
-			SetVirtualDirectory();
-		}
-
-		private void SetVirtualDirectory()
-		{
-			var defaultVirtualDirectory = "/";
-			try
-			{
-				if (HttpContext.Current != null)
-					defaultVirtualDirectory = HttpContext.Current.Request.ApplicationPath;
-			}
-			catch (HttpException)
-			{
-			}
-
-			VirtualDirectory = Settings["Raven/VirtualDirectory"] ?? defaultVirtualDirectory;
-		}
 
 		public string DataDirectory
 		{
@@ -68,10 +35,7 @@ namespace RavenFS.Config
 
 				return indexStoragePath;
 			}
-			set
-			{
-				indexStoragePath = value.ToFullPath();
-			}
+			set { indexStoragePath = value.ToFullPath(); }
 		}
 
 		public string ServerUrl
@@ -94,14 +58,14 @@ namespace RavenFS.Config
 					// the issue is probably Request is not available in this context
 					// we can safely ignore this, at any rate
 				}
-				if (httpRequest != null)// running in IIS, let us figure out how
+				if (httpRequest != null) // running in IIS, let us figure out how
 				{
 					var url = httpRequest.Url;
 					return new UriBuilder(url)
-					{
-						Path = httpRequest.ApplicationPath,
-						Query = ""
-					}.Uri.ToString();
+						       {
+							       Path = httpRequest.ApplicationPath,
+							       Query = ""
+						       }.Uri.ToString();
 				}
 
 				return new UriBuilder("http", (HostName ?? Environment.MachineName), Port, VirtualDirectory).Uri.ToString();
@@ -125,5 +89,38 @@ namespace RavenFS.Config
 		public string HostName { get; set; }
 
 		public int Port { get; set; }
+
+		public void Initialize()
+		{
+			// Data settings
+			DataDirectory = Settings["Raven/DataDir"] ?? @"~\Data.ravenfs";
+
+			if (string.IsNullOrEmpty(Settings["Raven/IndexStoragePath"]) == false)
+			{
+				IndexStoragePath = Settings["Raven/IndexStoragePath"];
+			}
+
+			// HTTP Settings
+			HostName = Settings["Raven/HostName"];
+
+			Port = PortUtil.GetPort(Settings["Raven/Port"]);
+
+			SetVirtualDirectory();
+		}
+
+		private void SetVirtualDirectory()
+		{
+			var defaultVirtualDirectory = "/";
+			try
+			{
+				if (HttpContext.Current != null)
+					defaultVirtualDirectory = HttpContext.Current.Request.ApplicationPath;
+			}
+			catch (HttpException)
+			{
+			}
+
+			VirtualDirectory = Settings["Raven/VirtualDirectory"] ?? defaultVirtualDirectory;
+		}
 	}
 }

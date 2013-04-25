@@ -3,33 +3,52 @@
 //     Copyright (c) Hibernating Rhinos LTD. All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Web;
 using Microsoft.Isam.Esent.Interop;
+using RavenFS.Client;
+using RavenFS.Extensions;
+using RavenFS.Synchronization.Rdc;
 using RavenFS.Util;
 
 namespace RavenFS.Storage
 {
-	using System.Linq;
-	using Client;
-	using Extensions;
-	using Synchronization.Rdc;
-
 	public class StorageActionsAccessor : IDisposable
 	{
-		private readonly TableColumnsCache tableColumnsCache;
-		private readonly Session session;
 		private readonly JET_DBID database;
-
-		private Table files, usage, pages, details;
-		private Transaction transaction;
+		private readonly Session session;
+		private readonly TableColumnsCache tableColumnsCache;
 		private Table config;
+		private Table details;
+
+		private Table files;
+		private Table pages;
 		private Table signatures;
+		private Transaction transaction;
+		private Table usage;
+
+		public StorageActionsAccessor(TableColumnsCache tableColumnsCache, JET_INSTANCE instance, string databaseName)
+		{
+			this.tableColumnsCache = tableColumnsCache;
+			try
+			{
+				session = new Session(instance);
+				transaction = new Transaction(session);
+				Api.JetOpenDatabase(session, databaseName, null, out database, OpenDatabaseGrbit.None);
+			}
+			catch (Exception)
+			{
+				Dispose();
+				throw;
+			}
+		}
 
 		private Table Files
 		{
@@ -61,22 +80,6 @@ namespace RavenFS.Storage
 			get { return details ?? (details = new Table(session, database, "details", OpenTableGrbit.None)); }
 		}
 
-
-		public StorageActionsAccessor(TableColumnsCache tableColumnsCache, JET_INSTANCE instance, string databaseName)
-		{
-			this.tableColumnsCache = tableColumnsCache;
-			try
-			{
-				session = new Session(instance);
-				transaction = new Transaction(session);
-				Api.JetOpenDatabase(session, databaseName, null, out database, OpenDatabaseGrbit.None);
-			}
-			catch (Exception)
-			{
-				Dispose();
-				throw;
-			}
-		}
 
 		[DebuggerHidden]
 		[DebuggerNonUserCode]
@@ -131,14 +134,14 @@ namespace RavenFS.Storage
 				return Api.RetrieveColumnAsInt32(session, Pages, tableColumnsCache.PagesColumns["id"]).Value;
 			}
 
-			byte[] bookMarkBuffer = new byte[SystemParameters.BookmarkMost];
-			int actualSize = 0;
+			var bookMarkBuffer = new byte[SystemParameters.BookmarkMost];
+			var actualSize = 0;
 			using (var update = new Update(session, Pages, JET_prep.Insert))
 			{
 				Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_strong_hash"], key.Strong);
 				Api.SetColumn(session, Pages, tableColumnsCache.PagesColumns["page_weak_hash"], key.Weak);
 				Api.JetSetColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, size,
-								 SetColumnGrbit.None, null);
+				                 SetColumnGrbit.None, null);
 
 				try
 				{
@@ -149,7 +152,6 @@ namespace RavenFS.Storage
 					// it means that page is being inserted by another thread
 					throw new ConcurrencyException("The same file page is being created");
 				}
-				
 			}
 
 			Api.JetGotoBookmark(session, Pages, bookMarkBuffer, actualSize);
@@ -163,15 +165,12 @@ namespace RavenFS.Storage
 			{
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["name"], filename, Encoding.Unicode);
 				if (totalSize != null)
-				{
 					Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(totalSize.Value));
-				}
+
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"], BitConverter.GetBytes(0));
 
-				if(!metadata.AllKeys.Contains("ETag"))
-				{
+				if (!metadata.AllKeys.Contains("ETag"))
 					throw new InvalidOperationException(string.Format("Metadata of file {0} does not contain 'ETag' key", filename));
-				}
 
 				var innerEsentMetadata = new NameValueCollection(metadata);
 
@@ -179,7 +178,8 @@ namespace RavenFS.Storage
 				innerEsentMetadata.Remove("ETag");
 
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["etag"], etag.TransformToValueForEsentSorting());
-				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(innerEsentMetadata), Encoding.Unicode);
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(innerEsentMetadata),
+				              Encoding.Unicode);
 
 				update.Save();
 			}
@@ -205,11 +205,12 @@ namespace RavenFS.Storage
 				foreach (var value in values)
 				{
 					sb.Append(key)
-						.Append("=")
-						.Append(Uri.EscapeDataString(value))
-						.Append("&");
+					  .Append("=")
+					  .Append(Uri.EscapeDataString(value))
+					  .Append("&");
 				}
 			}
+
 			if (sb.Length > 0)
 				sb.Length = sb.Length - 1;
 
@@ -226,20 +227,23 @@ namespace RavenFS.Storage
 			using (var update = new Update(session, Files, JET_prep.Replace))
 			{
 				var totalSize = GetTotalSize();
-				var uploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0);
+				var uploadedSize =
+					BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0);
 
 				if (totalSize != null && totalSize >= 0 && uploadedSize + pageSize > totalSize)
 					throw new InvalidDataException("Try to upload more data than the file was allocated for (" + totalSize +
-												   ") and new size would be: " + (uploadedSize + pageSize));
+					                               ") and new size would be: " + (uploadedSize + pageSize));
 
-				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"], BitConverter.GetBytes(uploadedSize + pageSize));
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"],
+				              BitConverter.GetBytes(uploadedSize + pageSize));
 
 				// using chunked encoding, we don't know what the size is
 				// we use negative values here for keeping track of the unknown size
 				if (totalSize == null || totalSize < 0)
 				{
 					var actualSize = totalSize ?? 0;
-					Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(actualSize - pageSize));
+					Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"],
+					              BitConverter.GetBytes(actualSize - pageSize));
 				}
 
 				update.Save();
@@ -261,6 +265,7 @@ namespace RavenFS.Storage
 			var totalSize = Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["total_size"]);
 			if (totalSize == null)
 				return null;
+
 			return BitConverter.ToInt64(totalSize, 0);
 		}
 
@@ -274,7 +279,7 @@ namespace RavenFS.Storage
 
 			int size;
 			Api.JetRetrieveColumn(session, Pages, tableColumnsCache.PagesColumns["data"], buffer, buffer.Length, out size,
-								  RetrieveColumnGrbit.None, null);
+			                      RetrieveColumnGrbit.None, null);
 			return size;
 		}
 
@@ -287,12 +292,13 @@ namespace RavenFS.Storage
 				return null;
 
 			return new FileHeader
-			{
-				Name = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
-				TotalSize = GetTotalSize(),
-				UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
-				Metadata = RetrieveMetadata()
-			};
+				       {
+					       Name = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
+					       TotalSize = GetTotalSize(),
+					       UploadedSize =
+						       BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
+					       Metadata = RetrieveMetadata()
+				       };
 		}
 
 		public FileAndPages GetFile(string filename, int start, int pagesToLoad)
@@ -303,13 +309,15 @@ namespace RavenFS.Storage
 				throw new FileNotFoundException("Could not find file: " + filename);
 
 			var fileInformation = new FileAndPages
-			{
-				TotalSize = GetTotalSize(),
-				UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
-				Metadata = RetrieveMetadata(),
-				Name = filename,
-				Start = start
-			};
+				                      {
+					                      TotalSize = GetTotalSize(),
+					                      UploadedSize =
+						                      BitConverter.ToInt64(
+							                      Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
+					                      Metadata = RetrieveMetadata(),
+					                      Name = filename,
+					                      Start = start
+				                      };
 
 			if (pagesToLoad > 0)
 			{
@@ -328,10 +336,14 @@ namespace RavenFS.Storage
 							continue;
 
 						fileInformation.Pages.Add(new PageInformation
-						{
-							Size = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_size"]).Value,
-							Id = Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"]).Value
-						});
+							                          {
+								                          Size =
+									                          Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_size"])
+									                             .Value,
+								                          Id =
+									                          Api.RetrieveColumnAsInt32(session, Usage, tableColumnsCache.UsageColumns["page_id"])
+									                             .Value
+							                          });
 					} while (Api.TryMoveNext(session, Usage) && fileInformation.Pages.Count < pagesToLoad);
 				}
 			}
@@ -356,25 +368,31 @@ namespace RavenFS.Storage
 				throw;
 			}
 
-			int index = 0;
+			var index = 0;
 
 			do
 			{
 				yield return new FileHeader
-				{
-					Name = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
-					TotalSize = GetTotalSize(),
-					UploadedSize = BitConverter.ToInt64(Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
-					Metadata = RetrieveMetadata()
-				};
+					             {
+						             Name =
+							             Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
+						             TotalSize = GetTotalSize(),
+						             UploadedSize =
+							             BitConverter.ToInt64(
+								             Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
+						             Metadata = RetrieveMetadata()
+					             };
 			} while (++index < size && Api.TryMoveNext(session, Files));
 		}
 
 		private NameValueCollection RetrieveMetadata()
 		{
-			var metadataAsString = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"], Encoding.Unicode);
+			var metadataAsString = Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["metadata"],
+			                                                  Encoding.Unicode);
 			var metadata = HttpUtility.ParseQueryString(metadataAsString);
-			metadata["ETag"] = "\"" + Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["etag"]).TransfromToGuidWithProperSorting() + "\"";
+			metadata["ETag"] = "\"" +
+			                   Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["etag"])
+			                      .TransfromToGuidWithProperSorting() + "\"";
 			return metadata;
 		}
 
@@ -386,20 +404,20 @@ namespace RavenFS.Storage
 				return Enumerable.Empty<FileHeader>();
 
 			var result = new List<FileHeader>();
-			int index = 0;
-			
+			var index = 0;
+
 			do
 			{
 				result.Add(new FileHeader
-				           	{
-				           		Name =
-				           			Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
-				           		TotalSize = GetTotalSize(),
-				           		UploadedSize =
-				           			BitConverter.ToInt64(
-				           				Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
-				           		Metadata = RetrieveMetadata()
-				           	});
+					           {
+						           Name =
+							           Api.RetrieveColumnAsString(session, Files, tableColumnsCache.FilesColumns["name"], Encoding.Unicode),
+						           TotalSize = GetTotalSize(),
+						           UploadedSize =
+							           BitConverter.ToInt64(
+								           Api.RetrieveColumn(session, Files, tableColumnsCache.FilesColumns["uploaded_size"]), 0),
+						           Metadata = RetrieveMetadata()
+					           });
 			} while (++index < take && Api.TryMoveNext(session, Files));
 
 			return result;
@@ -440,14 +458,14 @@ namespace RavenFS.Storage
 						PulseTransaction();
 						count = 0;
 					}
-
-				} while (Api.TryMoveNext(session, Usage));	
+				} while (Api.TryMoveNext(session, Usage));
 			}
 
 			Api.JetSetCurrentIndex(session, Files, "by_name");
 			Api.MakeKey(session, Files, filename, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			if (Api.TrySeek(session, Files, SeekGrbit.SeekEQ) == false)
 				return;
+
 			Api.JetDelete(session, Files);
 		}
 
@@ -478,7 +496,8 @@ namespace RavenFS.Storage
 				}
 
 				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["etag"], etag.TransformToValueForEsentSorting());
-				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(innerEsentMetadata), Encoding.Unicode);
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["metadata"], ToQueryString(innerEsentMetadata),
+				              Encoding.Unicode);
 
 				update.Save();
 			}
@@ -494,7 +513,8 @@ namespace RavenFS.Storage
 			using (var update = new Update(session, Files, JET_prep.Replace))
 			{
 				var totalSize = GetTotalSize() ?? 0;
-				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"], BitConverter.GetBytes(Math.Abs(totalSize)));
+				Api.SetColumn(session, Files, tableColumnsCache.FilesColumns["total_size"],
+				              BitConverter.GetBytes(Math.Abs(totalSize)));
 
 				update.Save();
 			}
@@ -563,7 +583,8 @@ namespace RavenFS.Storage
 			Api.MakeKey(session, Config, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			if (Api.TrySeek(session, Config, SeekGrbit.SeekEQ) == false)
 				throw new FileNotFoundException("Could not find config: " + name);
-			var metadata = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["metadata"], Encoding.Unicode);
+			var metadata = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["metadata"],
+			                                          Encoding.Unicode);
 			return HttpUtility.ParseQueryString(metadata);
 		}
 
@@ -576,7 +597,8 @@ namespace RavenFS.Storage
 			using (var update = new Update(session, Config, prep))
 			{
 				Api.SetColumn(session, Config, tableColumnsCache.ConfigColumns["name"], name, Encoding.Unicode);
-				Api.SetColumn(session, Config, tableColumnsCache.ConfigColumns["metadata"], ToQueryString(metadata), Encoding.Unicode);
+				Api.SetColumn(session, Config, tableColumnsCache.ConfigColumns["metadata"], ToQueryString(metadata),
+				              Encoding.Unicode);
 
 				update.Save();
 			}
@@ -590,7 +612,6 @@ namespace RavenFS.Storage
 				return;
 
 			Api.JetDelete(session, Config);
-
 		}
 
 		public IEnumerable<SignatureLevels> GetSignatures(string name)
@@ -599,18 +620,21 @@ namespace RavenFS.Storage
 			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			if (Api.TrySeek(session, Signatures, SeekGrbit.SeekEQ) == false)
 				yield break;
-			
+
 			Api.MakeKey(session, Signatures, name, Encoding.Unicode, MakeKeyGrbit.NewKey);
 			Api.TrySetIndexRange(session, Signatures, SetIndexRangeGrbit.RangeInclusive | SetIndexRangeGrbit.RangeUpperLimit);
 
 			do
 			{
 				yield return new SignatureLevels
-				{
-					Id = Api.RetrieveColumnAsInt32(session, Signatures, tableColumnsCache.SignaturesColumns["id"]).Value,
-					Level = Api.RetrieveColumnAsInt32(session, Signatures, tableColumnsCache.SignaturesColumns["level"]).Value,
-					CreatedAt = Api.RetrieveColumnAsDateTime(session, Signatures, tableColumnsCache.SignaturesColumns["created_at"]).Value
-				};
+					             {
+						             Id = Api.RetrieveColumnAsInt32(session, Signatures, tableColumnsCache.SignaturesColumns["id"]).Value,
+						             Level =
+							             Api.RetrieveColumnAsInt32(session, Signatures, tableColumnsCache.SignaturesColumns["level"]).Value,
+						             CreatedAt =
+							             Api.RetrieveColumnAsDateTime(session, Signatures, tableColumnsCache.SignaturesColumns["created_at"])
+							                .Value
+					             };
 			} while (Api.TryMoveNext(session, Signatures));
 		}
 
@@ -668,8 +692,8 @@ namespace RavenFS.Storage
 				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["level"], level);
 				Api.SetColumn(session, Signatures, tableColumnsCache.SignaturesColumns["created_at"], DateTime.UtcNow);
 
-				using(var stream = new ColumnStream(session, Signatures, tableColumnsCache.SignaturesColumns["data"]))
-				using(var buffer = new BufferedStream(stream))
+				using (var stream = new ColumnStream(session, Signatures, tableColumnsCache.SignaturesColumns["data"]))
+				using (var buffer = new BufferedStream(stream))
 				{
 					action(buffer);
 					buffer.Flush();
@@ -684,14 +708,14 @@ namespace RavenFS.Storage
 		{
 			Api.JetSetCurrentIndex(session, Config, "by_name");
 			Api.MoveBeforeFirst(session, Config);
-			for (int i = 0; i < start; i++)
+			for (var i = 0; i < start; i++)
 			{
-				if(Api.TryMoveNext(session, Config) == false)
+				if (Api.TryMoveNext(session, Config) == false)
 					yield break;
 			}
 
 			int count = 0;
-			while (Api.TryMoveNext(session, Config) && ++count < pageSize) 
+			while (Api.TryMoveNext(session, Config) && ++count < pageSize)
 			{
 				yield return Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["name"]);
 			}
@@ -711,7 +735,7 @@ namespace RavenFS.Storage
 			Api.JetSetCurrentIndex(session, Config, "by_name");
 
 			Api.MakeKey(session, Config, prefix, Encoding.Unicode, MakeKeyGrbit.NewKey);
-			if(Api.TrySeek(session, Config, SeekGrbit.SeekGE) == false)
+			if (Api.TrySeek(session, Config, SeekGrbit.SeekGE) == false)
 			{
 				return configs;
 			}
@@ -730,86 +754,86 @@ namespace RavenFS.Storage
 			{
 				do
 				{
-					var metadata = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["metadata"], Encoding.Unicode);
+					var metadata = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["metadata"],
+					                                          Encoding.Unicode);
 					configs.Add(HttpUtility.ParseQueryString(metadata));
-				}
-				while (Api.TryMoveNext(session, Config) && configs.Count < take);
+				} while (Api.TryMoveNext(session, Config) && configs.Count < take);
 			}
 
 			return configs;
 		}
 
-	    public IList<string> GetConfigNamesStartingWithPrefix(string prefix, int start, int take, out int total)
-	    {
-	        var configs = new List<string>();
+		public IList<string> GetConfigNamesStartingWithPrefix(string prefix, int start, int take, out int total)
+		{
+			var configs = new List<string>();
 
-	        Api.JetSetCurrentIndex(session, Config, "by_name");
+			Api.JetSetCurrentIndex(session, Config, "by_name");
 
-	        if (!string.IsNullOrEmpty(prefix))
-	        {
-	            Api.MakeKey(session, Config, prefix, Encoding.Unicode, MakeKeyGrbit.NewKey);
-	            if (Api.TrySeek(session, Config, SeekGrbit.SeekGE) == false)
-	            {
-	                total = 0;
-	                return configs;
-	            }
+			if (!string.IsNullOrEmpty(prefix))
+			{
+				Api.MakeKey(session, Config, prefix, Encoding.Unicode, MakeKeyGrbit.NewKey);
+				if (Api.TrySeek(session, Config, SeekGrbit.SeekGE) == false)
+				{
+					total = 0;
+					return configs;
+				}
 
-	            Api.MakeKey(session, Config, prefix, Encoding.Unicode,
-	                        MakeKeyGrbit.NewKey | MakeKeyGrbit.PartialColumnEndLimit);
-	            try
-	            {
-	                Api.JetMove(session, Config, 0, MoveGrbit.MoveKeyNE);
-	            }
-	            catch (EsentNoCurrentRecordException)
-	            {
-	                total = 0;
-	                return configs;
-	            }
+				Api.MakeKey(session, Config, prefix, Encoding.Unicode,
+				            MakeKeyGrbit.NewKey | MakeKeyGrbit.PartialColumnEndLimit);
+				try
+				{
+					Api.JetMove(session, Config, 0, MoveGrbit.MoveKeyNE);
+				}
+				catch (EsentNoCurrentRecordException)
+				{
+					total = 0;
+					return configs;
+				}
 
-	            if (!Api.TrySetIndexRange(session, Config,
-	                                      SetIndexRangeGrbit.RangeInclusive | SetIndexRangeGrbit.RangeUpperLimit))
-	            {
-	                total = 0;
-	                return configs;
-	            }
-	        }
-	        else
-	        {
-	            if (!Api.TryMoveFirst(session, Config))
-	            {
-                    total = 0;
-                    return configs;
-	            }
-	        }
+				if (!Api.TrySetIndexRange(session, Config,
+				                          SetIndexRangeGrbit.RangeInclusive | SetIndexRangeGrbit.RangeUpperLimit))
+				{
+					total = 0;
+					return configs;
+				}
+			}
+			else
+			{
+				if (!Api.TryMoveFirst(session, Config))
+				{
+					total = 0;
+					return configs;
+				}
+			}
 
-	        var skippedCount = 0;
+			var skippedCount = 0;
 
-	        for (int i = 0; i < start; i++)
-	        {
-	            if (Api.TryMoveNext(session, Config) == false)
-	            {
-                    total = skippedCount;
-	                return configs;
-	            }
-	            skippedCount++;
-	        }
+			for (int i = 0; i < start; i++)
+			{
+				if (Api.TryMoveNext(session, Config) == false)
+				{
+					total = skippedCount;
+					return configs;
+				}
+				skippedCount++;
+			}
 
-	        var hasNextRecord = false;
-	        do
-	        {
-	            var configName = Api.RetrieveColumnAsString(session, Config,tableColumnsCache.ConfigColumns["name"]);
-	            configs.Add(configName);
-	            hasNextRecord = Api.TryMoveNext(session, Config);
-	        } while (hasNextRecord && configs.Count < take);
+			var hasNextRecord = false;
+			do
+			{
+				var configName = Api.RetrieveColumnAsString(session, Config, tableColumnsCache.ConfigColumns["name"]);
+				configs.Add(configName);
+				hasNextRecord = Api.TryMoveNext(session, Config);
+			} while (hasNextRecord && configs.Count < take);
 
-	        int extraRecords = 0;
-	        if (hasNextRecord)
-	        {
-	            Api.JetIndexRecordCount(session, Config, out extraRecords, 0);
-	        }
-	        total = skippedCount + configs.Count + extraRecords;
+			var extraRecords = 0;
+			if (hasNextRecord)
+			{
+				Api.JetIndexRecordCount(session, Config, out extraRecords, 0);
+			}
+			total = skippedCount + configs.Count + extraRecords;
 
-	        return configs;
-	    }
+			return configs;
+		}
 	}
 }

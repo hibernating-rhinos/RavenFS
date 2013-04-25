@@ -1,5 +1,4 @@
 ﻿using System.Windows;
-using NLog.LogReceiverService;
 
 namespace RavenFS.Studio.Behaviors
 {

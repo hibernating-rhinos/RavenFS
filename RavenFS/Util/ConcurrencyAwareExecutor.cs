@@ -1,9 +1,9 @@
-﻿namespace RavenFS.Util
-{
-	using System;
-	using System.Threading;
-	using Client;
+﻿using System;
+using System.Threading;
+using RavenFS.Client;
 
+namespace RavenFS.Util
+{
 	public static class ConcurrencyAwareExecutor
 	{
 		public static void Execute(Action action, Func<ConcurrencyException, Exception> failed = null, int retries = 50)

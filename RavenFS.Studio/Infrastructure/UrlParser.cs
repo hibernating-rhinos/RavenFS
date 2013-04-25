@@ -57,14 +57,13 @@ namespace RavenFS.Studio.Infrastructure
 
 		public string GetQueryParam(string name)
 		{
-			if (QueryParams.ContainsKey(name))
-				return QueryParams[name];
-			return null;
+			return QueryParams.ContainsKey(name) ? QueryParams[name] : null;
 		}
 
 		public void SetQueryParam(string name, object value)
 		{
-			if (value == null) return;
+			if (value == null)
+				return;
 			QueryParams[name] = value.ToString();
 		}
 
@@ -78,11 +77,11 @@ namespace RavenFS.Studio.Infrastructure
 			var uri = Path;
 			if (string.IsNullOrWhiteSpace(uri))
 				uri = "/files";
+
 			var query = string.Join("&", QueryParams.Select(x => string.Format("{0}={1}", x.Key, x.Value)));
 			if (string.IsNullOrEmpty(query) == false)
-			{
 				uri += "?" + query;
-			}
+
 			return uri;
 		}
 	}

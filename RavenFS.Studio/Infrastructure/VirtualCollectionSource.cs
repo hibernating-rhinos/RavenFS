@@ -81,18 +81,13 @@ namespace RavenFS.Studio.Infrastructure
 
         public void Refresh(RefreshMode mode)
         {
-            InvalidateCount();
-            if (mode == RefreshMode.ClearStaleData)
-            {
-                OnCollectionChanged(new VirtualCollectionSourceChangedEventArgs(ChangeType.Reset));
-            }
-            else
-            {
-                OnCollectionChanged(new VirtualCollectionSourceChangedEventArgs(ChangeType.Refresh));
-            }
+	        InvalidateCount();
+	        OnCollectionChanged(mode == RefreshMode.ClearStaleData
+		                            ? new VirtualCollectionSourceChangedEventArgs(ChangeType.Reset)
+		                            : new VirtualCollectionSourceChangedEventArgs(ChangeType.Refresh));
         }
 
-        protected void OnCollectionChanged(VirtualCollectionSourceChangedEventArgs e)
+	    protected void OnCollectionChanged(VirtualCollectionSourceChangedEventArgs e)
         {
             var handler = CollectionChanged;
             if (handler != null) handler(this, e);
@@ -114,10 +109,8 @@ namespace RavenFS.Studio.Infrastructure
                 _count = newCount;
             }
 
-            if (fileCountChanged)
-            {
-                OnCountChanged(EventArgs.Empty);
-            }
+	        if (fileCountChanged)
+		        OnCountChanged(EventArgs.Empty);
         }
 
         protected void InvalidateCount()
@@ -130,7 +123,7 @@ namespace RavenFS.Studio.Infrastructure
 
         protected void OnCountChanged(EventArgs e)
         {
-            EventHandler<EventArgs> handler = CountChanged;
+            var handler = CountChanged;
             if (handler != null) handler(this, e);
         }
 

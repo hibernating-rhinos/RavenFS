@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace RavenFS.Client.Changes
 {
@@ -26,29 +24,23 @@ namespace RavenFS.Client.Changes
 
         public ImmutableList<T> Add(T item)
         {
-            if (items == null)
-            {
-                return new ImmutableList<T>(new[] { item });
-            }
-            else
-            {
-                var newItems = new T[items.Length + 1];
-                Array.Copy(items, newItems, items.Length);
-                newItems[newItems.Length - 1] = item;
+	        if (items == null)
+		        return new ImmutableList<T>(new[] {item});
+	        
+			var newItems = new T[items.Length + 1];
+	        Array.Copy(items, newItems, items.Length);
+	        newItems[newItems.Length - 1] = item;
 
-                return new ImmutableList<T>(newItems);
-            }
+	        return new ImmutableList<T>(newItems);
         } 
 
         public ImmutableList<T> Remove(T item)
         {
             var index = IndexOf(item);
-            if (index < 0)
-            {
-                return this;
-            }
+	        if (index < 0)
+		        return this;
 
-            var newItems = new T[items.Length - 1];
+	        var newItems = new T[items.Length - 1];
             Array.Copy(items, newItems, index);
             Array.Copy(items, index + 1, newItems, index, items.Length - index - 1);
 
@@ -57,17 +49,13 @@ namespace RavenFS.Client.Changes
 
         public int IndexOf(T item)
         {
-            if (items == null)
-            {
-                return -1;
-            }
-            else
-            {
-                return Array.IndexOf(items, item);
-            }
+	        if (items == null)
+		        return -1;
+	        
+			return Array.IndexOf(items, item);
         }
 
-        public IEnumerator<T> GetEnumerator()
+	    public IEnumerator<T> GetEnumerator()
         {
             if (items == null)
             {

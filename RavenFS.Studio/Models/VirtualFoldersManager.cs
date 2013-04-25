@@ -2,15 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Models
 {
@@ -29,22 +20,16 @@ namespace RavenFS.Studio.Models
 
         public void Add(string path)
         {
-            if (!path.StartsWith("/"))
-            {
-                throw new ArgumentException("Folder path must start with /");
-            }
+	        if (!path.StartsWith("/"))
+		        throw new ArgumentException("Folder path must start with /");
 
-            if (path.EndsWith("/"))
-            {
-                throw new ArgumentException("Folder path must not end with /");
-            }    
+	        if (path.EndsWith("/"))
+		        throw new ArgumentException("Folder path must not end with /");
 
-            if (folders.Any(d => d.FullPath.Equals(path, StringComparison.CurrentCultureIgnoreCase)))
-            {
-                return;
-            }
+	        if (folders.Any(d => d.FullPath.Equals(path, StringComparison.CurrentCultureIgnoreCase)))
+		        return;
 
-            folders.Add(new DirectoryModel() { FullPath = path, IsVirtual=true});
+	        folders.Add(new DirectoryModel() { FullPath = path, IsVirtual=true});
         }
 
         public void PruneFoldersThatNowExist(IList<DirectoryModel> realFolders)
@@ -85,12 +70,10 @@ namespace RavenFS.Studio.Models
         {
             var folderName = fullPath.Substring(parentPath.Length);
             var indexOfSlash = folderName.IndexOf('/',1);
-            if (indexOfSlash > 0)
-            {
-                folderName = folderName.Substring(0, indexOfSlash);
-            }
+	        if (indexOfSlash > 0)
+		        folderName = folderName.Substring(0, indexOfSlash);
 
-            return parentPath + folderName;
+	        return parentPath + folderName;
         }
 
         private static bool RealFolderHasSamePathAsVirtualFolder(IList<DirectoryModel> realFolders, DirectoryModel f)

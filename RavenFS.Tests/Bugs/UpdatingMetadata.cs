@@ -1,13 +1,11 @@
 ﻿using System.Collections.Specialized;
 using System.IO;
-using RavenFS.Client;
 using Xunit;
 
 namespace RavenFS.Tests.Bugs
 {
 	public class UpdatingMetadata : WebApiTest
 	{
-		
 		[Fact]
 		public void CanUpdateMetadata()
 		{

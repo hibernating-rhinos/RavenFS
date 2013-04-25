@@ -1,6 +1,5 @@
 using System;
 using System.Reactive.Linq;
-using System.Reactive;
 using RavenFS.Client;
 using RavenFS.Studio.Extensions;
 using RavenFS.Studio.Features.Replication;

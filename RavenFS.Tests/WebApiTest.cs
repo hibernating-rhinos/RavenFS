@@ -4,18 +4,17 @@ using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Web.Http.SelfHost;
 using RavenFS.Client;
+using RavenFS.Config;
 using RavenFS.Extensions;
 
 namespace RavenFS.Tests
 {
-	using RavenFS.Config;
-
 	public class WebApiTest : WithNLog, IDisposable
 	{
-		private HttpSelfHostConfiguration config;
-		private HttpSelfHostServer server;
 		private const string Url = "http://localhost:19079";
+		private readonly HttpSelfHostServer server;
 		protected WebClient WebClient;
+		private HttpSelfHostConfiguration config;
 		private RavenFileSystem ravenFileSystem;
 
 		static WebApiTest()
@@ -34,33 +33,40 @@ namespace RavenFS.Tests
 			IOExtensions.DeleteDirectory("Test");
 			NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(19079);
 			Task.Factory.StartNew(() => // initialize in MTA thread
-			{
-				config = new HttpSelfHostConfiguration(Url)
-				{
-					MaxReceivedMessageSize = Int64.MaxValue,
-					TransferMode = TransferMode.Streamed
-				};
-				var configuration = new InMemoryConfiguration();
-				configuration.Initialize();
-				configuration.DataDirectory = "~/Test";
-				ravenFileSystem = new RavenFileSystem(configuration);
-				ravenFileSystem.Start(config);
-			})
-			.Wait();
+				                      {
+					                      config = new HttpSelfHostConfiguration(Url)
+						                               {
+							                               MaxReceivedMessageSize = Int64.MaxValue,
+							                               TransferMode = TransferMode.Streamed
+						                               };
+					                      var configuration = new InMemoryConfiguration();
+					                      configuration.Initialize();
+					                      configuration.DataDirectory = "~/Test";
+					                      ravenFileSystem = new RavenFileSystem(configuration);
+					                      ravenFileSystem.Start(config);
+				                      })
+			    .Wait();
 
 			server = new HttpSelfHostServer(config);
 			server.OpenAsync().Wait();
-			
+
 			WebClient = new WebClient
-			{
-				BaseAddress = Url
-			};
+				            {
+					            BaseAddress = Url
+				            };
+		}
+
+		public virtual void Dispose()
+		{
+			server.CloseAsync().Wait();
+			server.Dispose();
+			ravenFileSystem.Dispose();
 		}
 
 
 		protected HttpWebRequest CreateWebRequest(string url)
 		{
-			return (HttpWebRequest)WebRequest.Create(Url + url);
+			return (HttpWebRequest) WebRequest.Create(Url + url);
 		}
 
 		protected RavenFileSystemClient NewClient()
@@ -71,13 +77,6 @@ namespace RavenFS.Tests
 		protected RavenFileSystem GetRavenFileSystem()
 		{
 			return ravenFileSystem;
-		}
-
-		public virtual void Dispose()
-		{
-			server.CloseAsync().Wait();
-			server.Dispose();
-			ravenFileSystem.Dispose();
 		}
 	}
 }

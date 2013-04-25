@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
-using System.Windows.Browser;
-using System.Windows.Controls;
-using System.Windows.Input;
-using RavenFS.Client;
 using RavenFS.Studio.Infrastructure;
 using RavenFS.Studio.Models;
 

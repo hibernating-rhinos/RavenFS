@@ -1,15 +1,16 @@
-﻿namespace RavenFS.Synchronization.Rdc
-{
-	using System;
-	using System.Collections.Generic;
-	using System.IO;
-	using System.Threading;
-	using System.Threading.Tasks;
-	using RavenFS.Synchronization.Rdc.Wrapper;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using RavenFS.Synchronization.Rdc.Wrapper;
 
+namespace RavenFS.Synchronization.Rdc
+{
 	public class NeedListParser
 	{
-		public static async Task ParseAsync(IPartialDataAccess source, IPartialDataAccess seed, Stream output, IEnumerable<RdcNeed> needList, CancellationToken token)
+		public static async Task ParseAsync(IPartialDataAccess source, IPartialDataAccess seed, Stream output,
+		                                    IEnumerable<RdcNeed> needList, CancellationToken token)
 		{
 			foreach (var item in needList)
 			{

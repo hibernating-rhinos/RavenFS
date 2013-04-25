@@ -1,15 +1,15 @@
-﻿namespace RavenFS.Synchronization.Rdc.Wrapper.Unmanaged
-{
-	using System;
-	using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
+namespace RavenFS.Synchronization.Rdc.Wrapper.Unmanaged
+{
 	[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 	[Guid("96236A7F-9DBC-11DA-9E3F-0011114AE311")]
 	[ComImport]
 	internal interface ISimilarityFileIdTable
 	{
 		Int32 CreateTable([MarshalAs(UnmanagedType.LPWStr)] string path, bool truncate,
-		                    IntPtr securityDescriptor, uint recordSize, out RdcCreatedTables isNew);
+		                  IntPtr securityDescriptor, uint recordSize, out RdcCreatedTables isNew);
 
 		Int32 CreateTableIndirect(IRdcFileWriter fileIdFile, bool truncate, uint recordSize, out RdcCreatedTables isNew);
 
@@ -22,6 +22,5 @@
 		Int32 Invalidate(uint similarityFileIndex);
 
 		Int32 GetRecordCount(out uint recordCount);
-
 	}
 }

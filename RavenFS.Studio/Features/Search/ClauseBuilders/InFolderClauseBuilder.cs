@@ -1,14 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
+﻿using System.Diagnostics;
 using RavenFS.Studio.Infrastructure;
 using RavenFS.Studio.Extensions;
 
@@ -31,15 +21,10 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
             var inputModel = model as SingleInputSearchClauseModel;
             Debug.Assert(inputModel != null);
 
-            if (inputModel.Input.IsNullOrEmpty())
-            {
-                return "";
-            }
-            else
-            {
-                return "__directory:" + inputModel.Input;
-            }
+	        if (inputModel.Input.IsNullOrEmpty())
+		        return "";
+	        
+			return "__directory:" + inputModel.Input;
         }
-
     }
 }

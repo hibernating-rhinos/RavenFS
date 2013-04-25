@@ -1,24 +1,26 @@
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using NLog;
+using RavenFS.Client;
+using RavenFS.Util;
+
 namespace RavenFS.Synchronization
 {
-	using System.Collections.Concurrent;
-	using System.Collections.Generic;
-	using System.Linq;
-	using System.Threading;
-	using NLog;
-	using RavenFS.Client;
-	using Util;
-
 	public class SynchronizationQueue
 	{
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
 
+		private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, SynchronizationWorkItem>>
+			activeSynchronizations =
+				new ConcurrentDictionary<string, ConcurrentDictionary<string, SynchronizationWorkItem>>();
+
+		private readonly ConcurrentDictionary<string, ReaderWriterLockSlim> pendingRemoveLocks =
+			new ConcurrentDictionary<string, ReaderWriterLockSlim>();
+
 		private readonly ConcurrentDictionary<string, ConcurrentQueue<SynchronizationWorkItem>> pendingSynchronizations =
 			new ConcurrentDictionary<string, ConcurrentQueue<SynchronizationWorkItem>>();
-
-		private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, SynchronizationWorkItem>> activeSynchronizations =
-			new ConcurrentDictionary<string, ConcurrentDictionary<string, SynchronizationWorkItem>>();
-
-		private readonly ConcurrentDictionary<string, ReaderWriterLockSlim> pendingRemoveLocks = new ConcurrentDictionary<string, ReaderWriterLockSlim>();
 
 		public IEnumerable<SynchronizationDetails> Pending
 		{
@@ -27,12 +29,12 @@ namespace RavenFS.Synchronization
 				return from destinationPending in pendingSynchronizations
 				       from pendingFile in destinationPending.Value
 				       select new SynchronizationDetails
-				              	{
-				              		DestinationUrl = destinationPending.Key,
-				              		FileName = pendingFile.FileName,
-									Type = pendingFile.SynchronizationType,
-									FileETag = pendingFile.FileETag
-				              	};
+					              {
+						              DestinationUrl = destinationPending.Key,
+						              FileName = pendingFile.FileName,
+						              Type = pendingFile.SynchronizationType,
+						              FileETag = pendingFile.FileETag
+					              };
 			}
 		}
 
@@ -43,28 +45,29 @@ namespace RavenFS.Synchronization
 				return from destinationActive in activeSynchronizations
 				       from activeFile in destinationActive.Value
 				       select new SynchronizationDetails
-				              	{
-				              		DestinationUrl = destinationActive.Key,
-				              		FileName = activeFile.Key,
-				              		Type = activeFile.Value.SynchronizationType,
-				              		FileETag = activeFile.Value.FileETag
-				              	};
+					              {
+						              DestinationUrl = destinationActive.Key,
+						              FileName = activeFile.Key,
+						              Type = activeFile.Value.SynchronizationType,
+						              FileETag = activeFile.Value.FileETag
+					              };
 			}
 		}
 
-        public int GetTotalPendingTasks()
-        {
-            return pendingSynchronizations.Sum(queue => queue.Value.Count);
-        }
+		public int GetTotalPendingTasks()
+		{
+			return pendingSynchronizations.Sum(queue => queue.Value.Count);
+		}
 
-        public int GetTotalActiveTasks()
-        {
-            return activeSynchronizations.Sum(queue => queue.Value.Count);
-        }
+		public int GetTotalActiveTasks()
+		{
+			return activeSynchronizations.Sum(queue => queue.Value.Count);
+		}
 
 		public int NumberOfActiveSynchronizationTasksFor(string destination)
 		{
-			return activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, SynchronizationWorkItem>()).Count;
+			return
+				activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, SynchronizationWorkItem>()).Count;
 		}
 
 		public void EnqueueSynchronization(string destination, SynchronizationWorkItem workItem)
@@ -73,11 +76,13 @@ namespace RavenFS.Synchronization
 
 			try
 			{
-				var pendingForDestination = pendingSynchronizations.GetOrAdd(destination, new ConcurrentQueue<SynchronizationWorkItem>());
+				var pendingForDestination = pendingSynchronizations.GetOrAdd(destination,
+				                                                             new ConcurrentQueue<SynchronizationWorkItem>());
 
 				// if delete work is enqueued and there are other synchronization works for a given file then remove them from a queue
 				if (workItem.SynchronizationType == SynchronizationType.Delete &&
-					pendingForDestination.Any(x => x.FileName == workItem.FileName && x.SynchronizationType != SynchronizationType.Delete))
+				    pendingForDestination.Any(
+					    x => x.FileName == workItem.FileName && x.SynchronizationType != SynchronizationType.Delete))
 				{
 					pendingRemoveLocks.GetOrAdd(destination, new ReaderWriterLockSlim()).EnterWriteLock();
 
@@ -88,14 +93,13 @@ namespace RavenFS.Synchronization
 						foreach (var pendingWork in pendingForDestination)
 						{
 							if (pendingWork.FileName != workItem.FileName)
-							{
 								modifiedQueue.Enqueue(pendingWork);
-							}
 						}
 
 						modifiedQueue.Enqueue(workItem);
 
-						pendingForDestination = pendingSynchronizations.AddOrUpdate(destination, modifiedQueue, (key, value) => modifiedQueue);
+						pendingForDestination = pendingSynchronizations.AddOrUpdate(destination, modifiedQueue,
+						                                                            (key, value) => modifiedQueue);
 					}
 					finally
 					{
@@ -108,32 +112,39 @@ namespace RavenFS.Synchronization
 					// if there is a file in pending synchronizations do not add it again
 					if (pendingWork.Equals(workItem))
 					{
-						log.Debug("{0} for a file {1} and a destination {2} was already existed in a pending queue", workItem.GetType().Name, workItem.FileName, destination);
+						log.Debug("{0} for a file {1} and a destination {2} was already existed in a pending queue",
+						          workItem.GetType().Name, workItem.FileName, destination);
 						return;
 					}
 
 					// if there is a work for a file of the same type but with lower file ETag just refresh existing work metadata and do not enqueue again
 					if (pendingWork.FileName == workItem.FileName &&
-						pendingWork.SynchronizationType == workItem.SynchronizationType &&
-						Buffers.Compare(workItem.FileETag.ToByteArray(), pendingWork.FileETag.ToByteArray()) > 0)
+					    pendingWork.SynchronizationType == workItem.SynchronizationType &&
+					    Buffers.Compare(workItem.FileETag.ToByteArray(), pendingWork.FileETag.ToByteArray()) > 0)
 					{
 						pendingWork.RefreshMetadata();
-						log.Debug("{0} for a file {1} and a destination {2} was already existed in a pending queue but with older ETag, it's metadata has been refreshed", workItem.GetType().Name, workItem.FileName, destination);
+						log.Debug(
+							"{0} for a file {1} and a destination {2} was already existed in a pending queue but with older ETag, it's metadata has been refreshed",
+							workItem.GetType().Name, workItem.FileName, destination);
 						return;
 					}
 				}
 
-				var activeForDestination = activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, SynchronizationWorkItem>());
+				var activeForDestination = activeSynchronizations.GetOrAdd(destination,
+				                                                           new ConcurrentDictionary<string, SynchronizationWorkItem>
+					                                                           ());
 
 				// if there is a work in an active synchronizations do not add it again
 				if (activeForDestination.ContainsKey(workItem.FileName) && activeForDestination[workItem.FileName].Equals(workItem))
 				{
-					log.Debug("{0} for a file {1} and a destination {2} was already existed in an active queue", workItem.GetType().Name, workItem.FileName, destination);
+					log.Debug("{0} for a file {1} and a destination {2} was already existed in an active queue",
+					          workItem.GetType().Name, workItem.FileName, destination);
 					return;
 				}
 
 				pendingForDestination.Enqueue(workItem);
-				log.Debug("{0} for a file {1} and a destination {2} was enqueued", workItem.GetType().Name, workItem.FileName, destination);
+				log.Debug("{0} for a file {1} and a destination {2} was enqueued", workItem.GetType().Name, workItem.FileName,
+				          destination);
 			}
 			finally
 			{
@@ -155,7 +166,6 @@ namespace RavenFS.Synchronization
 				}
 
 				return pendingForDestination.TryDequeue(out workItem);
-
 			}
 			finally
 			{
@@ -166,10 +176,8 @@ namespace RavenFS.Synchronization
 		public bool IsDifferentWorkForTheSameFileBeingPerformed(SynchronizationWorkItem work, string destination)
 		{
 			ConcurrentDictionary<string, SynchronizationWorkItem> activeForDestination;
-			if(!activeSynchronizations.TryGetValue(destination, out activeForDestination))
-			{
+			if (!activeSynchronizations.TryGetValue(destination, out activeForDestination))
 				return false;
-			}
 
 			SynchronizationWorkItem activeWork;
 			return activeForDestination.TryGetValue(work.FileName, out activeWork) && !activeWork.Equals(work);
@@ -177,11 +185,13 @@ namespace RavenFS.Synchronization
 
 		public void SynchronizationStarted(SynchronizationWorkItem work, string destination)
 		{
-			var activeForDestination = activeSynchronizations.GetOrAdd(destination, new ConcurrentDictionary<string, SynchronizationWorkItem>());
+			var activeForDestination = activeSynchronizations.GetOrAdd(destination,
+			                                                           new ConcurrentDictionary<string, SynchronizationWorkItem>());
 
-			if(activeForDestination.TryAdd(work.FileName, work))
+			if (activeForDestination.TryAdd(work.FileName, work))
 			{
-				log.Debug("File '{0}' with ETag {1} was added to an active synchronization queue for a destination {2}", work.FileName,
+				log.Debug("File '{0}' with ETag {1} was added to an active synchronization queue for a destination {2}",
+				          work.FileName,
 				          work.FileETag, destination);
 			}
 		}
@@ -195,12 +205,13 @@ namespace RavenFS.Synchronization
 				log.Warn("Could not get an active synchronization queue for {0}", destination);
 				return;
 			}
-			
+
 			SynchronizationWorkItem removingItem;
-			if(activeDestinationTasks.TryRemove(work.FileName, out removingItem))
+			if (activeDestinationTasks.TryRemove(work.FileName, out removingItem))
 			{
-				log.Debug("File '{0}' with ETag {1} was removed from an active synchronization queue for a destination {2}", work.FileName,
-						  work.FileETag, destination);
+				log.Debug("File '{0}' with ETag {1} was removed from an active synchronization queue for a destination {2}",
+				          work.FileName,
+				          work.FileETag, destination);
 			}
 		}
 
@@ -211,9 +222,7 @@ namespace RavenFS.Synchronization
 				foreach (var activeSynchronization in destSync.Value)
 				{
 					if (activeSynchronization.Key == fileName)
-					{
 						activeSynchronization.Value.Cancel();
-					}
 				}
 			}
 		}

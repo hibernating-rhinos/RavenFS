@@ -6,7 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -15,81 +14,82 @@ using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using Newtonsoft.Json;
+using RavenFS.Client;
 using RavenFS.Notifications;
 using RavenFS.Util;
+using Heartbeat = RavenFS.Notifications.Heartbeat;
 
 namespace RavenFS.Infrastructure.Connections
 {
-	using Client;
-	using Heartbeat = Notifications.Heartbeat;
-
 	/// <summary>
-    /// Repsonsible for streaming events to an individual client
-    /// </summary>
-    /// <remarks>
-    /// We use a queue to serialize the writing of individual messages to the stream because we were encountering concurrency exceptions when
-    /// a heartbeat and a message where being written to the stream at the same time
-    /// </remarks>
+	///     Repsonsible for streaming events to an individual client
+	/// </summary>
+	/// <remarks>
+	///     We use a queue to serialize the writing of individual messages to the stream because we were encountering concurrency exceptions when
+	///     a heartbeat and a message where being written to the stream at the same time
+	/// </remarks>
 	public class EventsTransport
 	{
+		private static readonly JsonSerializerSettings settings;
 		private readonly Timer heartbeat;
 
 		private readonly Logger log = LogManager.GetCurrentClassLogger();
-		
-		public string Id { get; private set; }
 
-	    public event Action Disconnected = delegate { };
+		private readonly AwaitableQueue<Tuple<string, TaskCompletionSource<bool>>> messageQueue =
+			new AwaitableQueue<Tuple<string, TaskCompletionSource<bool>>>();
 
-	    private static JsonSerializerSettings settings;
-	    private AwaitableQueue<Tuple<string, TaskCompletionSource<bool>>> messageQueue = new AwaitableQueue<Tuple<string, TaskCompletionSource<bool>>>();
-	    private volatile bool connected;
+		private volatile bool connected;
 
-	    static EventsTransport()
-        {
-            settings = new JsonSerializerSettings()
-            {
-                Binder = new TypeHidingBinder(),
-                TypeNameHandling = TypeNameHandling.All,
-            };
-        }
+		static EventsTransport()
+		{
+			settings = new JsonSerializerSettings
+				           {
+					           Binder = new TypeHidingBinder(),
+					           TypeNameHandling = TypeNameHandling.All,
+				           };
+		}
 
-	    public EventsTransport(string id)
+		public EventsTransport(string id)
 		{
 			connected = true;
-		    Id = id;
+			Id = id;
 			if (string.IsNullOrEmpty(Id))
 				throw new ArgumentException("Id is mandatory");
 
 			heartbeat = new Timer(Heartbeat);
 		}
 
-	    public HttpResponseMessage GetResponse()
+		public string Id { get; private set; }
+
+		public bool Connected
 		{
-		    var response = new HttpResponseMessage();
-            response.Content = new PushStreamContent(HandleStreamAvailable, "text/event-stream");
+			get { return connected; }
+		}
+
+		public event Action Disconnected = delegate { };
+
+		public HttpResponseMessage GetResponse()
+		{
+			var response = new HttpResponseMessage();
+			response.Content = new PushStreamContent(HandleStreamAvailable, "text/event-stream");
 
 			SendAsync(new Heartbeat());
 
 			return response;
 		}
 
-	    private void HandleStreamAvailable(Stream stream, HttpContent content, TransportContext context)
-	    {
-            heartbeat.Change(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
-	        ProcessMessageQueue(stream);
-	    }
+		private void HandleStreamAvailable(Stream stream, HttpContent content, TransportContext context)
+		{
+			heartbeat.Change(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+			ProcessMessageQueue(stream);
+		}
 
-	    public bool Connected
-	    {
-	        get { return connected; }
-	    }
-
-	    private async void ProcessMessageQueue(Stream stream)
-	    {
-            try
-            {
-                // if Disconnect() is called DequeueOrWaitAsync will throw OperationCancelledException, 
-                var messageWithTask = await messageQueue.DequeueOrWaitAsync();
+		private async void ProcessMessageQueue(Stream stream)
+		{
+			try
+			{
+				// if Disconnect() is called DequeueOrWaitAsync will throw OperationCancelledException, 
+				var messageWithTask = await messageQueue.DequeueOrWaitAsync();
 				using (var streamWriter = new StreamWriter(stream))
 				{
 					while (Connected)
@@ -116,96 +116,94 @@ namespace RavenFS.Infrastructure.Connections
 						messageWithTask = await messageQueue.DequeueOrWaitAsync();
 					}
 				}
-            }
-            catch (OperationCanceledException)
-            {
-                SignalCancelledToQueuedTasks();
-            }
-            finally
-            {
-                heartbeat.Dispose();
-                Disconnected();
-                CloseTransport(stream);
-            }
-	    }
+			}
+			catch (OperationCanceledException)
+			{
+				SignalCancelledToQueuedTasks();
+			}
+			finally
+			{
+				heartbeat.Dispose();
+				Disconnected();
+				CloseTransport(stream);
+			}
+		}
 
-	    private void SignalErrorToQueuedTasks(Exception ex)
-	    {
-	        Tuple<string, TaskCompletionSource<bool>> messageWithTask;
+		private void SignalErrorToQueuedTasks(Exception ex)
+		{
+			Tuple<string, TaskCompletionSource<bool>> messageWithTask;
 
-	        while (messageQueue.TryDequeue(out messageWithTask))
-	        {
-	            messageWithTask.Item2.SetException(ex);
-	        }
-	    }
+			while (messageQueue.TryDequeue(out messageWithTask))
+			{
+				messageWithTask.Item2.SetException(ex);
+			}
+		}
 
-        private void SignalCancelledToQueuedTasks()
-        {
-            Tuple<string, TaskCompletionSource<bool>> messageWithTask;
+		private void SignalCancelledToQueuedTasks()
+		{
+			Tuple<string, TaskCompletionSource<bool>> messageWithTask;
 
-            while (messageQueue.TryDequeue(out messageWithTask))
-            {
-                messageWithTask.Item2.SetCanceled();
-            }
-        }
+			while (messageQueue.TryDequeue(out messageWithTask))
+			{
+				messageWithTask.Item2.SetCanceled();
+			}
+		}
 
-	    private void Heartbeat(object _)
+		private void Heartbeat(object _)
 		{
 			SendAsync(new Heartbeat());
 		}
 
 		public Task SendAsync(Notification data)
 		{
-            var content = "data: " + JsonConvert.SerializeObject(data, Formatting.None, settings) + "\r\n\r\n";
+			var content = "data: " + JsonConvert.SerializeObject(data, Formatting.None, settings) + "\r\n\r\n";
 
-		    return Enqueue(content);
+			return Enqueue(content);
 		}
 
-        private Task Enqueue(string message)
-        {
-            var tcs = new TaskCompletionSource<bool>();
-            
-            if (!messageQueue.TryEnqueue(Tuple.Create(message, tcs)))
-            {
-                tcs.SetCanceled();
-            }
+		private Task Enqueue(string message)
+		{
+			var tcs = new TaskCompletionSource<bool>();
 
-            return tcs.Task;
-        }
+			if (!messageQueue.TryEnqueue(Tuple.Create(message, tcs)))
+				tcs.SetCanceled();
 
-	    private void CloseTransport(Stream stream)
-	    {
-	        try
-	        {
-	            using (stream)
-	            {
-	            }
-	        }
-	        catch (Exception closeEx)
-	        {
-	            log.DebugException("Could not close transport", closeEx);
-	        }
-	    }
+			return tcs.Task;
+		}
 
-	    public Task SendManyAsync(IEnumerable<Notification> data)
+		private void CloseTransport(Stream stream)
+		{
+			try
+			{
+				using (stream)
+				{
+				}
+			}
+			catch (Exception closeEx)
+			{
+				log.DebugException("Could not close transport", closeEx);
+			}
+		}
+
+		public Task SendManyAsync(IEnumerable<Notification> data)
 		{
 			var sb = new StringBuilder();
 
 			foreach (var o in data)
 			{
 				sb.Append("data: ")
-                    .Append(JsonConvert.SerializeObject(o, Formatting.None, settings))
-					.Append("\r\n\r\n");
+				  .Append(JsonConvert.SerializeObject(o, Formatting.None, settings))
+				  .Append("\r\n\r\n");
 			}
-	        var content = sb.ToString();
+			var content = sb.ToString();
 
-	        return Enqueue(content);
+			return Enqueue(content);
 		}
 
 		public void Disconnect()
-		{	
+		{
 			connected = false;
-            messageQueue.SignalCompletion();
+			messageQueue.SignalCompletion();
 		}
 	}
 }

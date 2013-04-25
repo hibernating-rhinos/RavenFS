@@ -1,18 +1,18 @@
-﻿namespace RavenFS.Synchronization
-{
-	using System;
-	using System.Collections.Generic;
-	using System.IO;
-	using System.Linq;
-	using System.Threading.Tasks;
-	using Multipart;
-	using NLog;
-	using RavenFS.Client;
-	using RavenFS.Storage;
-	using RavenFS.Util;
-	using Rdc;
-	using Rdc.Wrapper;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using NLog;
+using RavenFS.Client;
+using RavenFS.Storage;
+using RavenFS.Synchronization.Multipart;
+using RavenFS.Synchronization.Rdc;
+using RavenFS.Synchronization.Rdc.Wrapper;
+using RavenFS.Util;
 
+namespace RavenFS.Synchronization
+{
 	public class ContentUpdateWorkItem : SynchronizationWorkItem
 	{
 		private readonly Logger log = LogManager.GetCurrentClassLogger();
@@ -21,7 +21,8 @@
 		private DataInfo fileDataInfo;
 		private SynchronizationMultipartRequest multipartRequest;
 
-		public ContentUpdateWorkItem(string file, string sourceServerUrl, TransactionalStorage storage, SigGenerator sigGenerator)
+		public ContentUpdateWorkItem(string file, string sourceServerUrl, TransactionalStorage storage,
+		                             SigGenerator sigGenerator)
 			: base(file, sourceServerUrl, storage)
 		{
 			this.sigGenerator = sigGenerator;
@@ -42,7 +43,7 @@
 			cts.Cancel();
 		}
 
-		public async override Task<SynchronizationReport> PerformAsync(string destination)
+		public override async Task<SynchronizationReport> PerformAsync(string destination)
 		{
 			AssertLocalFileExistsAndIsNotConflicted(FileMetadata);
 
@@ -56,19 +57,15 @@
 				return await UploadToAsync(destination);
 			}
 
-            var destinationServerRdcStats = await destinationRavenFileSystemClient.Synchronization.GetRdcStatsAsync();
-            if (!IsRemoteRdcCompatible(destinationServerRdcStats))
-            {
-                throw new SynchronizationException("Incompatible RDC version detected on destination server");
-            }
-            
+			var destinationServerRdcStats = await destinationRavenFileSystemClient.Synchronization.GetRdcStatsAsync();
+			if (!IsRemoteRdcCompatible(destinationServerRdcStats))
+				throw new SynchronizationException("Incompatible RDC version detected on destination server");
+
 			var conflict = CheckConflictWithDestination(FileMetadata, destinationMetadata, ServerInfo.Url);
 
 			if (conflict != null)
-			{
 				return await ApplyConflictOnDestinationAsync(conflict, destination, ServerInfo.Url, log);
-			}
-			
+
 			using (var localSignatureRepository = new StorageSignatureRepository(Storage, FileName))
 			using (var remoteSignatureCache = new VolatileSignatureRepository(FileName))
 			{
@@ -91,7 +88,10 @@
 
 					if (destinationSignatureManifest.Signatures.Count > 0)
 					{
-						return await SynchronizeTo(destination, localSignatureRepository, remoteSignatureCache, localSignatureManifest, destinationSignatureManifest);
+						return
+							await
+							SynchronizeTo(destination, localSignatureRepository, remoteSignatureCache, localSignatureManifest,
+							              destinationSignatureManifest);
 					}
 				}
 
@@ -99,21 +99,20 @@
 			}
 		}
 
-	    private bool IsRemoteRdcCompatible(RdcStats destinationServerRdcStats)
-	    {
-            using (var versionChecker = new RdcVersionChecker())
-            {
-                RdcVersion localRdcVersion = versionChecker.GetRdcVersion();
-                if (destinationServerRdcStats.CurrentVersion >= localRdcVersion.MinimumCompatibleAppVersion)
-                {
-                    return true;
-                }
+		private bool IsRemoteRdcCompatible(RdcStats destinationServerRdcStats)
+		{
+			using (var versionChecker = new RdcVersionChecker())
+			{
+				var localRdcVersion = versionChecker.GetRdcVersion();
+				return destinationServerRdcStats.CurrentVersion >= localRdcVersion.MinimumCompatibleAppVersion;
+			}
+		}
 
-                return false;
-            }
-	    }
-
-	    private async Task<SynchronizationReport> SynchronizeTo(string destinationServerUrl, ISignatureRepository localSignatureRepository, ISignatureRepository remoteSignatureRepository, SignatureManifest sourceSignatureManifest, SignatureManifest destinationSignatureManifest)
+		private async Task<SynchronizationReport> SynchronizeTo(string destinationServerUrl,
+		                                                        ISignatureRepository localSignatureRepository,
+		                                                        ISignatureRepository remoteSignatureRepository,
+		                                                        SignatureManifest sourceSignatureManifest,
+		                                                        SignatureManifest destinationSignatureManifest)
 		{
 			var seedSignatureInfo = SignatureInfo.Parse(destinationSignatureManifest.Signatures.Last().Name);
 			var sourceSignatureInfo = SignatureInfo.Parse(sourceSignatureManifest.Signatures.Last().Name);
@@ -150,15 +149,16 @@
 			}
 		}
 
-		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, Stream sourceFileStream, IList<RdcNeed> needList)
+		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, Stream sourceFileStream,
+		                                                                IList<RdcNeed> needList)
 		{
 			cts.Token.ThrowIfCancellationRequested();
 
 			multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, ServerInfo, FileName, FileMetadata,
-																	   sourceFileStream, needList);
+			                                                       sourceFileStream, needList);
 
 			var bytesToTransferCount = needList.Where(x => x.BlockType == RdcNeedType.Source).Sum(x => (double) x.BlockLength);
-			
+
 			log.Debug(
 				"Synchronizing a file '{0}' (ETag {1}) to {2} by using multipart request. Need list length is {3}. Number of bytes that needs to be transfered is {4}",
 				FileName, FileETag, destinationServerUrl, needList.Count, bytesToTransferCount);
@@ -179,11 +179,11 @@
 				return null;
 			}
 			return new DataInfo
-			{
-				CreatedAt = Convert.ToDateTime(fileAndPages.Metadata["Last-Modified"]).ToUniversalTime(),
-				Length = fileAndPages.TotalSize ?? 0,
-				Name = fileAndPages.Name
-			};
+				       {
+					       CreatedAt = Convert.ToDateTime(fileAndPages.Metadata["Last-Modified"]).ToUniversalTime(),
+					       Length = fileAndPages.TotalSize ?? 0,
+					       Name = fileAndPages.Name
+				       };
 		}
 
 		public override bool Equals(object obj)

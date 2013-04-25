@@ -23,6 +23,7 @@ namespace RavenFS.Extensions
 				{
 					Thread.SpinWait(100);
 				}
+
 				return value;
 			}
 		}

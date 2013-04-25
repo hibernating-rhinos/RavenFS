@@ -1,8 +1,8 @@
-﻿namespace RavenFS.Controllers
-{
-	using System.Threading.Tasks;
-	using System.Web.Http;
+﻿using System.Threading.Tasks;
+using System.Web.Http;
 
+namespace RavenFS.Controllers
+{
 	public class StorageController : RavenController
 	{
 		[AcceptVerbs("POST")]

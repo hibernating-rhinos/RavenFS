@@ -5,16 +5,14 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
+using NLog;
 using Newtonsoft.Json;
-using RavenFS.Storage;
+using RavenFS.Client;
+using RavenFS.Util;
+using NameValueCollectionJsonConverter = RavenFS.Util.NameValueCollectionJsonConverter;
 
 namespace RavenFS.Controllers
 {
-	using Client;
-	using NLog;
-	using Util;
-	using NameValueCollectionJsonConverter = Util.NameValueCollectionJsonConverter;
-
 	public class ConfigController : RavenController
 	{
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
@@ -22,62 +20,55 @@ namespace RavenFS.Controllers
 		public string[] Get()
 		{
 			string[] names = null;
-			Storage.Batch(accessor =>
-			{
-				names = accessor.GetConfigNames(Paging.Start, Paging.PageSize).ToArray();
-			});
+			Storage.Batch(accessor => { names = accessor.GetConfigNames(Paging.Start, Paging.PageSize).ToArray(); });
 			return names;
 		}
-        
+
 		public HttpResponseMessage Get(string name)
 		{
 			try
 			{
 				NameValueCollection nameValueCollection = null;
-				Storage.Batch(accessor =>
-				{
-					nameValueCollection = accessor.GetConfig(name);
-				});
+				Storage.Batch(accessor => { nameValueCollection = accessor.GetConfig(name); });
 				return Request.CreateResponse(HttpStatusCode.OK, nameValueCollection);
 			}
 			catch (FileNotFoundException)
 			{
 				return Request.CreateResponse(HttpStatusCode.NotFound);
 			}
-
 		}
 
-        [AcceptVerbs("GET")]
-        public ConfigSearchResults ConfigNamesStartingWith(string prefix = "")
-        {
-            ConfigSearchResults results = null;
-            Storage.Batch(accessor =>
-                {
-                    int totalResults;
-                    var names = accessor.GetConfigNamesStartingWithPrefix(prefix, Paging.Start, Paging.PageSize,
-                                                                          out totalResults);
+		[AcceptVerbs("GET")]
+		public ConfigSearchResults ConfigNamesStartingWith(string prefix = "")
+		{
+			ConfigSearchResults results = null;
+			Storage.Batch(accessor =>
+				              {
+					              int totalResults;
+					              var names = accessor.GetConfigNamesStartingWithPrefix(prefix, Paging.Start, Paging.PageSize,
+					                                                                    out totalResults);
 
-                    results = new ConfigSearchResults()
-                        {
-                            ConfigNames = names,
-                            PageSize = Paging.PageSize,
-                            Start = Paging.Start,
-                            TotalCount = totalResults
-                        };
-                });
+					              results = new ConfigSearchResults
+						                        {
+							                        ConfigNames = names,
+							                        PageSize = Paging.PageSize,
+							                        Start = Paging.Start,
+							                        TotalCount = totalResults
+						                        };
+				              });
 
-            return results;
-        }
+			return results;
+		}
 
 		public async Task<HttpResponseMessage> Put(string name)
 		{
 			var jsonSerializer = new JsonSerializer
-			{
-				Converters =
-						{
-							new NameValueCollectionJsonConverter()
-						}
-			};
+				                     {
+					                     Converters =
+						                     {
+							                     new NameValueCollectionJsonConverter()
+						                     }
+				                     };
 			var contentStream = await Request.Content.ReadAsStreamAsync();
 
 			var nameValueCollection =
@@ -86,7 +77,7 @@ namespace RavenFS.Controllers
 			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor => accessor.SetConfig(name, nameValueCollection)),
 			                                 ConcurrencyResponseException);
 
-			Publisher.Publish(new ConfigChange() {Name = name, Action = ConfigChangeAction.Set});
+			Publisher.Publish(new ConfigChange {Name = name, Action = ConfigChangeAction.Set});
 
 			log.Debug("Config '{0}' was inserted", name);
 
@@ -98,7 +89,7 @@ namespace RavenFS.Controllers
 			ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor => accessor.DeleteConfig(name)),
 			                                 ConcurrencyResponseException);
 
-			Publisher.Publish(new ConfigChange() { Name = name, Action = ConfigChangeAction.Delete });
+			Publisher.Publish(new ConfigChange {Name = name, Action = ConfigChangeAction.Delete});
 
 			log.Debug("Config '{0}' was deleted", name);
 			return new HttpResponseMessage(HttpStatusCode.NoContent);

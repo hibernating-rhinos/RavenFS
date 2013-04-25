@@ -2,61 +2,46 @@
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
+using NLog;
+using RavenFS.Client;
 using RavenFS.Infrastructure;
 using RavenFS.Notifications;
 using RavenFS.Search;
 using RavenFS.Storage;
+using RavenFS.Synchronization;
+using RavenFS.Synchronization.Conflictuality;
+using RavenFS.Synchronization.Rdc.Wrapper;
 using RavenFS.Util;
 
 namespace RavenFS.Controllers
 {
-	using System.Net;
-	using Client;
-	using NLog;
-	using Synchronization;
-	using Synchronization.Conflictuality;
-	using Synchronization.Rdc.Wrapper;
-
 	public abstract class RavenController : ApiController
 	{
 		private static readonly Logger log = LogManager.GetCurrentClassLogger();
 
-		protected class PagingInfo
-		{
-			public int Start;
-			public int PageSize;
-		}
-
-		NameValueCollection queryString;
 		private PagingInfo paging;
+		private NameValueCollection queryString;
 
 		private RavenFileSystem ravenFileSystem;
 
 		public RavenFileSystem RavenFileSystem
 		{
-			get
+			get 
 			{
-				if (ravenFileSystem == null)
-					ravenFileSystem = (RavenFileSystem)ControllerContext.Configuration.DependencyResolver.GetService(typeof(RavenFileSystem));
-				return ravenFileSystem;
+				return ravenFileSystem ??
+				       (ravenFileSystem = (RavenFileSystem) ControllerContext.Configuration.DependencyResolver.GetService(typeof (RavenFileSystem)));
 			}
 		}
 
 		public NotificationPublisher Publisher
 		{
 			get { return RavenFileSystem.Publisher; }
-		}
-
-		protected Task<T> Result<T>(T result)
-		{
-			var tcs = new TaskCompletionSource<T>();
-			tcs.SetResult(result);
-			return tcs.Task;
 		}
 
 		public BufferPool BufferPool
@@ -134,24 +119,32 @@ namespace RavenFS.Controllers
 					pageSize = 25;
 
 				paging = new PagingInfo
-				{
-					PageSize = Math.Min(1024, Math.Max(1, pageSize)),
-					Start = Math.Max(start, 0)
-				};
+					         {
+						         PageSize = Math.Min(1024, Math.Max(1, pageSize)),
+						         Start = Math.Max(start, 0)
+					         };
+
 				return paging;
 			}
+		}
+
+		protected Task<T> Result<T>(T result)
+		{
+			var tcs = new TaskCompletionSource<T>();
+			tcs.SetResult(result);
+			return tcs.Task;
 		}
 
 		protected HttpResponseMessage StreamResult(string filename, Stream resultContent)
 		{
 			var response = new HttpResponseMessage
-			{
-				Headers =
-				{
-					TransferEncodingChunked = false
-				}
-			};
-			long length = 0;
+				               {
+					               Headers =
+						               {
+							               TransferEncodingChunked = false
+						               }
+				               };
+			long length;
 			ContentRangeHeaderValue contentRange = null;
 			if (Request.Headers.Range != null)
 			{
@@ -176,7 +169,6 @@ namespace RavenFS.Controllers
 					contentRange = new ContentRangeHeaderValue(0);
 					resultContent = Stream.Null;
 				}
-
 			}
 			else
 			{
@@ -184,22 +176,23 @@ namespace RavenFS.Controllers
 			}
 
 			response.Content = new StreamContent(resultContent)
-			{
-				Headers =
-				{
-					ContentDisposition = new ContentDispositionHeaderValue("attachment")
-					{
-						FileName = filename
-					},
-					ContentLength = length,
-					ContentRange = contentRange,
-				}
-			};
+				                   {
+					                   Headers =
+						                   {
+							                   ContentDisposition = new ContentDispositionHeaderValue("attachment")
+								                                        {
+									                                        FileName = filename
+								                                        },
+							                   ContentLength = length,
+							                   ContentRange = contentRange,
+						                   }
+				                   };
 
 			return response;
 		}
 
-		protected void AssertFileIsNotBeingSynced(string fileName, StorageActionsAccessor accessor, bool wrapByResponseException = false)
+		protected void AssertFileIsNotBeingSynced(string fileName, StorageActionsAccessor accessor,
+		                                          bool wrapByResponseException = false)
 		{
 			if (FileLockManager.TimeoutExceeded(fileName, accessor))
 			{
@@ -207,10 +200,10 @@ namespace RavenFS.Controllers
 			}
 			else
 			{
-				log.Debug("Cannot execute operation because file '{0}' is being synced",  fileName);
+				log.Debug("Cannot execute operation because file '{0}' is being synced", fileName);
 
 				var beingSyncedException = new SynchronizationException(string.Format("File {0} is being synced", fileName));
-				
+
 				if (wrapByResponseException)
 				{
 					throw new HttpResponseException(Request.CreateResponse(HttpStatusCode.PreconditionFailed, beingSyncedException));
@@ -220,14 +213,21 @@ namespace RavenFS.Controllers
 			}
 		}
 
-        protected HttpResponseException BadRequestException(string message)
-        {
-            return new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest) { Content = new StringContent(message) });
-        }
+		protected HttpResponseException BadRequestException(string message)
+		{
+			return
+				new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest) {Content = new StringContent(message)});
+		}
 
 		protected HttpResponseException ConcurrencyResponseException(ConcurrencyException concurrencyException)
 		{
 			return new HttpResponseException(Request.CreateResponse(HttpStatusCode.MethodNotAllowed, concurrencyException));
+		}
+
+		protected class PagingInfo
+		{
+			public int PageSize;
+			public int Start;
 		}
 	}
 }

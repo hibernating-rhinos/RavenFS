@@ -1,19 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Browser;
 using System.Windows.Input;
-using Microsoft.Expression.Interactivity.Core;
-using RavenFS.Client;
 using RavenFS.Studio.Behaviors;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Infrastructure;
-using System.Linq;
 using RavenFS.Studio.Extensions;
 using System.Reactive.Linq;
 using ActionCommand = RavenFS.Studio.Infrastructure.ActionCommand;
@@ -112,20 +105,16 @@ namespace RavenFS.Studio.Models
 
         private bool SearchPatternIsValid(string pattern)
         {
-            if (string.IsNullOrEmpty(pattern))
-            {
-                return true;
-            }
+	        if (string.IsNullOrEmpty(pattern))
+		        return true;
 
-            var startsWithWildcard = pattern.StartsWith("*") || pattern.StartsWith("?");
+	        var startsWithWildcard = pattern.StartsWith("*") || pattern.StartsWith("?");
             var endsWithWildcard = pattern.EndsWith("*") || pattern.EndsWith("?");
 
-            if (startsWithWildcard && endsWithWildcard)
-            {
-                return false;
-            }
+	        if (startsWithWildcard && endsWithWildcard)
+		        return false;
 
-            return Regex.IsMatch(pattern, SearchPatternValidationRegEx);
+	        return Regex.IsMatch(pattern, SearchPatternValidationRegEx);
         }
 
 	    private void UpdateBreadCrumbs()
@@ -154,11 +143,10 @@ namespace RavenFS.Studio.Models
 
 	        folder = folder.TrimEnd('/');
 
-            if (!folder.StartsWith("/"))
-            {
-                folder = "/" + folder;
-            }
-	        return folder;
+		    if (!folder.StartsWith("/"))
+			    folder = "/" + folder;
+
+		    return folder;
 	    }
 	}
 }

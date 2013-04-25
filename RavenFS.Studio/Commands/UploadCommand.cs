@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Windows;
 using System.Windows.Controls;
 using RavenFS.Client;
 using RavenFS.Studio.Infrastructure;
@@ -27,25 +26,20 @@ namespace RavenFS.Studio.Commands
 
 	    public override void Execute(object parameter)
 		{
-		    var files = parameter as IList<FileInfo>;
-            
-            if (files == null)
-            {
-                files = GetFilesFromFileDialog();
-            }
+		    var files = parameter as IList<FileInfo> ?? GetFilesFromFileDialog();
 
-            if (files != null)
-            {
-                foreach (var file in files)
-                {
-                    QueueForUpload(file, currentFolder.Value);
-                }
-            }
+		    if (files == null) 
+				return;
+
+		    foreach (var file in files)
+		    {
+			    QueueForUpload(file, currentFolder.Value);
+		    }
 		}
 
 	    private static IList<FileInfo> GetFilesFromFileDialog()
 	    {
-	        var fileDialog = new OpenFileDialog()
+	        var fileDialog = new OpenFileDialog
 	                             {
 	                                 Multiselect = true
 	                             };
@@ -72,10 +66,10 @@ namespace RavenFS.Studio.Commands
 
 	    private static void QueueForUpload(FileInfo file, string folder)
 	    {
-	        var operation = new AsyncOperationModel()
-	                            {
-	                                Description = "Uploading " + file.Name + " to " + folder,
-	                            };
+		    var operation = new AsyncOperationModel
+			                    {
+				                    Description = "Uploading " + file.Name + " to " + folder,
+			                    };
 
             var stream = file.OpenRead();
             var fileSize = stream.Length;
@@ -103,22 +97,16 @@ namespace RavenFS.Studio.Commands
 
         private static string GetNaturalSize(long bytes)
         {
-            if (bytes > Gb)
-            {
-                return string.Format(CultureInfo.CurrentCulture, "{0:F2} Gb", bytes/Gb);
-            }
-            else if (bytes > Mb)
-            {
-                return string.Format(CultureInfo.CurrentCulture, "{0:F2} Mb", bytes / Mb);
-            }
-            else if (bytes > Kb)
-            {
-                return string.Format(CultureInfo.CurrentCulture, "{0:F2} Kb", bytes / Kb);
-            }
-            else
-            {
-                return string.Format(CultureInfo.CurrentCulture, "{0} bytes", bytes);
-            }
+	        if (bytes > Gb)
+		        return string.Format(CultureInfo.CurrentCulture, "{0:F2} Gb", bytes/Gb);
+	        
+			if (bytes > Mb)
+		        return string.Format(CultureInfo.CurrentCulture, "{0:F2} Mb", bytes/Mb);
+	        
+			if (bytes > Kb)
+		        return string.Format(CultureInfo.CurrentCulture, "{0:F2} Kb", bytes/Kb);
+	        
+			return string.Format(CultureInfo.CurrentCulture, "{0} bytes", bytes);
         }
 	}
 }

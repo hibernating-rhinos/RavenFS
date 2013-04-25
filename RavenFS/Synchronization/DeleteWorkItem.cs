@@ -1,15 +1,15 @@
+using System;
+using System.IO;
+using System.Net;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using RavenFS.Client;
+using RavenFS.Extensions;
+using RavenFS.Storage;
+using RavenFS.Synchronization.Multipart;
+
 namespace RavenFS.Synchronization
 {
-	using System;
-	using System.IO;
-	using System.Net;
-	using System.Threading.Tasks;
-	using Multipart;
-	using Newtonsoft.Json;
-	using RavenFS.Client;
-	using RavenFS.Extensions;
-	using RavenFS.Storage;
-
 	public class DeleteWorkItem : SynchronizationWorkItem
 	{
 		public DeleteWorkItem(string fileName, string sourceServerUrl, TransactionalStorage storage)
@@ -22,12 +22,14 @@ namespace RavenFS.Synchronization
 			get { return SynchronizationType.Delete; }
 		}
 
-		public async override Task<SynchronizationReport> PerformAsync(string destination)
+		public override async Task<SynchronizationReport> PerformAsync(string destination)
 		{
 			FileAndPages fileAndPages = null;
 			Storage.Batch(accessor => fileAndPages = accessor.GetFile(FileName, 0, 0));
 
-			var request = (HttpWebRequest)WebRequest.Create(destination + "/synchronization/delete?fileName=" + Uri.EscapeDataString(FileName));
+			var request =
+				(HttpWebRequest)
+				WebRequest.Create(destination + "/synchronization/delete?fileName=" + Uri.EscapeDataString(FileName));
 
 			request.Method = "DELETE";
 			request.ContentLength = 0;
@@ -55,8 +57,8 @@ namespace RavenFS.Synchronization
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != typeof(DeleteWorkItem)) return false;
-			return Equals((DeleteWorkItem)obj);
+			if (obj.GetType() != typeof (DeleteWorkItem)) return false;
+			return Equals((DeleteWorkItem) obj);
 		}
 
 		public bool Equals(DeleteWorkItem other)

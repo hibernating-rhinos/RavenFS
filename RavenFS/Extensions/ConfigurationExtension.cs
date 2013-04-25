@@ -1,25 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Collections.Specialized;
 using System.IO;
-using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using RavenFS.Storage;
+using RavenFS.Util;
 
 namespace RavenFS.Extensions
 {
-	using System;
-	using Util;
-
 	public static class ConfigurationExtension
 	{
 		public static T GetConfigurationValue<T>(this StorageActionsAccessor accessor, string key)
 		{
 			var value = accessor.GetConfig(key)["value"];
-			var serializer = new JsonSerializer()
-			{
-				Converters = { new NameValueCollectionJsonConverter() }
-			};
+			var serializer = new JsonSerializer
+				                 {
+					                 Converters = {new NameValueCollectionJsonConverter()}
+				                 };
 			return serializer.Deserialize<T>(new JsonTextReader(new StringReader(value)));
 		}
 
@@ -41,13 +38,13 @@ namespace RavenFS.Extensions
 		{
 			var sb = new StringBuilder();
 			var jw = new JsonTextWriter(new StringWriter(sb));
-			var serializer = new JsonSerializer()
-			{
-				Converters = { new NameValueCollectionJsonConverter() }
-			};
+			var serializer = new JsonSerializer
+				                 {
+					                 Converters = {new NameValueCollectionJsonConverter()}
+				                 };
 			serializer.Serialize(jw, objectToSave);
 			var value = sb.ToString();
-			accessor.SetConfig(key, new NameValueCollection { { "value", value } });
+			accessor.SetConfig(key, new NameValueCollection {{"value", value}});
 		}
 
 		public static NameValueCollection AsConfig<T>(this T @object) where T : class, new()
@@ -63,7 +60,8 @@ namespace RavenFS.Extensions
 					if (pValue != null)
 					{
 						var propertyType = propertyInfo.PropertyType;
-						if (propertyType.IsPrimitive || propertyType.IsEnum || propertyType == typeof(string) || propertyType == typeof(Guid) || propertyType == typeof(DateTime))
+						if (propertyType.IsPrimitive || propertyType.IsEnum || propertyType == typeof (string) ||
+						    propertyType == typeof (Guid) || propertyType == typeof (DateTime))
 						{
 							nameValueCollection.Add(pName, pValue.ToString());
 						}
@@ -71,7 +69,7 @@ namespace RavenFS.Extensions
 						{
 							var serializedObject = new StringBuilder();
 
-							new JsonSerializer()
+							new JsonSerializer
 								{
 									Converters = {new NameValueCollectionJsonConverter()}
 								}.Serialize(new JsonTextWriter(new StringWriter(serializedObject)), pValue);
@@ -109,22 +107,22 @@ namespace RavenFS.Extensions
 						{
 							propertyInfo.SetValue(result, Enum.Parse(propertyInfo.PropertyType, config[pName]), null);
 						}
-						else if (propertyInfo.PropertyType == typeof(string))
+						else if (propertyInfo.PropertyType == typeof (string))
 						{
 							propertyInfo.SetValue(result, config[pName], null);
 						}
-						else if (propertyInfo.PropertyType == typeof(Guid))
+						else if (propertyInfo.PropertyType == typeof (Guid))
 						{
 							propertyInfo.SetValue(result, Guid.Parse(config[pName]), null);
 						}
-						else if(propertyInfo.PropertyType == typeof(DateTime))
+						else if (propertyInfo.PropertyType == typeof (DateTime))
 						{
 							propertyInfo.SetValue(result, DateTime.Parse(config[pName]), null);
 						}
 						else
 						{
 							var deserializedObject =
-								new JsonSerializer() {Converters = {new NameValueCollectionJsonConverter()}}.Deserialize(
+								new JsonSerializer {Converters = {new NameValueCollectionJsonConverter()}}.Deserialize(
 									new JsonTextReader(new StringReader(config[pName])), propertyInfo.PropertyType);
 
 							propertyInfo.SetValue(result, deserializedObject, null);

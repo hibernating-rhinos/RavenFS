@@ -3,17 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using RavenFS.Studio.Infrastructure;
 using RavenFS.Studio.Extensions;
 
@@ -77,17 +68,10 @@ namespace RavenFS.Studio.Models
 
         private bool MatchesSearchPattern(string name)
         {
-            if (string.IsNullOrEmpty(searchPatternRegEx))
-            {
-                return true;
-            }
-            else
-            {
-                return Regex.IsMatch(name, searchPatternRegEx, RegexOptions.IgnoreCase);
-            }
+	        return string.IsNullOrEmpty(searchPatternRegEx) || Regex.IsMatch(name, searchPatternRegEx, RegexOptions.IgnoreCase);
         }
 
-        public string CurrentFolder
+	    public string CurrentFolder
         {
             get { return currentFolder; }
             set
@@ -145,18 +129,13 @@ namespace RavenFS.Studio.Models
         {
             var sort = sortDescriptions.FirstOrDefault();
 
-            if (sort.PropertyName == "Name" && sort.Direction == ListSortDirection.Ascending)
-            {
-                return files.OrderBy(f => f.Name);
-            }
-            else if (sort.PropertyName == "Name" && sort.Direction == ListSortDirection.Descending)
-            {
-                return files.OrderByDescending(f => f.Name);
-            }
-            else
-            {
-                return files;
-            }
+	        if (sort.PropertyName == "Name" && sort.Direction == ListSortDirection.Ascending)
+		        return files.OrderBy(f => f.Name);
+	        
+			if (sort.PropertyName == "Name" && sort.Direction == ListSortDirection.Descending)
+		        return files.OrderByDescending(f => f.Name);
+	        
+			return files;
         }
 
         private void BeginGetFolders()

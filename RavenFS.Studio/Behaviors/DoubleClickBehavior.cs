@@ -34,8 +34,7 @@ namespace RavenFS.Studio.Behaviors
 
 		public DoubleClickBehavior()
 		{
-			timer = new DispatcherTimer();
-			timer.Interval = new TimeSpan(0, 0, 0, 0, dblclickDelay);
+			timer = new DispatcherTimer {Interval = new TimeSpan(0, 0, 0, 0, dblclickDelay)};
 			timer.Tick += (sender, e) => timer.Stop();
 		}
 

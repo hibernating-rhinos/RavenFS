@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Windows.Input;
-using RavenFS.Studio.Infrastructure;
+﻿using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Models
 {

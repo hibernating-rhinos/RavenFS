@@ -1,16 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Net;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Behaviors
 {
@@ -144,13 +137,11 @@ namespace RavenFS.Studio.Behaviors
 
             public void Attach()
             {
-                var parent = VisualTreeHelper.GetParent(_textBlock) as FrameworkElement;  
-                if (parent == null || _isAttached)
-                {
-                    return;
-                }
+                var parent = VisualTreeHelper.GetParent(_textBlock) as FrameworkElement;
+	            if (parent == null || _isAttached)
+		            return;
 
-                parent.SizeChanged += UpdateForegroundBrush;
+	            parent.SizeChanged += UpdateForegroundBrush;
                 _textBlock.SizeChanged += UpdateForegroundBrush;
 
                 _foregroundColor = DetermineForegroundColor(_textBlock);
@@ -166,12 +157,10 @@ namespace RavenFS.Studio.Behaviors
                 _textBlock.SizeChanged -= UpdateForegroundBrush;
 
                 var parent = VisualTreeHelper.GetParent(_textBlock) as FrameworkElement;
-                if (parent != null)
-                {
-                    parent.SizeChanged -= UpdateForegroundBrush;
-                }
+	            if (parent != null)
+		            parent.SizeChanged -= UpdateForegroundBrush;
 
-                // remove our explicitly set Foreground color
+	            // remove our explicitly set Foreground color
                 _textBlock.ClearValue(TextBlock.ForegroundProperty);
                 _isAttached = false;
             }
@@ -179,18 +168,14 @@ namespace RavenFS.Studio.Behaviors
             private Color DetermineForegroundColor(TextBlock textBlock)
             {
                 // if our own Attached Property has been used to set an explicit foreground color, use that
-                if (GetForegroundColor(textBlock) != Colors.Transparent)
-                {
-                    return GetForegroundColor(textBlock);
-                }
-                
-                // otherwise, if the textBlock has inherited a foreground color, use that
-                if (textBlock.Foreground is SolidColorBrush)
-                {
-                    return (textBlock.Foreground as SolidColorBrush).Color;
-                }
-                
-                return Colors.Black;
+	            if (GetForegroundColor(textBlock) != Colors.Transparent)
+		            return GetForegroundColor(textBlock);
+
+	            // otherwise, if the textBlock has inherited a foreground color, use that
+	            if (textBlock.Foreground is SolidColorBrush)
+		            return (textBlock.Foreground as SolidColorBrush).Color;
+
+	            return Colors.Black;
             }
 
             private void UpdateForegroundBrush(object sender, EventArgs e)
@@ -198,7 +183,7 @@ namespace RavenFS.Studio.Behaviors
                 // determine if the TextBlock has been clipped
                 var layoutClip = LayoutInformation.GetLayoutClip(_textBlock);
 
-                bool needsClipping = layoutClip != null
+                var needsClipping = layoutClip != null
                     && ((_textBlock.TextWrapping == TextWrapping.NoWrap && layoutClip.Bounds.Width > 0 
                     && layoutClip.Bounds.Width < _textBlock.ActualWidth) 
                     || (_textBlock.TextWrapping == TextWrapping.Wrap && layoutClip.Bounds.Height > 0
@@ -213,7 +198,7 @@ namespace RavenFS.Studio.Behaviors
                         _textBlock.ClearValue(ToolTipService.ToolTipProperty);
                     }
 
-                    _textBlock.Foreground = new SolidColorBrush() { Color = _foregroundColor };
+                    _textBlock.Foreground = new SolidColorBrush { Color = _foregroundColor };
                     _brush = null;
                     _isClipped = false;
                 }
@@ -230,7 +215,7 @@ namespace RavenFS.Studio.Behaviors
                         ToolTipService.SetToolTip(_textBlock, toolTip);
 
                         toolTip.SetBinding(FrameworkElement.StyleProperty,
-                                           new Binding()
+                                           new Binding
                                                {
                                                    Path = new PropertyPath(ToolTipStyleProperty), 
                                                    Source = _textBlock
@@ -238,7 +223,7 @@ namespace RavenFS.Studio.Behaviors
                     }
                         
                     toolTip.SetBinding(ContentControl.ContentProperty,
-                                        new Binding()
+                                        new Binding
                                         {
                                             Path = new PropertyPath(TextBlock.TextProperty),
                                             Source = _textBlock
@@ -288,9 +273,8 @@ namespace RavenFS.Studio.Behaviors
                                EndPoint = new Point(visibleWidth, 0),
                                GradientStops =
                                    {
-                                       new GradientStop()
-                                           {Color = _foregroundColor, Offset = 0},
-                                       new GradientStop()
+                                       new GradientStop {Color = _foregroundColor, Offset = 0},
+                                       new GradientStop
                                            {
                                                Color = _foregroundColor,
                                                // Even though the mapping mode is absolute,
@@ -298,7 +282,7 @@ namespace RavenFS.Studio.Behaviors
                                                // 0 being the start of the brush, and 1 the end of the brush
                                                Offset = (visibleWidth - FadeWidth)/visibleWidth
                                            },
-                                       new GradientStop()
+                                       new GradientStop
                                            {
                                                Color = Color.FromArgb(0, _foregroundColor.R, _foregroundColor.G, _foregroundColor.B),
                                                Offset = 1
@@ -319,9 +303,8 @@ namespace RavenFS.Studio.Behaviors
                     EndPoint = new Point(0, visibleHeight),
                     GradientStops =
                                    {
-                                       new GradientStop()
-                                           {Color = _foregroundColor, Offset = 0},
-                                       new GradientStop()
+                                       new GradientStop {Color = _foregroundColor, Offset = 0},
+                                       new GradientStop
                                            {
                                                Color = _foregroundColor,
                                                // Even though the mapping mode is absolute,
@@ -329,7 +312,7 @@ namespace RavenFS.Studio.Behaviors
                                                // 0 being the start of the brush, and 1 the end of the brush
                                                Offset = (visibleHeight - FadeHeight)/visibleHeight
                                            },
-                                       new GradientStop()
+                                       new GradientStop
                                            {
                                                Color = Color.FromArgb(0, _foregroundColor.R, _foregroundColor.G, _foregroundColor.B),
                                                Offset = 1

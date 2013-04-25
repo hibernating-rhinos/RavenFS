@@ -37,8 +37,8 @@ namespace RavenFS.Client
 		public RavenFileSystemClient(string baseUrl)
 		{
 			this.baseUrl = baseUrl;
-			if (this.ServerUrl.EndsWith("/"))
-				this.baseUrl = this.ServerUrl.Substring(0, this.ServerUrl.Length - 1);
+			if (ServerUrl.EndsWith("/"))
+				this.baseUrl = ServerUrl.Substring(0, ServerUrl.Length - 1);
 
             notifications = new ServerNotifications(baseUrl);
 		}
@@ -266,13 +266,9 @@ namespace RavenFS.Client
 			if (from != null)
 			{
 				if (to != null)
-				{
 					request.AddRange(from.Value, to.Value);
-				}
 				else
-				{
 					request.AddRange(from.Value);
-				}
 			}
 			else if (destination.CanSeek)
 			{
@@ -392,9 +388,7 @@ namespace RavenFS.Client
 		private void RegisterUploadOperation(Guid uploadId, CancellationTokenSource cts)
 		{
 			if (IsObservingFailedUploads)
-			{
 				uploadCancellationTokens.TryAdd(uploadId, cts);
-			}
 		}
 
 		private void UnregisterUploadOperation(Guid uploadId)
@@ -452,7 +446,7 @@ namespace RavenFS.Client
 			if (path.StartsWith("/"))
 				path = path.Substring(1);
 
-			string requestUriString = ServerUrl + "/folders/subdirectories/" + Uri.EscapeUriString(path) + "?pageSize=" +
+			var requestUriString = ServerUrl + "/folders/subdirectories/" + Uri.EscapeUriString(path) + "?pageSize=" +
 			                          pageSize + "&start=" + start;
 			var request = (HttpWebRequest)WebRequest.Create(requestUriString.NoCache());
 

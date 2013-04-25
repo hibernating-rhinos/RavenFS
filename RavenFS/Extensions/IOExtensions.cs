@@ -15,7 +15,6 @@ namespace RavenFS.Extensions
 {
     public static class IOExtensions
     {
-
 		public static void CopyDirectory(string from, string to, string[] skip)
 		{
 			try
@@ -31,9 +30,7 @@ namespace RavenFS.Extensions
 		static void CopyDirectory(DirectoryInfo source, DirectoryInfo target, string[] skip)
 		{
 			if (!target.Exists)
-			{
 				Directory.CreateDirectory(target.FullName);
-			}
 
 			// copy all files in the immediate directly
 			foreach (FileInfo fi in source.GetFiles())
@@ -42,7 +39,7 @@ namespace RavenFS.Extensions
 			}
 
 			// and recurse
-			foreach (DirectoryInfo diSourceDir in source.GetDirectories())
+			foreach (var diSourceDir in source.GetDirectories())
 			{
 				if(skip.Contains(diSourceDir.Name))
 					continue;

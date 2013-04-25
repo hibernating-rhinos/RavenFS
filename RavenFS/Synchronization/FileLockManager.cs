@@ -1,22 +1,22 @@
+using System;
+using System.IO;
+using NLog;
+using RavenFS.Extensions;
+using RavenFS.Storage;
+using RavenFS.Util;
+
 namespace RavenFS.Synchronization
 {
-	using System;
-	using System.IO;
-	using NLog;
-	using RavenFS.Extensions;
-	using RavenFS.Storage;
-	using RavenFS.Util;
-
 	public class FileLockManager
 	{
-		private readonly Logger log = LogManager.GetCurrentClassLogger();
-
 		private readonly TimeSpan defaultTimeout = TimeSpan.FromMinutes(10);
+		private readonly Logger log = LogManager.GetCurrentClassLogger();
 		private TimeSpan configuredTimeout;
 
 		private TimeSpan SynchronizationTimeout(StorageActionsAccessor accessor)
 		{
-			bool timeoutConfigExists = accessor.TryGetConfigurationValue(SynchronizationConstants.RavenSynchronizationLockTimeout, out configuredTimeout);
+			var timeoutConfigExists = accessor.TryGetConfigurationValue(
+				SynchronizationConstants.RavenSynchronizationLockTimeout, out configuredTimeout);
 
 			return timeoutConfigExists ? configuredTimeout : defaultTimeout;
 		}
@@ -24,10 +24,10 @@ namespace RavenFS.Synchronization
 		public void LockByCreatingSyncConfiguration(string fileName, ServerInfo sourceServer, StorageActionsAccessor accessor)
 		{
 			var syncLock = new SynchronizationLock
-											{
-												SourceServer = sourceServer,
-												FileLockedAt = DateTime.UtcNow
-											};
+				               {
+					               SourceServer = sourceServer,
+					               FileLockedAt = DateTime.UtcNow
+				               };
 
 			accessor.SetConfig(RavenFileNameHelper.SyncLockNameForFile(fileName), syncLock.AsConfig());
 

@@ -1,18 +1,18 @@
-﻿namespace RavenFS.Synchronization
-{
-	using System;
-	using System.Collections.Generic;
-	using System.Collections.Specialized;
-	using System.Linq;
-	using Infrastructure;
-	using Rdc.Wrapper;
-	using Storage;
-	using Util;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Linq;
+using RavenFS.Infrastructure;
+using RavenFS.Storage;
+using RavenFS.Synchronization.Rdc.Wrapper;
+using RavenFS.Util;
 
+namespace RavenFS.Synchronization
+{
 	public class SynchronizationStrategy
 	{
-		private readonly TransactionalStorage storage;
 		private readonly SigGenerator sigGenerator;
+		private readonly TransactionalStorage storage;
 
 		public SynchronizationStrategy(TransactionalStorage storage, SigGenerator sigGenerator)
 		{
@@ -23,30 +23,20 @@
 		public bool Filter(FileHeader file, Guid destinationId, IEnumerable<FileHeader> candidatesToSynchronization)
 		{
 			// prevent synchronization back to source
-			if(file.Metadata[SynchronizationConstants.RavenSynchronizationSource] == destinationId.ToString())
-			{
+			if (file.Metadata[SynchronizationConstants.RavenSynchronizationSource] == destinationId.ToString())
 				return false;
-			}
 
 			if (file.Name.EndsWith(RavenFileNameHelper.DownloadingFileSuffix))
-			{
 				return false;
-			}
 
 			if (file.Name.EndsWith(RavenFileNameHelper.DeletingFileSuffix))
-			{
 				return false;
-			}
 
 			if (file.IsFileBeingUploadedOrUploadHasBeenBroken())
-			{
 				return false;
-			}
 
-			if(ExistsRenameTombstone(file.Name, candidatesToSynchronization))
-			{
+			if (ExistsRenameTombstone(file.Name, candidatesToSynchronization))
 				return false;
-			}
 
 			return true;
 		}
@@ -60,7 +50,9 @@
 					x.Metadata[SynchronizationConstants.RavenRenameFile] == name);
 		}
 
-		public SynchronizationWorkItem DetermineWork(string file, NameValueCollection localMetadata, NameValueCollection destinationMetadata, string localServerUrl, out NoSyncReason reason)
+		public SynchronizationWorkItem DetermineWork(string file, NameValueCollection localMetadata,
+		                                             NameValueCollection destinationMetadata, string localServerUrl,
+		                                             out NoSyncReason reason)
 		{
 			reason = NoSyncReason.Unknown;
 
@@ -71,8 +63,8 @@
 			}
 
 			if (destinationMetadata != null &&
-					destinationMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null
-					&& destinationMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] == null)
+			    destinationMetadata[SynchronizationConstants.RavenSynchronizationConflict] != null
+			    && destinationMetadata[SynchronizationConstants.RavenSynchronizationConflictResolution] == null)
 			{
 				reason = NoSyncReason.DestinationFileConflicted;
 				return null;
@@ -90,13 +82,14 @@
 
 				if (rename != null)
 				{
-					if(destinationMetadata != null)
+					if (destinationMetadata != null)
 					{
 						return new RenameWorkItem(file, rename, localServerUrl, storage);
 					}
 					else
 					{
-						return new ContentUpdateWorkItem(rename, localServerUrl, storage, sigGenerator); // we have a rename tombstone but file does not exists on destination
+						return new ContentUpdateWorkItem(rename, localServerUrl, storage, sigGenerator);
+							// we have a rename tombstone but file does not exists on destination
 					}
 				}
 				return new DeleteWorkItem(file, localServerUrl, storage);
@@ -108,10 +101,14 @@
 				return null;
 			}
 
-			if (destinationMetadata != null && localMetadata["Content-MD5"] == destinationMetadata["Content-MD5"]) // file exists on dest and has the same content
+			if (destinationMetadata != null && localMetadata["Content-MD5"] == destinationMetadata["Content-MD5"])
+				// file exists on dest and has the same content
 			{
 				// check metadata to detect if any synchronization is needed
-				if (localMetadata.AllKeys.Except(new[] { "ETag", "Last-Modified" }).Any(key => !destinationMetadata.AllKeys.Contains(key) || localMetadata[key] != destinationMetadata[key]))
+				if (
+					localMetadata.AllKeys.Except(new[] {"ETag", "Last-Modified"})
+					             .Any(
+						             key => !destinationMetadata.AllKeys.Contains(key) || localMetadata[key] != destinationMetadata[key]))
 				{
 					return new MetadataUpdateWorkItem(file, localServerUrl, destinationMetadata, storage);
 				}
@@ -120,6 +117,7 @@
 
 				return null; // the same content and metadata - no need to synchronize
 			}
+
 			return new ContentUpdateWorkItem(file, localServerUrl, storage, sigGenerator);
 		}
 	}

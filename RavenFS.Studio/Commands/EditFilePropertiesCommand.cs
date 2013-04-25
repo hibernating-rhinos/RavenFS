@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
 using RavenFS.Studio.Infrastructure;
 using RavenFS.Studio.Models;
 using RavenFS.Studio.Views;
-using FileInfo = RavenFS.Client.FileInfo;
 
 namespace RavenFS.Studio.Commands
 {
@@ -28,6 +26,5 @@ namespace RavenFS.Studio.Commands
             var view = new FilePropertiesDialog { Model = model };
             view.Show();
         }
-
 	}
 }

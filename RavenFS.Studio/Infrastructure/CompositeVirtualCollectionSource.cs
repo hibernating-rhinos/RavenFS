@@ -2,16 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Infrastructure
 {
@@ -34,15 +25,14 @@ namespace RavenFS.Studio.Infrastructure
 
             source1.CountChanged += HandleCountChanged;
             source2.CountChanged += HandleCountChanged;
-            if (source1 is INotifyBusyness)
-            {
-                ((INotifyBusyness) source1).IsBusyChanged += HandleIsBusyChanged;
-            }
 
-            if (source2 is INotifyBusyness)
-            {
-                ((INotifyBusyness)source2).IsBusyChanged += HandleIsBusyChanged;
-            }
+	        var notifyBusyness = source1 as INotifyBusyness;
+	        if (notifyBusyness != null)
+		        notifyBusyness.IsBusyChanged += HandleIsBusyChanged;
+
+	        var busyness = source2 as INotifyBusyness;
+	        if (busyness != null)
+		        busyness.IsBusyChanged += HandleIsBusyChanged;
         }
 
         private void HandleCountChanged(object sender, EventArgs e)
@@ -62,19 +52,19 @@ namespace RavenFS.Studio.Infrastructure
 
         protected void OnCollectionChanged(VirtualCollectionSourceChangedEventArgs e)
         {
-            EventHandler<VirtualCollectionSourceChangedEventArgs> handler = CollectionChanged;
+            var handler = CollectionChanged;
             if (handler != null) handler(this, e);
         }
 
         protected void OnCountChanged(EventArgs e)
         {
-            EventHandler<EventArgs> handler = CountChanged;
+            var handler = CountChanged;
             if (handler != null) handler(this, e);
         }
 
         protected void OnIsBusyChanged(EventArgs e)
         {
-            EventHandler<EventArgs> handler = IsBusyChanged;
+            var handler = IsBusyChanged;
             if (handler != null) handler(this, e);
         }
 
@@ -104,49 +94,38 @@ namespace RavenFS.Studio.Infrastructure
                 source1Count = Source1.Count;
             }
 
-            if (start < source1Count.Value - pageSize)
-            {
-                return await Source1.GetPageAsync(start, pageSize, sortDescriptions);
-            }
-            else if (start > source1Count)
-            {
-                var source2Start = start - source1Count.Value;
-                return await Source2.GetPageAsync(source2Start, pageSize, sortDescriptions);
-            }
-            else
-            {
-                var source1PageSize = source1Count.Value - start;
-                var source2PageSize = pageSize - source1PageSize;
+	        if (start < source1Count.Value - pageSize)
+		        return await Source1.GetPageAsync(start, pageSize, sortDescriptions);
+	        
+			if (start > source1Count)
+	        {
+		        var source2Start = start - source1Count.Value;
+		        return await Source2.GetPageAsync(source2Start, pageSize, sortDescriptions);
+	        }
+	        
+			var source1PageSize = source1Count.Value - start;
+	        var source2PageSize = pageSize - source1PageSize;
 
-                // we need to mash up the two sources to provide a full page
-                var source1Results = Source1.GetPageAsync(start, source1PageSize, sortDescriptions);
-                var source2Results = Source2.GetPageAsync(0, source2PageSize, sortDescriptions);
+	        // we need to mash up the two sources to provide a full page
+	        var source1Results = Source1.GetPageAsync(start, source1PageSize, sortDescriptions);
+	        var source2Results = Source2.GetPageAsync(0, source2PageSize, sortDescriptions);
 
-                var result =
-                    await TaskEx.WhenAll(source1Results, source2Results)
-                        .ContinueWith(_ => (IList<T>)source1Results.Result.Concat(source2Results.Result).ToArray());
-
-                return result;
-            }
+	        await TaskEx.WhenAll(source1Results, source2Results);
+	        return (IList<T>)source1Results.Result.Concat(source2Results.Result).ToArray();
         }
 
         private async Task EnsureChildCollectionCountsInitialised()
         {
             var forceInitialiseCountTasks = new List<Task>();
 
-            if (!source1.Count.HasValue)
-            {
-                forceInitialiseCountTasks.Add(Source1.GetPageAsync(0, 0, null));
-            }
-            if (!source2.Count.HasValue)
-            {
-                forceInitialiseCountTasks.Add(Source2.GetPageAsync(0, 0, null));
-            }
+	        if (!source1.Count.HasValue)
+		        forceInitialiseCountTasks.Add(Source1.GetPageAsync(0, 0, null));
 
-            if (forceInitialiseCountTasks.Count > 0)
-            {
-                await TaskEx.WhenAll(forceInitialiseCountTasks);
-            }
+	        if (!source2.Count.HasValue)
+		        forceInitialiseCountTasks.Add(Source2.GetPageAsync(0, 0, null));
+
+	        if (forceInitialiseCountTasks.Count > 0)
+		        await TaskEx.WhenAll(forceInitialiseCountTasks);
         }
 
         public void Refresh(RefreshMode mode)

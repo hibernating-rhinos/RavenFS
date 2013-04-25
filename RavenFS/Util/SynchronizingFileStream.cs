@@ -1,17 +1,20 @@
+using System.Collections.Specialized;
+using System.Security.Cryptography;
+using RavenFS.Extensions;
+using RavenFS.Infrastructure;
+using RavenFS.Search;
+using RavenFS.Storage;
+
 namespace RavenFS.Util
 {
-	using System.Collections.Specialized;
-	using System.Security.Cryptography;
-	using Extensions;
-	using Infrastructure;
-	using Search;
-	using Storage;
-
 	public class SynchronizingFileStream : StorageStream
 	{
 		private readonly MD5 md5Hasher;
 
-		private SynchronizingFileStream(TransactionalStorage transactionalStorage, string fileName, StorageStreamAccess storageStreamAccess, NameValueCollection metadata, IndexStorage indexStorage, StorageOperationsTask operations) : base(transactionalStorage, fileName, storageStreamAccess, metadata, indexStorage, operations)
+		private SynchronizingFileStream(TransactionalStorage transactionalStorage, string fileName,
+		                                StorageStreamAccess storageStreamAccess, NameValueCollection metadata,
+		                                IndexStorage indexStorage, StorageOperationsTask operations)
+			: base(transactionalStorage, fileName, storageStreamAccess, metadata, indexStorage, operations)
 		{
 			md5Hasher = new MD5CryptoServiceProvider();
 		}
@@ -41,10 +44,13 @@ namespace RavenFS.Util
 			}
 		}
 
-		public static SynchronizingFileStream CreatingOrOpeningAndWritting(TransactionalStorage storage, IndexStorage search, StorageOperationsTask operationsTask, string fileName, NameValueCollection metadata)
+		public static SynchronizingFileStream CreatingOrOpeningAndWritting(TransactionalStorage storage, IndexStorage search,
+		                                                                   StorageOperationsTask operationsTask,
+		                                                                   string fileName, NameValueCollection metadata)
 		{
-			return new SynchronizingFileStream(storage, fileName, StorageStreamAccess.CreateAndWrite, metadata, search, operationsTask)
-			       	{ PreventUploadComplete = true };
+			return new SynchronizingFileStream(storage, fileName, StorageStreamAccess.CreateAndWrite, metadata, search,
+			                                   operationsTask)
+				       {PreventUploadComplete = true};
 		}
 	}
 }

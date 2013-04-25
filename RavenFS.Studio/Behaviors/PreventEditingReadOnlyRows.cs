@@ -1,15 +1,7 @@
-﻿using System;
-using System.Net;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
 using System.Windows.Interactivity;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Behaviors
 {
@@ -35,20 +27,16 @@ namespace RavenFS.Studio.Behaviors
 
         private void HandleBeginningEdit(object sender, DataGridBeginningEditEventArgs e)
         {
-            if (IsReadOnlyBinding == null)
-            {
-                return;
-            }
+	        if (IsReadOnlyBinding == null)
+		        return;
 
-            evaluator = evaluator ?? (new BindingEvaluator());
+	        evaluator = evaluator ?? (new BindingEvaluator());
 
             evaluator.DataContext = e.Row.DataContext;
             evaluator.SetBinding(BindingEvaluator.IsReadOnlyProperty, IsReadOnlyBinding);
 
-            if (evaluator.IsReadOnly)
-            {
-                e.Cancel = true;
-            }
+	        if (evaluator.IsReadOnly)
+		        e.Cancel = true;
         }
 
         private class BindingEvaluator : FrameworkElement

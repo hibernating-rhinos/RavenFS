@@ -18,9 +18,8 @@ namespace RavenFS.Studio.Converters
 				var readLine = reader.ReadLine();
 				var hasMoreLines = reader.ReadLine() != null;
 				if (hasMoreLines)
-				{
 					readLine = readLine + " ...";
-				}
+
 				return readLine;
 			}
 		}

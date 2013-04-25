@@ -21,7 +21,6 @@ namespace RavenFS.Studio.Models
         {
             get
             {
-
                 return collectionView ?? (collectionView = new PagedCollectionView(ApplicationModel.Current.Notifications)
                                             {
                                                 Filter = item => ((Notification) item).Level == NotificationLevel.Error
@@ -61,12 +60,10 @@ namespace RavenFS.Studio.Models
         private void HandleCopyErrorDetailsToClipboard(object parameter)
         {
             var notification = parameter as Notification;
-            if (notification == null)
-            {
-                return;
-            }
+	        if (notification == null)
+		        return;
 
-            Clipboard.SetText(notification.Details);
+	        Clipboard.SetText(notification.Details);
         }
 
         protected override void OnViewLoaded()

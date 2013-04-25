@@ -14,12 +14,10 @@ namespace RavenFS.Studio.Commands
         public override void Execute(object parameter)
         {
             var exception = parameter as Exception;
-            if (exception == null)
-            {
-                return;
-            }
+	        if (exception == null)
+		        return;
 
-            var text = exception.ToString();
+	        var text = exception.ToString();
             Clipboard.SetText(text);
         }
 

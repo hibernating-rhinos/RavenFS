@@ -1,16 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using System.Net;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Converters
 {
@@ -36,7 +28,7 @@ namespace RavenFS.Studio.Converters
 
         public string ValuesWhenCollapsed
         {
-            get { return valuesWhenCollapsed ?? string.Empty; ; }
+            get { return valuesWhenCollapsed ?? string.Empty; }
             set
             {
                 valuesWhenCollapsed = value;
@@ -47,14 +39,10 @@ namespace RavenFS.Studio.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var enumValuesWhenVisible = GetValuesWhenVisible();
-            if (enumValuesWhenVisible.Any())
-            {
-                return enumValuesWhenVisible.Contains(value) ? Visibility.Visible : Visibility.Collapsed;
-            }
-            else
-            {
-                return GetValuesWhenCollapsed().Contains(value) ? Visibility.Collapsed : Visibility.Visible;
-            }
+	        if (enumValuesWhenVisible.Any())
+		        return enumValuesWhenVisible.Contains(value) ? Visibility.Visible : Visibility.Collapsed;
+	        
+			return GetValuesWhenCollapsed().Contains(value) ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private object[] GetValuesWhenVisible()
@@ -62,7 +50,6 @@ namespace RavenFS.Studio.Converters
             if (parsedVisibleValues == null)
             {
                 var enumValues = ParseEnumValues(ValuesWhenVisibile);
-
                 parsedVisibleValues = enumValues;
             }
 
@@ -74,7 +61,6 @@ namespace RavenFS.Studio.Converters
             if (parsedCollapsedValues == null)
             {
                 var enumValues = ParseEnumValues(ValuesWhenCollapsed);
-
                 parsedCollapsedValues = enumValues;
             }
 
@@ -95,7 +81,5 @@ namespace RavenFS.Studio.Converters
         {
             throw new NotImplementedException();
         }
-
-
     }
 }

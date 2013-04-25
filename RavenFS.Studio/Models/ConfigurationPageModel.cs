@@ -1,28 +1,12 @@
 ﻿using System;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
-using System.Net;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
-using RavenFS.Client;
-using RavenFS.Extensions;
 using RavenFS.Studio.Behaviors;
 using RavenFS.Studio.Commands;
 using RavenFS.Studio.Extensions;
 using RavenFS.Studio.Features.Configuration;
 using RavenFS.Studio.Infrastructure;
-using RavenFS.Studio.Infrastructure.Input;
 
 namespace RavenFS.Studio.Models
 {
@@ -47,12 +31,10 @@ namespace RavenFS.Studio.Models
         private void HandleEditConfiguration(object parameter)
         {
             var configuration = parameter as VirtualItem<ConfigurationModel>;
-            if (configuration == null || !configuration.IsRealized)
-            {
-                return;
-            }
+	        if (configuration == null || !configuration.IsRealized)
+		        return;
 
-            UrlUtil.Navigate("/EditConfiguration?name=" + configuration.Item.Name);
+	        UrlUtil.Navigate("/EditConfiguration?name=" + configuration.Item.Name);
         }
 
         public ICommand ShowSearch

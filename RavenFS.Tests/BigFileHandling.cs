@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Reflection;
 using Newtonsoft.Json;
 using RavenFS.Tests.Tools;
@@ -72,9 +71,9 @@ namespace RavenFS.Tests
 
 			public override IEnumerable<object[]> GetData(MethodInfo methodUnderTest, Type[] parameterTypes)
 			{
-				for (int i = 0; i < Sizes; i++)
+				for (var i = 0; i < Sizes; i++)
 				{
-					for (int j = 0; j < Partitions; j++)
+					for (var j = 0; j < Partitions; j++)
 					{
 						var currentSize = (i+1)*BaseSize;
 						yield return new object[] {currentSize, currentSize/(j + 1)};

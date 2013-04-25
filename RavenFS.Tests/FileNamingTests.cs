@@ -1,8 +1,8 @@
-﻿namespace RavenFS.Tests
-{
-	using Util;
-	using Xunit;
+﻿using RavenFS.Util;
+using Xunit;
 
+namespace RavenFS.Tests
+{
 	public class FileNamingTests
 	{
 		[Fact]

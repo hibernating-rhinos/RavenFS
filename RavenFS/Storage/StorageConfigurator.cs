@@ -4,21 +4,20 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System;
+using System.Collections.Specialized;
+using System.IO;
+using Microsoft.Isam.Esent.Interop;
+using NLog;
+using RavenFS.Extensions;
+using RavenFS.Util;
+
 namespace RavenFS.Storage
 {
-	using System;
-	using System.Collections.Specialized;
-	using System.IO;
-	using Extensions;
-	using Microsoft.Isam.Esent.Interop;
-	using NLog;
-	using Util;
-
 	public class StorageConfigurator
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
-
 		public const int MaxSessions = 256;
+		private static readonly Logger log = LogManager.GetCurrentClassLogger();
 
 		private readonly NameValueCollection settings;
 
@@ -26,7 +25,6 @@ namespace RavenFS.Storage
 		{
 			this.settings = settings;
 		}
-
 
 		public void ConfigureInstance(JET_INSTANCE jetInstance, string path)
 		{
@@ -39,36 +37,41 @@ namespace RavenFS.Storage
 			}
 
 			var instanceParameters = new InstanceParameters(jetInstance)
-			{
-				CircularLog = GetValueFromConfiguration("Raven/Esent/CircularLog", true),
-				Recovery = true,
-				NoInformationEvent = false,
-				CreatePathIfNotExist = true,
-				TempDirectory = Path.Combine(logsPath, "temp"),
-				SystemDirectory = Path.Combine(logsPath, "system"),
-				LogFileDirectory = Path.Combine(logsPath, "logs"),
-				MaxVerPages = TranslateToSizeInDatabasePages(GetValueFromConfiguration("Raven/Esent/MaxVerPages", 128)),
-				BaseName = "RFS",
-				EventSource = "RavenFS",
-				LogBuffers = TranslateToSizeInDatabasePages(GetValueFromConfiguration("Raven/Esent/LogBuffers", 16)) / 2,
-				LogFileSize = GetValueFromConfiguration("Raven/Esent/LogFileSize", 1) * 1024,
-				MaxSessions = MaxSessions,
-				MaxCursors = GetValueFromConfiguration("Raven/Esent/MaxCursors", 2048),
-				DbExtensionSize = TranslateToSizeInDatabasePages(GetValueFromConfiguration("Raven/Esent/DbExtensionSize", 16)),
-				AlternateDatabaseRecoveryDirectory = path
-			};
+				                         {
+					                         CircularLog = GetValueFromConfiguration("Raven/Esent/CircularLog", true),
+					                         Recovery = true,
+					                         NoInformationEvent = false,
+					                         CreatePathIfNotExist = true,
+					                         TempDirectory = Path.Combine(logsPath, "temp"),
+					                         SystemDirectory = Path.Combine(logsPath, "system"),
+					                         LogFileDirectory = Path.Combine(logsPath, "logs"),
+					                         MaxVerPages =
+						                         TranslateToSizeInDatabasePages(GetValueFromConfiguration("Raven/Esent/MaxVerPages", 128)),
+					                         BaseName = "RFS",
+					                         EventSource = "RavenFS",
+					                         LogBuffers =
+						                         TranslateToSizeInDatabasePages(GetValueFromConfiguration("Raven/Esent/LogBuffers", 16))/2,
+					                         LogFileSize = GetValueFromConfiguration("Raven/Esent/LogFileSize", 1)*1024,
+					                         MaxSessions = MaxSessions,
+					                         MaxCursors = GetValueFromConfiguration("Raven/Esent/MaxCursors", 2048),
+					                         DbExtensionSize =
+						                         TranslateToSizeInDatabasePages(GetValueFromConfiguration("Raven/Esent/DbExtensionSize",
+						                                                                                  16)),
+					                         AlternateDatabaseRecoveryDirectory = path
+				                         };
 
 			log.Info(@"Esent Settings:
   MaxVerPages      = {0}
   CacheSizeMax     = {1}
-  DatabasePageSize = {2}", instanceParameters.MaxVerPages, SystemParameters.CacheSizeMax, SystemParameters.DatabasePageSize);
+  DatabasePageSize = {2}", instanceParameters.MaxVerPages, SystemParameters.CacheSizeMax,
+			         SystemParameters.DatabasePageSize);
 		}
 
 		public void LimitSystemCache()
 		{
-			var defaultCacheSize = Environment.Is64BitProcess ? Math.Min(1024, (MemoryStatistics.TotalPhysicalMemory / 4)) : 256;
-			int cacheSizeMaxInMegabytes = GetValueFromConfiguration("Raven/Esent/CacheSizeMax", defaultCacheSize);
-			int cacheSizeMax = TranslateToSizeInDatabasePages(cacheSizeMaxInMegabytes);
+			var defaultCacheSize = Environment.Is64BitProcess ? Math.Min(1024, (MemoryStatistics.TotalPhysicalMemory/4)) : 256;
+			var cacheSizeMaxInMegabytes = GetValueFromConfiguration("Raven/Esent/CacheSizeMax", defaultCacheSize);
+			var cacheSizeMax = TranslateToSizeInDatabasePages(cacheSizeMaxInMegabytes);
 			if (SystemParameters.CacheSizeMax > cacheSizeMax)
 			{
 				try
@@ -83,14 +86,14 @@ namespace RavenFS.Storage
 
 		private static int TranslateToSizeInDatabasePages(int sizeInMegabytes)
 		{
-			return (sizeInMegabytes * 1024 * 1024) / SystemParameters.DatabasePageSize;
+			return (sizeInMegabytes*1024*1024)/SystemParameters.DatabasePageSize;
 		}
 
 		private int GetValueFromConfiguration(string name, int defaultValue)
 		{
 			int value;
 			if (string.IsNullOrEmpty(settings[name]) == false &&
-				int.TryParse(settings[name], out value))
+			    int.TryParse(settings[name], out value))
 			{
 				return value;
 			}
@@ -101,7 +104,7 @@ namespace RavenFS.Storage
 		{
 			bool value;
 			if (string.IsNullOrEmpty(settings[name]) == false &&
-				bool.TryParse(settings[name], out value))
+			    bool.TryParse(settings[name], out value))
 			{
 				return value;
 			}

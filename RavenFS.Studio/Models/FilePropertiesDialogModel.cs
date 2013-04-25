@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using RavenFS.Client;
 using RavenFS.Extensions;
-using RavenFS.Studio.Commands;
 using RavenFS.Studio.Extensions;
 using RavenFS.Studio.Infrastructure;
 using System.Linq;
@@ -75,7 +73,7 @@ namespace RavenFS.Studio.Models
         {
             if (!metadataTask.IsFaulted)
             {
-                NameValueCollection collection = metadataTask.Result.FilterHeadersForViewing();
+                var collection = metadataTask.Result.FilterHeadersForViewing();
 
                 var editableCollection =
                     new EditableKeyValueCollection(
@@ -100,12 +98,10 @@ namespace RavenFS.Studio.Models
 
 	    private void AddEmptyItem()
 	    {
-	        if (emptyItem != null)
-	        {
-	            emptyItem.PropertyChanged -= HandleEmptyItemPropertyChanged;
-	        }
+		    if (emptyItem != null)
+			    emptyItem.PropertyChanged -= HandleEmptyItemPropertyChanged;
 
-            emptyItem = new EditableKeyValue();
+		    emptyItem = new EditableKeyValue();
 	        emptyItem.PropertyChanged += HandleEmptyItemPropertyChanged;
 
             Metadata.Add(emptyItem);
@@ -114,10 +110,8 @@ namespace RavenFS.Studio.Models
 	    private void HandleEmptyItemPropertyChanged(object sender, PropertyChangedEventArgs e)
 	    {
             // as soon as the user starts modifying the item, it's no longer new, so add a new empty item
-            if (!string.IsNullOrEmpty(emptyItem.Key) || !string.IsNullOrEmpty(emptyItem.Value))
-            {
-                AddEmptyItem();
-            }
+		    if (!string.IsNullOrEmpty(emptyItem.Key) || !string.IsNullOrEmpty(emptyItem.Value))
+			    AddEmptyItem();
 	    }
 
         public ICommand DeleteMetadataItemCommand { get { return deleteCommand ?? (deleteCommand = new ActionCommand(HandleDelete)); } }
@@ -125,12 +119,10 @@ namespace RavenFS.Studio.Models
 	    private void HandleDelete(object item)
 	    {
 	        var metaDataItem = item as EditableKeyValue;
-            if (metaDataItem == null || metaDataItem == emptyItem || metaDataItem.IsReadOnly)
-            {
-                return;
-            }
+		    if (metaDataItem == null || metaDataItem == emptyItem || metaDataItem.IsReadOnly)
+			    return;
 
-	        Metadata.Remove(metaDataItem);
+		    Metadata.Remove(metaDataItem);
 	    }
 
 	    public ICommand CancelCommand { get { return cancelCommand ?? (cancelCommand = new ActionCommand(() => Close(false))); } }
@@ -155,6 +147,5 @@ namespace RavenFS.Studio.Models
 
 	        Close(true);
 	    }
-
 	}
 }

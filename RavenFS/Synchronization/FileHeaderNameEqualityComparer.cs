@@ -1,8 +1,8 @@
+using System.Collections.Generic;
+using RavenFS.Storage;
+
 namespace RavenFS.Synchronization
 {
-	using System.Collections.Generic;
-	using Storage;
-
 	internal class FileHeaderNameEqualityComparer : IEqualityComparer<FileHeader>
 	{
 		public bool Equals(FileHeader x, FileHeader y)

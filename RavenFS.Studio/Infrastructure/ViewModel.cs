@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reactive;
 using System.Reactive.Subjects;
-using System.Threading.Tasks;
 using RavenFS.Studio.Behaviors;
 
 namespace RavenFS.Studio.Infrastructure
@@ -19,12 +18,10 @@ namespace RavenFS.Studio.Infrastructure
 
 	    public void NotifyViewUnloaded()
 	    {
-            if (unloaded != null)
-            {
-                unloaded.OnNext(Unit.Default);
-            }
+		    if (unloaded != null)
+			    unloaded.OnNext(Unit.Default);
 
-	        OnViewUnloaded();
+		    OnViewUnloaded();
 	    }
 
 	    protected virtual void OnViewLoaded()
@@ -44,7 +41,7 @@ namespace RavenFS.Studio.Infrastructure
 
 	    protected void OnUIMessage(UIMessageEventArgs e)
 	    {
-	        EventHandler<UIMessageEventArgs> handler = UIMessage;
+	        var handler = UIMessage;
 	        if (handler != null) handler(this, e);
 	    }
 	}

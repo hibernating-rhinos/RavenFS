@@ -18,12 +18,10 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
         public override string GetSearchClauseFromModel(ViewModel model)
         {
             var singleInputModel = model as SingleInputSearchClauseModel;
-            if (singleInputModel == null)
-            {
-                throw new InvalidOperationException();
-            }
+	        if (singleInputModel == null)
+		        throw new InvalidOperationException();
 
-            return "__fileName:" + singleInputModel.Input + "*";
+	        return "__fileName:" + singleInputModel.Input + "*";
         }
     }
 }

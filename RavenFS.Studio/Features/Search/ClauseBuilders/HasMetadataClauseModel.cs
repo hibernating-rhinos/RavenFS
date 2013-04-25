@@ -1,16 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using RavenFS.Studio.Infrastructure;
 using RavenFS.Studio.Models;
 using RavenFS.Studio.Extensions;
@@ -19,7 +9,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
 {
     public class HasMetadataClauseModel : ViewModel
     {
-        private static readonly HashSet<string> ExcludedTerms = new HashSet<string>() { "Content-Length", "Last-Modified" };
+        private static readonly HashSet<string> ExcludedTerms = new HashSet<string> { "Content-Length", "Last-Modified" };
  
         string selectedField;
         string searchPattern;
@@ -31,16 +21,11 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
 
         private void Initialize()
         {
-            if (ApplicationModel.Current.State.CachedSearchTerms != null)
-            {
-                AvailableFields = new ObservableCollection<string>(ApplicationModel.Current.State.CachedSearchTerms);
-            }
-            else
-            {
-                AvailableFields = new ObservableCollection<string>();
-            }
+	        AvailableFields = ApplicationModel.Current.State.CachedSearchTerms == null
+		                          ? new ObservableCollection<string>()
+		                          : new ObservableCollection<string>(ApplicationModel.Current.State.CachedSearchTerms);
 
-            ApplicationModel.Current.Client
+	        ApplicationModel.Current.Client
                 .GetSearchFieldsAsync(0, 1024)
                 .ContinueOnUIThread(
                     t =>
@@ -58,7 +43,7 @@ namespace RavenFS.Studio.Features.Search.ClauseBuilders
                         });
         }
 
-        public ObservableCollection<string> AvailableFields { get; set; }
+	    public ObservableCollection<string> AvailableFields { get; set; }
 
         public string SelectedField
         {

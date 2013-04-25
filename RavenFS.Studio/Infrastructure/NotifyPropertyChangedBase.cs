@@ -1,10 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Windows;
-using System.Windows.Threading;
 
 namespace RavenFS.Studio.Infrastructure
 {
@@ -20,7 +17,7 @@ namespace RavenFS.Studio.Infrastructure
             }
             remove
             {
-                EventState firstOrDefault = PropertyChangedInternal.GetInvocationList()
+                var firstOrDefault = PropertyChangedInternal.GetInvocationList()
                     .Select(x => ((EventState)x.Target))
                     .FirstOrDefault(x => x.Value == value);
 
@@ -37,7 +34,7 @@ namespace RavenFS.Studio.Infrastructure
 
             public EventState(PropertyChangedEventHandler value)
             {
-                this.Value = value;
+                Value = value;
             }
 
             public void Invoke(object sender, PropertyChangedEventArgs e)

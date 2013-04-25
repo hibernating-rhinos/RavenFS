@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Web.Http;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using RavenFS.Storage;
 
 namespace RavenFS.Controllers
 {
-	using System.Web.Http;
-
 	public class SearchController : RavenController
 	{
 		[AcceptVerbs("GET")]
@@ -30,12 +29,12 @@ namespace RavenFS.Controllers
 			Storage.Batch(accessor => list.AddRange(keys.Select(accessor.ReadFile).Where(x => x != null)));
 
 			return new SearchResults
-			{
-				Start = Paging.Start,
-				PageSize = Paging.PageSize,
-				Files = list,
-				FileCount = results
-			};
+				       {
+					       Start = Paging.Start,
+					       PageSize = Paging.PageSize,
+					       Files = list,
+					       FileCount = results
+				       };
 		}
 	}
 }

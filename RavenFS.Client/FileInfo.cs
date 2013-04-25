@@ -11,7 +11,6 @@ namespace RavenFS.Client
 		public NameValueCollection Metadata { get; set; }
 	}
 
-
 	public class SearchResults
 	{
 		public FileInfo[] Files { get; set; }

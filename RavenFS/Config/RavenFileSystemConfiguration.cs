@@ -1,15 +1,16 @@
-﻿namespace RavenFS.Config
-{
-	using System;
-	using System.Collections.Generic;
-	using System.Configuration;
-	using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
 
+namespace RavenFS.Config
+{
 	public class RavenFileSystemConfiguration : InMemoryConfiguration
 	{
 		public RavenFileSystemConfiguration()
 		{
-			LoadConfigurationAndInitialize(ConfigurationManager.AppSettings.AllKeys.Select(k => Tuple.Create(k, ConfigurationManager.AppSettings[k])));
+			LoadConfigurationAndInitialize(
+				ConfigurationManager.AppSettings.AllKeys.Select(k => Tuple.Create(k, ConfigurationManager.AppSettings[k])));
 		}
 
 		private void LoadConfigurationAndInitialize(IEnumerable<Tuple<string, string>> values)
@@ -26,7 +27,8 @@
 		public void LoadFrom(string path)
 		{
 			var configuration = ConfigurationManager.OpenExeConfiguration(path);
-			LoadConfigurationAndInitialize(configuration.AppSettings.Settings.AllKeys.Select(k => Tuple.Create(k, ConfigurationManager.AppSettings[k])));
+			LoadConfigurationAndInitialize(
+				configuration.AppSettings.Settings.AllKeys.Select(k => Tuple.Create(k, ConfigurationManager.AppSettings[k])));
 		}
 	}
 }

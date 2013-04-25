@@ -1,27 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
+using System.Globalization;
+using System.Linq;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using System.Web.Http.SelfHost;
 using RavenFS.Client;
+using RavenFS.Config;
 using RavenFS.Extensions;
-using RavenFS.Tests.Tools;
 
 namespace RavenFS.Tests
 {
-	using System.Globalization;
-	using System.Linq;
-	using RavenFS.Config;
-	using Storage;
-
 	public abstract class MultiHostTestBase : WithNLog, IDisposable
 	{
-		public static readonly int[] Ports = { 19079, 19081 };
+		protected const string UrlBase = "http://localhost:";
+		public static readonly int[] Ports = {19079, 19081};
 
 		private readonly IList<IDisposable> disposables = new List<IDisposable>();
-
-		protected const string UrlBase = "http://localhost:";
 
 		protected MultiHostTestBase()
 		{
@@ -36,25 +31,25 @@ namespace RavenFS.Tests
 			NonAdminHttp.EnsureCanListenToWhenInNonAdminContext(port);
 			HttpSelfHostConfiguration config = null;
 			Task.Factory.StartNew(() => // initialize in MTA thread
-			                      	{
-			                      		config = new HttpSelfHostConfiguration(ServerAddress(port))
-			                      		         	{
-			                      		         		MaxReceivedMessageSize = Int64.MaxValue,
-			                      		         		TransferMode = TransferMode.Streamed
-			                      		         	};
+				                      {
+					                      config = new HttpSelfHostConfiguration(ServerAddress(port))
+						                               {
+							                               MaxReceivedMessageSize = Int64.MaxValue,
+							                               TransferMode = TransferMode.Streamed
+						                               };
 
-			                      		var configuration = new InMemoryConfiguration();
-										configuration.Initialize();
-			                      		configuration.DataDirectory = "~/" + port;
-			                      		configuration.Port = port;
+					                      var configuration = new InMemoryConfiguration();
+					                      configuration.Initialize();
+					                      configuration.DataDirectory = "~/" + port;
+					                      configuration.Port = port;
 
-										IOExtensions.DeleteDirectory(configuration.DataDirectory);
+					                      IOExtensions.DeleteDirectory(configuration.DataDirectory);
 
-										var ravenFileSystem = new RavenFileSystem(configuration);
-			                      		ravenFileSystem.Start(config);
-			                      		disposables.Add(ravenFileSystem);
-			                      	})
-				.Wait();
+					                      var ravenFileSystem = new RavenFileSystem(configuration);
+					                      ravenFileSystem.Start(config);
+					                      disposables.Add(ravenFileSystem);
+				                      })
+			    .Wait();
 
 			var server = new HttpSelfHostServer(config);
 			server.OpenAsync().Wait();

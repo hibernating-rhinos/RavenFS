@@ -59,11 +59,9 @@ namespace RavenFS.Util
 		{
 			BufferTracker value;
 			if (trackLeakedBuffers.TryGetValue(buffer, out value))
-			{
 				value.Discard();
-			}
+
 			bufferManager.ReturnBuffer(buffer);
 		}
 	}
-
 }

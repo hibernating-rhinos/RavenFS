@@ -27,12 +27,10 @@ namespace RavenFS.Studio.Models
 	        {
 	            var sb = new StringBuilder();
 
-	            if (exception != null)
-	            {
-	                sb.Append(exception.ToString());
-	            }
+		        if (exception != null)
+			        sb.Append(exception.ToString());
 
-	            sb.AppendLine();
+		        sb.AppendLine();
 	            sb.AppendLine();
 
                 if (details != null)

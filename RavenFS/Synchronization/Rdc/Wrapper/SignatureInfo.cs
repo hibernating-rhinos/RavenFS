@@ -3,46 +3,47 @@
 // //     Copyright (c) Hibernating Rhinos LTD. All rights reserved.
 // // </copyright>
 // //-----------------------------------------------------------------------
+
+using System;
+using System.Text.RegularExpressions;
+
 namespace RavenFS.Synchronization.Rdc.Wrapper
 {
-	using System;
-	using System.Text.RegularExpressions;
-
 	public class SignatureInfo
 	{
-        public SignatureInfo(int level, string fileName)
-        {
-            FileName = fileName;
-            Level = level;
-        }
+		private static readonly Regex SigFileNamePattern = new Regex(@"^(.*?)\.([0-9])\.sig$");
 
-        public string FileName { get; private set; }
+		public SignatureInfo(int level, string fileName)
+		{
+			FileName = fileName;
+			Level = level;
+		}
 
-        public int Level { get; private set; }
+		public string FileName { get; private set; }
 
-        public string Name
-        {
-            get { return FileName + "." + Level + ".sig"; }
+		public int Level { get; private set; }
+
+		public string Name
+		{
+			get { return FileName + "." + Level + ".sig"; }
 		}
 
 		public long Length { get; set; }
 
-        public static SignatureInfo Parse(string sigName)
-        {
-            var extracted = ExtractFileNameAndLevel(sigName);
-            return new SignatureInfo(extracted.Item2, extracted.Item1);
-        }
+		public static SignatureInfo Parse(string sigName)
+		{
+			var extracted = ExtractFileNameAndLevel(sigName);
+			return new SignatureInfo(extracted.Item2, extracted.Item1);
+		}
 
-	    private static readonly Regex SigFileNamePattern = new Regex(@"^(.*?)\.([0-9])\.sig$");
-
-        private static Tuple<string, int> ExtractFileNameAndLevel(string sigName)
-        {
-            var matcher = SigFileNamePattern.Match(sigName);
-            if (matcher.Success)
-            {
-                return new Tuple<string, int>(matcher.Groups[1].Value, int.Parse(matcher.Groups[2].Value));
-            }
-            throw new FormatException("SigName: " + sigName + " is not valid");
-        }
+		private static Tuple<string, int> ExtractFileNameAndLevel(string sigName)
+		{
+			var matcher = SigFileNamePattern.Match(sigName);
+			if (matcher.Success)
+			{
+				return new Tuple<string, int>(matcher.Groups[1].Value, int.Parse(matcher.Groups[2].Value));
+			}
+			throw new FormatException("SigName: " + sigName + " is not valid");
+		}
 	}
 }

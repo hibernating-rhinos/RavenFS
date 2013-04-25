@@ -1,9 +1,9 @@
-﻿namespace RavenFS.Infrastructure
-{
-	using System;
-	using System.Collections.Generic;
-	using System.Web.Http.Dependencies;
+﻿using System;
+using System.Collections.Generic;
+using System.Web.Http.Dependencies;
 
+namespace RavenFS.Infrastructure
+{
 	public class DelegateDependencyResolver : IDependencyResolver
 	{
 		private readonly Func<Type, object> getService;

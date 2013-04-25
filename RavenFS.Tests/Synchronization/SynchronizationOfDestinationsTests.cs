@@ -1,20 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
+using System.Linq;
+using RavenFS.Client;
+using RavenFS.Extensions;
+using RavenFS.Synchronization;
+using RavenFS.Tests.Synchronization.IO;
+using RavenFS.Util;
+using Xunit;
+
 namespace RavenFS.Tests.Synchronization
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Collections.Specialized;
-	using System.IO;
-	using System.Linq;
-	using System.Text;
-	using IO;
-	using Newtonsoft.Json;
-	using RavenFS.Client;
-	using RavenFS.Extensions;
-	using RavenFS.Notifications;
-	using RavenFS.Synchronization;
-	using RavenFS.Util;
-	using Xunit;
-
 	public class SynchronizationOfDestinationsTests : MultiHostTestBase
 	{
 		private const int AddtitionalServerInstancePortNumber = 19083;
@@ -45,10 +42,18 @@ namespace RavenFS.Tests.Synchronization
 			sourceContent.Position = 0;
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destination1Client.ServerUrl },
-																										{ "url", destination2Client.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination1Client
+						                                                                                         .ServerUrl
+					                                                                                         },
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination2Client
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
@@ -71,15 +76,15 @@ namespace RavenFS.Tests.Synchronization
 			Assert.Equal(sourceContent.Length, result2.BytesCopied + result2.BytesTransfered);
 
 			// check content of files
-			string destination1Md5 = null;
+			string destination1Md5;
 			using (var resultFileContent = new MemoryStream())
 			{
 				destination1Client.DownloadAsync("test.bin", resultFileContent).Wait();
 				resultFileContent.Position = 0;
-				destination1Md5 = IOExtensions.GetMD5Hash(resultFileContent);
+				destination1Md5 = resultFileContent.GetMD5Hash();
 			}
 
-			string destination2Md5 = null;
+			string destination2Md5;
 			using (var resultFileContent = new MemoryStream())
 			{
 				destination2Client.DownloadAsync("test.bin", resultFileContent).Wait();
@@ -104,9 +109,13 @@ namespace RavenFS.Tests.Synchronization
 			sourceClient.UploadAsync("test.bin", new RandomStream(1024)).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			// synchronize from source to destination
 			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
@@ -115,9 +124,13 @@ namespace RavenFS.Tests.Synchronization
 			Assert.Equal(SynchronizationType.ContentUpdate, destinationSyncResults[0].Reports.ToArray()[0].Type);
 
 			destinationClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", sourceClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                              {
+					                                                                                              {
+						                                                                                              "url",
+						                                                                                              sourceClient
+						                                                                                              .ServerUrl
+					                                                                                              }
+				                                                                                              }).Wait();
 
 			// synchronize from destination to source
 			var sourceSyncResults = destinationClient.Synchronization.SynchronizeDestinationsAsync().Result;
@@ -135,15 +148,19 @@ namespace RavenFS.Tests.Synchronization
 			var source1Content = new RandomStream(10000);
 
 			sourceClient.UploadAsync("test1.bin", source1Content).Wait();
-			
+
 			var source2Content = new RandomStream(10000);
 
 			sourceClient.UploadAsync("test2.bin", source2Content).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
@@ -170,9 +187,13 @@ namespace RavenFS.Tests.Synchronization
 			sourceClient.UploadAsync("test2.bin", source2Content).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
@@ -197,14 +218,19 @@ namespace RavenFS.Tests.Synchronization
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
 			var synchronizationDetails =
-				sourceClient.Config.GetConfig(RavenFileNameHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result.AsObject<SynchronizationDetails>();
+				sourceClient.Config.GetConfig(RavenFileNameHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl))
+				            .Result.AsObject<SynchronizationDetails>();
 
 			Assert.Equal("test.bin", synchronizationDetails.FileName);
 			Assert.Equal(destinationClient.ServerUrl, synchronizationDetails.DestinationUrl);
@@ -224,13 +250,17 @@ namespace RavenFS.Tests.Synchronization
 
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
-			
+
 			// start synchronization again to force confirmation by source
-			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait(); 
+			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
 			var shouldBeNull =
 				sourceClient.Config.GetConfig(RavenFileNameHelper.SyncNameForFile("test.bin", destinationClient.ServerUrl)).Result;
@@ -245,7 +275,7 @@ namespace RavenFS.Tests.Synchronization
 			var sourceClient = NewClient(0);
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationLimit,
-										  new NameValueCollection { { "value", "\"1\"" } }).Wait();
+			                              new NameValueCollection {{"value", "\"1\""}}).Wait();
 
 			var destinationClient = NewClient(1);
 
@@ -253,13 +283,17 @@ namespace RavenFS.Tests.Synchronization
 			sourceClient.UploadAsync("test2.bin", sourceContent).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
 			var pendingSynchronizations = sourceClient.Synchronization.GetPendingAsync().Result;
-			
+
 			Assert.Equal(1, pendingSynchronizations.TotalCount);
 			Assert.Equal(destinationClient.ServerUrl, pendingSynchronizations.Items[0].DestinationUrl);
 		}
@@ -276,7 +310,7 @@ namespace RavenFS.Tests.Synchronization
 
 			var sourceContent = new MemoryStream();
 			var streamWriter = new StreamWriter(sourceContent);
-			var expected = new string('a', 1024 * 1024 * 10);
+			var expected = new string('a', 1024*1024*10);
 			streamWriter.Write(expected);
 			streamWriter.Flush();
 			sourceContent.Position = 0;
@@ -284,10 +318,18 @@ namespace RavenFS.Tests.Synchronization
 			sourceClient.UploadAsync("test.txt", sourceContent).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destination1Client.ServerUrl },
-																										{ "url", destination2Client.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination1Client
+						                                                                                         .ServerUrl
+					                                                                                         },
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination2Client
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			// push file to all destinations
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
@@ -295,14 +337,22 @@ namespace RavenFS.Tests.Synchronization
 			// prevent pushing files after metadata update
 			sourceClient.Config.DeleteConfig(SynchronizationConstants.RavenSynchronizationDestinations).Wait();
 
-			sourceClient.UpdateMetadataAsync("test.txt", new NameValueCollection() { { "value", "shouldBeSynchronized" } }).Wait();
+			sourceClient.UpdateMetadataAsync("test.txt", new NameValueCollection {{"value", "shouldBeSynchronized"}}).Wait();
 
 			// add destinations again
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destination1Client.ServerUrl },
-																										{ "url", destination2Client.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination1Client
+						                                                                                         .ServerUrl
+					                                                                                         },
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination2Client
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			// should synchronize metadata
 			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
@@ -319,7 +369,7 @@ namespace RavenFS.Tests.Synchronization
 			Assert.Equal("shouldBeSynchronized", destination1Client.GetMetadataForAsync("test.txt").Result["value"]);
 			Assert.Equal("shouldBeSynchronized", destination2Client.GetMetadataForAsync("test.txt").Result["value"]);
 		}
-		
+
 		[Fact]
 		public void Should_rename_file_on_all_destinations()
 		{
@@ -333,25 +383,41 @@ namespace RavenFS.Tests.Synchronization
 			// upload file to all servers
 			sourceClient.UploadAsync("test.bin", new RandomStream(10)).Wait();
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destination1Client.ServerUrl },
-																										{ "url", destination2Client.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination1Client
+						                                                                                         .ServerUrl
+					                                                                                         },
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination2Client
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
 			sourceClient.Config.DeleteConfig(SynchronizationConstants.RavenSynchronizationDestinations).Wait();
-			
+
 
 			// delete file on source
 			sourceClient.RenameAsync("test.bin", "rename.bin").Wait();
 
 			// set up destinations
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destination1Client.ServerUrl },
-																										{ "url", destination2Client.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination1Client
+						                                                                                         .ServerUrl
+					                                                                                         },
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination2Client
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
@@ -390,10 +456,18 @@ namespace RavenFS.Tests.Synchronization
 
 			// set up destinations
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destination1Client.ServerUrl },
-																										{ "url", destination2Client.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination1Client
+						                                                                                         .ServerUrl
+					                                                                                         },
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destination2Client
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
@@ -413,7 +487,7 @@ namespace RavenFS.Tests.Synchronization
 		[Fact]
 		public void Should_confirm_that_file_is_safe()
 		{
-			var sourceContent = new RandomStream(1024 * 1024);
+			var sourceContent = new RandomStream(1024*1024);
 
 			var sourceClient = NewClient(1);
 			var destinationClient = NewClient(0);
@@ -421,13 +495,26 @@ namespace RavenFS.Tests.Synchronization
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
-			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>> { new Tuple<string, Guid>("test.bin", sourceClient.GetMetadataForAsync("test.bin").Result.Value<Guid>("ETag"))}).Result;
+			var confirmations =
+				destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>>
+					                                                    {
+						                                                    new Tuple<string, Guid>(
+							                                                    "test.bin",
+							                                                    sourceClient.GetMetadataForAsync
+								                                                    ("test.bin")
+							                                                                .Result.Value<Guid>(
+								                                                                "ETag"))
+					                                                    }).Result;
 
 			Assert.Equal(1, confirmations.Count());
 			Assert.Equal(FileStatus.Safe, confirmations.ToArray()[0].Status);
@@ -437,7 +524,7 @@ namespace RavenFS.Tests.Synchronization
 		[Fact]
 		public void Should_say_that_file_status_is_unknown_if_there_is_different_etag()
 		{
-			var sourceContent = new RandomStream(1024 * 1024);
+			var sourceContent = new RandomStream(1024*1024);
 
 			var sourceClient = NewClient(1);
 			var destinationClient = NewClient(0);
@@ -445,15 +532,25 @@ namespace RavenFS.Tests.Synchronization
 			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
 
 			var differentETag = Guid.NewGuid();
 
-			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>> { new Tuple<string, Guid>("test.bin", differentETag) }).Result;
+			var confirmations =
+				destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>>
+					                                                    {
+						                                                    new Tuple<string, Guid>(
+							                                                    "test.bin", differentETag)
+					                                                    })
+				                 .Result;
 
 			Assert.Equal(1, confirmations.Count());
 			Assert.Equal(FileStatus.Unknown, confirmations.ToArray()[0].Status);
@@ -465,13 +562,18 @@ namespace RavenFS.Tests.Synchronization
 		{
 			var destinationClient = NewClient(0);
 
-			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>> { new Tuple<string, Guid>("test.bin", Guid.Empty) }).Result;
+			var confirmations =
+				destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>>
+					                                                    {
+						                                                    new Tuple<string, Guid>(
+							                                                    "test.bin", Guid.Empty)
+					                                                    }).Result;
 
 			Assert.Equal(1, confirmations.Count());
 			Assert.Equal(FileStatus.Unknown, confirmations.ToArray()[0].Status);
 			Assert.Equal("test.bin", confirmations.ToArray()[0].FileName);
 		}
-		
+
 		[Fact]
 		public void Should_report_that_file_is_broken_if_last_synchronization_set_exception()
 		{
@@ -479,8 +581,8 @@ namespace RavenFS.Tests.Synchronization
 
 			var sampleGuid = Guid.NewGuid();
 
-			var failureSynchronization = new SynchronizationReport("test.bin",  sampleGuid, SynchronizationType.Unknown)
-			                             	{Exception = new Exception("There was an exception in last synchronization.")};
+			var failureSynchronization = new SynchronizationReport("test.bin", sampleGuid, SynchronizationType.Unknown)
+				                             {Exception = new Exception("There was an exception in last synchronization.")};
 
 			//var sb = new StringBuilder();
 			//var jw = new JsonTextWriter(new StringWriter(sb));
@@ -488,9 +590,15 @@ namespace RavenFS.Tests.Synchronization
 
 			//destinationClient.Config.SetConfig(RavenFileNameHelper.SyncResultNameForFile("test.bin"),
 			//								   new NameValueCollection() {{"value", sb.ToString()}}).Wait();
-			destinationClient.Config.SetConfig(RavenFileNameHelper.SyncResultNameForFile("test.bin"), failureSynchronization.AsConfig()).Wait();
+			destinationClient.Config.SetConfig(RavenFileNameHelper.SyncResultNameForFile("test.bin"),
+			                                   failureSynchronization.AsConfig()).Wait();
 
-			var confirmations = destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>> { new Tuple<string, Guid>("test.bin", sampleGuid) }).Result;
+			var confirmations =
+				destinationClient.Synchronization.ConfirmFilesAsync(new List<Tuple<string, Guid>>
+					                                                    {
+						                                                    new Tuple<string, Guid>(
+							                                                    "test.bin", sampleGuid)
+					                                                    }).Result;
 
 			Assert.Equal(1, confirmations.Count());
 			Assert.Equal(FileStatus.Broken, confirmations.ToArray()[0].Status);
@@ -505,15 +613,19 @@ namespace RavenFS.Tests.Synchronization
 
 			destinationClient.UploadAsync("file.bin",
 			                              new NameValueCollection
-			                              	{{SynchronizationConstants.RavenSynchronizationConflict, "true"}},
+				                              {{SynchronizationConstants.RavenSynchronizationConflict, "true"}},
 			                              new RandomStream(10)).Wait();
 
 			sourceClient.UploadAsync("file.bin", new RandomStream(10)).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
@@ -531,9 +643,13 @@ namespace RavenFS.Tests.Synchronization
 			                         new RandomStream(10)).Wait();
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			var destinationSyncResults = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
 
@@ -558,9 +674,13 @@ namespace RavenFS.Tests.Synchronization
 			var destinationClient = NewClient(1);
 
 			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-			                                                                                     	{
-			                                                                                     		{ "url", destinationClient.ServerUrl }
-			                                                                                     	}).Wait();
+				                                                                                         {
+					                                                                                         {
+						                                                                                         "url",
+						                                                                                         destinationClient
+						                                                                                         .ServerUrl
+					                                                                                         }
+				                                                                                         }).Wait();
 
 			IEnumerable<DestinationSyncResult> results = null;
 

@@ -8,16 +8,12 @@
 		public override bool Equals(object obj)
 		{
 			if (obj == null || GetType() != obj.GetType())
-			{
 				return false;
-			}
 
 			var page = obj as PageInformation;
 
 			if (page == null)
-			{
 				return false;
-			}
 
 			return page.Id == Id && page.Size == Size;
 		}

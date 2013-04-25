@@ -131,7 +131,7 @@ namespace RavenFS.Studio.Infrastructure
 
         private void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            NotifyCollectionChangedEventHandler handler = CollectionChanged;
+            var handler = CollectionChanged;
             if (handler != null) handler(this, e);
         }
 
@@ -243,7 +243,7 @@ namespace RavenFS.Studio.Infrastructure
 
         private void OnCurrentChanging(CurrentChangingEventArgs e)
         {
-            CurrentChangingEventHandler handler = CurrentChanging;
+            var handler = CurrentChanging;
             if (handler != null) handler(this, e);
         }
 
@@ -251,7 +251,7 @@ namespace RavenFS.Studio.Infrastructure
 
         private void OnCurrentChanged(EventArgs e)
         {
-            EventHandler handler = CurrentChanged;
+            var handler = CurrentChanged;
             if (handler != null) handler(this, e);
         }
 
@@ -279,7 +279,7 @@ namespace RavenFS.Studio.Infrastructure
 
         protected void OnQueryItemVisibility(QueryItemVisibilityEventArgs e)
         {
-            EventHandler<QueryItemVisibilityEventArgs> handler = QueryItemVisibility;
+            var handler = QueryItemVisibility;
             if (handler != null) handler(this, e);
         }
     }

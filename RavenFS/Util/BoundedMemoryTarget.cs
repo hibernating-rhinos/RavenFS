@@ -1,14 +1,24 @@
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using NLog;
+using NLog.Targets;
+
 namespace RavenFS.Util
 {
-	using System.Collections.Concurrent;
-	using System.Collections.Generic;
-	using NLog;
-	using NLog.Targets;
-
 	public class BoundedMemoryTarget : Target
 	{
 		private ConcurrentQueue<LogEventInfo> generalLog = new ConcurrentQueue<LogEventInfo>();
 		private ConcurrentQueue<LogEventInfo> warnLog = new ConcurrentQueue<LogEventInfo>();
+
+		public IEnumerable<LogEventInfo> GeneralLog
+		{
+			get { return generalLog; }
+		}
+
+		public IEnumerable<LogEventInfo> WarnLog
+		{
+			get { return warnLog; }
+		}
 
 		protected override void Write(LogEventInfo logEvent)
 		{
@@ -25,16 +35,6 @@ namespace RavenFS.Util
 
 			LogEventInfo _;
 			logEventInfos.TryDequeue(out _);
-		}
-
-		public IEnumerable<LogEventInfo> GeneralLog
-		{
-			get { return generalLog; }
-		}
-
-		public IEnumerable<LogEventInfo> WarnLog
-		{
-			get { return warnLog; }
 		}
 
 		public void Clear()

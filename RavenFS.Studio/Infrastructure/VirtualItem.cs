@@ -22,11 +22,10 @@ namespace RavenFS.Studio.Infrastructure
         {
             get
             {
-                if (!IsRealized && !DataFetchError)
-                {
-                    _parent.RealizeItemRequested(Index);
-                }
-                return _item;
+	            if (!IsRealized && !DataFetchError)
+		            _parent.RealizeItemRequested(Index);
+
+	            return _item;
             }
             private set
             {
@@ -89,7 +88,7 @@ namespace RavenFS.Studio.Infrastructure
 
         protected void OnPropertyChanged(PropertyChangedEventArgs e)
         {
-            PropertyChangedEventHandler handler = PropertyChanged;
+            var handler = PropertyChanged;
             if (handler != null) handler(this, e);
         }
     }

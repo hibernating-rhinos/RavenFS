@@ -1,20 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using RavenFS.Studio.Infrastructure;
 
 namespace RavenFS.Studio.Models
@@ -41,10 +31,8 @@ namespace RavenFS.Studio.Models
 
         private void HandleClearCompletedOperationsAutomaticallyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (ClearCompletedOperationsAutomatically.Value)
-            {
-                ClearOperations(o => o.Status == AsyncOperationStatus.Completed);
-            }
+	        if (ClearCompletedOperationsAutomatically.Value)
+		        ClearOperations(o => o.Status == AsyncOperationStatus.Completed);
         }
 
         private void ClearOperations(Func<AsyncOperationModel, bool> predicate)

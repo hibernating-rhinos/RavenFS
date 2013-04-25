@@ -1,13 +1,4 @@
 ﻿using System;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Models
 {
@@ -34,10 +25,8 @@ namespace RavenFS.Studio.Models
                 {
                     Name = fullPath.Substring(lastSlash + 1);
                     Folder = fullPath.Substring(0, lastSlash);
-                    if (!Folder.StartsWith("/"))
-                    {
-                        Folder = "/" + Folder;
-                    }
+	                if (!Folder.StartsWith("/"))
+		                Folder = "/" + Folder;
                 }
                 else if (lastSlash == 0)
                 {

@@ -1,14 +1,14 @@
-﻿namespace RavenFS.Tests.Synchronization
-{
-	using System;
-	using System.Collections.Specialized;
-	using System.IO;
-	using System.Linq;
-	using Client;
-	using Extensions;
-	using IO;
-	using Xunit;
+﻿using System;
+using System.Collections.Specialized;
+using System.IO;
+using System.Linq;
+using RavenFS.Client;
+using RavenFS.Extensions;
+using RavenFS.Tests.Synchronization.IO;
+using Xunit;
 
+namespace RavenFS.Tests.Synchronization
+{
 	public class FileChangesPropagationTests : MultiHostTestBase
 	{
 		private const int AddtitionalServerInstancePortNumber = 19083;
@@ -18,14 +18,14 @@
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
-			var content = new MemoryStream(new byte[] { 1, 2, 3 });
+			var content = new MemoryStream(new byte[] {1, 2, 3});
 
 			var server1 = NewClient(0);
 			var server2 = NewClient(1);
 			var server3 = new RavenFileSystemClient(ServerAddress(AddtitionalServerInstancePortNumber));
 
 			content.Position = 0;
-			server1.UploadAsync("test.bin", new NameValueCollection() { { "test", "value" } }, content).Wait();
+			server1.UploadAsync("test.bin", new NameValueCollection {{"test", "value"}}, content).Wait();
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
@@ -65,7 +65,7 @@
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
-			var buffer = new byte[1024 * 1024 * 2]; // 2 MB
+			var buffer = new byte[1024*1024*2]; // 2 MB
 			new Random().NextBytes(buffer);
 
 			var content = new MemoryStream(buffer);
@@ -76,7 +76,7 @@
 			var server3 = new RavenFileSystemClient(ServerAddress(AddtitionalServerInstancePortNumber));
 
 			content.Position = 0;
-			server1.UploadAsync("test.bin", new NameValueCollection() { { "test", "value" } }, content).Wait();
+			server1.UploadAsync("test.bin", new NameValueCollection {{"test", "value"}}, content).Wait();
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
@@ -102,7 +102,7 @@
 			Assert.Equal(SynchronizationType.ContentUpdate, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 
 			// On all servers should have the same content of the file
-			string server1Md5 = null;
+			string server1Md5;
 			using (var resultFileContent = new MemoryStream())
 			{
 				server1.DownloadAsync("test.bin", resultFileContent).Wait();
@@ -110,7 +110,7 @@
 				server1Md5 = resultFileContent.GetMD5Hash();
 			}
 
-			string server2Md5 = null;
+			string server2Md5;
 			using (var resultFileContent = new MemoryStream())
 			{
 				server2.DownloadAsync("test.bin", resultFileContent).Wait();
@@ -118,7 +118,7 @@
 				server2Md5 = resultFileContent.GetMD5Hash();
 			}
 
-			string server3Md5 = null;
+			string server3Md5;
 			using (var resultFileContent = new MemoryStream())
 			{
 				server3.DownloadAsync("test.bin", resultFileContent).Wait();
@@ -135,14 +135,14 @@
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
-			var content = new MemoryStream(new byte[] { 1, 2, 3 });
+			var content = new MemoryStream(new byte[] {1, 2, 3});
 
 			var server1 = NewClient(0);
 			var server2 = NewClient(1);
 			var server3 = new RavenFileSystemClient(ServerAddress(AddtitionalServerInstancePortNumber));
 
 			content.Position = 0;
-			server1.UploadAsync("test.bin", new NameValueCollection() { { "test", "value" } }, content).Wait();
+			server1.UploadAsync("test.bin", new NameValueCollection {{"test", "value"}}, content).Wait();
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
@@ -179,14 +179,14 @@
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
-			var content = new MemoryStream(new byte[] { 1, 2, 3 });
+			var content = new MemoryStream(new byte[] {1, 2, 3});
 
 			var server1 = NewClient(0);
 			var server2 = NewClient(1);
 			var server3 = new RavenFileSystemClient(ServerAddress(AddtitionalServerInstancePortNumber));
 
 			content.Position = 0;
-			server1.UploadAsync("test.bin", new NameValueCollection() { { "test", "value" } }, content).Wait();
+			server1.UploadAsync("test.bin", new NameValueCollection {{"test", "value"}}, content).Wait();
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
@@ -198,7 +198,7 @@
 
 			SyncTestUtils.TurnOffSynchronization(server1);
 
-			server1.UpdateMetadataAsync("test.bin", new NameValueCollection() {{"new_test", "new_value"}}).Wait();
+			server1.UpdateMetadataAsync("test.bin", new NameValueCollection {{"new_test", "new_value"}}).Wait();
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 

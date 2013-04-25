@@ -36,8 +36,8 @@ namespace RavenFS.Client.Changes
 			// 5) 65 is A, add 27 to this (minus 10 from 37 as these are digits) = 92. 
 			//    Add 6 to 92, as 91-96 are symbols. 98 is b. 
 			// 6)  
-			long x = value % 62L;
-			long y = value / 62L;
+			var x = value % 62L;
+			var y = value / 62L;
 			if (y > 0)
 				return Base62ToString(y) + ValToChar(x).ToString(CultureInfo.InvariantCulture);
 			return ValToChar(x).ToString(CultureInfo.InvariantCulture);
@@ -52,8 +52,8 @@ namespace RavenFS.Client.Changes
 					ascii += 6;
 				return (char)ascii;
 			}
-			else
-				return value.ToString()[0];
-		} 
+
+			return value.ToString()[0];
+		}
 	}
 }

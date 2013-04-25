@@ -1,14 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace RavenFS.Studio.Infrastructure
 {
@@ -24,7 +15,7 @@ namespace RavenFS.Studio.Infrastructure
         public void NotifySelectionChanged(int count, Func<IEnumerable> selectedItemsEnumerableProvider)
         {
             this.count = count;
-            this.selectedItemsProvider = selectedItemsEnumerableProvider;
+            selectedItemsProvider = selectedItemsEnumerableProvider;
             OnSelectionChanged(EventArgs.Empty);
         }
 
@@ -32,18 +23,16 @@ namespace RavenFS.Studio.Infrastructure
 
         protected IEnumerable GetSelectedItems()
         {
-            if (selectedItemsProvider != null)
+	        if (selectedItemsProvider != null)
             {
                 var snapshot = selectedItemsProvider();
                 return snapshot;
             }
-            else
-            {
-                return new object[0];
-            }
+	        
+			return new object[0];
         }
 
-        protected void SetDesiredSelection(IList items)
+	    protected void SetDesiredSelection(IList items)
         {
             OnDesiredSelectionChanged(new DesiredSelectionChangedEventArgs(items));
         }

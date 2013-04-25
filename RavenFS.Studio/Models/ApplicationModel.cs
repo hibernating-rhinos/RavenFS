@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
@@ -19,9 +18,8 @@ namespace RavenFS.Studio.Models
 		{
             Notifications = new ObservableCollection<Notification>();
             Notifications.CollectionChanged += delegate { OnPropertyChanged(() => ErrorCount); };
-			Client = new RavenFileSystemClient(DetermineUri());
-			Client.IsObservingFailedUploads = true;
-		    AsyncOperations = new AsyncOperationsModel();
+			Client = new RavenFileSystemClient(DetermineUri()) {IsObservingFailedUploads = true};
+			AsyncOperations = new AsyncOperationsModel();
 		    State = new ApplicationState();
 		}
 
@@ -44,16 +42,14 @@ namespace RavenFS.Studio.Models
             Execute.OnTheUI(() =>
             {
                 Notifications.Add(notification);
-                if (Notifications.Count > 10)
-                {
-                    Notifications.RemoveAt(0);
-                }
+	            if (Notifications.Count > 10)
+		            Notifications.RemoveAt(0);
             });
         }
 
         public void AddInfoNotification(string message)
         {
-            AddNotification(new Notification(message, NotificationLevel.Info));
+            AddNotification(new Notification(message));
         }
 
         public void AddWarningNotification(string message)
@@ -68,32 +64,25 @@ namespace RavenFS.Studio.Models
 
 		private static string DetermineUri()
 		{
-            if (DesignerProperties.IsInDesignTool)
-            {
-                return string.Empty;
-            }
+			if (DesignerProperties.IsInDesignTool)
+				return string.Empty;
 
-            // check for a server UI in the InitParams of the Silverlight Host
+			// check for a server UI in the InitParams of the Silverlight Host
             // this allows us to configure a debug page on the local file system that we can load in
             // SilverlightSpy to inspect the XAP
-            if (Application.Current.Host.InitParams.ContainsKey("ServerUri"))
-            {
-                return Application.Current.Host.InitParams["ServerUri"];
-            }
+			if (Application.Current.Host.InitParams.ContainsKey("ServerUri"))
+				return Application.Current.Host.InitParams["ServerUri"];
 
-		    var documentUri = HtmlPage.Document.DocumentUri;
-		    if (documentUri.Scheme == "file")
-			{
+			var documentUri = HtmlPage.Document.DocumentUri;
+			if (documentUri.Scheme == "file")
 				return "http://localhost:9090";
-			}
-		    var path = documentUri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
+			
+			var path = documentUri.GetComponents(UriComponents.Path, UriFormat.UriEscaped);
             var lastIndexOfUI = path.LastIndexOf("ui");
-            if (lastIndexOfUI != -1)
-			{
-                path = path.Substring(0, lastIndexOfUI);
-			}
+			if (lastIndexOfUI != -1)
+				path = path.Substring(0, lastIndexOfUI);
 
-		    var uriBuilder = new UriBuilder(documentUri.Scheme, documentUri.DnsSafeHost, documentUri.Port, path);
+			var uriBuilder = new UriBuilder(documentUri.Scheme, documentUri.DnsSafeHost, documentUri.Port, path);
 
 		    return uriBuilder.Uri.ToString();
 		}

@@ -8,7 +8,7 @@
 		private readonly TransactionalStorage storage;
 		private readonly int id;
 		private readonly int level;
-		private long? length = null;
+		private long? length;
 
 		public SignatureReadOnlyStream(TransactionalStorage storage, int id, int level)
 		{

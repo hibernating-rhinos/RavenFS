@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Specialized;
+using RavenFS.Synchronization;
 
 namespace RavenFS.Storage
 {
-	using Synchronization;
-
 	public class FileHeader
 	{
 		public string Name { get; set; }
@@ -13,10 +12,7 @@ namespace RavenFS.Storage
 
 		public string HumaneTotalSize
 		{
-			get
-			{
-				return Humane(TotalSize);
-			}
+			get { return Humane(TotalSize); }
 		}
 
 
@@ -25,32 +21,31 @@ namespace RavenFS.Storage
 			get { return Humane(UploadedSize); }
 		}
 
+		public NameValueCollection Metadata { get; set; }
+
 		public static string Humane(long? size)
 		{
 			if (size == null)
 				return null;
 
 			var absSize = Math.Abs(size.Value);
-			const double GB = 1024 * 1024 * 1024;
-			const double MB = 1024 * 1024 ;
+			const double GB = 1024*1024*1024;
+			const double MB = 1024*1024;
 			const double KB = 1024;
 
 			if (absSize > GB) // GB
-				return string.Format("{0:#,#.##} GBytes", size / GB);
+				return string.Format("{0:#,#.##} GBytes", size/GB);
 			if (absSize > MB)
-				return string.Format("{0:#,#.##} MBytes", size / MB);
+				return string.Format("{0:#,#.##} MBytes", size/MB);
 			if (absSize > KB)
-				return string.Format("{0:#,#.##} KBytes", size / KB);
+				return string.Format("{0:#,#.##} KBytes", size/KB);
 			return string.Format("{0:#,#} Bytes", size);
-
 		}
-
-		public NameValueCollection Metadata { get; set; }
 
 		public bool IsFileBeingUploadedOrUploadHasBeenBroken()
 		{
 			return TotalSize == null || TotalSize != UploadedSize ||
-				       (Metadata[SynchronizationConstants.RavenDeleteMarker] == null && Metadata["Content-MD5"] == null);
+			       (Metadata[SynchronizationConstants.RavenDeleteMarker] == null && Metadata["Content-MD5"] == null);
 		}
 
 		protected bool Equals(FileHeader other)
@@ -63,7 +58,7 @@ namespace RavenFS.Storage
 		{
 			if (ReferenceEquals(null, obj)) return false;
 			if (ReferenceEquals(this, obj)) return true;
-			if (obj.GetType() != this.GetType()) return false;
+			if (obj.GetType() != GetType()) return false;
 			return Equals((FileHeader) obj);
 		}
 
@@ -71,7 +66,7 @@ namespace RavenFS.Storage
 		{
 			unchecked
 			{
-				int hashCode = (Name != null ? Name.GetHashCode() : 0);
+				var hashCode = (Name != null ? Name.GetHashCode() : 0);
 				hashCode = (hashCode*397) ^ TotalSize.GetHashCode();
 				hashCode = (hashCode*397) ^ UploadedSize.GetHashCode();
 				hashCode = (hashCode*397) ^ (Metadata != null ? Metadata.GetHashCode() : 0);

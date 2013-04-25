@@ -1,8 +1,8 @@
-﻿namespace RavenFS.Client
-{
-	using System;
-	using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
+namespace RavenFS.Client
+{
 	public class DestinationSyncResult
 	{
 		public string DestinationServer { get; set; }

@@ -3,30 +3,29 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace RavenFS.Client
 {
-	using Newtonsoft.Json;
-
-	///<summary>
-	/// Extension methods to handle common scenarios
-	///</summary>
+	/// <summary>
+	///     Extension methods to handle common scenarios
+	/// </summary>
 	public static class ExceptionExtensions
 	{
 		public static Task TryThrowBetterError(this Task self)
 		{
 			return self.ContinueWith(task =>
-			{
-				if (task.Status != TaskStatus.Faulted)
-					return task;
+				                         {
+					                         if (task.Status != TaskStatus.Faulted)
+						                         return task;
 
-				var webException = task.Exception.ExtractSingleInnerException() as WebException;
-				if (webException == null || webException.Response == null)
-					return task;
+					                         var webException = task.Exception.ExtractSingleInnerException() as WebException;
+					                         if (webException == null || webException.Response == null)
+						                         return task;
 
-				throw webException.BetterWebExceptionError();
-			})
-			.Unwrap();
+					                         throw webException.BetterWebExceptionError();
+				                         })
+			           .Unwrap();
 		}
 
 		public static Exception BetterWebExceptionError(this WebException webException)
@@ -66,17 +65,17 @@ namespace RavenFS.Client
 		public static Task<T> TryThrowBetterError<T>(this Task<T> self)
 		{
 			return self.ContinueWith(task =>
-			{
-				if (task.Status != TaskStatus.Faulted)
-					return task;
+				                         {
+					                         if (task.Status != TaskStatus.Faulted)
+						                         return task;
 
-				var webException = task.Exception.ExtractSingleInnerException() as WebException;
-				if (webException == null || webException.Response == null)
-					return task;
+					                         var webException = task.Exception.ExtractSingleInnerException() as WebException;
+					                         if (webException == null || webException.Response == null)
+						                         return task;
 
-				throw webException.BetterWebExceptionError();
-			})
-			.Unwrap();
+					                         throw webException.BetterWebExceptionError();
+				                         })
+			           .Unwrap();
 		}
 
 		public static void TryThrowBetterError(this AggregateException aggregateException)
@@ -89,10 +88,10 @@ namespace RavenFS.Client
 		}
 
 		/// <summary>
-		/// Recursively examines the inner exceptions of an <see cref="AggregateException"/> and returns a single child exception.
+		///     Recursively examines the inner exceptions of an <see cref="AggregateException" /> and returns a single child exception.
 		/// </summary>
 		/// <returns>
-		/// If any of the aggregated exceptions have more than one inner exception, null is returned.
+		///     If any of the aggregated exceptions have more than one inner exception, null is returned.
 		/// </returns>
 		public static Exception ExtractSingleInnerException(this AggregateException e)
 		{
@@ -113,18 +112,18 @@ namespace RavenFS.Client
 		}
 
 		/// <summary>
-		/// Extracts a portion of an exception for a user friendly display
+		///     Extracts a portion of an exception for a user friendly display
 		/// </summary>
 		/// <param name="e">The exception.</param>
 		/// <returns>The primary portion of the exception message.</returns>
 		public static string SimplifyError(this Exception e)
 		{
-			var parts = e.Message.Split(new[] {  "\r\n   " }, StringSplitOptions.None);
+			var parts = e.Message.Split(new[] {"\r\n   "}, StringSplitOptions.None);
 			var firstLine = parts.First();
 			var index = firstLine.IndexOf(':');
 			return index > 0
-				? firstLine.Remove(0,index + 2)
-				: firstLine;
+				       ? firstLine.Remove(0, index + 2)
+				       : firstLine;
 		}
 	}
 }

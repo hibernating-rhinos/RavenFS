@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interactivity;
-using Microsoft.Expression.Interactivity.Input;
 
 namespace RavenFS.Studio.Behaviors
 {
@@ -37,10 +36,8 @@ namespace RavenFS.Studio.Behaviors
         protected override void OnEvent(System.EventArgs eventArgs)
         {
             var keyEventArgs = eventArgs as KeyEventArgs;
-            if (keyEventArgs.Key == Key && Keyboard.Modifiers == Modifiers)
-            {
-                InvokeActions(null);
-            }
+	        if (keyEventArgs.Key == Key && Keyboard.Modifiers == Modifiers)
+		        InvokeActions(null);
         }
 	}
 }

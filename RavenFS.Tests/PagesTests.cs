@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Specialized;
 using RavenFS.Extensions;
-using RavenFS.Tests.Tools;
-using RavenFS.Util;
 using Xunit;
 
 namespace RavenFS.Tests
 {
-	using System.Linq;
-	using Storage;
-
 	public class PagesTests : IDisposable
 	{
 		readonly Storage.TransactionalStorage storage;
@@ -18,7 +13,6 @@ namespace RavenFS.Tests
 		                                               	{
 		                                               		{"ETag", "\"" + Guid.Empty +"\""}
 		                                               	};
-
 
 		public PagesTests()
 		{
@@ -151,7 +145,7 @@ namespace RavenFS.Tests
 		[Fact]
 		public void CanInsertAndReadPage()
 		{
-			int key = 0;
+			var key = 0;
 			storage.Batch(accessor =>
 			{
 				key = accessor.InsertPage(new byte[] { 1, 2, 3, 4, 5, 6 }, 4);
