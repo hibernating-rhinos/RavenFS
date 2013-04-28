@@ -271,25 +271,24 @@ namespace RavenFS.Controllers
 
 				SynchronizationTask.Cancel(name);
 
-				ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
-					                                                     {
-						                                                     AssertFileIsNotBeingSynced(name, accessor, true);
-						                                                     StorageOperationsTask.IndicateFileToDelete(name);
+			    ConcurrencyAwareExecutor.Execute(() => Storage.Batch(accessor =>
+			        {
+			            AssertFileIsNotBeingSynced(name, accessor, true);
+			            StorageOperationsTask.IndicateFileToDelete(name);
 
-						                                                     long? contentLength = Request.Content.Headers.ContentLength;
-						                                                     if (Request.Headers.TransferEncodingChunked ?? false)
-						                                                     {
-							                                                     contentLength = null;
-						                                                     }
-						                                                     accessor.PutFile(name, contentLength, headers);
+			            long? contentLength = Request.Content.Headers.ContentLength;
+			            if (Request.Headers.TransferEncodingChunked ?? false)
+			            {
+			                contentLength = null;
+			            }
+			            accessor.PutFile(name, contentLength, headers);
 
-						                                                     Search.Index(name, headers);
-					                                                     }));
+			            Search.Index(name, headers);
+			        }));
 
 				log.Debug("Inserted a new file '{0}' with ETag {1}", name, headers.Value<Guid>("ETag"));
 
-				var contentStream = await Request.Content.ReadAsStreamAsync();
-
+				using(var contentStream = await Request.Content.ReadAsStreamAsync())
 				using (var readFileToDatabase = new ReadFileToDatabase(BufferPool, Storage, contentStream, name))
 				{
 					await readFileToDatabase.Execute();
@@ -373,30 +372,32 @@ namespace RavenFS.Controllers
 
 			public async Task Execute()
 			{
-				var totalSizeRead = await inputStream.ReadAsync(buffer);
+			    while (true)
+			    {
+                    var totalSizeRead = await inputStream.ReadAsync(buffer);
 
-				TotalSizeRead += totalSizeRead;
+                    TotalSizeRead += totalSizeRead;
 
-				if (totalSizeRead == 0) // nothing left to read
-				{
-					storage.Batch(accessor => accessor.CompleteFileUpload(filename));
-					md5Hasher.TransformFinalBlock(new byte[0], 0, 0);
+                    if (totalSizeRead == 0) // nothing left to read
+                    {
+                        storage.Batch(accessor => accessor.CompleteFileUpload(filename));
+                        md5Hasher.TransformFinalBlock(new byte[0], 0, 0);
 
-					FileHash = md5Hasher.Hash.ToStringHash();
+                        FileHash = md5Hasher.Hash.ToStringHash();
 
-					return; // task is done
-				}
+                        return; // task is done
+                    }
 
-				ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor =>
-					                                                     {
-						                                                     var hashKey = accessor.InsertPage(buffer, totalSizeRead);
-						                                                     accessor.AssociatePage(filename, hashKey, pos, totalSizeRead);
-					                                                     }));
+                    ConcurrencyAwareExecutor.Execute(() => storage.Batch(accessor =>
+                    {
+                        var hashKey = accessor.InsertPage(buffer, totalSizeRead);
+                        accessor.AssociatePage(filename, hashKey, pos, totalSizeRead);
+                    }));
 
-				md5Hasher.TransformBlock(buffer, 0, totalSizeRead, null, 0);
+                    md5Hasher.TransformBlock(buffer, 0, totalSizeRead, null, 0);
 
-				pos++;
-				await Execute();
+                    pos++;
+			    }
 			}
 		}
 	}
