@@ -716,7 +716,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void After_file_delete_next_synchronization_should_override_tombsone()
+		public async void After_file_delete_next_synchronization_should_override_tombsone()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);
@@ -725,7 +725,7 @@ namespace RavenFS.Tests.Synchronization
 			sourceContent.Position = 0;
 			source.UploadAsync("test.bin", sourceContent).Wait();
 
-			var report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
+			var report = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
 			Assert.Null(report.Exception);
 
 			destination.DeleteAsync("test.bin").Wait();

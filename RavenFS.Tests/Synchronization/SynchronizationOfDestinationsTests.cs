@@ -269,7 +269,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void File_should_be_in_pending_queue_if_no_synchronization_requests_available()
+		public async void File_should_be_in_pending_queue_if_no_synchronization_requests_available()
 		{
 			var sourceContent = new RandomStream(1);
 			var sourceClient = NewClient(0);
@@ -279,20 +279,20 @@ namespace RavenFS.Tests.Synchronization
 
 			var destinationClient = NewClient(1);
 
-			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
-			sourceClient.UploadAsync("test2.bin", sourceContent).Wait();
+			await sourceClient.UploadAsync("test.bin", sourceContent);
+			await sourceClient.UploadAsync("test2.bin", sourceContent);
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
+			await sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
 				                                                                                         {
 					                                                                                         {
 						                                                                                         "url",
 						                                                                                         destinationClient
 						                                                                                         .ServerUrl
 					                                                                                         }
-				                                                                                         }).Wait();
-			sourceClient.Synchronization.SynchronizeDestinationsAsync().Wait();
+				                                                                                         });
+			await sourceClient.Synchronization.SynchronizeDestinationsAsync();
 
-			var pendingSynchronizations = sourceClient.Synchronization.GetPendingAsync().Result;
+			var pendingSynchronizations = await sourceClient.Synchronization.GetPendingAsync();
 
 			Assert.Equal(1, pendingSynchronizations.TotalCount);
 			Assert.Equal(destinationClient.ServerUrl, pendingSynchronizations.Items[0].DestinationUrl);

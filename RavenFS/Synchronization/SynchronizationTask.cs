@@ -280,28 +280,24 @@ namespace RavenFS.Synchronization
 			for (var i = 0; i < AvailableSynchronizationRequestsTo(destinationUrl); i++)
 			{
 				SynchronizationWorkItem work;
-				if (synchronizationQueue.TryDequeuePendingSynchronization(destinationUrl, out work))
-				{
-					if (synchronizationQueue.IsDifferentWorkForTheSameFileBeingPerformed(work, destinationUrl))
-					{
-						log.Debug("There was an already being performed synchronization of a file '{0}' to {1}", work.FileName,
-						          destinationUrl);
-						synchronizationQueue.EnqueueSynchronization(destinationUrl, work); // add it again at the end of the queue
-					}
-					else
-					{
-						var workTask = PerformSynchronizationAsync(destinationUrl, work);
+				if (!synchronizationQueue.TryDequePendingSynchronization(destinationUrl, out work))
+					break;
 
-						if (forceSyncingContinuation)
-						{
-							workTask.ContinueWith(t => SynchronizePendingFilesAsync(destinationUrl, true).ToArray());
-						}
-						yield return workTask;
-					}
+				if (synchronizationQueue.IsDifferentWorkForTheSameFileBeingPerformed(work, destinationUrl))
+				{
+					log.Debug("There was an already being performed synchronization of a file '{0}' to {1}", work.FileName,
+					          destinationUrl);
+					synchronizationQueue.EnqueueSynchronization(destinationUrl, work); // add it again at the end of the queue
 				}
 				else
 				{
-					break;
+					var workTask = PerformSynchronizationAsync(destinationUrl, work);
+
+					if (forceSyncingContinuation)
+					{
+						workTask.ContinueWith(t => SynchronizePendingFilesAsync(destinationUrl, true).ToArray());
+					}
+					yield return workTask;
 				}
 			}
 		}
