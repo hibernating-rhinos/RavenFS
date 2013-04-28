@@ -6,7 +6,7 @@ namespace RavenFS.Tests.Bugs
 	public class GettingListOfFilesAfterSynchronization : MultiHostTestBase
 	{
 		[Fact]
-		public void Should_work()
+		public async void Should_work()
 		{
 			var ms = new MemoryStream();
 			var streamWriter = new StreamWriter(ms);
@@ -18,11 +18,11 @@ namespace RavenFS.Tests.Bugs
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			string fileName = "abc.txt";
-			sourceClient.UploadAsync(fileName, ms).Wait();
-			sourceClient.Synchronization.StartAsync(fileName, destinationClient.ServerUrl).Wait();
+			var fileName = "abc.txt";
+			await sourceClient.UploadAsync(fileName, ms);
+			await sourceClient.Synchronization.StartAsync(fileName, destinationClient.ServerUrl);
 
-			var destinationFiles = destinationClient.GetFilesAsync("/").Result;
+			var destinationFiles = await destinationClient.GetFilesAsync("/");
 			Assert.True(destinationFiles.FileCount == 1, "count not one");
 			Assert.True(destinationFiles.Files.Length == 1, "not one file");
 			Assert.True(destinationFiles.Files[0].Name == fileName, "name doesnt match");

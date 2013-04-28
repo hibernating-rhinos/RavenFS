@@ -248,7 +248,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void Destination_should_know_what_is_last_file_etag_after_synchronization()
+		public async void Destination_should_know_what_is_last_file_etag_after_synchronization()
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
@@ -259,20 +259,19 @@ namespace RavenFS.Tests.Synchronization
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
-			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
+			await sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent);
 
-			sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Wait();
+			await sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl);
 
-			var lastSynchronization =
-				destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
+			var lastSynchronization = await destinationClient.Synchronization.GetLastSynchronizationFromAsync(await sourceClient.GetServerId());
 
-			var sourceMetadataWithEtag = sourceClient.GetMetadataForAsync("test.bin").Result;
+			var sourceMetadataWithEtag = await sourceClient.GetMetadataForAsync("test.bin");
 
 			Assert.Equal(sourceMetadataWithEtag.Value<Guid>("ETag"), lastSynchronization.LastSourceFileEtag);
 		}
 
 		[Fact]
-		public void Destination_should_not_override_last_etag_if_greater_value_exists()
+		public async void Destination_should_not_override_last_etag_if_greater_value_exists()
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
@@ -283,15 +282,14 @@ namespace RavenFS.Tests.Synchronization
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
-			sourceClient.UploadAsync("test1.bin", sourceMetadata, sourceContent).Wait();
-			sourceClient.UploadAsync("test2.bin", sourceMetadata, sourceContent).Wait();
+			await sourceClient.UploadAsync("test1.bin", sourceMetadata, sourceContent);
+			await sourceClient.UploadAsync("test2.bin", sourceMetadata, sourceContent);
 
-			sourceClient.Synchronization.StartAsync("test2.bin", destinationClient.ServerUrl).Wait();
-			sourceClient.Synchronization.StartAsync("test1.bin", destinationClient.ServerUrl).Wait();
+			await sourceClient.Synchronization.StartAsync("test2.bin", destinationClient.ServerUrl);
+			await sourceClient.Synchronization.StartAsync("test1.bin", destinationClient.ServerUrl);
 
 			var lastSourceETag = sourceClient.GetMetadataForAsync("test2.bin").Result.Value<Guid>("ETag");
-			var lastSynchronization =
-				destinationClient.Synchronization.GetLastSynchronizationFromAsync(sourceClient.GetServerId().Result).Result;
+			var lastSynchronization = await destinationClient.Synchronization.GetLastSynchronizationFromAsync(await sourceClient.GetServerId());
 
 			Assert.Equal(lastSourceETag, lastSynchronization.LastSourceFileEtag);
 		}
@@ -307,7 +305,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void Source_should_upload_file_to_destination_if_doesnt_exist_there()
+		public async void Source_should_upload_file_to_destination_if_doesnt_exist_there()
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
@@ -318,14 +316,12 @@ namespace RavenFS.Tests.Synchronization
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
-			sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent).Wait();
+			await sourceClient.UploadAsync("test.bin", sourceMetadata, sourceContent);
 
-			var sourceSynchronizationReport =
-				sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
-			var resultFileMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
+			var sourceSynchronizationReport = await sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl);
+			var resultFileMetadata = await destinationClient.GetMetadataForAsync("test.bin");
 
-			Assert.Equal(sourceContent.Length,
-			             sourceSynchronizationReport.BytesCopied + sourceSynchronizationReport.BytesTransfered);
+			Assert.Equal(sourceContent.Length, sourceSynchronizationReport.BytesCopied + sourceSynchronizationReport.BytesTransfered);
 			Assert.Equal("some-value", resultFileMetadata["SomeTest-metadata"]);
 		}
 
@@ -435,18 +431,18 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void Should_refuse_to_synchronize_if_limit_of_concurrent_synchronizations_exceeded()
+		public async void Should_refuse_to_synchronize_if_limit_of_concurrent_synchronizations_exceeded()
 		{
 			var sourceContent = new RandomStream(1);
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationLimit,
-			                              new NameValueCollection {{"value", "\"-1\""}}).Wait();
+			await sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationLimit,
+			                              new NameValueCollection {{"value", "\"-1\""}});
 
-			sourceClient.UploadAsync("test.bin", sourceContent).Wait();
+			await sourceClient.UploadAsync("test.bin", sourceContent);
 
-			var synchronizationReport = sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
+			var synchronizationReport = await sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl);
 
 			Assert.Equal(
 				"The limit of active synchronizations to " + destinationClient.ServerUrl +
@@ -534,51 +530,50 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void Should_just_rename_file_in_synchronization_process()
+		public async void Should_just_rename_file_in_synchronization_process()
 		{
 			var content = new MemoryStream(new byte[] {1, 2, 3, 4});
 
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			sourceClient.UploadAsync("test.bin", new NameValueCollection {{"key", "value"}}, content).Wait();
+			await sourceClient.UploadAsync("test.bin", new NameValueCollection {{"key", "value"}}, content);
 			content.Position = 0;
-			destinationClient.UploadAsync("test.bin", new NameValueCollection {{"key", "value"}}, content).Wait();
+			await destinationClient.UploadAsync("test.bin", new NameValueCollection {{"key", "value"}}, content);
 
-			sourceClient.RenameAsync("test.bin", "renamed.bin").Wait();
+			await sourceClient.RenameAsync("test.bin", "renamed.bin");
 
 			// we need to indicate old file name, otherwise content update would be performed because renamed file does not exist on dest
 			var report = SyncTestUtils.ResolveConflictAndSynchronize(sourceClient, destinationClient, "test.bin");
 
 			Assert.Equal(SynchronizationType.Rename, report.Type);
 
-			var testMetadata = destinationClient.GetMetadataForAsync("test.bin").Result;
-			var renamedMetadata = destinationClient.GetMetadataForAsync("renamed.bin").Result;
+			var testMetadata = await destinationClient.GetMetadataForAsync("test.bin");
+			var renamedMetadata = await destinationClient.GetMetadataForAsync("renamed.bin");
 
 			Assert.Null(testMetadata);
 			Assert.NotNull(renamedMetadata);
 
-			var result = destinationClient.GetFilesAsync("/").Result;
+			var result = await destinationClient.GetFilesAsync("/");
 
 			Assert.Equal(1, result.FileCount);
 			Assert.Equal("renamed.bin", result.Files[0].Name);
 		}
 
 		[Fact]
-		public void Empty_file_should_be_synchronized_correctly()
+		public async void Empty_file_should_be_synchronized_correctly()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
-			source.UploadAsync("empty.test", new NameValueCollection {{"should-be-transferred", "true"}}, new MemoryStream())
-			      .Wait();
-			var result = source.Synchronization.StartAsync("empty.test", destination.ServerUrl).Result;
+			await source.UploadAsync("empty.test", new NameValueCollection {{"should-be-transferred", "true"}}, new MemoryStream());
+			var result = await source.Synchronization.StartAsync("empty.test", destination.ServerUrl);
 
 			Assert.Null(result.Exception);
 
 			using (var ms = new MemoryStream())
 			{
-				var metadata = destination.DownloadAsync("empty.test", ms).Result;
+				var metadata = await destination.DownloadAsync("empty.test", ms);
 
 				Assert.Equal("true", metadata["should-be-transferred"]);
 				Assert.Equal(0, ms.Length);
@@ -586,12 +581,12 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void Should_throw_exception_if_synchronized_file_doesnt_exist()
+		public async void Should_throw_exception_if_synchronized_file_doesnt_exist()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
-			var result = source.Synchronization.StartAsync("file_which_doesnt_exist", destination.ServerUrl).Result;
+			var result = await source.Synchronization.StartAsync("file_which_doesnt_exist", destination.ServerUrl);
 
 			Assert.Equal("File did not exist locally", result.Exception.Message);
 		}
@@ -744,31 +739,31 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void Should_save_file_etag_in_report()
+		public async void Should_save_file_etag_in_report()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
 			var sourceContent = new MemoryStream(new byte[] {5, 10, 15});
 			sourceContent.Position = 0;
-			source.UploadAsync("test.bin", sourceContent).Wait();
+			await source.UploadAsync("test.bin", sourceContent);
 
-			var report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
+			var report = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
 
 			Assert.NotEqual(Guid.Empty, report.FileETag);
 		}
 
 		[Fact]
-		public void Should_not_throw_if_file_does_not_exist_on_destination()
+		public async void Should_not_throw_if_file_does_not_exist_on_destination()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
-			source.UploadAsync("test.bin", new RandomStream(1)).Wait();
+			await source.UploadAsync("test.bin", new RandomStream(1));
 
-			source.DeleteAsync("test.bin").Wait();
+			await source.DeleteAsync("test.bin");
 
-			var synchronizationReport = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
+			var synchronizationReport = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
 
 			Assert.Equal(SynchronizationType.Delete, synchronizationReport.Type);
 			Assert.Null(synchronizationReport.Exception);

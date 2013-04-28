@@ -21,12 +21,12 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void NotificationsAreReceivedOnSourceWhenSynchronizationsAreStartedAndFinished()
+		public async void NotificationsAreReceivedOnSourceWhenSynchronizationsAreStartedAndFinished()
 		{
-			source.Notifications.ConnectionTask.Wait();
+			await source.Notifications.ConnectionTask;
 
 			// content update
-			source.UploadAsync("test.bin", new MemoryStream(new byte[] {1, 2, 3})).Wait();
+			await source.UploadAsync("test.bin", new MemoryStream(new byte[] {1, 2, 3}));
 
 			var notificationTask =
 				source.Notifications.SynchronizationUpdates()
@@ -34,14 +34,13 @@ namespace RavenFS.Tests.Synchronization
 				      .Timeout(
 					      TimeSpan.FromSeconds(20)).Take(2).ToArray().
 				       ToTask();
-			source.Notifications.WhenSubscriptionsActive().Wait();
+			await source.Notifications.WhenSubscriptionsActive();
 
-			var report =
-				source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
+			var report = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
 
 			Assert.Null(report.Exception);
 
-			var synchronizationUpdates = notificationTask.Result;
+			var synchronizationUpdates = await notificationTask;
 
 			Assert.Equal(SynchronizationAction.Start, synchronizationUpdates[0].Action);
 			Assert.Equal("test.bin", synchronizationUpdates[0].FileName);
@@ -51,7 +50,7 @@ namespace RavenFS.Tests.Synchronization
 			Assert.Equal(SynchronizationType.ContentUpdate, synchronizationUpdates[1].Type);
 
 			// metadata update
-			source.UpdateMetadataAsync("test.bin", new NameValueCollection {{"key", "value"}}).Wait();
+			await source.UpdateMetadataAsync("test.bin", new NameValueCollection {{"key", "value"}});
 
 			notificationTask =
 				source.Notifications.SynchronizationUpdates()
@@ -60,13 +59,13 @@ namespace RavenFS.Tests.Synchronization
 					      TimeSpan.FromSeconds(20)).
 				       Take(2).ToArray().
 				       ToTask();
-			source.Notifications.WhenSubscriptionsActive().Wait();
+			await source.Notifications.WhenSubscriptionsActive();
 
-			report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
+			report = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
 
 			Assert.Null(report.Exception);
 
-			synchronizationUpdates = notificationTask.Result;
+			synchronizationUpdates = await notificationTask;
 
 			Assert.Equal(SynchronizationAction.Start, synchronizationUpdates[0].Action);
 			Assert.Equal("test.bin", synchronizationUpdates[0].FileName);
@@ -76,7 +75,7 @@ namespace RavenFS.Tests.Synchronization
 			Assert.Equal(SynchronizationType.MetadataUpdate, synchronizationUpdates[1].Type);
 
 			// rename update
-			source.RenameAsync("test.bin", "rename.bin").Wait();
+			await source.RenameAsync("test.bin", "rename.bin");
 
 			notificationTask =
 				source.Notifications.SynchronizationUpdates()
@@ -85,13 +84,13 @@ namespace RavenFS.Tests.Synchronization
 					      TimeSpan.FromSeconds(20)).
 				       Take(2).ToArray().
 				       ToTask();
-			source.Notifications.WhenSubscriptionsActive().Wait();
+			await source.Notifications.WhenSubscriptionsActive();
 
-			report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
+			report = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
 
 			Assert.Null(report.Exception);
 
-			synchronizationUpdates = notificationTask.Result;
+			synchronizationUpdates = await notificationTask;
 
 			Assert.Equal(SynchronizationAction.Start, synchronizationUpdates[0].Action);
 			Assert.Equal("test.bin", synchronizationUpdates[0].FileName);
@@ -101,7 +100,7 @@ namespace RavenFS.Tests.Synchronization
 			Assert.Equal(SynchronizationType.Rename, synchronizationUpdates[1].Type);
 
 			// delete update
-			source.DeleteAsync("rename.bin").Wait();
+			await source.DeleteAsync("rename.bin");
 
 			notificationTask =
 				source.Notifications.SynchronizationUpdates()
@@ -110,13 +109,13 @@ namespace RavenFS.Tests.Synchronization
 					      TimeSpan.FromSeconds(20)).
 				       Take(2).ToArray().
 				       ToTask();
-			source.Notifications.WhenSubscriptionsActive().Wait();
+			await source.Notifications.WhenSubscriptionsActive();
 
-			report = source.Synchronization.StartAsync("rename.bin", destination.ServerUrl).Result;
+			report = await source.Synchronization.StartAsync("rename.bin", destination.ServerUrl);
 
 			Assert.Null(report.Exception);
 
-			synchronizationUpdates = notificationTask.Result;
+			synchronizationUpdates = await notificationTask;
 
 			Assert.Equal(SynchronizationAction.Start, synchronizationUpdates[0].Action);
 			Assert.Equal("rename.bin", synchronizationUpdates[0].FileName);
@@ -127,12 +126,12 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void NotificationsAreReceivedOnDestinationWhenSynchronizationsAreFinished()
+		public async void NotificationsAreReceivedOnDestinationWhenSynchronizationsAreFinished()
 		{
-			destination.Notifications.ConnectionTask.Wait();
+			await destination.Notifications.ConnectionTask;
 
 			// content update
-			source.UploadAsync("test.bin", new MemoryStream(new byte[] {1, 2, 3})).Wait();
+			await source.UploadAsync("test.bin", new MemoryStream(new byte[] {1, 2, 3}));
 
 			var notificationTask =
 				destination.Notifications.SynchronizationUpdates()
@@ -140,21 +139,20 @@ namespace RavenFS.Tests.Synchronization
 				           .Timeout(
 					           TimeSpan.FromSeconds(20)).Take(1).ToArray().
 				            ToTask();
-			source.Notifications.WhenSubscriptionsActive().Wait();
+			await source.Notifications.WhenSubscriptionsActive();
 
-			var report =
-				source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
+			var report = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
 
 			Assert.Null(report.Exception);
 
-			var synchronizationUpdates = notificationTask.Result;
+			var synchronizationUpdates = await notificationTask;
 
 			Assert.Equal(SynchronizationAction.Start, synchronizationUpdates[0].Action);
 			Assert.Equal("test.bin", synchronizationUpdates[0].FileName);
 			Assert.Equal(SynchronizationType.ContentUpdate, synchronizationUpdates[0].Type);
 
 			// metadata update
-			source.UpdateMetadataAsync("test.bin", new NameValueCollection {{"key", "value"}}).Wait();
+			await source.UpdateMetadataAsync("test.bin", new NameValueCollection {{"key", "value"}});
 
 			notificationTask =
 				destination.Notifications.SynchronizationUpdates()
@@ -162,20 +160,20 @@ namespace RavenFS.Tests.Synchronization
 				           .Timeout(
 					           TimeSpan.FromSeconds(20)).Take(1).ToArray().
 				            ToTask();
-			source.Notifications.WhenSubscriptionsActive().Wait();
+			await source.Notifications.WhenSubscriptionsActive();
 
-			report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
+			report = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
 
 			Assert.Null(report.Exception);
 
-			synchronizationUpdates = notificationTask.Result;
+			synchronizationUpdates = await notificationTask;
 
 			Assert.Equal(SynchronizationAction.Start, synchronizationUpdates[0].Action);
 			Assert.Equal("test.bin", synchronizationUpdates[0].FileName);
 			Assert.Equal(SynchronizationType.MetadataUpdate, synchronizationUpdates[0].Type);
 
 			// rename update
-			source.RenameAsync("test.bin", "rename.bin").Wait();
+			await source.RenameAsync("test.bin", "rename.bin");
 
 			notificationTask =
 				destination.Notifications.SynchronizationUpdates()
@@ -183,20 +181,20 @@ namespace RavenFS.Tests.Synchronization
 				           .Timeout(
 					           TimeSpan.FromSeconds(20)).Take(1).ToArray().
 				            ToTask();
-			source.Notifications.WhenSubscriptionsActive().Wait();
+			await source.Notifications.WhenSubscriptionsActive();
 
-			report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
+			report = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
 
 			Assert.Null(report.Exception);
 
-			synchronizationUpdates = notificationTask.Result;
+			synchronizationUpdates = await notificationTask;
 
 			Assert.Equal(SynchronizationAction.Start, synchronizationUpdates[0].Action);
 			Assert.Equal("test.bin", synchronizationUpdates[0].FileName);
 			Assert.Equal(SynchronizationType.Rename, synchronizationUpdates[0].Type);
 
 			// delete update
-			source.DeleteAsync("rename.bin").Wait();
+			await source.DeleteAsync("rename.bin");
 
 			notificationTask =
 				destination.Notifications.SynchronizationUpdates()
@@ -204,13 +202,13 @@ namespace RavenFS.Tests.Synchronization
 				           .Timeout(
 					           TimeSpan.FromSeconds(20)).Take(1).ToArray().
 				            ToTask();
-			source.Notifications.WhenSubscriptionsActive().Wait();
+			await source.Notifications.WhenSubscriptionsActive();
 
-			report = source.Synchronization.StartAsync("rename.bin", destination.ServerUrl).Result;
+			report = await source.Synchronization.StartAsync("rename.bin", destination.ServerUrl);
 
 			Assert.Null(report.Exception);
 
-			synchronizationUpdates = notificationTask.Result;
+			synchronizationUpdates = await notificationTask;
 
 			Assert.Equal(SynchronizationAction.Start, synchronizationUpdates[0].Action);
 			Assert.Equal("rename.bin", synchronizationUpdates[0].FileName);

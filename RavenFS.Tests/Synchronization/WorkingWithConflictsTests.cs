@@ -130,7 +130,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void Must_not_synchronize_file_conflicted_on_source_side()
+		public async void Must_not_synchronize_file_conflicted_on_source_side()
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadataWithConflict = new NameValueCollection
@@ -141,9 +141,9 @@ namespace RavenFS.Tests.Synchronization
 			var destinationClient = NewClient(0);
 			var sourceClient = NewClient(1);
 
-			sourceClient.UploadAsync("test.bin", sourceMetadataWithConflict, sourceContent).Wait();
+			await sourceClient.UploadAsync("test.bin", sourceMetadataWithConflict, sourceContent);
 
-			var shouldBeConflict = sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl).Result;
+			var shouldBeConflict = await sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl);
 
 			Assert.NotNull(shouldBeConflict.Exception);
 			Assert.Equal("File was conflicted on our side", shouldBeConflict.Exception.Message);
@@ -178,13 +178,11 @@ namespace RavenFS.Tests.Synchronization
 			var client = NewClient(1);
 
 			var guid = Guid.NewGuid().ToString();
-			var innerException =
-				SyncTestUtils.ExecuteAndGetInnerException(
-					() =>
-					client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem>(), "http://localhost:12345")
-					      .Wait());
+			var innerException = (WebException)
+				SyncTestUtils.ExecuteAndGetInnerException(async () =>
+					await client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem>(), "http://localhost:12345"));
 
-			Assert.IsType(typeof (FileNotFoundException), innerException);
+			Assert.Equal(HttpStatusCode.NotFound, ((HttpWebResponse)innerException.Response).StatusCode);
 		}
 
 		[Fact]
@@ -385,34 +383,32 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void Source_should_remove_syncing_item_if_conflict_was_resolved_on_destination_by_current()
+		public async void Source_should_remove_syncing_item_if_conflict_was_resolved_on_destination_by_current()
 		{
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			sourceClient.UploadAsync("test", new MemoryStream(new byte[] {1, 2, 3})).Wait();
-			destinationClient.UploadAsync("test", new MemoryStream(new byte[] {1, 2})).Wait();
+			await sourceClient.UploadAsync("test", new MemoryStream(new byte[] {1, 2, 3}));
+			await destinationClient.UploadAsync("test", new MemoryStream(new byte[] {1, 2}));
 
-			var shouldBeConflict = sourceClient.Synchronization.StartAsync("test", destinationClient.ServerUrl).Result;
+			var shouldBeConflict = await sourceClient.Synchronization.StartAsync("test", destinationClient.ServerUrl);
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 
-			destinationClient.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion).Wait();
+			await destinationClient.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion);
 
-			sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
-				                                                                                         {
-					                                                                                         {
-						                                                                                         "url",
-						                                                                                         destinationClient
-						                                                                                         .ServerUrl
-					                                                                                         },
-				                                                                                         }).Wait();
+			await sourceClient.Config.SetConfig(SynchronizationConstants.RavenSynchronizationDestinations, new NameValueCollection
+				{
+					{
+						"url", destinationClient.ServerUrl
+					},
+				});
 
-			var report = sourceClient.Synchronization.SynchronizeDestinationsAsync().Result;
+			var report = await sourceClient.Synchronization.SynchronizeDestinationsAsync();
 			Assert.Null(report.ToArray()[0].Exception);
 
-			var syncingItem =
-				sourceClient.Config.GetConfig(RavenFileNameHelper.SyncNameForFile("test", destinationClient.ServerUrl)).Result;
+			var syncingItem = await
+			                  sourceClient.Config.GetConfig(RavenFileNameHelper.SyncNameForFile("test", destinationClient.ServerUrl));
 			Assert.Null(syncingItem);
 		}
 
@@ -438,28 +434,28 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void Should_create_a_conflict_when_attempt_to_synchronize_a_delete_while_documents_have_different_versions()
+		public async void Should_create_a_conflict_when_attempt_to_synchronize_a_delete_while_documents_have_different_versions()
 		{
 			var server1 = NewClient(0);
 			var server2 = NewClient(1);
 
-			server1.UploadAsync("test", new MemoryStream(new byte[] {1, 2, 3})).Wait();
-			server2.UploadAsync("test", new MemoryStream(new byte[] {1, 2})).Wait();
+			await server1.UploadAsync("test", new MemoryStream(new byte[] {1, 2, 3}));
+			await server2.UploadAsync("test", new MemoryStream(new byte[] {1, 2}));
 
-			var shouldBeConflict = server1.Synchronization.StartAsync("test", server2.ServerUrl).Result;
+			var shouldBeConflict = await server1.Synchronization.StartAsync("test", server2.ServerUrl);
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 
-			server2.DeleteAsync("test").Wait();
+			await server2.DeleteAsync("test");
 
-			shouldBeConflict = server2.Synchronization.StartAsync("test", server1.ServerUrl).Result;
+			shouldBeConflict = await server2.Synchronization.StartAsync("test", server1.ServerUrl);
 
 			Assert.Equal("File test is conflicted", shouldBeConflict.Exception.Message);
 
 			// try to resolve and assert that synchronization went fine
-			server1.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion).Wait();
+			await server1.Synchronization.ResolveConflictAsync("test", ConflictResolutionStrategy.CurrentVersion);
 
-			var shouldNotBeConflict = server1.Synchronization.StartAsync("test", server2.ServerUrl).Result;
+			var shouldNotBeConflict = await server1.Synchronization.StartAsync("test", server2.ServerUrl);
 
 			Assert.Null(shouldNotBeConflict.Exception);
 			Assert.Equal(server1.GetMetadataForAsync("test").Result["Content-Md5"],

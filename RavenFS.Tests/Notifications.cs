@@ -20,69 +20,68 @@ namespace RavenFS.Tests
 	    }
 
 		[Fact]
-        public void NotificationReceivedWhenFileAdded()
+        public async void NotificationReceivedWhenFileAdded()
         {
-            client.Notifications.ConnectionTask.Wait();
+            await client.Notifications.ConnectionTask;
 
             var notificationTask =
                 client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
-            client.Notifications.WhenSubscriptionsActive().Wait();
+            await client.Notifications.WhenSubscriptionsActive();
 
-            client.UploadAsync("abc.txt", new MemoryStream()).Wait();
+            await client.UploadAsync("abc.txt", new MemoryStream());
 
-            var fileChange = notificationTask.Result;
+            var fileChange = await notificationTask;
 
             Assert.Equal("abc.txt", fileChange.File);
             Assert.Equal(FileChangeAction.Add, fileChange.Action);
         }
 
 		[Fact]
-		public void NotificationReceivedWhenFileDeleted()
+		public async void NotificationReceivedWhenFileDeleted()
         {
-            client.UploadAsync("abc.txt", new MemoryStream()).Wait();
-
+            await client.UploadAsync("abc.txt", new MemoryStream());
 
             var notificationTask =
                 client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
-            client.Notifications.WhenSubscriptionsActive().Wait();
+            await client.Notifications.WhenSubscriptionsActive();
 
-            client.DeleteAsync("abc.txt").Wait();
+            await client.DeleteAsync("abc.txt");
 
-            var fileChange = notificationTask.Result;
+            var fileChange = await notificationTask;
 
             Assert.Equal("abc.txt", fileChange.File);
             Assert.Equal(FileChangeAction.Delete, fileChange.Action);
         }
 
 		[Fact]
-		public void NotificationReceivedWhenFileUpdated()
+		public async void NotificationReceivedWhenFileUpdated()
         {
-            client.UploadAsync("abc.txt", new MemoryStream()).Wait();
+            await client.UploadAsync("abc.txt", new MemoryStream());
 
             var notificationTask =
                 client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
-            client.Notifications.WhenSubscriptionsActive().Wait();
+            await client.Notifications.WhenSubscriptionsActive();
 
-            client.UpdateMetadataAsync("abc.txt", new NameValueCollection() {{"MyMetadata", "MyValue"}}).Wait();
+            await client.UpdateMetadataAsync("abc.txt", new NameValueCollection() {{"MyMetadata", "MyValue"}});
 
-            var fileChange = notificationTask.Result;
+            var fileChange = await notificationTask;
 
             Assert.Equal("abc.txt", fileChange.File);
             Assert.Equal(FileChangeAction.Update, fileChange.Action);
         }
 
 		[Fact]
-		public void NotificationsReceivedWhenFileRenamed()
+		public async void NotificationsReceivedWhenFileRenamed()
         {
-            client.UploadAsync("abc.txt", new MemoryStream()).Wait();
+            await client.UploadAsync("abc.txt", new MemoryStream());
 
             var notificationTask =
                 client.Notifications.FolderChanges("/").Buffer(TimeSpan.FromSeconds(5)).Take(1).ToTask();
-            client.Notifications.WhenSubscriptionsActive().Wait();
+            await client.Notifications.WhenSubscriptionsActive();
 
-            client.RenameAsync("abc.txt", "newName.txt").Wait();
+            await client.RenameAsync("abc.txt", "newName.txt");
 
-            var fileChanges = notificationTask.Result;
+            var fileChanges = await notificationTask;
 
             Assert.Equal("abc.txt", fileChanges[0].File);
             Assert.Equal(FileChangeAction.Renaming, fileChanges[0].Action);
@@ -105,30 +104,30 @@ namespace RavenFS.Tests
         }
 
 		[Fact]
-		public void NotificationsIsReceivedWhenConfigIsUpdated()
+		public async void NotificationsIsReceivedWhenConfigIsUpdated()
         {
             var notificationTask =
                 client.Notifications.ConfigurationChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
-            client.Notifications.WhenSubscriptionsActive().Wait();
+            await client.Notifications.WhenSubscriptionsActive();
 
-            client.Config.SetConfig("Test", new NameValueCollection()).Wait();
+            await client.Config.SetConfig("Test", new NameValueCollection());
 
-            var configChange = notificationTask.Result;
+            var configChange = await notificationTask;
 
             Assert.Equal("Test", configChange.Name);
             Assert.Equal(ConfigChangeAction.Set, configChange.Action);
         }
 
 		[Fact]
-		public void NotificationsIsReceivedWhenConfigIsDeleted()
+		public async void NotificationsIsReceivedWhenConfigIsDeleted()
         {
             var notificationTask =
                 client.Notifications.ConfigurationChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
-            client.Notifications.WhenSubscriptionsActive().Wait();
+            await client.Notifications.WhenSubscriptionsActive();
 
-            client.Config.DeleteConfig("Test").Wait();
+            await client.Config.DeleteConfig("Test");
 
-            var configChange = notificationTask.Result;
+            var configChange = await notificationTask;
 
             Assert.Equal("Test", configChange.Name);
             Assert.Equal(ConfigChangeAction.Delete, configChange.Action);
