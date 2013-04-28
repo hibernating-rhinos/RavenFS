@@ -356,22 +356,26 @@ namespace RavenFS.Client
 
 			try
 			{
-				var destination = await request.GetRequestStreamAsync();
-				await source.CopyToAsync(destination, written =>
-				{
-					if (progress != null)
-						progress(filename, written);
-				}, cts.Token);
+			    using (var destination = await request.GetRequestStreamAsync())
+			    {
+			        await source.CopyToAsync(destination, written =>
+			            {
+			                if (progress != null)
+			                    progress(filename, written);
+			            }, cts.Token);
 
-				UnregisterUploadOperation(uploadIdentifier);
-				destination.Close();
-
-				var webResponse = await request.GetResponseAsync();
-				webResponse.Close();
+			        using (await request.GetResponseAsync())
+			        {
+			        }
+			    }
 			}
 			catch (AggregateException e)
 			{
-				e.TryThrowBetterError();
+			    e.TryThrowBetterError();
+			}
+			finally
+			{
+                UnregisterUploadOperation(uploadIdentifier);			    
 			}
 			
 		}
