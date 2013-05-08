@@ -33,11 +33,11 @@ namespace RavenFS.Studio.Models
 
         private void HandleVirtualFoldersChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (!isPruningFolders)
-            {
-                UpdateVirtualFolders();
-                Refresh(RefreshMode.PermitStaleDataWhilstRefreshing);
-            }
+	        if (isPruningFolders) 
+				return;
+
+	        UpdateVirtualFolders();
+	        Refresh(RefreshMode.PermitStaleDataWhilstRefreshing);
         }
 
         private void UpdateVirtualFolders()
@@ -151,7 +151,7 @@ namespace RavenFS.Studio.Models
                         {
                             if (!t.IsFaulted)
                             {
-                                var folders = t.Result.Select(n => new DirectoryModel() {FullPath = n}).ToArray();
+                                var folders = t.Result.Select(n => new DirectoryModel {FullPath = n}).ToArray();
                                 PruneVirtualFolders(folders);
                                 SetFolders(folders);
                             }
