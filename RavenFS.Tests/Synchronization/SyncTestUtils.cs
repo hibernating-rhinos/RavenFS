@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Storage;
 using RavenFS.Synchronization;
@@ -35,13 +36,13 @@ namespace RavenFS.Tests.Synchronization
 			source.Config.DeleteConfig(SynchronizationConstants.RavenSynchronizationDestinations).Wait();
 		}
 
-		public static Exception ExecuteAndGetInnerException(Action action)
+		public static Exception ExecuteAndGetInnerException(Func<Task> action)
 		{
 			Exception innerException = null;
 
 			try
 			{
-				action();
+				action().Wait();
 			}
 			catch (AggregateException exception)
 			{

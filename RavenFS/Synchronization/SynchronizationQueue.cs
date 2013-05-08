@@ -152,10 +152,10 @@ namespace RavenFS.Synchronization
 			}
 		}
 
-		public bool TryDequeuePendingSynchronization(string destination, out SynchronizationWorkItem workItem)
+		public bool TryDequePendingSynchronization(string destination, out SynchronizationWorkItem workItem)
 		{
-			pendingRemoveLocks.GetOrAdd(destination, new ReaderWriterLockSlim()).EnterReadLock();
-
+			var readerWriterLockSlim = pendingRemoveLocks.GetOrAdd(destination, new ReaderWriterLockSlim());
+			readerWriterLockSlim.EnterReadLock();
 			try
 			{
 				ConcurrentQueue<SynchronizationWorkItem> pendingForDestination;
@@ -169,7 +169,7 @@ namespace RavenFS.Synchronization
 			}
 			finally
 			{
-				pendingRemoveLocks.GetOrAdd(destination, new ReaderWriterLockSlim()).ExitReadLock();
+				readerWriterLockSlim.ExitReadLock();
 			}
 		}
 

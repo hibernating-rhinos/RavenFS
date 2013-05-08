@@ -10,18 +10,18 @@ namespace RavenFS.Tests.Bugs
 	public class SynchronizationAfterSetUpDestinations : MultiHostTestBase
 	{
 		[Fact]
-		public void Should_transfer_entire_file_even_if_rename_operation_was_performed()
+		public async void Should_transfer_entire_file_even_if_rename_operation_was_performed()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
 			var fileContent = new MemoryStream(new byte[] {1, 2, 3});
-			source.UploadAsync("test.bin", fileContent).Wait();
-			source.RenameAsync("test.bin", "renamed.bin").Wait();
+			await source.UploadAsync("test.bin", fileContent);
+			await source.RenameAsync("test.bin", "renamed.bin");
 
 			SyncTestUtils.TurnOnSynchronization(source, destination);
 
-			var destinationSyncResults = source.Synchronization.SynchronizeDestinationsAsync().Result;
+			var destinationSyncResults = await source.Synchronization.SynchronizeDestinationsAsync();
 			Assert.Equal(1, destinationSyncResults.Length);
 
 			var reports = destinationSyncResults[0].Reports.ToArray();

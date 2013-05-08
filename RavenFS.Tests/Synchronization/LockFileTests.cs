@@ -15,87 +15,85 @@ namespace RavenFS.Tests.Synchronization
 		private readonly NameValueCollection EmptyData = new NameValueCollection();
 
 		[Fact]
-		public void Should_delete_sync_configuration_after_synchronization()
+		public async void Should_delete_sync_configuration_after_synchronization()
 		{
 			RavenFileSystemClient destinationClient;
 			RavenFileSystemClient sourceClient;
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl);
-			var config = destinationClient.Config.GetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin")).Result;
+			await sourceClient.Synchronization.StartAsync("test.bin", destinationClient.ServerUrl);
+			var config = await destinationClient.Config.GetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin"));
 
 			Assert.Null(config);
 		}
 
 		[Fact]
-		public void Should_refuse_to_update_metadata_while_sync_configuration_exists()
+		public async void Should_refuse_to_update_metadata_while_sync_configuration_exists()
 		{
 			RavenFileSystemClient destinationClient;
 			RavenFileSystemClient sourceClient;
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			destinationClient.Config.SetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin"),
-			                                   SynchronizationConfig(DateTime.UtcNow)).Wait();
+			await destinationClient.Config.SetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin"),
+			                                   SynchronizationConfig(DateTime.UtcNow));
 
 			var innerException =
-				SyncTestUtils.ExecuteAndGetInnerException(
-					() => destinationClient.UpdateMetadataAsync("test.bin", new NameValueCollection()).Wait());
+				SyncTestUtils.ExecuteAndGetInnerException(async () => await destinationClient.UpdateMetadataAsync("test.bin", new NameValueCollection()));
 
 			Assert.IsType(typeof (SynchronizationException), innerException);
 			Assert.Equal("File test.bin is being synced", innerException.Message);
 		}
 
 		[Fact]
-		public void Should_refuse_to_delete_file_while_sync_configuration_exists()
+		public async void Should_refuse_to_delete_file_while_sync_configuration_exists()
 		{
 			RavenFileSystemClient destinationClient;
 			RavenFileSystemClient sourceClient;
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			destinationClient.Config.SetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin"),
-			                                   SynchronizationConfig(DateTime.UtcNow)).Wait();
+			await destinationClient.Config.SetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin"),
+			                                   SynchronizationConfig(DateTime.UtcNow));
 
-			var innerException = SyncTestUtils.ExecuteAndGetInnerException(() => destinationClient.DeleteAsync("test.bin").Wait());
+			var innerException = SyncTestUtils.ExecuteAndGetInnerException(async () => await destinationClient.DeleteAsync("test.bin"));
 
 			Assert.IsType(typeof (SynchronizationException), innerException);
 			Assert.Equal("File test.bin is being synced", innerException.Message);
 		}
 
 		[Fact]
-		public void Should_refuse_to_rename_file_while_sync_configuration_exists()
+		public async void Should_refuse_to_rename_file_while_sync_configuration_exists()
 		{
 			RavenFileSystemClient destinationClient;
 			RavenFileSystemClient sourceClient;
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			destinationClient.Config.SetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin"),
-			                                   SynchronizationConfig(DateTime.UtcNow)).Wait();
+			await destinationClient.Config.SetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin"),
+			                                   SynchronizationConfig(DateTime.UtcNow));
 
 			var innerException =
-				SyncTestUtils.ExecuteAndGetInnerException(() => destinationClient.RenameAsync("test.bin", "newname.bin").Wait());
+				SyncTestUtils.ExecuteAndGetInnerException(async () => await destinationClient.RenameAsync("test.bin", "newname.bin"));
 
 			Assert.IsType(typeof (SynchronizationException), innerException);
 			Assert.Equal("File test.bin is being synced", innerException.Message);
 		}
 
 		[Fact]
-		public void Should_refuse_to_upload_file_while_sync_configuration_exists()
+		public async void Should_refuse_to_upload_file_while_sync_configuration_exists()
 		{
 			RavenFileSystemClient destinationClient;
 			RavenFileSystemClient sourceClient;
 
 			UploadFilesSynchronously(out sourceClient, out destinationClient);
 
-			destinationClient.Config.SetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin"),
-			                                   SynchronizationConfig(DateTime.UtcNow)).Wait();
+			await destinationClient.Config.SetConfig(RavenFileNameHelper.SyncLockNameForFile("test.bin"),
+			                                   SynchronizationConfig(DateTime.UtcNow));
 
 			var innerException =
-				SyncTestUtils.ExecuteAndGetInnerException(
-					() => destinationClient.UploadAsync("test.bin", EmptyData, new MemoryStream()).Wait());
+				SyncTestUtils.ExecuteAndGetInnerException(async () => await destinationClient.UploadAsync("test.bin", EmptyData, new MemoryStream()));
 
 			Assert.IsType(typeof (SynchronizationException), innerException);
 			Assert.Equal("File test.bin is being synced", innerException.Message);

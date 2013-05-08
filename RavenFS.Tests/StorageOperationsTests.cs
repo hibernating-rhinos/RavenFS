@@ -15,16 +15,16 @@ namespace RavenFS.Tests
 	public class StorageOperationsTests : WebApiTest
 	{
 		[Fact]
-		public void Can_force_storage_cleanup_from_client()
+		public async void Can_force_storage_cleanup_from_client()
 		{
 			var client = NewClient();
-			client.UploadAsync("toDelete.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5})).Wait();
+			await client.UploadAsync("toDelete.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5}));
 
-			client.DeleteAsync("toDelete.bin").Wait();
+			await client.DeleteAsync("toDelete.bin");
 
-			client.Storage.CleanUp().Wait();
+			await client.Storage.CleanUp();
 
-			var configNames = client.Config.GetConfigNames().Result;
+			var configNames = await client.Config.GetConfigNames();
 
 			Assert.DoesNotContain(
 				RavenFileNameHelper.DeleteOperationConfigNameForFile(RavenFileNameHelper.DeletingFileName("toDelete.bin")),
@@ -251,7 +251,7 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public void Should_resume_file_renaming_from_client()
+		public async void Should_resume_file_renaming_from_client()
 		{
 			var client = NewClient();
 			var rfs = GetRavenFileSystem();
@@ -259,7 +259,7 @@ namespace RavenFS.Tests
 			const string fileName = "file.bin";
 			const string rename = "renamed.bin";
 
-			client.UploadAsync(fileName, new RandomStream(1)).Wait();
+			await client.UploadAsync(fileName, new RandomStream(1));
 
 			// create config to say to the server that rename operation performed last time were not finished
 			var renameOpConfig = RavenFileNameHelper.RenameOperationConfigNameForFile(fileName);
@@ -274,13 +274,13 @@ namespace RavenFS.Tests
 						                                                                          }
 				                                                 }.AsConfig()));
 
-			client.Storage.RetryRenaming().Wait();
+			await client.Storage.RetryRenaming();
 
-			IEnumerable<string> configNames = client.Config.GetConfigNames().Result;
+			IEnumerable<string> configNames = await client.Config.GetConfigNames();
 
 			Assert.DoesNotContain(renameOpConfig, configNames);
 
-			var renamedMetadata = client.GetMetadataForAsync(rename).Result;
+			var renamedMetadata = await client.GetMetadataForAsync(rename);
 
 			Assert.NotNull(renamedMetadata);
 		}

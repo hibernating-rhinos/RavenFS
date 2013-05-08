@@ -21,7 +21,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void NotificationIsReceivedWhenConflictIsDetected()
+		public async void NotificationIsReceivedWhenConflictIsDetected()
 		{
 			var sourceContent = new RandomlyModifiedStream(new RandomStream(1), 0.01);
 			var destinationContent = new RandomlyModifiedStream(sourceContent, 0.01);
@@ -36,8 +36,8 @@ namespace RavenFS.Tests.Synchronization
 					                          {"SomeTest-metadata", "should-be-overwritten"}
 				                          };
 
-			destinationClient.UploadAsync("abc.txt", destinationMetadata, destinationContent).Wait();
-			sourceClient.UploadAsync("abc.txt", sourceMetadata, sourceContent).Wait();
+			await destinationClient.UploadAsync("abc.txt", destinationMetadata, destinationContent);
+			await sourceClient.UploadAsync("abc.txt", sourceMetadata, sourceContent);
 
 			var notificationTask =
 				destinationClient.Notifications.Conflicts()
@@ -45,11 +45,11 @@ namespace RavenFS.Tests.Synchronization
 				                 .Timeout(TimeSpan.FromSeconds(5))
 				                 .Take(1)
 				                 .ToTask();
-			destinationClient.Notifications.WhenSubscriptionsActive().Wait();
+			await destinationClient.Notifications.WhenSubscriptionsActive();
 
-			sourceClient.Synchronization.StartAsync("abc.txt", destinationClient.ServerUrl).Wait();
+			await sourceClient.Synchronization.StartAsync("abc.txt", destinationClient.ServerUrl);
 
-			var conflictDetected = notificationTask.Result;
+			var conflictDetected = await notificationTask;
 
 			Assert.Equal("abc.txt", conflictDetected.FileName);
 			Assert.Equal(new Uri(sourceClient.ServerUrl).Port, new Uri(conflictDetected.SourceServerUrl).Port);

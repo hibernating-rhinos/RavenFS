@@ -14,7 +14,7 @@ namespace RavenFS.Tests.Synchronization
 		private const int AddtitionalServerInstancePortNumber = 19083;
 
 		[Fact]
-		public void File_rename_should_be_propagated()
+		public async void File_rename_should_be_propagated()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
@@ -41,11 +41,11 @@ namespace RavenFS.Tests.Synchronization
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result;
-			Assert.Null(secondServer1Sychronization[0].Exception);
-			Assert.Equal(SynchronizationType.Rename, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
+			var secondServer1Synchronization = await server1.Synchronization.SynchronizeDestinationsAsync();
+			Assert.Null(secondServer1Synchronization[0].Exception);
+			Assert.Equal(SynchronizationType.Rename, secondServer1Synchronization[0].Reports.ToArray()[0].Type);
 
-			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result;
+			var secondServer2Synchronization = await server2.Synchronization.SynchronizeDestinationsAsync();
 			Assert.Null(secondServer2Synchronization[0].Exception);
 			Assert.Equal(SynchronizationType.Rename, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 
@@ -61,7 +61,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void File_content_change_should_be_propagated()
+		public async void File_content_change_should_be_propagated()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
@@ -93,11 +93,11 @@ namespace RavenFS.Tests.Synchronization
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result;
-			Assert.Null(secondServer1Sychronization[0].Exception);
-			Assert.Equal(SynchronizationType.ContentUpdate, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
+			var secondServer1Synchronization = await server1.Synchronization.SynchronizeDestinationsAsync();
+			Assert.Null(secondServer1Synchronization[0].Exception);
+			Assert.Equal(SynchronizationType.ContentUpdate, secondServer1Synchronization[0].Reports.ToArray()[0].Type);
 
-			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result;
+			var secondServer2Synchronization = await server2.Synchronization.SynchronizeDestinationsAsync();
 			Assert.Null(secondServer2Synchronization[0].Exception);
 			Assert.Equal(SynchronizationType.ContentUpdate, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 
@@ -131,7 +131,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void File_delete_should_be_propagated()
+		public async void File_delete_should_be_propagated()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
@@ -158,11 +158,11 @@ namespace RavenFS.Tests.Synchronization
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result;
-			Assert.Null(secondServer1Sychronization[0].Exception);
-			Assert.Equal(SynchronizationType.Delete, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
+			var secondServer1Synchronization = await server1.Synchronization.SynchronizeDestinationsAsync();
+			Assert.Null(secondServer1Synchronization[0].Exception);
+			Assert.Equal(SynchronizationType.Delete, secondServer1Synchronization[0].Reports.ToArray()[0].Type);
 
-			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result;
+			var secondServer2Synchronization = await server2.Synchronization.SynchronizeDestinationsAsync();
 			Assert.Null(secondServer2Synchronization[0].Exception);
 			Assert.Equal(SynchronizationType.Delete, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 
@@ -175,7 +175,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void Metadata_change_should_be_propagated()
+		public async void Metadata_change_should_be_propagated()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
@@ -202,11 +202,11 @@ namespace RavenFS.Tests.Synchronization
 
 			SyncTestUtils.TurnOnSynchronization(server1, server2);
 
-			var secondServer1Sychronization = server1.Synchronization.SynchronizeDestinationsAsync().Result;
-			Assert.Null(secondServer1Sychronization[0].Exception);
-			Assert.Equal(SynchronizationType.MetadataUpdate, secondServer1Sychronization[0].Reports.ToArray()[0].Type);
+			var secondServer1Synchronization = await server1.Synchronization.SynchronizeDestinationsAsync();
+			Assert.Null(secondServer1Synchronization[0].Exception);
+			Assert.Equal(SynchronizationType.MetadataUpdate, secondServer1Synchronization[0].Reports.ToArray()[0].Type);
 
-			var secondServer2Synchronization = server2.Synchronization.SynchronizeDestinationsAsync().Result;
+			var secondServer2Synchronization = await server2.Synchronization.SynchronizeDestinationsAsync();
 			Assert.Null(secondServer2Synchronization[0].Exception);
 			Assert.Equal(SynchronizationType.MetadataUpdate, secondServer2Synchronization[0].Reports.ToArray()[0].Type);
 

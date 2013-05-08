@@ -337,14 +337,14 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public void Should_not_return_metadata_of_deleted_file()
+		public async void Should_not_return_metadata_of_deleted_file()
 		{
 			var client = NewClient();
-			client.UploadAsync("toDelete.bin", new RandomStream(1)).Wait();
+			await client.UploadAsync("toDelete.bin", new RandomStream(1));
 
-			client.DeleteAsync("toDelete.bin").Wait();
+			await client.DeleteAsync("toDelete.bin");
 
-			var metadata = client.GetMetadataForAsync("toDelete.bin").Result;
+			var metadata = await client.GetMetadataForAsync("toDelete.bin");
 			Assert.Null(metadata);
 		}
 
@@ -412,16 +412,16 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public void Should_refuse_to_rename_if_file_with_the_same_name_already_exists()
+		public async void Should_refuse_to_rename_if_file_with_the_same_name_already_exists()
 		{
 			var client = NewClient();
-			client.UploadAsync("file1.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5})).Wait();
-			client.UploadAsync("file2.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5})).Wait();
+			await client.UploadAsync("file1.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5}));
+			await client.UploadAsync("file2.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5}));
 
 			Exception ex = null;
 			try
 			{
-				client.RenameAsync("file1.bin", "file2.bin").Wait();
+				await client.RenameAsync("file1.bin", "file2.bin");
 			}
 			catch (AggregateException e)
 			{
@@ -441,7 +441,7 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public void Should_throw_file_not_found_exception()
+		public async void Should_throw_file_not_found_exception()
 		{
 			var client = NewClient();
 
@@ -449,7 +449,7 @@ namespace RavenFS.Tests
 
 			try
 			{
-				client.DownloadAsync("not_existing_file", new MemoryStream()).Wait();
+				await client.DownloadAsync("not_existing_file", new MemoryStream());
 			}
 			catch (AggregateException ex)
 			{
@@ -459,7 +459,7 @@ namespace RavenFS.Tests
 
 			try
 			{
-				client.RenameAsync("not_existing_file", "abc").Wait();
+				await client.RenameAsync("not_existing_file", "abc");
 			}
 			catch (AggregateException ex)
 			{
@@ -469,7 +469,7 @@ namespace RavenFS.Tests
 
 			try
 			{
-				client.DeleteAsync("not_existing_file").Wait();
+				await client.DeleteAsync("not_existing_file");
 			}
 			catch (AggregateException ex)
 			{
@@ -479,7 +479,7 @@ namespace RavenFS.Tests
 
 			try
 			{
-				client.UpdateMetadataAsync("not_existing_file", new NameValueCollection()).Wait();
+				await client.UpdateMetadataAsync("not_existing_file", new NameValueCollection());
 				throwsCount++;
 			}
 			catch (AggregateException ex)
@@ -492,18 +492,18 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public void Must_not_rename_tombstone()
+		public async void Must_not_rename_tombstone()
 		{
 			var client = NewClient();
 
-			client.UploadAsync("file.bin", new MemoryStream(new byte[] {1, 2, 3})).Wait();
-			client.RenameAsync("file.bin", "newname.bin").Wait();
+			await client.UploadAsync("file.bin", new MemoryStream(new byte[] {1, 2, 3}));
+			await client.RenameAsync("file.bin", "newname.bin");
 
-			Assert.Throws<FileNotFoundException>(() =>
+			Assert.Throws<FileNotFoundException>(async () =>
 				                                     {
 					                                     try
 					                                     {
-						                                     client.RenameAsync("file.bin", "file2.bin").Wait();
+						                                     await client.RenameAsync("file.bin", "file2.bin");
 					                                     }
 					                                     catch (AggregateException ex)
 					                                     {
@@ -513,18 +513,18 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public void Next_file_delete_should_throw_file_not_found_exception()
+		public async void Next_file_delete_should_throw_file_not_found_exception()
 		{
 			var client = NewClient();
 
-			client.UploadAsync("file.bin", new MemoryStream(new byte[] {1, 2, 3})).Wait();
-			client.DeleteAsync("file.bin").Wait();
+			await client.UploadAsync("file.bin", new MemoryStream(new byte[] {1, 2, 3}));
+			await client.DeleteAsync("file.bin");
 
-			Assert.Throws<FileNotFoundException>(() =>
+			Assert.Throws<FileNotFoundException>(async () =>
 				                                     {
 					                                     try
 					                                     {
-						                                     client.DeleteAsync("file.bin").Wait();
+						                                     await client.DeleteAsync("file.bin");
 					                                     }
 					                                     catch (AggregateException ex)
 					                                     {

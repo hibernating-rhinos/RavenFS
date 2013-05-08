@@ -6,26 +6,26 @@ namespace RavenFS.Tests
 	public class Config : WebApiTest
 	{
 		[Fact]
-		public void CanGetConfig_NotThere()
+		public async void CanGetConfig_NotThere()
 		{
 			var client = NewClient();
 
-			Assert.Null(client.Config.GetConfig("test").Result);
+			Assert.Null(await client.Config.GetConfig("test"));
 		}
 
 		[Fact]
-		public void CanSetConfig()
+		public async void CanSetConfig()
 		{
 			var client = NewClient();
 
-			Assert.Null(client.Config.GetConfig("test").Result);
+			Assert.Null(await client.Config.GetConfig("test"));
 
-			client.Config.SetConfig("test", new NameValueCollection
-			{
-				{"test", "there"},
-				{"hi", "you"}
-			}).Wait();
-			var nameValueCollection = client.Config.GetConfig("test").Result;
+			await client.Config.SetConfig("test", new NameValueCollection
+				{
+					{"test", "there"},
+					{"hi", "you"}
+				});
+			var nameValueCollection = await client.Config.GetConfig("test");
 			Assert.NotNull(nameValueCollection);
 
 			Assert.Equal("there", nameValueCollection["test"]);
@@ -35,44 +35,44 @@ namespace RavenFS.Tests
 
 
 		[Fact]
-		public void CanGetConfigNames()
+		public async void CanGetConfigNames()
 		{
 			var client = NewClient();
 
-			Assert.Null(client.Config.GetConfig("test").Result);
+			Assert.Null(await client.Config.GetConfig("test"));
 
-			client.Config.SetConfig("test", new NameValueCollection
-			{
-				{"test", "there"},
-				{"hi", "you"}
-			}).Wait();
+			await client.Config.SetConfig("test", new NameValueCollection
+				{
+					{"test", "there"},
+					{"hi", "you"}
+				});
 
-			client.Config.SetConfig("test2", new NameValueCollection
-			{
-				{"test", "there"},
-				{"hi", "you"}
-			}).Wait();
-			var names = client.Config.GetConfigNames().Result;
+			await client.Config.SetConfig("test2", new NameValueCollection
+				{
+					{"test", "there"},
+					{"hi", "you"}
+				});
+			var names = await client.Config.GetConfigNames();
 			Assert.Equal(new[]{"Raven/Sequences/Raven/Etag", "test", "test2"}, names);
 		}
 
 		[Fact]
-		public void CanDelConfig()
+		public async void CanDelConfig()
 		{
 			var client = NewClient();
 
-			Assert.Null(client.Config.GetConfig("test").Result);
+			Assert.Null(await client.Config.GetConfig("test"));
 
-			client.Config.SetConfig("test", new NameValueCollection
+			await client.Config.SetConfig("test", new NameValueCollection
 			{
 				{"test", "there"},
 				{"hi", "you"}
-			}).Wait();
-			Assert.NotNull(client.Config.GetConfig("test").Result);
+			});
+			Assert.NotNull(await client.Config.GetConfig("test"));
 
-			client.Config.DeleteConfig("test").Wait();
+			await client.Config.DeleteConfig("test");
 
-			Assert.Null(client.Config.GetConfig("test").Result);
+			Assert.Null(await client.Config.GetConfig("test"));
 		}
 
 	    [Fact]
