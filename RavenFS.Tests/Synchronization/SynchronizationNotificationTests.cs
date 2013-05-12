@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Client.Changes;
 using Xunit;
@@ -21,7 +22,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void NotificationsAreReceivedOnSourceWhenSynchronizationsAreStartedAndFinished()
+		public async Task NotificationsAreReceivedOnSourceWhenSynchronizationsAreStartedAndFinished()
 		{
 			await source.Notifications.ConnectionTask;
 
@@ -126,7 +127,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void NotificationsAreReceivedOnDestinationWhenSynchronizationsAreFinished()
+		public async Task NotificationsAreReceivedOnDestinationWhenSynchronizationsAreFinished()
 		{
 			await destination.Notifications.ConnectionTask;
 
@@ -217,8 +218,12 @@ namespace RavenFS.Tests.Synchronization
 
 		public override void Dispose()
 		{
-			(destination.Notifications as ServerNotifications).DisposeAsync().Wait();
-			(source.Notifications as ServerNotifications).DisposeAsync().Wait();
+			var serverNotifications = destination.Notifications as ServerNotifications;
+			if (serverNotifications != null)
+				serverNotifications.DisposeAsync().Wait();
+			var notifications = source.Notifications as ServerNotifications;
+			if (notifications != null)
+				notifications.DisposeAsync().Wait();
 			base.Dispose();
 		}
 	}

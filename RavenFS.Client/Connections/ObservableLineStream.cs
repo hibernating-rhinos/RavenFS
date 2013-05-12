@@ -27,7 +27,7 @@ namespace RavenFS.Client.Connections
 			this.onDispose = onDispose;
 		}
 
-		public async void Start()
+		public async Task Start()
 		{
 			try
 			{
@@ -107,7 +107,7 @@ namespace RavenFS.Client.Connections
 				return;
 			}
 		
-			Start(); // read more lines						
+			await Start(); // read more lines						
 		}
 
 		private Task<int> ReadAsync()

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Synchronization;
@@ -101,7 +102,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_not_synchronize_file_back_to_source_if_origins_from_source()
+		public async Task Should_not_synchronize_file_back_to_source_if_origins_from_source()
 		{
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
@@ -136,7 +137,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Synchronization_should_upload_all_missing_files()
+		public async Task Synchronization_should_upload_all_missing_files()
 		{
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
@@ -167,7 +168,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Make_sure_that_locks_are_released_after_synchronization_when_two_files_synchronized_simultaneously()
+		public async Task Make_sure_that_locks_are_released_after_synchronization_when_two_files_synchronized_simultaneously()
 		{
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
@@ -201,7 +202,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Source_should_save_configuration_record_after_synchronization()
+		public async Task Source_should_save_configuration_record_after_synchronization()
 		{
 			var sourceClient = NewClient(0);
 			var sourceContent = new RandomStream(10000);
@@ -230,7 +231,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Source_should_delete_configuration_record_if_destination_confirm_that_file_is_safe()
+		public async Task Source_should_delete_configuration_record_if_destination_confirm_that_file_is_safe()
 		{
 			var sourceClient = NewClient(0);
 			var sourceContent = new RandomStream(10000);
@@ -259,7 +260,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void File_should_be_in_pending_queue_if_no_synchronization_requests_available()
+		public async Task File_should_be_in_pending_queue_if_no_synchronization_requests_available()
 		{
 			var sourceContent = new RandomStream(1);
 			var sourceClient = NewClient(0);
@@ -289,7 +290,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_change_metadata_on_all_destinations()
+		public async Task Should_change_metadata_on_all_destinations()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
@@ -355,7 +356,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_rename_file_on_all_destinations()
+		public async Task Should_rename_file_on_all_destinations()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
@@ -413,7 +414,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_delete_file_on_all_destinations()
+		public async Task Should_delete_file_on_all_destinations()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
@@ -457,7 +458,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_confirm_that_file_is_safe()
+		public async Task Should_confirm_that_file_is_safe()
 		{
 			var sourceContent = new RandomStream(1024*1024);
 
@@ -518,7 +519,7 @@ namespace RavenFS.Tests.Synchronization
 						                                                    new Tuple<string, Guid>(
 							                                                    "test.bin", differentETag)
 					                                                    })
-				                 .Result;
+				                 .Result.ToList();
 
 			Assert.Equal(1, confirmations.Count());
 			Assert.Equal(FileStatus.Unknown, confirmations.ToArray()[0].Status);
@@ -535,7 +536,7 @@ namespace RavenFS.Tests.Synchronization
 					                                                    {
 						                                                    new Tuple<string, Guid>(
 							                                                    "test.bin", Guid.Empty)
-					                                                    }).Result;
+					                                                    }).Result.ToList();
 
 			Assert.Equal(1, confirmations.Count());
 			Assert.Equal(FileStatus.Unknown, confirmations.ToArray()[0].Status);
@@ -566,7 +567,7 @@ namespace RavenFS.Tests.Synchronization
 					                                                    {
 						                                                    new Tuple<string, Guid>(
 							                                                    "test.bin", sampleGuid)
-					                                                    }).Result;
+					                                                    }).Result.ToList();
 
 			Assert.Equal(1, confirmations.Count());
 			Assert.Equal(FileStatus.Broken, confirmations.ToArray()[0].Status);

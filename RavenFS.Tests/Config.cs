@@ -1,4 +1,5 @@
 using System.Collections.Specialized;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace RavenFS.Tests
@@ -6,7 +7,7 @@ namespace RavenFS.Tests
 	public class Config : WebApiTest
 	{
 		[Fact]
-		public async void CanGetConfig_NotThere()
+		public async Task CanGetConfig_NotThere()
 		{
 			var client = NewClient();
 
@@ -14,7 +15,7 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public async void CanSetConfig()
+		public async Task CanSetConfig()
 		{
 			var client = NewClient();
 
@@ -35,7 +36,7 @@ namespace RavenFS.Tests
 
 
 		[Fact]
-		public async void CanGetConfigNames()
+		public async Task CanGetConfigNames()
 		{
 			var client = NewClient();
 
@@ -57,7 +58,7 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public async void CanDelConfig()
+		public async Task CanDelConfig()
 		{
 			var client = NewClient();
 

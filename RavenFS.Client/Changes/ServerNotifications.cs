@@ -43,7 +43,7 @@ namespace RavenFS.Client.Changes
 					result.Subscribe(this);
 					return;
 				}
-				catch (Exception e)
+				catch (Exception)
 				{
 					if (reconnectAttemptsRemaining <= 0)
 						throw;
@@ -107,7 +107,7 @@ namespace RavenFS.Client.Changes
             return (IObservable<ConfigChange>)observable;
         }
 
-	    private async void ConfigureConnection(string command, string value = "")
+	    private async Task ConfigureConnection(string command, string value = "")
 	    {
 	        var afterConnection = AfterConnection(() => Send(command, value));
 
@@ -194,7 +194,7 @@ namespace RavenFS.Client.Changes
 			if (disposed)
 				return;
 
-			DisposeAsync();
+			DisposeAsync().Wait();
 		}
 
 		private bool disposed;
@@ -247,14 +247,14 @@ namespace RavenFS.Client.Changes
 
         }
 
-		public async void OnError(Exception error)
+		public void OnError(Exception error)
 		{
 			if (reconnectAttemptsRemaining <= 0)
 				return;
 
 			try
 			{
-				await EstablishConnection().ObserveException();
+				EstablishConnection().ObserveException().Wait();
 			}
 			catch (Exception exception)
 			{

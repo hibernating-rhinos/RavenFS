@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Tests.Synchronization;
@@ -10,7 +11,7 @@ namespace RavenFS.Tests.Bugs
 	public class SynchronizationAfterSetUpDestinations : MultiHostTestBase
 	{
 		[Fact]
-		public async void Should_transfer_entire_file_even_if_rename_operation_was_performed()
+		public async Task Should_transfer_entire_file_even_if_rename_operation_was_performed()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);

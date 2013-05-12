@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Tests.Synchronization.IO;
@@ -337,7 +338,7 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public async void Should_not_return_metadata_of_deleted_file()
+		public async Task Should_not_return_metadata_of_deleted_file()
 		{
 			var client = NewClient();
 			await client.UploadAsync("toDelete.bin", new RandomStream(1));
@@ -412,7 +413,7 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public async void Should_refuse_to_rename_if_file_with_the_same_name_already_exists()
+		public async Task Should_refuse_to_rename_if_file_with_the_same_name_already_exists()
 		{
 			var client = NewClient();
 			await client.UploadAsync("file1.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5}));
@@ -441,7 +442,7 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public async void Should_throw_file_not_found_exception()
+		public async Task Should_throw_file_not_found_exception()
 		{
 			var client = NewClient();
 
@@ -492,7 +493,7 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public async void Must_not_rename_tombstone()
+		public async Task Must_not_rename_tombstone()
 		{
 			var client = NewClient();
 
@@ -513,7 +514,7 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public async void Next_file_delete_should_throw_file_not_found_exception()
+		public async Task Next_file_delete_should_throw_file_not_found_exception()
 		{
 			var client = NewClient();
 

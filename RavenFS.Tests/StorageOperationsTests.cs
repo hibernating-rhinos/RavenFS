@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using RavenFS.Extensions;
 using RavenFS.Storage;
 using RavenFS.Tests.Synchronization;
@@ -15,7 +16,7 @@ namespace RavenFS.Tests
 	public class StorageOperationsTests : WebApiTest
 	{
 		[Fact]
-		public async void Can_force_storage_cleanup_from_client()
+		public async Task Can_force_storage_cleanup_from_client()
 		{
 			var client = NewClient();
 			await client.UploadAsync("toDelete.bin", new MemoryStream(new byte[] {1, 2, 3, 4, 5}));
@@ -115,7 +116,8 @@ namespace RavenFS.Tests
 			for (var i = 1; i <= numberOfPages; i++)
 			{
 				var pageId = 0;
-				rfs.Storage.Batch(accessor => pageId = accessor.ReadPage(i, null));
+				var i1 = i;
+				rfs.Storage.Batch(accessor => pageId = accessor.ReadPage(i1, null));
 				Assert.Equal(-1, pageId); // if page does not exist we return -1
 			}
 		}
@@ -150,7 +152,7 @@ namespace RavenFS.Tests
 		[Fact]
 		public void Should_not_delete_downloading_file_if_synchronization_retry_is_being_performed()
 		{
-			var fileName = "file.bin";
+			const string fileName = "file.bin";
 			var downloadingFileName = RavenFileNameHelper.DownloadingFileName(fileName);
 
 			var client = NewClient();
@@ -192,11 +194,11 @@ namespace RavenFS.Tests
 			// upload again - note that actual file delete was not performed yet
 			client.UploadAsync("file.bin", new RandomStream(1)).Wait();
 
-			IEnumerable<string> configNames = null;
+			List<string> configNames = null;
 			rfs.Storage.Batch(
 				accessor =>
 				configNames =
-				accessor.GetConfigNames(0, 10).ToArray().Where(x => x.StartsWith(RavenFileNameHelper.DeleteOperationConfigPrefix)));
+				accessor.GetConfigNames(0, 10).ToArray().Where(x => x.StartsWith(RavenFileNameHelper.DeleteOperationConfigPrefix)).ToList());
 
 			Assert.Equal(2, configNames.Count());
 
@@ -251,7 +253,7 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public async void Should_resume_file_renaming_from_client()
+		public async Task Should_resume_file_renaming_from_client()
 		{
 			var client = NewClient();
 			var rfs = GetRavenFileSystem();

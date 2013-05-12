@@ -31,11 +31,11 @@ namespace RavenFS.Client.Changes
 		{
 			if (Interlocked.Decrement(ref value) == 0)
 			{
-				Dispose();
+				Dispose().Wait();
 			}
 		}
 
-		public async void Add(Task<IDisposable> disposableTask)
+		public async Task Add(Task<IDisposable> disposableTask)
 		{
 			if (value == 0)
 			{
@@ -47,7 +47,7 @@ namespace RavenFS.Client.Changes
 			toDispose.Add(disposableTask);
 		}
 
-		public async void Dispose()
+		public async Task Dispose()
 		{
 			foreach (var disposableTask in toDispose)
 			{

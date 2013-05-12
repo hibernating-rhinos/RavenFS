@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using Xunit;
 
@@ -20,7 +21,7 @@ namespace RavenFS.Tests
 	    }
 
 		[Fact]
-        public async void NotificationReceivedWhenFileAdded()
+        public async Task NotificationReceivedWhenFileAdded()
         {
             await client.Notifications.ConnectionTask;
 
@@ -37,7 +38,7 @@ namespace RavenFS.Tests
         }
 
 		[Fact]
-		public async void NotificationReceivedWhenFileDeleted()
+		public async Task NotificationReceivedWhenFileDeleted()
         {
             await client.UploadAsync("abc.txt", new MemoryStream());
 
@@ -54,7 +55,7 @@ namespace RavenFS.Tests
         }
 
 		[Fact]
-		public async void NotificationReceivedWhenFileUpdated()
+		public async Task NotificationReceivedWhenFileUpdated()
         {
             await client.UploadAsync("abc.txt", new MemoryStream());
 
@@ -62,7 +63,7 @@ namespace RavenFS.Tests
                 client.Notifications.FolderChanges("/").Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
             await client.Notifications.WhenSubscriptionsActive();
 
-            await client.UpdateMetadataAsync("abc.txt", new NameValueCollection() {{"MyMetadata", "MyValue"}});
+            await client.UpdateMetadataAsync("abc.txt", new NameValueCollection {{"MyMetadata", "MyValue"}});
 
             var fileChange = await notificationTask;
 
@@ -71,7 +72,7 @@ namespace RavenFS.Tests
         }
 
 		[Fact]
-		public async void NotificationsReceivedWhenFileRenamed()
+		public async Task NotificationsReceivedWhenFileRenamed()
         {
             await client.UploadAsync("abc.txt", new MemoryStream());
 
@@ -104,7 +105,7 @@ namespace RavenFS.Tests
         }
 
 		[Fact]
-		public async void NotificationsIsReceivedWhenConfigIsUpdated()
+		public async Task NotificationsIsReceivedWhenConfigIsUpdated()
         {
             var notificationTask =
                 client.Notifications.ConfigurationChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
@@ -119,7 +120,7 @@ namespace RavenFS.Tests
         }
 
 		[Fact]
-		public async void NotificationsIsReceivedWhenConfigIsDeleted()
+		public async Task NotificationsIsReceivedWhenConfigIsDeleted()
         {
             var notificationTask =
                 client.Notifications.ConfigurationChanges().Timeout(TimeSpan.FromSeconds(2)).Take(1).ToTask();
@@ -135,7 +136,9 @@ namespace RavenFS.Tests
 
 		public override void Dispose()
 		{
-			(client.Notifications as ServerNotifications).DisposeAsync().Wait();
+			var serverNotifications = client.Notifications as ServerNotifications;
+			if (serverNotifications != null)
+				serverNotifications.DisposeAsync().Wait();
 			base.Dispose();
 		}
     }

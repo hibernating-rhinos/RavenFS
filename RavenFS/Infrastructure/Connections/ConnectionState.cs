@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Util;
 
@@ -26,10 +27,10 @@ namespace RavenFS.Infrastructure.Connections
 			this.eventsTransport = eventsTransport;
 		}
 
-		public void Send(Notification notification)
+		public async Task Send(Notification notification)
 		{
 			if (ShouldSend(notification))
-				Enqueue(notification);
+				await Enqueue(notification);
 		}
 
 		private bool ShouldSend(Notification notification)
@@ -64,7 +65,7 @@ namespace RavenFS.Infrastructure.Connections
 			return false;
 		}
 
-		private async void Enqueue(Notification msg)
+		private async Task Enqueue(Notification msg)
 		{
 			if (eventsTransport == null || eventsTransport.Connected == false)
 			{
@@ -81,7 +82,7 @@ namespace RavenFS.Infrastructure.Connections
 			}
 		}
 
-		public async void Reconnect(EventsTransport transport)
+		public async Task Reconnect(EventsTransport transport)
 		{
 			eventsTransport = transport;
 			var items = new List<Notification>();

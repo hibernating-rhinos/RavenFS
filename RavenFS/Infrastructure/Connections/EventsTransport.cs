@@ -30,7 +30,7 @@ namespace RavenFS.Infrastructure.Connections
 	/// </remarks>
 	public class EventsTransport
 	{
-		private static readonly JsonSerializerSettings settings;
+		private static readonly JsonSerializerSettings Settings;
 		private readonly Timer heartbeat;
 
 		private readonly Logger log = LogManager.GetCurrentClassLogger();
@@ -42,7 +42,7 @@ namespace RavenFS.Infrastructure.Connections
 
 		static EventsTransport()
 		{
-			settings = new JsonSerializerSettings
+			Settings = new JsonSerializerSettings
 				           {
 					           Binder = new TypeHidingBinder(),
 					           TypeNameHandling = TypeNameHandling.All,
@@ -70,8 +70,7 @@ namespace RavenFS.Infrastructure.Connections
 
 		public HttpResponseMessage GetResponse()
 		{
-			var response = new HttpResponseMessage();
-			response.Content = new PushStreamContent(HandleStreamAvailable, "text/event-stream");
+			var response = new HttpResponseMessage {Content = new PushStreamContent(HandleStreamAvailable, "text/event-stream")};
 
 			SendAsync(new Heartbeat());
 
@@ -81,10 +80,10 @@ namespace RavenFS.Infrastructure.Connections
 		private void HandleStreamAvailable(Stream stream, HttpContent content, TransportContext context)
 		{
 			heartbeat.Change(TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
-			ProcessMessageQueue(stream);
+			ProcessMessageQueue(stream).Wait();
 		}
 
-		private async void ProcessMessageQueue(Stream stream)
+		private async Task ProcessMessageQueue(Stream stream)
 		{
 			try
 			{
@@ -156,7 +155,7 @@ namespace RavenFS.Infrastructure.Connections
 
 		public Task SendAsync(Notification data)
 		{
-			var content = "data: " + JsonConvert.SerializeObject(data, Formatting.None, settings) + "\r\n\r\n";
+			var content = "data: " + JsonConvert.SerializeObject(data, Formatting.None, Settings) + "\r\n\r\n";
 
 			return Enqueue(content);
 		}
@@ -192,7 +191,7 @@ namespace RavenFS.Infrastructure.Connections
 			foreach (var o in data)
 			{
 				sb.Append("data: ")
-				  .Append(JsonConvert.SerializeObject(o, Formatting.None, settings))
+				  .Append(JsonConvert.SerializeObject(o, Formatting.None, Settings))
 				  .Append("\r\n\r\n");
 			}
 			var content = sb.ToString();

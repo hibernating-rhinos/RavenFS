@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.IO;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Synchronization;
@@ -15,7 +16,7 @@ namespace RavenFS.Tests.Synchronization
 		private readonly NameValueCollection EmptyData = new NameValueCollection();
 
 		[Fact]
-		public async void Should_delete_sync_configuration_after_synchronization()
+		public async Task Should_delete_sync_configuration_after_synchronization()
 		{
 			RavenFileSystemClient destinationClient;
 			RavenFileSystemClient sourceClient;
@@ -29,7 +30,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_refuse_to_update_metadata_while_sync_configuration_exists()
+		public async Task Should_refuse_to_update_metadata_while_sync_configuration_exists()
 		{
 			RavenFileSystemClient destinationClient;
 			RavenFileSystemClient sourceClient;
@@ -47,7 +48,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_refuse_to_delete_file_while_sync_configuration_exists()
+		public async Task Should_refuse_to_delete_file_while_sync_configuration_exists()
 		{
 			RavenFileSystemClient destinationClient;
 			RavenFileSystemClient sourceClient;
@@ -64,7 +65,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_refuse_to_rename_file_while_sync_configuration_exists()
+		public async Task Should_refuse_to_rename_file_while_sync_configuration_exists()
 		{
 			RavenFileSystemClient destinationClient;
 			RavenFileSystemClient sourceClient;
@@ -82,7 +83,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_refuse_to_upload_file_while_sync_configuration_exists()
+		public async Task Should_refuse_to_upload_file_while_sync_configuration_exists()
 		{
 			RavenFileSystemClient destinationClient;
 			RavenFileSystemClient sourceClient;

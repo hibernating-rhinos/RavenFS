@@ -2,6 +2,7 @@ using System;
 using System.Collections.Specialized;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Client.Changes;
 using RavenFS.Tests.Synchronization.IO;
@@ -21,7 +22,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void NotificationIsReceivedWhenConflictIsDetected()
+		public async Task NotificationIsReceivedWhenConflictIsDetected()
 		{
 			var sourceContent = new RandomlyModifiedStream(new RandomStream(1), 0.01);
 			var destinationContent = new RandomlyModifiedStream(sourceContent, 0.01);
@@ -57,8 +58,12 @@ namespace RavenFS.Tests.Synchronization
 
 		public override void Dispose()
 		{
-			(destinationClient.Notifications as ServerNotifications).DisposeAsync().Wait();
-			(sourceClient.Notifications as ServerNotifications).DisposeAsync().Wait();
+			var serverNotifications = destinationClient.Notifications as ServerNotifications;
+			if (serverNotifications != null)
+				serverNotifications.DisposeAsync().Wait();
+			var notifications = sourceClient.Notifications as ServerNotifications;
+			if (notifications != null)
+				notifications.DisposeAsync().Wait();
 			base.Dispose();
 		}
 	}

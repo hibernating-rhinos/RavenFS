@@ -29,8 +29,7 @@ namespace RavenFS.Tests.Synchronization
 
 			var sourceContent = SyncTestUtils.PrepareSourceStream(size);
 			sourceContent.Position = 0;
-			var destinationContent = new CombinedStream(differenceChunk, sourceContent);
-			destinationContent.Position = 0;
+			var destinationContent = new CombinedStream(differenceChunk, sourceContent) {Position = 0};
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 			var sourceMetadata = new NameValueCollection
@@ -50,7 +49,7 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
-			string resultMd5 = null;
+			string resultMd5;
 			using (var resultFileContent = new MemoryStream())
 			{
 				var metadata = destinationClient.DownloadAsync("test.txt", resultFileContent).Result;
@@ -77,8 +76,7 @@ namespace RavenFS.Tests.Synchronization
 			sw.Write("Coconut is Stupid");
 			sw.Flush();
 
-			var sourceContent = new CombinedStream(SyncTestUtils.PrepareSourceStream(size), differenceChunk);
-			sourceContent.Position = 0;
+			var sourceContent = new CombinedStream(SyncTestUtils.PrepareSourceStream(size), differenceChunk) {Position = 0};
 			var destinationContent = SyncTestUtils.PrepareSourceStream(size);
 			destinationContent.Position = 0;
 			var sourceClient = NewClient(0);
@@ -125,7 +123,7 @@ namespace RavenFS.Tests.Synchronization
 
 			Assert.Equal(sourceContent.Length, result.BytesCopied + result.BytesTransfered);
 
-			string resultMd5 = null;
+			string resultMd5;
 			using (var resultFileContent = new MemoryStream())
 			{
 				destinationClient.DownloadAsync("test.txt", resultFileContent).Wait();
@@ -248,7 +246,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Destination_should_know_what_is_last_file_etag_after_synchronization()
+		public async Task Destination_should_know_what_is_last_file_etag_after_synchronization()
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
@@ -271,7 +269,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Destination_should_not_override_last_etag_if_greater_value_exists()
+		public async Task Destination_should_not_override_last_etag_if_greater_value_exists()
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
@@ -305,7 +303,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Source_should_upload_file_to_destination_if_doesnt_exist_there()
+		public async Task Source_should_upload_file_to_destination_if_doesnt_exist_there()
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadata = new NameValueCollection
@@ -431,7 +429,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_refuse_to_synchronize_if_limit_of_concurrent_synchronizations_exceeded()
+		public async Task Should_refuse_to_synchronize_if_limit_of_concurrent_synchronizations_exceeded()
 		{
 			var sourceContent = new RandomStream(1);
 			var sourceClient = NewClient(0);
@@ -530,7 +528,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_just_rename_file_in_synchronization_process()
+		public async Task Should_just_rename_file_in_synchronization_process()
 		{
 			var content = new MemoryStream(new byte[] {1, 2, 3, 4});
 
@@ -561,7 +559,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Empty_file_should_be_synchronized_correctly()
+		public async Task Empty_file_should_be_synchronized_correctly()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);
@@ -581,7 +579,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_throw_exception_if_synchronized_file_doesnt_exist()
+		public async Task Should_throw_exception_if_synchronized_file_doesnt_exist()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);
@@ -677,24 +675,24 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public void Can_synchronize_file_that_doesnt_have_any_signature_while_file_on_destination_has()
+		public async Task Can_synchronize_file_that_doesnt_have_any_signature_while_file_on_destination_has()
 		{
-			const int size1b = 1;
+			const int size1B = 1;
 			const int size5Mb = 1024*1024*5;
 
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
-			var buffer = new byte[size1b]; // 1b file should have no signatures
+			var buffer = new byte[size1B]; // 1b file should have no signatures
 			new Random().NextBytes(buffer);
 
 			var sourceContent = new MemoryStream(buffer);
-			source.UploadAsync("test.bin", sourceContent).Wait();
+			await source.UploadAsync("test.bin", sourceContent);
 
 			buffer = new byte[size5Mb]; // 5Mb file should have 2 signatures
 			new Random().NextBytes(buffer);
 
-			destination.UploadAsync("test.bin", new MemoryStream(buffer)).Wait();
+			await destination.UploadAsync("test.bin", new MemoryStream(buffer));
 
 			var sourceSigCount = source.Synchronization.GetRdcManifestAsync("test.bin").Result.Signatures.Count;
 			var destinationSigCount = destination.Synchronization.GetRdcManifestAsync("test.bin").Result.Signatures.Count;
@@ -705,31 +703,30 @@ namespace RavenFS.Tests.Synchronization
 			var result = SyncTestUtils.ResolveConflictAndSynchronize(source, destination, "test.bin");
 
 			Assert.Null(result.Exception);
-			Assert.Equal(size1b, result.BytesTransfered);
+			Assert.Equal(size1B, result.BytesTransfered);
 			sourceContent.Position = 0;
 			Assert.Equal(sourceContent.GetMD5Hash(), destination.GetMetadataForAsync("test.bin").Result["Content-MD5"]);
 		}
 
 		[Fact]
-		public async void After_file_delete_next_synchronization_should_override_tombsone()
+		public async Task After_file_delete_next_synchronization_should_override_tombsone()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
-			var sourceContent = new MemoryStream(new byte[] {5, 10, 15});
-			sourceContent.Position = 0;
-			source.UploadAsync("test.bin", sourceContent).Wait();
+			var sourceContent = new MemoryStream(new byte[] {5, 10, 15}) {Position = 0};
+			await source.UploadAsync("test.bin", sourceContent);
 
 			var report = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
 			Assert.Null(report.Exception);
 
-			destination.DeleteAsync("test.bin").Wait();
+			await destination.DeleteAsync("test.bin");
 
-			report = source.Synchronization.StartAsync("test.bin", destination.ServerUrl).Result;
+			report = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
 			Assert.Null(report.Exception);
 
 			var destContent = new MemoryStream();
-			var destMetadata = destination.DownloadAsync("test.bin", destContent).Result;
+			var destMetadata = await destination.DownloadAsync("test.bin", destContent);
 
 			Assert.True(destMetadata[SynchronizationConstants.RavenDeleteMarker] == null,
 			            "Metedata should not containt Raven-Delete-Marker");
@@ -739,13 +736,12 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_save_file_etag_in_report()
+		public async Task Should_save_file_etag_in_report()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);
 
-			var sourceContent = new MemoryStream(new byte[] {5, 10, 15});
-			sourceContent.Position = 0;
+			var sourceContent = new MemoryStream(new byte[] {5, 10, 15}) {Position = 0};
 			await source.UploadAsync("test.bin", sourceContent);
 
 			var report = await source.Synchronization.StartAsync("test.bin", destination.ServerUrl);
@@ -754,7 +750,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_not_throw_if_file_does_not_exist_on_destination()
+		public async Task Should_not_throw_if_file_does_not_exist_on_destination()
 		{
 			var source = NewClient(0);
 			var destination = NewClient(1);

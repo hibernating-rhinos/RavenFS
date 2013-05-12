@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RavenFS.Client;
 using RavenFS.Extensions;
@@ -130,7 +131,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Must_not_synchronize_file_conflicted_on_source_side()
+		public async Task Must_not_synchronize_file_conflicted_on_source_side()
 		{
 			var sourceContent = new RandomStream(10);
 			var sourceMetadataWithConflict = new NameValueCollection
@@ -239,6 +240,10 @@ namespace RavenFS.Tests.Synchronization
 
 			using (var stream = response.GetResponseStream())
 			{
+				Assert.NotNull(stream);
+				if (stream == null) 
+					return;
+
 				var report = new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
 				Assert.Equal("File test.txt is conflicted", report.Exception.Message);
 			}
@@ -383,7 +388,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Source_should_remove_syncing_item_if_conflict_was_resolved_on_destination_by_current()
+		public async Task Source_should_remove_syncing_item_if_conflict_was_resolved_on_destination_by_current()
 		{
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
@@ -434,7 +439,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Should_create_a_conflict_when_attempt_to_synchronize_a_delete_while_documents_have_different_versions()
+		public async Task Should_create_a_conflict_when_attempt_to_synchronize_a_delete_while_documents_have_different_versions()
 		{
 			var server1 = NewClient(0);
 			var server2 = NewClient(1);

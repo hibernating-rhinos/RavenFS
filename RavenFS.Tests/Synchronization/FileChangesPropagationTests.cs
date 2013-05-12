@@ -2,6 +2,7 @@
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Tests.Synchronization.IO;
@@ -14,7 +15,7 @@ namespace RavenFS.Tests.Synchronization
 		private const int AddtitionalServerInstancePortNumber = 19083;
 
 		[Fact]
-		public async void File_rename_should_be_propagated()
+		public async Task File_rename_should_be_propagated()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
@@ -61,7 +62,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void File_content_change_should_be_propagated()
+		public async Task File_content_change_should_be_propagated()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
@@ -131,7 +132,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void File_delete_should_be_propagated()
+		public async Task File_delete_should_be_propagated()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 
@@ -175,7 +176,7 @@ namespace RavenFS.Tests.Synchronization
 		}
 
 		[Fact]
-		public async void Metadata_change_should_be_propagated()
+		public async Task Metadata_change_should_be_propagated()
 		{
 			StartServerInstance(AddtitionalServerInstancePortNumber);
 

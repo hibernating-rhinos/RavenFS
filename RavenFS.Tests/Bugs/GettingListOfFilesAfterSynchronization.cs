@@ -1,4 +1,5 @@
 using System.IO;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace RavenFS.Tests.Bugs
@@ -6,7 +7,7 @@ namespace RavenFS.Tests.Bugs
 	public class GettingListOfFilesAfterSynchronization : MultiHostTestBase
 	{
 		[Fact]
-		public async void Should_work()
+		public async Task Should_work()
 		{
 			var ms = new MemoryStream();
 			var streamWriter = new StreamWriter(ms);
@@ -18,7 +19,7 @@ namespace RavenFS.Tests.Bugs
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
 
-			var fileName = "abc.txt";
+			const string fileName = "abc.txt";
 			await sourceClient.UploadAsync(fileName, ms);
 			await sourceClient.Synchronization.StartAsync(fileName, destinationClient.ServerUrl);
 

@@ -752,8 +752,7 @@ namespace RavenFS.Client
 				request.ContentLength = 0;
 				try
 				{
-					var webResponse = await request.GetResponseAsync();
-
+					using(var webResponse = await request.GetResponseAsync())
 					using (var stream = webResponse.GetResponseStream())
 					{
 						return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
@@ -775,7 +774,7 @@ namespace RavenFS.Client
 
 				try
 				{
-					var webResponse = await request.GetResponseAsync();
+					using(var webResponse = await request.GetResponseAsync())
 					using (var stream = webResponse.GetResponseStream())
 					{
 						return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
