@@ -33,7 +33,7 @@ namespace RavenFS.Tests
 
             var fileChange = await notificationTask;
 
-            Assert.Equal("abc.txt", fileChange.File);
+            Assert.Equal("/abc.txt", fileChange.File);
             Assert.Equal(FileChangeAction.Add, fileChange.Action);
         }
 
@@ -50,7 +50,7 @@ namespace RavenFS.Tests
 
             var fileChange = await notificationTask;
 
-            Assert.Equal("abc.txt", fileChange.File);
+            Assert.Equal("/abc.txt", fileChange.File);
             Assert.Equal(FileChangeAction.Delete, fileChange.Action);
         }
 
@@ -67,7 +67,7 @@ namespace RavenFS.Tests
 
             var fileChange = await notificationTask;
 
-            Assert.Equal("abc.txt", fileChange.File);
+            Assert.Equal("/abc.txt", fileChange.File);
             Assert.Equal(FileChangeAction.Update, fileChange.Action);
         }
 
@@ -84,9 +84,9 @@ namespace RavenFS.Tests
 
             var fileChanges = await notificationTask;
 
-            Assert.Equal("abc.txt", fileChanges[0].File);
+            Assert.Equal("/abc.txt", fileChanges[0].File);
             Assert.Equal(FileChangeAction.Renaming, fileChanges[0].Action);
-            Assert.Equal("newName.txt", fileChanges[1].File);
+            Assert.Equal("/newName.txt", fileChanges[1].File);
             Assert.Equal(FileChangeAction.Renamed, fileChanges[1].Action);
         }
 

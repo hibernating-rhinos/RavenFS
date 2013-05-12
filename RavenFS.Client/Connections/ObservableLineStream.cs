@@ -6,6 +6,7 @@
 
 using System;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using RavenFS.Client.Util;
@@ -27,89 +28,100 @@ namespace RavenFS.Client.Connections
 			this.onDispose = onDispose;
 		}
 
-		public async Task Start()
+		public void Start()
 		{
-			try
-			{
-				var read = await ReadAsync();
-
-				if (read == 0) // will force reopening of the connection
-					throw new EndOfStreamException();
-				// find \r\n in newly read range
-
-				var startPos = 0;
-				byte prev = 0;
-				var foundLines = false;
-				for (var i = posInBuffer; i < posInBuffer + read; i++)
+			ReadAsync()
+				.ContinueWith(task =>
 				{
-					if (prev == '\r' && buffer[i] == '\n')
+					var read = task.Result;
+					if (read == 0)// will force reopening of the connection
+						throw new EndOfStreamException();
+					// find \r\n in newly read range
+
+					var startPos = 0;
+					byte prev = 0;
+					bool foundLines = false;
+					for (int i = posInBuffer; i < posInBuffer + read; i++)
 					{
-						foundLines = true;
-						var oldStartPos = startPos;
-						// yeah, we found a line, let us give it to the users
-						startPos = i + 1;
+						if (prev == '\r' && buffer[i] == '\n')
+						{
+							foundLines = true;
+							var oldStartPos = startPos;
+							// yeah, we found a line, let us give it to the users
+							startPos = i + 1;
 
-						// is it an empty line?
-						if (oldStartPos == i - 2)
-						{
-							continue; // ignore and continue
-						}
+							// is it an empty line?
+							if (oldStartPos == i - 2)
+							{
+								continue; // ignore and continue
+							}
 
-						// first 5 bytes should be: 'd','a','t','a',':'
-						// if it isn't, ignore and continue
-						if (buffer.Length - oldStartPos < 5 ||
-						    buffer[oldStartPos] != 'd' ||
-						    buffer[oldStartPos + 1] != 'a' ||
-						    buffer[oldStartPos + 2] != 't' ||
-						    buffer[oldStartPos + 3] != 'a' ||
-						    buffer[oldStartPos + 4] != ':')
-						{
-							continue;
+							// first 5 bytes should be: 'd','a','t','a',':'
+							// if it isn't, ignore and continue
+							if (buffer.Length - oldStartPos < 5 ||
+								buffer[oldStartPos] != 'd' ||
+								buffer[oldStartPos + 1] != 'a' ||
+								buffer[oldStartPos + 2] != 't' ||
+								buffer[oldStartPos + 3] != 'a' ||
+								buffer[oldStartPos + 4] != ':')
+							{
+								continue;
+							}
+
+							var data = Encoding.UTF8.GetString(buffer, oldStartPos + 5, i - oldStartPos - 6);
+							foreach (var subscriber in subscribers)
+							{
+								subscriber.OnNext(data);
+							}
 						}
-						var data = Encoding.UTF8.GetString(buffer, oldStartPos + 5, i - (oldStartPos + 6));
-						foreach (var subscriber in subscribers)
-						{
-							subscriber.OnNext(data);
-						}
+						prev = buffer[i];
 					}
-					prev = buffer[i];
-				}
-				posInBuffer += read;
-				if (startPos >= posInBuffer) // read to end
-				{
-					posInBuffer = 0;
-					return;
-				}
-				if (foundLines == false)
-					return;
+					posInBuffer += read;
+					if (startPos >= posInBuffer) // read to end
+					{
+						posInBuffer = 0;
+						return;
+					}
+					if (foundLines == false)
+						return;
 
-				// move remaining to the start of buffer, then reset
-				Array.Copy(buffer, startPos, buffer, 0, posInBuffer - startPos);
-				posInBuffer -= startPos;
-			}
-			catch (Exception e)
-			{
-				try
-				{
-					stream.Dispose();
-				}
-				catch (Exception)
-				{
-					// explicitly ignoring this
-				}
-				
-				if (e is ObjectDisposedException)
-					return; // this isn't an error
-				foreach (var subscriber in subscribers)
-				{
-					subscriber.OnError(e);
-				}
-				return;
-			}
-		
-			await Start(); // read more lines						
+					// move remaining to the start of buffer, then reset
+					Array.Copy(buffer, startPos, buffer, 0, posInBuffer - startPos);
+					posInBuffer -= startPos;
+				})
+								.ContinueWith(task =>
+								{
+									if (task.IsFaulted)
+									{
+										try
+										{
+											stream.Dispose();
+										}
+										catch (Exception)
+										{
+											// explicitly ignoring this
+										}
+										var aggregateException = task.Exception;
+										var exception = aggregateException.ExtractSingleInnerException();
+										if (exception is ObjectDisposedException)
+											return; // this isn't an error
+										var we = exception as WebException;
+										if (we != null && we.Status == WebExceptionStatus.RequestCanceled)
+											return; // not an error, actually
+
+										foreach (var subscriber in subscribers)
+										{
+											subscriber.OnError(aggregateException);
+										}
+										return;
+									}
+
+									Start(); // read more lines
+								});
 		}
 
+
+#if SILVERLIGHT || NETFX_CORE
 		private Task<int> ReadAsync()
 		{
 			try
@@ -118,9 +130,25 @@ namespace RavenFS.Client.Connections
 			}
 			catch (Exception e)
 			{
-				return Util.TaskExtensions.FromException<int>(e);
+				return new CompletedTask<int>(e);
 			}
 		}
+#else
+		private Task<int> ReadAsync()
+		{
+			try
+			{
+				return Task.Factory.FromAsync<int>(
+					(callback, state) => stream.BeginRead(buffer, posInBuffer, buffer.Length - posInBuffer, callback, state),
+					stream.EndRead,
+					null);
+			}
+			catch (Exception e)
+			{
+				return new CompletedTask<int>(e);
+			}
+		}
+#endif
 
 		public IDisposable Subscribe(IObserver<string> observer)
 		{

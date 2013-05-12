@@ -39,23 +39,25 @@ namespace RavenFS.Controllers
 		}
 
 		[AcceptVerbs("GET")]
-		public ConfigSearchResults ConfigNamesStartingWith(string prefix = "")
+		public ConfigSearchResults ConfigNamesStartingWith(string prefix)
 		{
+			if (prefix == null)
+				prefix = "";
 			ConfigSearchResults results = null;
 			Storage.Batch(accessor =>
-				              {
-					              int totalResults;
-					              var names = accessor.GetConfigNamesStartingWithPrefix(prefix, Paging.Start, Paging.PageSize,
-					                                                                    out totalResults);
+							  {
+								  int totalResults;
+								  var names = accessor.GetConfigNamesStartingWithPrefix(prefix, Paging.Start, Paging.PageSize,
+																						out totalResults);
 
-					              results = new ConfigSearchResults
-						                        {
-							                        ConfigNames = names,
-							                        PageSize = Paging.PageSize,
-							                        Start = Paging.Start,
-							                        TotalCount = totalResults
-						                        };
-				              });
+								  results = new ConfigSearchResults
+												{
+													ConfigNames = names,
+													PageSize = Paging.PageSize,
+													Start = Paging.Start,
+													TotalCount = totalResults
+												};
+							  });
 
 			return results;
 		}
