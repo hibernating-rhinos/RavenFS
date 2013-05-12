@@ -179,11 +179,10 @@ namespace RavenFS.Tests.Synchronization
 			var client = NewClient(1);
 
 			var guid = Guid.NewGuid().ToString();
-			var innerException = (WebException)
-				SyncTestUtils.ExecuteAndGetInnerException(async () =>
+			var innerException = SyncTestUtils.ExecuteAndGetInnerException(async () =>
 					await client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem>(), "http://localhost:12345"));
 
-			Assert.Equal(HttpStatusCode.NotFound, ((HttpWebResponse)innerException.Response).StatusCode);
+			Assert.IsType<FileNotFoundException>(innerException);
 		}
 
 		[Fact]

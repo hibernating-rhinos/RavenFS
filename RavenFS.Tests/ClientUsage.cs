@@ -424,9 +424,9 @@ namespace RavenFS.Tests
 			{
 				await client.RenameAsync("file1.bin", "file2.bin");
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
-				ex = e.InnerException;
+				ex = e;
 			}
 			Assert.Contains("Cannot rename because file file2.bin already exists", ex.Message);
 		}
@@ -452,9 +452,9 @@ namespace RavenFS.Tests
 			{
 				await client.DownloadAsync("not_existing_file", new MemoryStream());
 			}
-			catch (AggregateException ex)
+			catch (Exception ex)
 			{
-				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+				Assert.IsType<FileNotFoundException>(ex);
 				throwsCount++;
 			}
 
@@ -462,9 +462,9 @@ namespace RavenFS.Tests
 			{
 				await client.RenameAsync("not_existing_file", "abc");
 			}
-			catch (AggregateException ex)
+			catch (Exception ex)
 			{
-				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+				Assert.IsType<FileNotFoundException>(ex);
 				throwsCount++;
 			}
 
@@ -472,9 +472,9 @@ namespace RavenFS.Tests
 			{
 				await client.DeleteAsync("not_existing_file");
 			}
-			catch (AggregateException ex)
+			catch (Exception ex)
 			{
-				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+				Assert.IsType<FileNotFoundException>(ex);
 				throwsCount++;
 			}
 
@@ -483,9 +483,9 @@ namespace RavenFS.Tests
 				await client.UpdateMetadataAsync("not_existing_file", new NameValueCollection());
 				throwsCount++;
 			}
-			catch (AggregateException ex)
+			catch (Exception ex)
 			{
-				Assert.IsType<FileNotFoundException>(ex.ExtractSingleInnerException());
+				Assert.IsType<FileNotFoundException>(ex);
 				throwsCount++;
 			}
 
@@ -500,17 +500,15 @@ namespace RavenFS.Tests
 			await client.UploadAsync("file.bin", new MemoryStream(new byte[] {1, 2, 3}));
 			await client.RenameAsync("file.bin", "newname.bin");
 
-			Assert.Throws<FileNotFoundException>(async () =>
-				                                     {
-					                                     try
-					                                     {
-						                                     await client.RenameAsync("file.bin", "file2.bin");
-					                                     }
-					                                     catch (AggregateException ex)
-					                                     {
-						                                     throw ex.ExtractSingleInnerException();
-					                                     }
-				                                     });
+			try
+			{
+				await client.RenameAsync("file.bin", "file2.bin");
+				Assert.Equal(true, false); // Should not get here
+			}
+			catch (Exception ex)
+			{
+				Assert.IsType<FileNotFoundException>(ex);
+			}
 		}
 
 		[Fact]
@@ -521,17 +519,15 @@ namespace RavenFS.Tests
 			await client.UploadAsync("file.bin", new MemoryStream(new byte[] {1, 2, 3}));
 			await client.DeleteAsync("file.bin");
 
-			Assert.Throws<FileNotFoundException>(async () =>
-				                                     {
-					                                     try
-					                                     {
-						                                     await client.DeleteAsync("file.bin");
-					                                     }
-					                                     catch (AggregateException ex)
-					                                     {
-						                                     throw ex.ExtractSingleInnerException();
-					                                     }
-				                                     });
+			try
+			{
+				await client.DeleteAsync("file.bin");
+				Assert.Equal(true, false); // Should not get here
+			}
+			catch (Exception ex)
+			{
+				Assert.IsType<FileNotFoundException>(ex);
+			}
 		}
 
 		private static MemoryStream PrepareTextSourceStream()

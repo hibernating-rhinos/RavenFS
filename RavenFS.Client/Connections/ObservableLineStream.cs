@@ -87,7 +87,7 @@ namespace RavenFS.Client.Connections
 				Array.Copy(buffer, startPos, buffer, 0, posInBuffer - startPos);
 				posInBuffer -= startPos;
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
 				try
 				{
@@ -98,7 +98,7 @@ namespace RavenFS.Client.Connections
 					// explicitly ignoring this
 				}
 				
-				if (e.ExtractSingleInnerException() is ObjectDisposedException)
+				if (e is ObjectDisposedException)
 					return; // this isn't an error
 				foreach (var subscriber in subscribers)
 				{

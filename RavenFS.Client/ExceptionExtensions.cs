@@ -78,13 +78,19 @@ namespace RavenFS.Client
 			           .Unwrap();
 		}
 
-		public static void TryThrowBetterError(this AggregateException aggregateException)
+		public static Exception TryThrowBetterError(this Exception exception)
 		{
+			var aggregateException = exception as AggregateException;
+			if (aggregateException == null)
+			{
+				var web = exception as WebException;
+				return web != null ? web.BetterWebExceptionError() : exception;
+			}
 			var webException = aggregateException.ExtractSingleInnerException() as WebException;
 			if (webException == null || webException.Response == null)
-				throw aggregateException;
+				return aggregateException;
 
-			throw webException.BetterWebExceptionError();
+			return webException.BetterWebExceptionError();
 		}
 
 		/// <summary>

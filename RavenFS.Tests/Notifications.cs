@@ -91,7 +91,7 @@ namespace RavenFS.Tests
         }
 
 		[Fact]
-		public void NotificationsAreOnlyReceivedForFilesInGivenFolder()
+		public async Task NotificationsAreOnlyReceivedForFilesInGivenFolder()
         {
             var notificationTask =
                 client.Notifications.FolderChanges("/Folder").Buffer(TimeSpan.FromSeconds(2)).Take(1).ToTask();
@@ -99,7 +99,7 @@ namespace RavenFS.Tests
 
             client.UploadAsync("AnotherFolder/abc.txt", new MemoryStream()).Wait();
 
-            var notifications = notificationTask.Result;
+            var notifications = await notificationTask;
 
             Assert.Equal(0, notifications.Count);
         }

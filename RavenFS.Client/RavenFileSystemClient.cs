@@ -78,10 +78,9 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<ServerStats>(new JsonTextReader(new StreamReader(stream)));
 					}
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
-				e.TryThrowBetterError();
-				throw;
+				throw e.TryThrowBetterError();
 			}
 		}
 
@@ -96,10 +95,9 @@ namespace RavenFS.Client
 				var webResponse = await request.GetResponseAsync();
 				webResponse.Close();
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
-				e.TryThrowBetterError();
-				throw;
+				throw e.TryThrowBetterError();
 			}
 		}
 
@@ -114,9 +112,9 @@ namespace RavenFS.Client
 				var webResponse = await request.GetResponseAsync();
 				webResponse.Close();
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
-				e.TryThrowBetterError();
+				throw e.TryThrowBetterError();
 			}
 		}
 
@@ -140,10 +138,9 @@ namespace RavenFS.Client
 					}.Deserialize<FileInfo[]>(jsonTextReader);
 				}
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
-				e.TryThrowBetterError();
-				throw;
+				throw e.TryThrowBetterError();	
 			}
 		}
 
@@ -160,10 +157,9 @@ namespace RavenFS.Client
 					return new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(stream)));
 				}
 	        }
-	        catch (AggregateException e)
+	        catch (Exception e)
 	        {
-		        e.TryThrowBetterError();
-		        throw;
+				throw e.TryThrowBetterError();
 	        }
         }
 
@@ -201,10 +197,9 @@ namespace RavenFS.Client
 						}.Deserialize<SearchResults>(jsonTextReader);
 				}
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
-				e.TryThrowBetterError();
-				throw;
+				throw e.TryThrowBetterError();
 			}
 		}
 
@@ -220,9 +215,14 @@ namespace RavenFS.Client
 				{
 					return new NameValueCollection(webResponse.Headers);
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					var we = e.ExtractSingleInnerException() as WebException;
+					var aggregate = e as AggregateException;
+					WebException we;
+					if (aggregate != null)
+						we = aggregate.ExtractSingleInnerException() as WebException;
+					else
+						we = e as WebException;
 					if (we == null)
 						throw;
 					var httpWebResponse = we.Response as HttpWebResponse;
@@ -233,10 +233,18 @@ namespace RavenFS.Client
 					throw;
 				}
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
-				e.TryThrowBetterError();
-				throw;
+				var web = e as WebException;
+				if (web != null)
+				{
+					var httpWebResponse = web.Response as HttpWebResponse;
+					if (httpWebResponse == null)
+						throw e.TryThrowBetterError();
+					if (httpWebResponse.StatusCode == HttpStatusCode.NotFound)
+						return null;
+				}
+				throw e.TryThrowBetterError();
 			}
 		}
 
@@ -292,10 +300,9 @@ namespace RavenFS.Client
 					});
 				return collection;
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
-				e.TryThrowBetterError();
-				throw;
+				throw e.TryThrowBetterError();
 			}
 		}
 
@@ -311,9 +318,9 @@ namespace RavenFS.Client
 			{
 				await request.GetResponseAsync();
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
-				e.TryThrowBetterError();
+				throw e.TryThrowBetterError();
 			}
 		}
 
@@ -331,7 +338,7 @@ namespace RavenFS.Client
 		                              Action<string, long> progress)
 		{
 			if (source.CanRead == false)
-				throw new AggregateException("Stream does not support reading");
+				throw new Exception("Stream does not support reading");
 
 			var uploadIdentifier = Guid.NewGuid();
 			var request =
@@ -369,9 +376,9 @@ namespace RavenFS.Client
 			        }
 			    }
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
-			    e.TryThrowBetterError();
+				throw e.TryThrowBetterError();
 			}
 			finally
 			{
@@ -463,10 +470,9 @@ namespace RavenFS.Client
 				    return new JsonSerializer().Deserialize<string[]>(new JsonTextReader(new StreamReader(stream)));
 			    }
 		    }
-		    catch (AggregateException e)
+		    catch (Exception e)
 		    {
-				e.TryThrowBetterError();
-			    throw;
+				throw e.TryThrowBetterError();
 		    }
 		}
 
@@ -497,10 +503,9 @@ namespace RavenFS.Client
 					return new JsonSerializer().Deserialize<Guid>(new JsonTextReader(new StreamReader(stream)));
 				}
 			}
-			catch (AggregateException e)
+			catch (Exception e)
 			{
-				e.TryThrowBetterError();
-				throw;
+				throw e.TryThrowBetterError();
 			}
 		}
 
@@ -597,10 +602,9 @@ namespace RavenFS.Client
 						return jsonSerializer.Deserialize<string[]>(new JsonTextReader(new StreamReader(responseStream)));
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 
@@ -634,17 +638,17 @@ namespace RavenFS.Client
 				var requestUriString = ravenFileSystemClient.ServerUrl + "/config?name=" + StringUtils.UrlEncode(name);
 				var request = (HttpWebRequest) WebRequest.Create(requestUriString.NoCache());
 
-				var response = await request.GetResponseAsync();
-
 				try
 				{
+					var response = await request.GetResponseAsync();
+
 					var webResponse = response;
 					return jsonSerializer.Deserialize<NameValueCollection>(
 							new JsonTextReader(new StreamReader(webResponse.GetResponseStream())));
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					var webException = e.ExtractSingleInnerException() as WebException;
+					var webException = e as WebException;
 					if (webException == null)
 						throw;
 					var httpWebResponse = webException.Response as HttpWebResponse;
@@ -678,10 +682,9 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<ConfigSearchResults>(jsonTextReader);
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 		}
@@ -714,10 +717,9 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<SignatureManifest>(new JsonTextReader(new StreamReader(stream)));
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 
@@ -736,10 +738,9 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<DestinationSyncResult[]>(new JsonTextReader(new StreamReader(stream)));
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 
 			}
@@ -758,10 +759,9 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<SynchronizationReport>(new JsonTextReader(new StreamReader(stream)));
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 
@@ -781,10 +781,9 @@ namespace RavenFS.Client
 					}
 
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 
@@ -800,9 +799,9 @@ namespace RavenFS.Client
 					var webResponse = await request.GetResponseAsync();
 					webResponse.Close();
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
+					throw e.TryThrowBetterError();
 				}
             }
 
@@ -829,10 +828,9 @@ namespace RavenFS.Client
 					stream.Close();
 					await request.GetResponseAsync();
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 
@@ -852,10 +850,9 @@ namespace RavenFS.Client
 						return preResult;
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 
             }
@@ -877,10 +874,9 @@ namespace RavenFS.Client
 						return preResult;
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 
@@ -902,10 +898,9 @@ namespace RavenFS.Client
 						return preResult;
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 
@@ -926,10 +921,9 @@ namespace RavenFS.Client
 						return preResult;
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 
@@ -959,10 +953,9 @@ namespace RavenFS.Client
 								new JsonTextReader(new StreamReader(responseStream)));
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 
@@ -983,10 +976,9 @@ namespace RavenFS.Client
 						return preResult;
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 
@@ -1003,10 +995,9 @@ namespace RavenFS.Client
 					var webResponse = await request.GetResponseAsync();
 					webResponse.Close();
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 
@@ -1023,10 +1014,9 @@ namespace RavenFS.Client
 						return new JsonSerializer().Deserialize<RdcStats>(new JsonTextReader(new StreamReader(stream)));
 					}
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			}
 		}
@@ -1052,10 +1042,9 @@ namespace RavenFS.Client
 					var webResponse = await request.GetResponseAsync();
 					webResponse.Close();
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
 			
 			}
@@ -1072,12 +1061,10 @@ namespace RavenFS.Client
 					var webResponse = await request.GetResponseAsync();
 					webResponse.Close();
 				}
-				catch (AggregateException e)
+				catch (Exception e)
 				{
-					e.TryThrowBetterError();
-					throw;
+					throw e.TryThrowBetterError();
 				}
-				;
 			}
 		}
 

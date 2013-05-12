@@ -46,7 +46,7 @@ namespace RavenFS.Synchronization.Multipart
 
 			if (sourceStream.CanRead == false)
 			{
-				throw new AggregateException("Stream does not support reading");
+				throw new Exception("Stream does not support reading");
 			}
 
 			request = (HttpWebRequest) WebRequest.Create(destinationUrl + "/synchronization/MultipartProceed");
