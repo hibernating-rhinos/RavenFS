@@ -23,7 +23,7 @@ namespace RavenFS.Controllers
 {
 	public abstract class RavenController : ApiController
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		private PagingInfo paging;
 		private NameValueCollection queryString;
@@ -200,7 +200,7 @@ namespace RavenFS.Controllers
 			}
 			else
 			{
-				log.Debug("Cannot execute operation because file '{0}' is being synced", fileName);
+				Log.Debug("Cannot execute operation because file '{0}' is being synced", fileName);
 
 				var beingSyncedException = new SynchronizationException(string.Format("File {0} is being synced", fileName));
 

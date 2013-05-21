@@ -21,7 +21,6 @@ namespace RavenFS.Infrastructure
 			httpContext.Response.Status = "301 Moved Permanently";
 			httpContext.Response.StatusCode = 301;
 			httpContext.Response.AppendHeader("Location", newUrl);
-			return;
 		}
 	}
 }

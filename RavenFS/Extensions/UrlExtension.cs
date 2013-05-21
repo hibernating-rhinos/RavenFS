@@ -14,7 +14,7 @@ namespace RavenFS.Extensions
 	{
 		public static string GetRequestUrl(this HttpContext context)
 		{
-			string localPath = context.Request.Url.LocalPath;
+			var localPath = context.Request.Url.LocalPath;
 		    var virtualPath = HttpRuntime.AppDomainAppVirtualPath;
 
 		    if (!string.IsNullOrEmpty(virtualPath) && virtualPath != "/" &&

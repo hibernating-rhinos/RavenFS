@@ -83,14 +83,10 @@ namespace RavenFS.Synchronization
 				if (rename != null)
 				{
 					if (destinationMetadata != null)
-					{
 						return new RenameWorkItem(file, rename, localServerUrl, storage);
-					}
-					else
-					{
-						return new ContentUpdateWorkItem(rename, localServerUrl, storage, sigGenerator);
-							// we have a rename tombstone but file does not exists on destination
-					}
+
+					return new ContentUpdateWorkItem(rename, localServerUrl, storage, sigGenerator);
+					// we have a rename tombstone but file does not exists on destination
 				}
 				return new DeleteWorkItem(file, localServerUrl, storage);
 			}

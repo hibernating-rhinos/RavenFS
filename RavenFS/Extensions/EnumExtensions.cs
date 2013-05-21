@@ -16,11 +16,11 @@ namespace RavenFS.Extensions
 			var memberInfo = type.GetMember(enumerationValue.ToString());
 			if (memberInfo.Length > 0)
 			{
-				var attrs = memberInfo[0].GetCustomAttributes(typeof (DescriptionAttribute), false);
+				var attributes = memberInfo[0].GetCustomAttributes(typeof (DescriptionAttribute), false);
 
-				if (attrs.Length > 0)
+				if (attributes.Length > 0)
 				{
-					return ((DescriptionAttribute) attrs[0]).Description;
+					return ((DescriptionAttribute) attributes[0]).Description;
 				}
 			}
 

@@ -21,7 +21,7 @@ namespace RavenFS.Client
 	{
 		private readonly string baseUrl;
 	    private readonly ServerNotifications notifications;
-		private IDisposable failedUploadsObservator = null;
+		private IDisposable failedUploadsObserver;
 
 		private readonly ConcurrentDictionary<Guid, CancellationTokenSource> uploadCancellationTokens =
 			new ConcurrentDictionary<Guid, CancellationTokenSource>();
@@ -50,17 +50,17 @@ namespace RavenFS.Client
 
 		public bool IsObservingFailedUploads
 		{
-			get { return failedUploadsObservator != null; }
+			get { return failedUploadsObserver != null; }
 			set
 			{
 				if (value)
 				{
-					failedUploadsObservator = notifications.FailedUploads().Subscribe(CancelFileUpload);
+					failedUploadsObserver = notifications.FailedUploads().Subscribe(CancelFileUpload);
 				}
 				else
 				{
-					failedUploadsObservator.Dispose();
-					failedUploadsObservator = null;
+					failedUploadsObserver.Dispose();
+					failedUploadsObserver = null;
 				}
 			}
 		}

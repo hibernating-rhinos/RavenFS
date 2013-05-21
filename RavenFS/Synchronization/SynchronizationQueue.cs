@@ -10,7 +10,7 @@ namespace RavenFS.Synchronization
 {
 	public class SynchronizationQueue
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, SynchronizationWorkItem>>
 			activeSynchronizations =
@@ -112,7 +112,7 @@ namespace RavenFS.Synchronization
 					// if there is a file in pending synchronizations do not add it again
 					if (pendingWork.Equals(workItem))
 					{
-						log.Debug("{0} for a file {1} and a destination {2} was already existed in a pending queue",
+						Log.Debug("{0} for a file {1} and a destination {2} was already existed in a pending queue",
 						          workItem.GetType().Name, workItem.FileName, destination);
 						return;
 					}
@@ -123,7 +123,7 @@ namespace RavenFS.Synchronization
 					    Buffers.Compare(workItem.FileETag.ToByteArray(), pendingWork.FileETag.ToByteArray()) > 0)
 					{
 						pendingWork.RefreshMetadata();
-						log.Debug(
+						Log.Debug(
 							"{0} for a file {1} and a destination {2} was already existed in a pending queue but with older ETag, it's metadata has been refreshed",
 							workItem.GetType().Name, workItem.FileName, destination);
 						return;
@@ -137,13 +137,13 @@ namespace RavenFS.Synchronization
 				// if there is a work in an active synchronizations do not add it again
 				if (activeForDestination.ContainsKey(workItem.FileName) && activeForDestination[workItem.FileName].Equals(workItem))
 				{
-					log.Debug("{0} for a file {1} and a destination {2} was already existed in an active queue",
+					Log.Debug("{0} for a file {1} and a destination {2} was already existed in an active queue",
 					          workItem.GetType().Name, workItem.FileName, destination);
 					return;
 				}
 
 				pendingForDestination.Enqueue(workItem);
-				log.Debug("{0} for a file {1} and a destination {2} was enqueued", workItem.GetType().Name, workItem.FileName,
+				Log.Debug("{0} for a file {1} and a destination {2} was enqueued", workItem.GetType().Name, workItem.FileName,
 				          destination);
 			}
 			finally
@@ -190,7 +190,7 @@ namespace RavenFS.Synchronization
 
 			if (activeForDestination.TryAdd(work.FileName, work))
 			{
-				log.Debug("File '{0}' with ETag {1} was added to an active synchronization queue for a destination {2}",
+				Log.Debug("File '{0}' with ETag {1} was added to an active synchronization queue for a destination {2}",
 				          work.FileName,
 				          work.FileETag, destination);
 			}
@@ -202,14 +202,14 @@ namespace RavenFS.Synchronization
 
 			if (activeSynchronizations.TryGetValue(destination, out activeDestinationTasks) == false)
 			{
-				log.Warn("Could not get an active synchronization queue for {0}", destination);
+				Log.Warn("Could not get an active synchronization queue for {0}", destination);
 				return;
 			}
 
 			SynchronizationWorkItem removingItem;
 			if (activeDestinationTasks.TryRemove(work.FileName, out removingItem))
 			{
-				log.Debug("File '{0}' with ETag {1} was removed from an active synchronization queue for a destination {2}",
+				Log.Debug("File '{0}' with ETag {1} was removed from an active synchronization queue for a destination {2}",
 				          work.FileName,
 				          work.FileETag, destination);
 			}

@@ -6,9 +6,9 @@ namespace RavenFS.Infrastructure
 {
 	public class ErrorLoggingConcurrentMergeScheduler : ConcurrentMergeScheduler
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-		protected override void HandleMergeException(System.Exception exc)
+		protected override void HandleMergeException(Exception exc)
 		{
 			try
 			{
@@ -16,7 +16,7 @@ namespace RavenFS.Infrastructure
 			}
 			catch (Exception e)
 			{
-				log.WarnException("Concurrent merge failed", e);
+				Log.WarnException("Concurrent merge failed", e);
 			}
 		}
 	}

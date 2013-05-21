@@ -10,9 +10,7 @@
 			var history = obj as HistoryItem;
 
 			if (history == null)
-			{
 				return false;
-			}
 
 			return Version == history.Version && ServerId == history.ServerId;
 		}

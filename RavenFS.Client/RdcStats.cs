@@ -4,6 +4,6 @@
     {
         public uint CurrentVersion { get; set; }
 
-        public uint MinimumCompatibileAppVersion { get; set; }
+        public uint MinimumCompatibleAppVersion { get; set; }
     }
 }

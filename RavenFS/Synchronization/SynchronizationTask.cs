@@ -21,7 +21,7 @@ namespace RavenFS.Synchronization
 	{
 		private const int DefaultLimitOfConcurrentSynchronizations = 5;
 
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		private readonly NotificationPublisher publisher;
 		private readonly TransactionalStorage storage;
@@ -65,13 +65,13 @@ namespace RavenFS.Synchronization
 
 			foreach (var destination in GetSynchronizationDestinations())
 			{
-				log.Debug("Starting to synchronize a destination server {0}", destination);
+				Log.Debug("Starting to synchronize a destination server {0}", destination);
 
 				var destinationUrl = destination;
 
 				if (!CanSynchronizeTo(destinationUrl))
 				{
-					log.Debug("Could not synchronize to {0} because no synchronization request was available", destination);
+					Log.Debug("Could not synchronize to {0} because no synchronization request was available", destination);
 					continue;
 				}
 
@@ -93,7 +93,7 @@ namespace RavenFS.Synchronization
 			catch (Exception ex)
 			{
 				var exceptionMessage = "Could not get metadata details for " + fileName + " from " + destinationUrl;
-				log.WarnException(exceptionMessage, ex);
+				Log.WarnException(exceptionMessage, ex);
 
 				return new SynchronizationReport(fileName, Guid.Empty, SynchronizationType.Unknown)
 					{
@@ -109,7 +109,7 @@ namespace RavenFS.Synchronization
 
 			if (work == null)
 			{
-				log.Debug("File '{0}' was not synchronized to {1}. {2}", fileName, destinationUrl, reason.GetDescription());
+				Log.Debug("File '{0}' was not synchronized to {1}. {2}", fileName, destinationUrl, reason.GetDescription());
 
 				return new SynchronizationReport(fileName, Guid.Empty, SynchronizationType.Unknown)
 					{
@@ -141,7 +141,7 @@ namespace RavenFS.Synchronization
 				{
 					if (confirmation.Status == FileStatus.Safe)
 					{
-						log.Debug("Destination server {0} said that file '{1}' is safe", destinationUrl, confirmation.FileName);
+						Log.Debug("Destination server {0} said that file '{1}' is safe", destinationUrl, confirmation.FileName);
 						RemoveSyncingConfiguration(confirmation.FileName, destinationUrl);
 					}
 					else
@@ -154,7 +154,7 @@ namespace RavenFS.Synchronization
 								{
 									needSyncingAgain.Add(fileHeader);
 
-									log.Debug(
+									Log.Debug(
 										"Destination server {0} said that file '{1}' is {2}.", destinationUrl, confirmation.FileName,
 										confirmation.Status);
 								}
@@ -166,7 +166,7 @@ namespace RavenFS.Synchronization
 
 				var reports = await TaskEx.WhenAll(SynchronizePendingFilesAsync(destinationUrl, forceSyncingContinuation));
 
-				var desinationSyncResult = new DestinationSyncResult
+				var destinationSyncResult = new DestinationSyncResult
 					{
 						DestinationServer = destinationUrl
 					};
@@ -179,19 +179,19 @@ namespace RavenFS.Synchronization
 
 					if (successfullSynchronizationsCount > 0 || failedSynchronizationsCount > 0)
 					{
-						log.Debug(
-							"Synchronization to a destination {0} has completed. {1} file(s) were synchronized successfully, {2} synchonization(s) were failed",
+						Log.Debug(
+							"Synchronization to a destination {0} has completed. {1} file(s) were synchronized successfully, {2} synchronization(s) were failed",
 							destinationUrl, successfullSynchronizationsCount, failedSynchronizationsCount);
 					}
 
-					desinationSyncResult.Reports = reports;
+					destinationSyncResult.Reports = reports;
 				}
 
-				return desinationSyncResult;
+				return destinationSyncResult;
 			}
 			catch (Exception ex)
 			{
-				log.WarnException(string.Format("Failed to perform a synchronization to a destination {0}", destinationUrl), ex);
+				Log.WarnException(string.Format("Failed to perform a synchronization to a destination {0}", destinationUrl), ex);
 
 				return new DestinationSyncResult
 					{
@@ -220,20 +220,20 @@ namespace RavenFS.Synchronization
 				filesToSynchronization.Add(needSyncing);
 			}
 
-			var filteredFilesToSychronization =
+			var filteredFilesToSynchronization =
 				filesToSynchronization.Where(
 					x => synchronizationStrategy.Filter(x, lastEtag.DestinationServerId, filesToSynchronization)).ToList();
 
 			if (filesToSynchronization.Count > 0)
 			{
 				LogFilesInfo("There were {0} file(s) that needed synchronization after filtering: {1}",
-				             filteredFilesToSychronization);
+				             filteredFilesToSynchronization);
 			}
 
-			if (filteredFilesToSychronization.Count == 0)
+			if (filteredFilesToSynchronization.Count == 0)
 				return;
 
-			foreach (var fileHeader in filteredFilesToSychronization)
+			foreach (var fileHeader in filteredFilesToSynchronization)
 			{
 				var file = fileHeader.Name;
 				var localMetadata = GetLocalMetadata(file);
@@ -246,7 +246,7 @@ namespace RavenFS.Synchronization
 				}
 				catch (Exception ex)
 				{
-					log.WarnException(
+					Log.WarnException(
 						string.Format(
 							"Could not retrieve a metadata of a file '{0}' from {1} in order to determine needed synchronization type", file,
 							destinationUrl), ex);
@@ -259,7 +259,7 @@ namespace RavenFS.Synchronization
 
 				if (work == null)
 				{
-					log.Debug("File '{0}' were not synchronized to {1}. {2}", file, destinationUrl, reason.GetDescription());
+					Log.Debug("File '{0}' were not synchronized to {1}. {2}", file, destinationUrl, reason.GetDescription());
 
 					if (reason == NoSyncReason.ContainedInDestinationHistory)
 					{
@@ -285,7 +285,7 @@ namespace RavenFS.Synchronization
 
 				if (synchronizationQueue.IsDifferentWorkForTheSameFileBeingPerformed(work, destinationUrl))
 				{
-					log.Debug("There was an already being performed synchronization of a file '{0}' to {1}", work.FileName,
+					Log.Debug("There was an already being performed synchronization of a file '{0}' to {1}", work.FileName,
 					          destinationUrl);
 					synchronizationQueue.EnqueueSynchronization(destinationUrl, work); // add it again at the end of the queue
 				}
@@ -305,12 +305,12 @@ namespace RavenFS.Synchronization
 		private async Task<SynchronizationReport> PerformSynchronizationAsync(string destinationUrl,
 		                                                                      SynchronizationWorkItem work)
 		{
-			log.Debug("Starting to perform {0} for a file '{1}' and a destination server {2}", work.GetType().Name, work.FileName,
+			Log.Debug("Starting to perform {0} for a file '{1}' and a destination server {2}", work.GetType().Name, work.FileName,
 			          destinationUrl);
 
 			if (!CanSynchronizeTo(destinationUrl))
 			{
-				log.Debug("The limit of active synchronizations to {0} server has been achieved. Cannot process a file '{1}'.",
+				Log.Debug("The limit of active synchronizations to {0} server has been achieved. Cannot process a file '{1}'.",
 				          destinationUrl, work.FileName);
 
 				synchronizationQueue.EnqueueSynchronization(destinationUrl, work);
@@ -362,18 +362,18 @@ namespace RavenFS.Synchronization
 					                            report.BytesTransfered, report.BytesCopied, report.NeedListLength);
 				}
 
-				log.Debug("{0} to {1} has finished successfully{2}", work.ToString(), destinationUrl, moreDetails);
+				Log.Debug("{0} to {1} has finished successfully{2}", work.ToString(), destinationUrl, moreDetails);
 			}
 			else
 			{
 				if (work.IsCancelled || report.Exception is TaskCanceledException)
 				{
 					synchronizationCancelled = true;
-					log.DebugException(string.Format("{0} to {1} was cancelled", work, destinationUrl), report.Exception);
+					Log.DebugException(string.Format("{0} to {1} was cancelled", work, destinationUrl), report.Exception);
 				}
 				else
 				{
-					log.WarnException(string.Format("{0} to {1} has finished with the exception", work, destinationUrl),
+					Log.WarnException(string.Format("{0} to {1} has finished with the exception", work, destinationUrl),
 					                  report.Exception);
 				}
 			}
@@ -397,12 +397,12 @@ namespace RavenFS.Synchronization
 			return report;
 		}
 
-		private List<FileHeader> GetFilesToSynchronization(
+		private IEnumerable<FileHeader> GetFilesToSynchronization(
 			SourceSynchronizationInformation destinationsSynchronizationInformationForSource, int take)
 		{
 			var filesToSynchronization = new List<FileHeader>();
 
-			log.Debug("Getting files to synchronize with ETag greater than {0} [parameter take = {1}]",
+			Log.Debug("Getting files to synchronize with ETag greater than {0} [parameter take = {1}]",
 			          destinationsSynchronizationInformationForSource.LastSourceFileEtag, take);
 
 			try
@@ -414,7 +414,7 @@ namespace RavenFS.Synchronization
 			}
 			catch (Exception e)
 			{
-				log.WarnException(
+				Log.WarnException(
 					string.Format("Could not get files to synchronize after: " +
 					              destinationsSynchronizationInformationForSource.LastSourceFileEtag), e);
 			}
@@ -434,7 +434,7 @@ namespace RavenFS.Synchronization
 					filesNeedConfirmation.Select(x => new Tuple<string, Guid>(x.FileName, x.FileETag)));
 		}
 
-		private IList<SynchronizationDetails> GetSyncingConfigurations(string destination)
+		private IEnumerable<SynchronizationDetails> GetSyncingConfigurations(string destination)
 		{
 			IList<SynchronizationDetails> configObjects = new List<SynchronizationDetails>();
 
@@ -450,7 +450,7 @@ namespace RavenFS.Synchronization
 			}
 			catch (Exception e)
 			{
-				log.WarnException(string.Format("Could not get syncing configurations for a destination {0}", destination), e);
+				Log.WarnException(string.Format("Could not get syncing configurations for a destination {0}", destination), e);
 			}
 
 			return configObjects;
@@ -472,7 +472,7 @@ namespace RavenFS.Synchronization
 			}
 			catch (Exception e)
 			{
-				log.WarnException(
+				Log.WarnException(
 					string.Format("Could not create syncing configurations for a file {0} and destination {1}", fileName, destination),
 					e);
 			}
@@ -487,7 +487,7 @@ namespace RavenFS.Synchronization
 			}
 			catch (Exception e)
 			{
-				log.WarnException(
+				Log.WarnException(
 					string.Format("Could not remove syncing configurations for a file {0} and a destination {1}", fileName, destination),
 					e);
 			}
@@ -519,7 +519,7 @@ namespace RavenFS.Synchronization
 			{
 				if (failedAttemptsToGetDestinationsConfig < 3 || failedAttemptsToGetDestinationsConfig%10 == 0)
 				{
-					log.Debug("Configuration " + SynchronizationConstants.RavenSynchronizationDestinations + " does not exist");
+					Log.Debug("Configuration " + SynchronizationConstants.RavenSynchronizationDestinations + " does not exist");
 				}
 
 				failedAttemptsToGetDestinationsConfig++;
@@ -529,16 +529,16 @@ namespace RavenFS.Synchronization
 
 			failedAttemptsToGetDestinationsConfig = 0;
 
-			var destionationsConfig = new NameValueCollection();
+			var destinationsConfig = new NameValueCollection();
 
 			storage.Batch(
-				accessor => destionationsConfig = accessor.GetConfig(SynchronizationConstants.RavenSynchronizationDestinations));
+				accessor => destinationsConfig = accessor.GetConfig(SynchronizationConstants.RavenSynchronizationDestinations));
 
-			var destinations = destionationsConfig.GetValues("url");
+			var destinations = destinationsConfig.GetValues("url");
 
 			if (destinations == null)
 			{
-				log.Warn("Empty " + SynchronizationConstants.RavenSynchronizationDestinations + " configuration");
+				Log.Warn("Empty " + SynchronizationConstants.RavenSynchronizationDestinations + " configuration");
 				return Enumerable.Empty<string>();
 			}
 
@@ -550,7 +550,7 @@ namespace RavenFS.Synchronization
 
 			if (destinations.Length == 0)
 			{
-				log.Warn("Configuration " + SynchronizationConstants.RavenSynchronizationDestinations +
+				Log.Warn("Configuration " + SynchronizationConstants.RavenSynchronizationDestinations +
 				         " does not contain any destination");
 			}
 
@@ -581,13 +581,13 @@ namespace RavenFS.Synchronization
 
 		public void Cancel(string fileName)
 		{
-			log.Debug("Cancellation of active synchronizations of a file '{0}'", fileName);
+			Log.Debug("Cancellation of active synchronizations of a file '{0}'", fileName);
 			Queue.CancelActiveSynchronizations(fileName);
 		}
 
 		private static void LogFilesInfo(string message, ICollection<FileHeader> files)
 		{
-			log.Debug(message, files.Count,
+			Log.Debug(message, files.Count,
 			          string.Join(",", files.Select(x => string.Format("{0} [ETag {1}]", x.Name, x.Metadata.Value<Guid>("ETag")))));
 		}
 	}

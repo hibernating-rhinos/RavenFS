@@ -32,12 +32,11 @@ namespace RavenFS.Client.Changes
 			var request= (HttpWebRequest) WebRequest.Create(url + "/changes/events?id=" + id);
 		    request.Method = "GET";
 
-			IObservable<string> result;
 			while (true)
 			{
 				try
 				{
-					result = await request.ServerPullAsync();
+					var result = await request.ServerPullAsync();
 					reconnectAttemptsRemaining = 3; // after the first successful try, we will retry 3 times before giving up
 					connection = (IDisposable)result;
 					result.Subscribe(this);

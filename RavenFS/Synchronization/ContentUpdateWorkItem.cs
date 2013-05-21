@@ -40,7 +40,7 @@ namespace RavenFS.Synchronization
 
 		public override void Cancel()
 		{
-			cts.Cancel();
+			Cts.Cancel();
 		}
 
 		public override async Task<SynchronizationReport> PerformAsync(string destination)
@@ -75,7 +75,7 @@ namespace RavenFS.Synchronization
 
 				log.Debug("Starting to retrieve signatures of a local file '{0}'.", FileName);
 
-				cts.Token.ThrowIfCancellationRequested();
+				Cts.Token.ThrowIfCancellationRequested();
 
 				// first we need to create a local file signatures before we synchronize with remote ones
 				var localSignatureManifest = await localRdcManager.GetSignatureManifestAsync(FileDataInfo);
@@ -84,7 +84,7 @@ namespace RavenFS.Synchronization
 
 				if (localSignatureManifest.Signatures.Count > 0)
 				{
-					var destinationSignatureManifest = await destinationRdcManager.SynchronizeSignaturesAsync(FileDataInfo, cts.Token);
+					var destinationSignatureManifest = await destinationRdcManager.SynchronizeSignaturesAsync(FileDataInfo, Cts.Token);
 
 					if (destinationSignatureManifest.Signatures.Count > 0)
 					{
@@ -122,7 +122,7 @@ namespace RavenFS.Synchronization
 				IList<RdcNeed> needList;
 				using (var needListGenerator = new NeedListGenerator(remoteSignatureRepository, localSignatureRepository))
 				{
-					needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo, cts.Token);
+					needList = needListGenerator.CreateNeedsList(seedSignatureInfo, sourceSignatureInfo, Cts.Token);
 				}
 
 				return await PushByUsingMultipartRequest(destinationServerUrl, localFile, needList);
@@ -152,7 +152,7 @@ namespace RavenFS.Synchronization
 		private Task<SynchronizationReport> PushByUsingMultipartRequest(string destinationServerUrl, Stream sourceFileStream,
 		                                                                IList<RdcNeed> needList)
 		{
-			cts.Token.ThrowIfCancellationRequested();
+			Cts.Token.ThrowIfCancellationRequested();
 
 			multipartRequest = new SynchronizationMultipartRequest(destinationServerUrl, ServerInfo, FileName, FileMetadata,
 			                                                       sourceFileStream, needList);
@@ -163,7 +163,7 @@ namespace RavenFS.Synchronization
 				"Synchronizing a file '{0}' (ETag {1}) to {2} by using multipart request. Need list length is {3}. Number of bytes that needs to be transfered is {4}",
 				FileName, FileETag, destinationServerUrl, needList.Count, bytesToTransferCount);
 
-			return multipartRequest.PushChangesAsync(cts.Token);
+			return multipartRequest.PushChangesAsync(Cts.Token);
 		}
 
 		private DataInfo GetLocalFileDataInfo(string fileName)

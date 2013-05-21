@@ -9,7 +9,7 @@ namespace RavenFS.Config
 {
 	public class ServerUrlUtil
 	{
-		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public static bool TrySaveServerUrlForNextTime(string serverUrl)
 		{
@@ -31,7 +31,7 @@ namespace RavenFS.Config
 			}
 			catch (Exception e)
 			{
-				logger.InfoException("Could not store server url", e);
+				Logger.InfoException("Could not store server url", e);
 			}
 
 			return false;

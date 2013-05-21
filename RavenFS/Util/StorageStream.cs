@@ -18,8 +18,8 @@ namespace RavenFS.Util
 		private FileAndPages fileAndPages;
 		private FileHeader fileHeader;
 
-		protected byte[] innerBuffer;
-		protected int innerBufferOffset = 0;
+		protected byte[] InnerBuffer;
+		protected int InnerBufferOffset = 0;
 		private int writtingPagePosition;
 
 		protected StorageStream(TransactionalStorage transactionalStorage, string fileName,
@@ -61,7 +61,7 @@ namespace RavenFS.Util
 
 		public NameValueCollection Metadata { get; private set; }
 
-		private long currentPageFrameSize
+		private long CurrentPageFrameSize
 		{
 			get { return fileAndPages.Pages.Sum(item => item.Size); }
 		}
@@ -134,9 +134,9 @@ namespace RavenFS.Util
 				TransactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(Name, 0, PagesBatchSize));
 				currentPageFrameOffset = 0;
 			}
-			while (currentPageFrameOffset + currentPageFrameSize - 1 < offset)
+			while (currentPageFrameOffset + CurrentPageFrameSize - 1 < offset)
 			{
-				var lastPageFrameSize = currentPageFrameSize;
+				var lastPageFrameSize = CurrentPageFrameSize;
 				var nextPageIndex = fileAndPages.Start + fileAndPages.Pages.Count;
 				TransactionalStorage.Batch(accessor => fileAndPages = accessor.GetFile(Name, nextPageIndex, PagesBatchSize));
 				if (fileAndPages.Pages.Count < 1)
@@ -185,18 +185,18 @@ namespace RavenFS.Util
 
 		public override void Flush()
 		{
-			if (innerBuffer != null && innerBufferOffset > 0)
+			if (InnerBuffer != null && InnerBufferOffset > 0)
 			{
 				ConcurrencyAwareExecutor.Execute(() => TransactionalStorage.Batch(
 					accessor =>
 						{
-							var hashKey = accessor.InsertPage(innerBuffer, innerBufferOffset);
-							accessor.AssociatePage(Name, hashKey, writtingPagePosition, innerBufferOffset);
+							var hashKey = accessor.InsertPage(InnerBuffer, InnerBufferOffset);
+							accessor.AssociatePage(Name, hashKey, writtingPagePosition, InnerBufferOffset);
 							writtingPagePosition++;
 						}));
 
-				innerBuffer = null;
-				innerBufferOffset = 0;
+				InnerBuffer = null;
+				InnerBufferOffset = 0;
 			}
 		}
 
@@ -206,17 +206,17 @@ namespace RavenFS.Util
 
 			while (innerOffset < count)
 			{
-				if (innerBuffer == null)
-					innerBuffer = new byte[StorageConstants.MaxPageSize];
+				if (InnerBuffer == null)
+					InnerBuffer = new byte[StorageConstants.MaxPageSize];
 
-				var toCopy = Math.Min(StorageConstants.MaxPageSize - innerBufferOffset, count - innerOffset);
+				var toCopy = Math.Min(StorageConstants.MaxPageSize - InnerBufferOffset, count - innerOffset);
 				if (toCopy == 0)
 					throw new Exception("Impossible");
 
-				Array.Copy(buffer, offset + innerOffset, innerBuffer, innerBufferOffset, toCopy);
-				innerBufferOffset += toCopy;
+				Array.Copy(buffer, offset + innerOffset, InnerBuffer, InnerBufferOffset, toCopy);
+				InnerBufferOffset += toCopy;
 
-				if (innerBufferOffset == StorageConstants.MaxPageSize)
+				if (InnerBufferOffset == StorageConstants.MaxPageSize)
 					Flush();
 
 				innerOffset += toCopy;

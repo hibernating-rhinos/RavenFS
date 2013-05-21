@@ -25,9 +25,9 @@ namespace RavenFS.Util
 
 		public override void Flush()
 		{
-			if (innerBuffer != null && innerBufferOffset > 0)
+			if (InnerBuffer != null && InnerBufferOffset > 0)
 			{
-				md5Hasher.TransformBlock(innerBuffer, 0, innerBufferOffset, null, 0);
+				md5Hasher.TransformBlock(InnerBuffer, 0, InnerBufferOffset, null, 0);
 				base.Flush();
 			}
 		}

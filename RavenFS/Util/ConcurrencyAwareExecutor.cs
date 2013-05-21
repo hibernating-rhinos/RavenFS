@@ -8,7 +8,7 @@ namespace RavenFS.Util
 	{
 		public static void Execute(Action action, Func<ConcurrencyException, Exception> failed = null, int retries = 50)
 		{
-			var shouldRetry = false;
+			bool shouldRetry;
 
 			do
 			{

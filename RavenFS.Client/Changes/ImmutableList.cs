@@ -63,7 +63,7 @@ namespace RavenFS.Client.Changes
             }
             else
             {
-                for (int i = 0; i < items.Length; i++)
+                for (var i = 0; i < items.Length; i++)
                 {
                     yield return items[i];
                 }

@@ -6,17 +6,17 @@ namespace RavenFS.Infrastructure
 	public class SequenceActions
 	{
 		private const string SequencesKeyPrefix = "Raven/Sequences/";
-		private readonly TransactionalStorage _storage;
+		private readonly TransactionalStorage storage;
 
 		public SequenceActions(TransactionalStorage storage)
 		{
-			_storage = storage;
+			this.storage = storage;
 		}
 
 		public long GetNextValue(string name)
 		{
 			long result = 1;
-			_storage.Batch(
+			storage.Batch(
 				accessor =>
 					{
 						var sequenceName = SequenceName(name);

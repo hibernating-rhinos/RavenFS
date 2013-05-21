@@ -6,21 +6,21 @@ namespace RavenFS.Infrastructure
 {
 	public class UuidGenerator
 	{
-		private readonly long _currentEtagBase;
-		private readonly SequenceActions _sequenceActions;
-		private long _sequentialUuidCounter;
+		private readonly long currentEtagBase;
+		private readonly SequenceActions sequenceActions;
+		private long sequentialUuidCounter;
 
 		public UuidGenerator(SequenceActions sequenceActions)
 		{
-			_sequenceActions = sequenceActions;
-			_currentEtagBase = sequenceActions.GetNextValue("Raven/Etag");
+			this.sequenceActions = sequenceActions;
+			currentEtagBase = sequenceActions.GetNextValue("Raven/Etag");
 		}
 
 		public Guid CreateSequentialUuid()
 		{
-			var ticksAsBytes = BitConverter.GetBytes(_currentEtagBase);
+			var ticksAsBytes = BitConverter.GetBytes(currentEtagBase);
 			Array.Reverse(ticksAsBytes);
-			var increment = Interlocked.Increment(ref _sequentialUuidCounter);
+			var increment = Interlocked.Increment(ref sequentialUuidCounter);
 			var currentAsBytes = BitConverter.GetBytes(increment);
 			Array.Reverse(currentAsBytes);
 			var bytes = new byte[16];

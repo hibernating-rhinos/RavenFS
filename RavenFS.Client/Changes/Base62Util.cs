@@ -11,11 +11,11 @@ namespace RavenFS.Client.Changes
 {
 	public class Base62Util
 	{
-		private static readonly Random random = new Random();
+		private static readonly Random Random = new Random();
 
 		public static string Base62Random()
 		{
-			return Base62ToString(random.Next());
+			return Base62ToString(Random.Next());
 		}
 
 		private static string Base62ToString(long value)
@@ -53,7 +53,7 @@ namespace RavenFS.Client.Changes
 				return (char)ascii;
 			}
 
-			return value.ToString()[0];
+			return value.ToString(CultureInfo.InvariantCulture)[0];
 		}
 	}
 }

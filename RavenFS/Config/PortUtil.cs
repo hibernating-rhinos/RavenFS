@@ -13,7 +13,7 @@ namespace RavenFS.Config
 	public static class PortUtil
 	{
 		private const int DefaultPort = 9090;
-		private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
 		public static int GetPort(string portStr)
 		{
@@ -46,7 +46,7 @@ namespace RavenFS.Config
 				TrySaveAutoPortForNextTime(autoPort);
 
 				if (autoPort != DefaultPort)
-					logger.Info("Default port {0} was not available, so using available port {1}", DefaultPort, autoPort);
+					Logger.Info("Default port {0} was not available, so using available port {1}", DefaultPort, autoPort);
 
 				return autoPort;
 			}
@@ -76,7 +76,7 @@ namespace RavenFS.Config
 			}
 			catch (Exception e)
 			{
-				logger.InfoException("Could not store selected port to local config, next time the port could change", e);
+				Logger.InfoException("Could not store selected port to local config, next time the port could change", e);
 			}
 		}
 

@@ -37,7 +37,7 @@ namespace RavenFS.Client.Util
 
 		public CompletedTask(T result)
 		{
-			this.Result = result;
+			Result = result;
 		}
 
 		public CompletedTask(Exception error)

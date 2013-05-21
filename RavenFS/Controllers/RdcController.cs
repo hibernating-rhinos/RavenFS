@@ -15,14 +15,14 @@ namespace RavenFS.Controllers
 {
 	public class RdcController : RavenController
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		[AcceptVerbs("GET")]
 		public HttpResponseMessage Signatures(string filename)
 		{
 			filename = Uri.UnescapeDataString(filename);
 
-			log.Debug("Got signatures of a file '{0}' request", filename);
+			Log.Debug("Got signatures of a file '{0}' request", filename);
 
 			using (var signatureRepository = new StorageSignatureRepository(Storage, filename))
 			{
@@ -41,7 +41,7 @@ namespace RavenFS.Controllers
 				return new RdcStats
 					       {
 						       CurrentVersion = rdcVersion.CurrentVersion,
-						       MinimumCompatibileAppVersion = rdcVersion.MinimumCompatibleAppVersion
+						       MinimumCompatibleAppVersion = rdcVersion.MinimumCompatibleAppVersion
 					       };
 			}
 		}
@@ -57,7 +57,7 @@ namespace RavenFS.Controllers
 			}
 			catch (FileNotFoundException)
 			{
-				log.Debug("Signature manifest for a file '{0}' was not found", filename);
+				Log.Debug("Signature manifest for a file '{0}' was not found", filename);
 				return Request.CreateResponse(HttpStatusCode.NotFound);
 			}
 
@@ -76,7 +76,7 @@ namespace RavenFS.Controllers
 						                                           });
 				signatureManifest.FileLength = fileLength ?? 0;
 
-				log.Debug("Signature manifest for a file '{0}' was downloaded. Signatures count was {1}", filename,
+				Log.Debug("Signature manifest for a file '{0}' was downloaded. Signatures count was {1}", filename,
 				          signatureManifest.Signatures.Count);
 
 				return Request.CreateResponse(HttpStatusCode.OK, signatureManifest);

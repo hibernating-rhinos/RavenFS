@@ -25,21 +25,21 @@ namespace RavenFS.Controllers
 {
 	public class SynchronizationController : RavenController
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-		private static readonly ConcurrentDictionary<Guid, ReaderWriterLockSlim> synchronizationFinishLocks =
+		private static readonly ConcurrentDictionary<Guid, ReaderWriterLockSlim> SynchronizationFinishLocks =
 			new ConcurrentDictionary<Guid, ReaderWriterLockSlim>();
 
 		[AcceptVerbs("POST")]
 		public Task<DestinationSyncResult[]> ToDestinations(bool forceSyncingAll)
 		{
-			return SynchronizationTask.SynchronizeDestinationsAsync(forceSyncingContinuation: forceSyncingAll);
+			return SynchronizationTask.SynchronizeDestinationsAsync(forceSyncingAll);
 		}
 
 		[AcceptVerbs("POST")]
 		public Task<SynchronizationReport> Start(string fileName, string destinationServerUrl)
 		{
-			log.Debug("Starting to synchronize a file '{0}' to {1}", fileName, destinationServerUrl);
+			Log.Debug("Starting to synchronize a file '{0}' to {1}", fileName, destinationServerUrl);
 
 			return SynchronizationTask.SynchronizeFileToAsync(fileName, destinationServerUrl);
 		}
@@ -58,7 +58,7 @@ namespace RavenFS.Controllers
 
 			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.ContentUpdate);
 
-			log.Debug("Starting to process multipart synchronization request of a file '{0}' with ETag {1} from {2}", fileName,
+			Log.Debug("Starting to process multipart synchronization request of a file '{0}' with ETag {1} from {2}", fileName,
 			          sourceFileETag, sourceServerInfo);
 
 			StorageStream localFile = null;
@@ -98,11 +98,11 @@ namespace RavenFS.Controllers
 
 				var provider = new MultipartSyncStreamProvider(synchronizingFile, localFile);
 
-				log.Debug("Starting to process multipart content of a file '{0}'", fileName);
+				Log.Debug("Starting to process multipart content of a file '{0}'", fileName);
 
 				await Request.Content.ReadAsMultipartAsync(provider);
 
-				log.Debug("Multipart content of a file '{0}' was processed", fileName);
+				Log.Debug("Multipart content of a file '{0}' was processed", fileName);
 
 				report.BytesCopied = provider.BytesCopied;
 				report.BytesTransfered = provider.BytesTransfered;
@@ -112,7 +112,7 @@ namespace RavenFS.Controllers
 				synchronizingFile.Dispose();
 				sourceMetadata["Content-MD5"] = synchronizingFile.FileHash;
 
-				Storage.Batch(accesor => accesor.UpdateFileMetadata(tempFileName, sourceMetadata));
+				Storage.Batch(accessor => accessor.UpdateFileMetadata(tempFileName, sourceMetadata));
 
 				Storage.Batch(accessor =>
 					              {
@@ -125,11 +125,11 @@ namespace RavenFS.Controllers
 
 				if (isNewFile)
 				{
-					log.Debug("Temporary downloading file '{0}' was renamed to '{1}'. Indexes was updated.", tempFileName, fileName);
+					Log.Debug("Temporary downloading file '{0}' was renamed to '{1}'. Indexes was updated.", tempFileName, fileName);
 				}
 				else
 				{
-					log.Debug("Old file '{0}' was deleted. Indexes was updated.", fileName);
+					Log.Debug("Old file '{0}' was deleted. Indexes was updated.", fileName);
 				}
 
 				if (isConflictResolved)
@@ -152,13 +152,13 @@ namespace RavenFS.Controllers
 
 			if (report.Exception == null)
 			{
-				log.Debug(
+				Log.Debug(
 					"File '{0}' was synchronized successfully from {1}. {2} bytes were transfered and {3} bytes copied. Need list length was {4}",
 					fileName, sourceServerInfo, report.BytesTransfered, report.BytesCopied, report.NeedListLength);
 			}
 			else
 			{
-				log.WarnException(
+				Log.WarnException(
 					string.Format("Error has occured during synchronization of a file '{0}' from {1}", fileName, sourceServerInfo),
 					report.Exception);
 			}
@@ -178,7 +178,7 @@ namespace RavenFS.Controllers
 			{
 				// we want to execute those operation in a single batch but we also have to ensure that
 				// Raven/Synchronization/Sources/sourceServerId config is modified only by one finishing synchronization at the same time
-				synchronizationFinishLocks.GetOrAdd(sourceServer.Id, new ReaderWriterLockSlim()).EnterWriteLock();
+				SynchronizationFinishLocks.GetOrAdd(sourceServer.Id, new ReaderWriterLockSlim()).EnterWriteLock();
 
 				Storage.Batch(accessor =>
 					              {
@@ -193,12 +193,12 @@ namespace RavenFS.Controllers
 			}
 			catch (Exception ex)
 			{
-				log.ErrorException(
+				Log.ErrorException(
 					string.Format("Failed to finish synchronization of a file '{0}' from {1}", fileName, sourceServer), ex);
 			}
 			finally
 			{
-				synchronizationFinishLocks.GetOrAdd(sourceServer.Id, new ReaderWriterLockSlim()).ExitWriteLock();
+				SynchronizationFinishLocks.GetOrAdd(sourceServer.Id, new ReaderWriterLockSlim()).ExitWriteLock();
 			}
 		}
 
@@ -219,7 +219,7 @@ namespace RavenFS.Controllers
 						                  SourceServerUrl = sourceServer.Url
 					                  });
 
-				log.Debug(
+				Log.Debug(
 					"File '{0}' is in conflict with synchronized version from {1} ({2}). File marked as conflicted, conflict configuration item created",
 					fileName, sourceServer.Url, sourceServer.Id);
 
@@ -242,7 +242,7 @@ namespace RavenFS.Controllers
 			var sourceServerInfo = Request.Headers.Value<ServerInfo>(SyncingMultipartConstants.SourceServerInfo);
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
-			log.Debug("Starting to update a metadata of file '{0}' with ETag {1} from {2} bacause of synchronization", fileName,
+			Log.Debug("Starting to update a metadata of file '{0}' with ETag {1} from {2} because of synchronization", fileName,
 			          sourceFileETag, sourceServerInfo);
 
 			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.MetadataUpdate);
@@ -284,7 +284,7 @@ namespace RavenFS.Controllers
 			{
 				report.Exception = ex;
 
-				log.WarnException(
+				Log.WarnException(
 					string.Format("Error was occured during metadata synchronization of file '{0}' from {1}", fileName,
 					              sourceServerInfo), ex);
 			}
@@ -297,7 +297,7 @@ namespace RavenFS.Controllers
 
 			if (report.Exception == null)
 			{
-				log.Debug("Metadata of file '{0}' was synchronized successfully from {1}", fileName, sourceServerInfo);
+				Log.Debug("Metadata of file '{0}' was synchronized successfully from {1}", fileName, sourceServerInfo);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -309,7 +309,7 @@ namespace RavenFS.Controllers
 			var sourceServerInfo = Request.Headers.Value<ServerInfo>(SyncingMultipartConstants.SourceServerInfo);
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 
-			log.Debug("Starting to delete a file '{0}' with ETag {1} from {2} bacause of synchronization", fileName,
+			Log.Debug("Starting to delete a file '{0}' with ETag {1} from {2} because of synchronization", fileName,
 			          sourceFileETag, sourceServerInfo);
 
 			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.Delete);
@@ -367,7 +367,7 @@ namespace RavenFS.Controllers
 			{
 				report.Exception = ex;
 
-				log.WarnException(
+				Log.WarnException(
 					string.Format("Error was occured during deletion synchronization of file '{0}' from {1}", fileName,
 					              sourceServerInfo), ex);
 			}
@@ -380,7 +380,7 @@ namespace RavenFS.Controllers
 
 			if (report.Exception == null)
 			{
-				log.Debug("File '{0}' was deleted during synchronization from {1}", fileName, sourceServerInfo);
+				Log.Debug("File '{0}' was deleted during synchronization from {1}", fileName, sourceServerInfo);
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
@@ -393,7 +393,7 @@ namespace RavenFS.Controllers
 			var sourceFileETag = Request.Headers.Value<Guid>("ETag");
 			var sourceMetadata = Request.Headers.FilterHeaders();
 
-			log.Debug("Starting to rename a file '{0}' to '{1}' with ETag {2} from {3} because of synchronization", fileName,
+			Log.Debug("Starting to rename a file '{0}' to '{1}' with ETag {2} from {3} because of synchronization", fileName,
 			          rename, sourceFileETag, sourceServerInfo);
 
 			var report = new SynchronizationReport(fileName, sourceFileETag, SynchronizationType.Rename);
@@ -427,7 +427,7 @@ namespace RavenFS.Controllers
 			catch (Exception ex)
 			{
 				report.Exception = ex;
-				log.WarnException(
+				Log.WarnException(
 					string.Format("Error was occured during renaming synchronization of file '{0}' from {1}", fileName,
 					              sourceServerInfo), ex);
 			}
@@ -439,7 +439,7 @@ namespace RavenFS.Controllers
 			}
 
 			if (report.Exception == null)
-				log.Debug("File '{0}' was renamed to '{1}' during synchronization from {2}", fileName, rename, sourceServerInfo);
+				Log.Debug("File '{0}' was renamed to '{1}' during synchronization from {2}", fileName, rename, sourceServerInfo);
 
 			return Request.CreateResponse(HttpStatusCode.OK, report);
 		}
@@ -523,7 +523,7 @@ namespace RavenFS.Controllers
 		[AcceptVerbs("PATCH")]
 		public HttpResponseMessage ResolveConflict(string fileName, ConflictResolutionStrategy strategy)
 		{
-			log.Debug("Resolving conflict of a file '{0}' by using {1} strategy", fileName, strategy);
+			Log.Debug("Resolving conflict of a file '{0}' by using {1} strategy", fileName, strategy);
 
 			if (strategy == ConflictResolutionStrategy.CurrentVersion)
 			{
@@ -583,7 +583,7 @@ namespace RavenFS.Controllers
 					                  SourceServerUrl = remoteServerUrl
 				                  });
 
-			log.Debug(
+			Log.Debug(
 				"Conflict applied for a file '{0}' (remote version: {1}, remote server id: {2}).", filename, remoteVersion,
 				remoteServerId);
 
@@ -596,7 +596,7 @@ namespace RavenFS.Controllers
 			SourceSynchronizationInformation lastEtag = null;
 			Storage.Batch(accessor => lastEtag = GetLastSynchronization(from, accessor));
 
-			log.Debug("Got synchronization last ETag request from {0}: [{1}]", from, lastEtag);
+			Log.Debug("Got synchronization last ETag request from {0}: [{1}]", from, lastEtag);
 
 			return Request.CreateResponse(HttpStatusCode.OK, lastEtag);
 		}
@@ -608,7 +608,7 @@ namespace RavenFS.Controllers
 			{
 				// we want to execute those operation in a single batch but we also have to ensure that
 				// Raven/Synchronization/Sources/sourceServerId config is modified only by one finishing synchronization at the same time
-				synchronizationFinishLocks.GetOrAdd(sourceServerId, new ReaderWriterLockSlim()).EnterWriteLock();
+				SynchronizationFinishLocks.GetOrAdd(sourceServerId, new ReaderWriterLockSlim()).EnterWriteLock();
 
 				Storage.Batch(
 					accessor =>
@@ -617,12 +617,12 @@ namespace RavenFS.Controllers
 			}
 			catch (Exception ex)
 			{
-				log.ErrorException(
+				Log.ErrorException(
 					string.Format("Failed to update last seen ETag from {0}", sourceServerId), ex);
 			}
 			finally
 			{
-				synchronizationFinishLocks.GetOrAdd(sourceServerId, new ReaderWriterLockSlim()).ExitWriteLock();
+				SynchronizationFinishLocks.GetOrAdd(sourceServerId, new ReaderWriterLockSlim()).ExitWriteLock();
 			}
 
 			return Request.CreateResponse(HttpStatusCode.OK);
@@ -808,7 +808,7 @@ namespace RavenFS.Controllers
 
 			accessor.SetConfig(key, synchronizationSourceInfo.AsConfig());
 
-			log.Debug("Saved last synchronized file ETag {0} from {1} ({2})", lastSourceEtag, sourceServer.Url, sourceServer.Id);
+			Log.Debug("Saved last synchronized file ETag {0} from {1} ({2})", lastSourceEtag, sourceServer.Url, sourceServer.Id);
 		}
 	}
 }

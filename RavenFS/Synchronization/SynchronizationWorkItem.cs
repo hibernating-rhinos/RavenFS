@@ -16,7 +16,7 @@ namespace RavenFS.Synchronization
 	{
 		private readonly ConflictDetector conflictDetector;
 		private readonly ConflictResolver conflictResolver;
-		protected readonly CancellationTokenSource cts = new CancellationTokenSource();
+		protected readonly CancellationTokenSource Cts = new CancellationTokenSource();
 
 		protected SynchronizationWorkItem(string fileName, string sourceServerUrl, TransactionalStorage storage)
 		{
@@ -47,7 +47,7 @@ namespace RavenFS.Synchronization
 
 		public bool IsCancelled
 		{
-			get { return cts.Token.IsCancellationRequested; }
+			get { return Cts.Token.IsCancellationRequested; }
 		}
 
 		protected NameValueCollection FileMetadata { get; set; }

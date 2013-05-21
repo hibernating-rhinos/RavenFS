@@ -6,22 +6,22 @@ namespace RavenFS.Util
 {
     public class AwaitableQueue<T>
     {
-        Queue<T> _queue = new Queue<T>();
-        Queue<TaskCompletionSource<T>> _waitingTasks = new Queue<TaskCompletionSource<T>>(); 
-        object _gate = new object();
-        private bool _completed;
+	    Queue<T> queue = new Queue<T>();
+	    Queue<TaskCompletionSource<T>> waitingTasks = new Queue<TaskCompletionSource<T>>();
+	    object gate = new object();
+        private bool completed;
 
 
         public bool TryEnqueue(T item)
         {
-            lock(_gate)
+            lock(gate)
             {
-                if (_completed)
+                if (completed)
                 {
                     return false;
                 }
 
-                _queue.Enqueue(item);
+                queue.Enqueue(item);
             }
 
             FulfillWaitingTasks();
@@ -30,11 +30,11 @@ namespace RavenFS.Util
 
         public bool TryDequeue(out T item)
         {
-            lock(_gate)
+            lock(gate)
             {
-                if (_queue.Count > 0)
+                if (queue.Count > 0)
                 {
-                    item = _queue.Dequeue();
+                    item = queue.Dequeue();
                     return true;
                 }
 	            
@@ -47,15 +47,15 @@ namespace RavenFS.Util
         {
             bool wasEnqueued = false;
             var tcs = new TaskCompletionSource<T>();
-            lock(_gate)
+            lock(gate)
             {
-                if (_completed)
+                if (completed)
                 {
                     tcs.SetCanceled();
                 }
                 else
                 {
-                    _waitingTasks.Enqueue(tcs);
+                    waitingTasks.Enqueue(tcs);
                     wasEnqueued = true;
                 }
             }
@@ -70,12 +70,12 @@ namespace RavenFS.Util
         {
             var tasksToCancel = new List<TaskCompletionSource<T>>();
 
-            lock(_gate)
+            lock(gate)
             {
-                _completed = true;
-                while (_waitingTasks.Count > 0)
+                completed = true;
+                while (waitingTasks.Count > 0)
                 {
-                    tasksToCancel.Add(_waitingTasks.Dequeue());
+                    tasksToCancel.Add(waitingTasks.Dequeue());
                 }
             }
 
@@ -95,10 +95,10 @@ namespace RavenFS.Util
 
         private Tuple<T,TaskCompletionSource<T>> GetNextItemAndTask()
         {
-            lock(_gate)
+            lock(gate)
             {
-	            if (_queue.Count > 0 && _waitingTasks.Count > 0)
-		            return Tuple.Create(_queue.Dequeue(), _waitingTasks.Dequeue());
+	            if (queue.Count > 0 && waitingTasks.Count > 0)
+		            return Tuple.Create(queue.Dequeue(), waitingTasks.Dequeue());
 
 	            return Tuple.Create(default(T), default(TaskCompletionSource<T>));
             }

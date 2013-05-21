@@ -11,7 +11,7 @@ namespace RavenFS.Client
 
         static NotificationJSonUtilities()
         {
-            settings = new JsonSerializerSettings()
+            settings = new JsonSerializerSettings
                            {
                                Binder = new TypeHidingBinder(),
                                TypeNameHandling = TypeNameHandling.Auto

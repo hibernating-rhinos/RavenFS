@@ -15,7 +15,7 @@ namespace RavenFS.Controllers
 {
 	public class ConfigController : RavenController
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		public string[] Get()
 		{
@@ -81,7 +81,7 @@ namespace RavenFS.Controllers
 
 			Publisher.Publish(new ConfigChange {Name = name, Action = ConfigChangeAction.Set});
 
-			log.Debug("Config '{0}' was inserted", name);
+			Log.Debug("Config '{0}' was inserted", name);
 
 			return new HttpResponseMessage(HttpStatusCode.Created);
 		}
@@ -93,7 +93,7 @@ namespace RavenFS.Controllers
 
 			Publisher.Publish(new ConfigChange {Name = name, Action = ConfigChangeAction.Delete});
 
-			log.Debug("Config '{0}' was deleted", name);
+			Log.Debug("Config '{0}' was deleted", name);
 			return new HttpResponseMessage(HttpStatusCode.NoContent);
 		}
 	}

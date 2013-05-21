@@ -22,7 +22,7 @@ using Heartbeat = RavenFS.Notifications.Heartbeat;
 namespace RavenFS.Infrastructure.Connections
 {
 	/// <summary>
-	///     Repsonsible for streaming events to an individual client
+	///     Responsible for streaming events to an individual client
 	/// </summary>
 	/// <remarks>
 	///     We use a queue to serialize the writing of individual messages to the stream because we were encountering concurrency exceptions when

@@ -8,11 +8,11 @@ namespace RavenFS.Notifications
 {
 	public class TypeHidingJsonSerializer
 	{
-		private static readonly JsonSerializerSettings settings;
+		private static readonly JsonSerializerSettings Settings;
 
 		static TypeHidingJsonSerializer()
 		{
-			settings = new JsonSerializerSettings
+			Settings = new JsonSerializerSettings
 				           {
 					           Binder = new TypeHidingBinder(),
 					           TypeNameHandling = TypeNameHandling.Auto,
@@ -21,22 +21,22 @@ namespace RavenFS.Notifications
 
 		public string Stringify(object obj)
 		{
-			return JsonConvert.SerializeObject(obj, Formatting.None, settings);
+			return JsonConvert.SerializeObject(obj, Formatting.None, Settings);
 		}
 
 		public object Parse(string json)
 		{
-			return JsonConvert.DeserializeObject(json, settings);
+			return JsonConvert.DeserializeObject(json, Settings);
 		}
 
 		public object Parse(string json, Type targetType)
 		{
-			return JsonConvert.DeserializeObject(json, targetType, settings);
+			return JsonConvert.DeserializeObject(json, targetType, Settings);
 		}
 
 		public T Parse<T>(string json)
 		{
-			return JsonConvert.DeserializeObject<T>(json, settings);
+			return JsonConvert.DeserializeObject<T>(json, Settings);
 		}
 	}
 

@@ -19,7 +19,7 @@ namespace RavenFS.Infrastructure
 {
 	public class StorageOperationsTask
 	{
-		private static readonly Logger log = LogManager.GetCurrentClassLogger();
+		private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
 		private readonly ConcurrentDictionary<string, Task> deleteFileTasks = new ConcurrentDictionary<string, Task>();
 		private readonly FileLockManager fileLockManager = new FileLockManager();
@@ -149,7 +149,7 @@ namespace RavenFS.Infrastructure
 						accessor.UpdateFileMetadata(deletingFileName, metadata);
 						accessor.DecrementFileCount();
 
-						log.Debug(string.Format("File '{0}' was renamed to '{1}' and marked as deleted",
+						Log.Debug(string.Format("File '{0}' was renamed to '{1}' and marked as deleted",
 						                        fileName, deletingFileName));
 
 						var configName = RavenFileNameHelper.DeleteOperationConfigNameForFile(deletingFileName);
@@ -161,7 +161,7 @@ namespace RavenFS.Infrastructure
 					}
 					else
 					{
-						log.Warn("Could not rename a file '{0}' when a delete operation was performed",
+						Log.Warn("Could not rename a file '{0}' when a delete operation was performed",
 						         fileName);
 					}
 				});
@@ -204,7 +204,7 @@ namespace RavenFS.Infrastructure
 						continue;
 				}
 
-				log.Debug("Starting to delete file '{0}' from storage", deletingFileName);
+				Log.Debug("Starting to delete file '{0}' from storage", deletingFileName);
 
 				var deleteTask = TaskEx.Run(() =>
 					{
@@ -214,7 +214,7 @@ namespace RavenFS.Infrastructure
 						}
 						catch (Exception e)
 						{
-							log.WarnException(string.Format("Could not delete file '{0}' from storage", deletingFileName), e);
+							Log.WarnException(string.Format("Could not delete file '{0}' from storage", deletingFileName), e);
 							return;
 						}
 						var configName = RavenFileNameHelper.DeleteOperationConfigNameForFile(deletingFileName);
@@ -227,7 +227,7 @@ namespace RavenFS.Infrastructure
 								Action = ConfigChangeAction.Delete
 							});
 
-						log.Debug("File '{0}' was deleted from storage", deletingFileName);
+						Log.Debug("File '{0}' was deleted from storage", deletingFileName);
 					});
 
 				deleteFileTasks.AddOrUpdate(deletingFileName, deleteTask, (file, oldTask) => deleteTask);
@@ -257,7 +257,7 @@ namespace RavenFS.Infrastructure
 				if (IsRenameInProgress(renameOperation.Name))
 					continue;
 
-				log.Debug("Starting to resume a rename operation of a file '{0}' to '{1}'", renameOperation.Name,
+				Log.Debug("Starting to resume a rename operation of a file '{0}' to '{1}'", renameOperation.Name,
 				          renameOperation.Rename);
 
 				var renameTask = TaskEx.Run(() =>
@@ -265,12 +265,12 @@ namespace RavenFS.Infrastructure
 						try
 						{
 							ConcurrencyAwareExecutor.Execute(() => RenameFile(renameOperation), retries: 1);
-							log.Debug("File '{0}' was renamed to '{1}'", renameOperation.Name, renameOperation.Rename);
+							Log.Debug("File '{0}' was renamed to '{1}'", renameOperation.Name, renameOperation.Rename);
 
 						}
 						catch (Exception e)
 						{
-							log.WarnException(
+							Log.WarnException(
 								string.Format("Could not rename file '{0}' to '{1}'", renameOperation.Name, renameOperation.Rename), e);
 							throw;
 						}
@@ -305,7 +305,7 @@ namespace RavenFS.Infrastructure
 
 			if (deletedFile != null) // if there exists a file already marked as deleted
 			{
-				if (deletedFile.IsFileBeingUploadedOrUploadHasBeenBroken()) // and might be uploading at the momemnt
+				if (deletedFile.IsFileBeingUploadedOrUploadHasBeenBroken()) // and might be uploading at the moment
 				{
 					if (!uploadingFiles.ContainsKey(deletedFile.Name))
 					{

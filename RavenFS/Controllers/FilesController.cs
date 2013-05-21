@@ -276,7 +276,7 @@ namespace RavenFS.Controllers
 			            AssertFileIsNotBeingSynced(name, accessor, true);
 			            StorageOperationsTask.IndicateFileToDelete(name);
 
-			            long? contentLength = Request.Content.Headers.ContentLength;
+			            var contentLength = Request.Content.Headers.ContentLength;
 			            if (Request.Headers.TransferEncodingChunked ?? false)
 			            {
 			                contentLength = null;
@@ -295,7 +295,7 @@ namespace RavenFS.Controllers
 
 					Historian.UpdateLastModified(headers); // update with the final file size
 
-					log.Debug("File '{0}' was uploaded. Starting to update file medatata and indexes", name);
+					log.Debug("File '{0}' was uploaded. Starting to update file metadata and indexes", name);
 
 					headers["Content-MD5"] = readFileToDatabase.FileHash;
 
