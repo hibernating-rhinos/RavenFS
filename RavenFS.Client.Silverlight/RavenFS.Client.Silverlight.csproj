@@ -220,6 +220,9 @@
     <Compile Include="..\RavenFS.Client\Util\AtomicDictionary.cs">
       <Link>Util\AtomicDictionary.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\Util\CompletedTask.cs">
+      <Link>Util\CompletedTask.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\Util\ConcurrentSet.cs">
       <Link>Util\ConcurrentSet.cs</Link>
     </Compile>
