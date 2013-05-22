@@ -72,6 +72,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.4.5.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="NLog">
+      <HintPath>..\RavenFS\bin\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Reactive.Core">
@@ -83,6 +86,9 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\RavenFS\Synchronization\SynchronizationConstants.cs">
+      <Link>Imports\SynchronizationConstants.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS\Util\NameValueCollectionJsonConverter.cs">
       <Link>NameValueCollectionJsonConverter.cs</Link>
     </Compile>
@@ -103,8 +109,13 @@
     <Compile Include="ConflictResolutionStrategy.cs" />
     <Compile Include="ConflictDetected.cs" />
     <Compile Include="ConflictResolved.cs" />
+    <Compile Include="Connections\FailoverBehavior.cs" />
+    <Compile Include="Connections\FileConvention.cs" />
     <Compile Include="Connections\HttpWebRequestExtensions.cs" />
     <Compile Include="Connections\ObservableLineStream.cs" />
+    <Compile Include="Connections\ReplicationInformer.cs" />
+    <Compile Include="Connections\ReplicationInformerLocalCache.cs" />
+    <Compile Include="Connections\ServerHash.cs" />
     <Compile Include="Connections\WebResponseExtensions.cs" />
     <Compile Include="DestinationSyncResult.cs" />
     <Compile Include="ExceptionExtensions.cs" />
@@ -139,11 +150,14 @@
     <Compile Include="Util\CompletedTask.cs" />
     <Compile Include="Util\ConcurrentSet.cs" />
     <Compile Include="Util\DisposableAction.cs" />
+    <Compile Include="Util\Inflector.cs" />
+    <Compile Include="Util\SystemTime.cs" />
     <Compile Include="Util\TaskExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
