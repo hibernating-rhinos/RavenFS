@@ -322,7 +322,7 @@
     <Compile Include="Util\CombinedStream.cs" />
     <Compile Include="Util\ConcurrencyAwareExecutor.cs" />
     <Compile Include="Util\ConcurrentSet.cs" />
-    <Compile Include="Util\DispsableAction.cs" />
+    <Compile Include="Util\DisposableAction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\BufferPool.cs" />
     <Compile Include="Util\FilePathTools.cs" />
