@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Linq;
 using RavenFS.Client.Changes;
+using RavenFS.Client.Connections;
 
 namespace RavenFS.Client
 {
@@ -22,6 +23,7 @@ namespace RavenFS.Client
 		private readonly string baseUrl;
 	    private readonly ServerNotifications notifications;
 		private IDisposable failedUploadsObserver;
+		private readonly ReplicationInformer replicationInformer;
 
 		private readonly ConcurrentDictionary<Guid, CancellationTokenSource> uploadCancellationTokens =
 			new ConcurrentDictionary<Guid, CancellationTokenSource>();
@@ -34,6 +36,23 @@ namespace RavenFS.Client
 		}
 #endif
 
+		/// <summary>
+		/// Notify when the failover status changed
+		/// </summary>
+		public event EventHandler<FailoverStatusChangedEventArgs> FailoverStatusChanged
+		{
+			add { replicationInformer.FailoverStatusChanged += value; }
+			remove { replicationInformer.FailoverStatusChanged -= value; }
+		}
+
+		/// <summary>
+		/// Allow access to the replication informer used to determine how we replicate requests
+		/// </summary>
+		public ReplicationInformer ReplicationInformer
+		{
+			get { return replicationInformer; }
+		}
+
 		public RavenFileSystemClient(string baseUrl)
 		{
 			this.baseUrl = baseUrl;
@@ -41,6 +60,8 @@ namespace RavenFS.Client
 				this.baseUrl = ServerUrl.Substring(0, ServerUrl.Length - 1);
 
             notifications = new ServerNotifications(baseUrl);
+			replicationInformer = new ReplicationInformer(new FileConvention());
+
 		}
 
 		public string ServerUrl
