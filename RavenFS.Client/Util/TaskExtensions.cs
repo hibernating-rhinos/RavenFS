@@ -16,5 +16,11 @@ namespace RavenFS.Client.Util
         {
             return FromException<bool>(ex);
         }
+
+		public static void AssertNotFailed(this Task task)
+		{
+			if (task.IsFaulted)
+				task.Wait(); // would throw
+		}
     }
 }

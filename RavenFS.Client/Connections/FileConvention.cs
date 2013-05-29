@@ -16,8 +16,6 @@ namespace RavenFS.Client.Connections
 	/// </summary>
 	public class FileConvention
 	{
-
-
 		/// <summary>
 		/// Initializes a new instance of the <see cref="FileConvention"/> class.
 		/// </summary>
@@ -34,41 +32,12 @@ namespace RavenFS.Client.Connections
 		public FailoverBehavior FailoverBehavior { get; set; }
 
 		/// <summary>
-		/// Handles unauthenticated responses, usually by authenticating against the oauth server
-		/// </summary>
-		public Func<HttpWebResponse, Action<HttpWebRequest>> HandleUnauthorizedResponse { get; set; }
-
-		/// <summary>
-		/// Handles forbidden responses
-		/// </summary>
-		public Func<HttpWebResponse, Action<HttpWebRequest>> HandleForbiddenResponse { get; set; }
-
-		/// <summary>
-		/// Begins handling of unauthenticated responses, usually by authenticating against the oauth server
-		/// in async manner
-		/// </summary>
-		public Func<HttpWebResponse, Task<Action<HttpWebRequest>>> HandleUnauthorizedResponseAsync { get; set; }
-
-		/// <summary>
-		/// Begins handling of forbidden responses
-		/// in async manner
-		/// </summary>
-		public Func<HttpWebResponse, Task<Action<HttpWebRequest>>> HandleForbiddenResponseAsync { get; set; }
-
-		/// <summary>
 		/// Clone the current conventions to a new instance
 		/// </summary>
 		public FileConvention Clone()
 		{
 			return (FileConvention) MemberwiseClone();
 		}
-
-		/// <summary>
-		/// This is called to provide replication behavior for the client. You can customize 
-		/// this to inject your own replication / failover logic.
-		/// </summary>
-		public Func<string, ReplicationInformer> ReplicationInformerFactory { get; set; }
-
 
 		public FailoverBehavior FailoverBehaviorWithoutFlags
 		{
@@ -81,5 +50,10 @@ namespace RavenFS.Client.Connections
 		/// Default: 5 minutes
 		/// </summary>
 		public TimeSpan MaxFailoverCheckPeriod { get; set; }
+
+		/// <summary>
+		/// Enable multipule async operations
+		/// </summary>
+		public bool AllowMultipuleAsyncOperations { get; set; }
 	}
 }

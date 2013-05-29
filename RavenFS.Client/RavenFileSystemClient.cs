@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using System.Linq;
 using RavenFS.Client.Changes;
 using RavenFS.Client.Connections;
+using RavenFS.Client.Util;
 
 namespace RavenFS.Client
 {
@@ -24,6 +25,8 @@ namespace RavenFS.Client
 	    private readonly ServerNotifications notifications;
 		private IDisposable failedUploadsObserver;
 		private readonly ReplicationInformer replicationInformer;
+		private readonly FileConvention convention;
+		private int readStripingBase;
 
 		private readonly ConcurrentDictionary<Guid, CancellationTokenSource> uploadCancellationTokens =
 			new ConcurrentDictionary<Guid, CancellationTokenSource>();
@@ -60,8 +63,9 @@ namespace RavenFS.Client
 				this.baseUrl = ServerUrl.Substring(0, ServerUrl.Length - 1);
 
             notifications = new ServerNotifications(baseUrl);
-			replicationInformer = new ReplicationInformer(new FileConvention());
-
+			convention = new FileConvention();
+			replicationInformer = new ReplicationInformer(convention);
+			this.readStripingBase = replicationInformer.GetReadStripingBase();
 		}
 
 		public string ServerUrl
@@ -163,6 +167,42 @@ namespace RavenFS.Client
 			{
 				throw e.TryThrowBetterError();	
 			}
+		}
+
+		private int requestCount;
+		private volatile bool currentlyExecuting;
+
+		private Task<T> ExecuteWithReplication<T>(string method, Func<string, Task<T>> operation)
+		{
+			var currentRequest = Interlocked.Increment(ref requestCount);
+			if (currentlyExecuting && convention.AllowMultipuleAsyncOperations == false)
+				throw new InvalidOperationException("Only a single concurrent async request is allowed per async client instance.");
+
+			currentlyExecuting = true;
+			try
+			{
+				return replicationInformer.ExecuteWithReplicationAsync(method, ServerUrl, currentRequest, readStripingBase, operation)
+					.ContinueWith(task =>
+					{
+						currentlyExecuting = false;
+						return task;
+					}).Unwrap();
+			}
+			catch (Exception)
+			{
+				currentlyExecuting = false;
+				throw;
+			}
+		}
+
+		private Task ExecuteWithReplication(string method, Func<string, Task> operation)
+		{
+			// Convert the Func<string, Task> to a Func<string, Task<object>>
+			return ExecuteWithReplication(method, u => operation(u).ContinueWith<object>(t =>
+			{
+				t.AssertNotFailed();
+				return null;
+			}));
 		}
 
         public async Task<string[]> GetSearchFieldsAsync(int start = 0, int pageSize = 25)

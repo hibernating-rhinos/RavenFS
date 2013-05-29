@@ -25,6 +25,7 @@ namespace RavenFS.Client.Connections
 		private readonly object replicationLock = new object();
 		private List<string> replicationDestinations = new List<string>();
 		private static readonly List<string> Empty = new List<string>();
+		protected static int readStripingBase;
 
 		/// <summary>
 		/// Notify when the failover status changed
@@ -102,7 +103,7 @@ namespace RavenFS.Client.Connections
 				if (taskCopy != null)
 					return taskCopy;
 
-				return refreshReplicationInformationTask = Task.Factory.StartNew(() => RefreshReplicationInformation(serverClient))
+				return refreshReplicationInformationTask = RefreshReplicationInformationAsync(serverClient)
 					.ContinueWith(task =>
 					{
 						if (task.Exception != null)
@@ -110,270 +111,6 @@ namespace RavenFS.Client.Connections
 							log.ErrorException("Failed to refresh replication information", task.Exception);
 						}
 						refreshReplicationInformationTask = null;
-					});
-			}
-		}
-
-		private class FailureCounter
-		{
-			public long Value;
-			public DateTime LastCheck;
-			public bool ForceCheck;
-
-			public FailureCounter()
-			{
-				LastCheck = SystemTime.UtcNow;
-			}
-		}
-
-
-		/// <summary>
-		/// Get the current failure count for the url
-		/// </summary>
-		public long GetFailureCount(string operationUrl)
-		{
-			return GetHolder(operationUrl).Value;
-		}
-
-		/// <summary>
-		/// Get failure last check time for the url
-		/// </summary>
-		public DateTime GetFailureLastCheck(string operationUrl)
-		{
-			return GetHolder(operationUrl).LastCheck;
-		}
-
-		/// <summary>
-		/// Should execute the operation using the specified operation URL
-		/// </summary>
-		public virtual bool ShouldExecuteUsing(string operationUrl, int currentRequest, string method, bool primary)
-		{
-			if (primary == false)
-				AssertValidOperation(method);
-
-			var failureCounter = GetHolder(operationUrl);
-			if (failureCounter.Value == 0 || failureCounter.ForceCheck)
-			{
-				failureCounter.LastCheck = SystemTime.UtcNow;
-				return true;
-			}
-
-
-			if (currentRequest % GetCheckRepetitionRate(failureCounter.Value) == 0)
-			{
-				failureCounter.LastCheck = SystemTime.UtcNow;
-				return true;
-			}
-
-			if ((SystemTime.UtcNow - failureCounter.LastCheck) > Conventions.MaxFailoverCheckPeriod)
-			{
-				failureCounter.LastCheck = SystemTime.UtcNow;
-				return true;
-			}
-
-			return false;
-		}
-
-		private int GetCheckRepetitionRate(long value)
-		{
-			if (value < 2)
-				return (int)value;
-			if (value < 10)
-				return 2;
-			if (value < 100)
-				return 10;
-			if (value < 1000)
-				return 100;
-			if (value < 10000)
-				return 1000;
-			if (value < 100000)
-				return 10000;
-			return 100000;
-		}
-
-		protected void AssertValidOperation(string method)
-		{
-			switch (Conventions.FailoverBehaviorWithoutFlags)
-			{
-				case FailoverBehavior.AllowReadsFromSecondaries:
-					if (method == "GET")
-						return;
-					break;
-				case FailoverBehavior.AllowReadsFromSecondariesAndWritesToSecondaries:
-					return;
-				case FailoverBehavior.FailImmediately:
-					var allowReadFromAllServers = Conventions.FailoverBehavior.HasFlag(FailoverBehavior.ReadFromAllServers);
-					if (allowReadFromAllServers && method == "GET")
-						return;
-					break;
-			}
-			throw new InvalidOperationException("Could not replicate " + method +
-												" operation to secondary node, failover behavior is: " +
-												Conventions.FailoverBehavior);
-		}
-
-		private FailureCounter GetHolder(string operationUrl)
-		{
-#if !SILVERLIGHT
-			return failureCounts.GetOrAdd(operationUrl, new FailureCounter());
-#else
-			// need to compensate for 3.5 not having concurrent dic.
-
-			FailureCounter value;
-			if (failureCounts.TryGetValue(operationUrl, out value) == false)
-			{
-				lock (replicationLock)
-				{
-					if (failureCounts.TryGetValue(operationUrl, out value) == false)
-					{
-						failureCounts[operationUrl] = value = new FailureCounter();
-					}
-				}
-			}
-			return value;
-#endif
-
-		}
-
-		/// <summary>
-		/// Determines whether this is the first failure on the specified operation URL.
-		/// </summary>
-		/// <param name="operationUrl">The operation URL.</param>
-		public bool IsFirstFailure(string operationUrl)
-		{
-			FailureCounter value = GetHolder(operationUrl);
-			return value.Value == 0;
-		}
-
-		/// <summary>
-		/// Increments the failure count for the specified operation URL
-		/// </summary>
-		/// <param name="operationUrl">The operation URL.</param>
-		public void IncrementFailureCount(string operationUrl)
-		{
-			FailureCounter value = GetHolder(operationUrl);
-			value.ForceCheck = false;
-			var current = Interlocked.Increment(ref value.Value);
-			if (current == 1)// first failure
-			{
-				FailoverStatusChanged(this, new FailoverStatusChangedEventArgs
-				{
-					Url = operationUrl,
-					Failing = true
-				});
-			}
-		}
-
-		/// <summary>
-		/// Refreshes the replication information.
-		/// Expert use only.
-		/// </summary>
-#if SILVERLIGHT || NETFX_CORE
-		public Task RefreshReplicationInformation(AsyncServerClient commands)
-		{
-			lock (this)
-			{
-				var serverHash = ServerHash.GetServerHash(commands.Url);
-				return commands.DirectGetAsync(commands.Url, RavenReplicationDestinations).ContinueWith((Task<JsonDocument> getTask) =>
-				{
-					JsonDocument document;
-					if (getTask.Status == TaskStatus.RanToCompletion)
-					{
-						document = getTask.Result;
-						failureCounts[commands.Url] = new FailureCounter(); // we just hit the master, so we can reset its failure count
-					}
-					else
-					{
-						log.ErrorException("Could not contact master for new replication information", getTask.Exception);
-						document = ReplicationInformerLocalCache.TryLoadReplicationInformationFromLocalCache(serverHash);
-					}
-
-
-					if (IsInvalidDestinationsDocument(document))
-					{
-						lastReplicationUpdate = SystemTime.UtcNow; // checked and not found
-						return;
-					}
-
-					ReplicationInformerLocalCache.TrySavingReplicationInformationToLocalCache(serverHash, document);
-
-					UpdateReplicationInformationFromDocument(document);
-
-					lastReplicationUpdate = SystemTime.UtcNow;
-				});
-			}
-		}
-#else
-		public void RefreshReplicationInformation(RavenFileSystemClient serverClient)
-		{
-			lock (this)
-			{
-				var serverHash = ServerHash.GetServerHash(serverClient.ServerUrl);
-
-				serverClient.Config.GetConfig(SynchronizationConstants.RavenSynchronizationDestinations).ContinueWith(task =>
-					{
-						if (task.IsFaulted)
-						{
-							log.ErrorException("Could not contact master for new replication information", task.Exception);
-							replicationDestinations = ReplicationInformerLocalCache.TryLoadReplicationInformationFromLocalCache(serverHash).ToList();
-						}
-						else
-						{
-							if (task.Result == null)
-							{
-								LastReplicationUpdate = SystemTime.UtcNow; // checked and not found
-								return;
-							}
-							var result = task.Result.GetValues("url");
-							replicationDestinations = result == null ? null : result.ToList();
-						}
-					}).Wait();
-
-				if (replicationDestinations == null || replicationDestinations.Count == 0)
-				{
-					LastReplicationUpdate = SystemTime.UtcNow; // checked and not found
-					return;
-				}
-
-				failureCounts[serverClient.ServerUrl] = new FailureCounter(); // we just hit the master, so we can reset its failure count
-
-				ReplicationInformerLocalCache.TrySavingReplicationInformationToLocalCache(serverHash, replicationDestinations);
-
-				UpdateReplicationInformationFromDocument(replicationDestinations);
-
-				LastReplicationUpdate = SystemTime.UtcNow;
-			}
-		}
-#endif
-
-		private void UpdateReplicationInformationFromDocument(IEnumerable<string> destinations)
-		{
-			foreach (var destination in destinations)
-			{
-				FailureCounter value;
-				if (failureCounts.TryGetValue(destination, out value))
-					continue;
-				failureCounts[destination] = new FailureCounter();
-			}
-		}
-
-		/// <summary>
-		/// Resets the failure count for the specified URL
-		/// </summary>
-		/// <param name="operationUrl">The operation URL.</param>
-		public virtual void ResetFailureCount(string operationUrl)
-		{
-			var value = GetHolder(operationUrl);
-			var oldVal = Interlocked.Exchange(ref value.Value, 0);
-			value.LastCheck = SystemTime.UtcNow;
-			value.ForceCheck = false;
-			if (oldVal != 0)
-			{
-				FailoverStatusChanged(this,
-					new FailoverStatusChangedEventArgs
-					{
-						Url = operationUrl,
-						Failing = false
 					});
 			}
 		}
@@ -458,7 +195,6 @@ Failed to get in touch with any of the " + (1 + localReplicationDestinations.Cou
 		#endregion
 
 		#region ExecuteWithReplicationAsync
-
 		public Task<T> ExecuteWithReplicationAsync<T>(string method, string primaryUrl, int currentRequest, int currentReadStripingBase, Func<string, Task<T>> operation)
 		{
 			return ExecuteWithReplicationAsync(new ExecuteWithReplicationState<T>(method, primaryUrl, currentRequest, currentReadStripingBase, operation));
@@ -634,8 +370,211 @@ Failed to get in touch with any of the " + (1 + state.ReplicationDestinations.Co
 			TryAllServersFailedTwice,
 			AfterTryingWithDefaultUrlTwice
 		}
-
 		#endregion
+
+		private class FailureCounter
+		{
+			public long Value;
+			public DateTime LastCheck;
+			public bool ForceCheck;
+
+			public FailureCounter()
+			{
+				LastCheck = SystemTime.UtcNow;
+			}
+		}
+
+
+		/// <summary>
+		/// Get the current failure count for the url
+		/// </summary>
+		public long GetFailureCount(string operationUrl)
+		{
+			return GetHolder(operationUrl).Value;
+		}
+
+		/// <summary>
+		/// Get failure last check time for the url
+		/// </summary>
+		public DateTime GetFailureLastCheck(string operationUrl)
+		{
+			return GetHolder(operationUrl).LastCheck;
+		}
+
+		/// <summary>
+		/// Should execute the operation using the specified operation URL
+		/// </summary>
+		public virtual bool ShouldExecuteUsing(string operationUrl, int currentRequest, string method, bool primary)
+		{
+			if (primary == false)
+				AssertValidOperation(method);
+
+			var failureCounter = GetHolder(operationUrl);
+			if (failureCounter.Value == 0 || failureCounter.ForceCheck)
+			{
+				failureCounter.LastCheck = SystemTime.UtcNow;
+				return true;
+			}
+
+
+			if (currentRequest % GetCheckRepetitionRate(failureCounter.Value) == 0)
+			{
+				failureCounter.LastCheck = SystemTime.UtcNow;
+				return true;
+			}
+
+			if ((SystemTime.UtcNow - failureCounter.LastCheck) > Conventions.MaxFailoverCheckPeriod)
+			{
+				failureCounter.LastCheck = SystemTime.UtcNow;
+				return true;
+			}
+
+			return false;
+		}
+
+		private int GetCheckRepetitionRate(long value)
+		{
+			if (value < 2)
+				return (int)value;
+			if (value < 10)
+				return 2;
+			if (value < 100)
+				return 10;
+			if (value < 1000)
+				return 100;
+			if (value < 10000)
+				return 1000;
+			if (value < 100000)
+				return 10000;
+			return 100000;
+		}
+
+		protected void AssertValidOperation(string method)
+		{
+			switch (Conventions.FailoverBehaviorWithoutFlags)
+			{
+				case FailoverBehavior.AllowReadsFromSecondaries:
+					if (method == "GET")
+						return;
+					break;
+				case FailoverBehavior.AllowReadsFromSecondariesAndWritesToSecondaries:
+					return;
+				case FailoverBehavior.FailImmediately:
+					var allowReadFromAllServers = Conventions.FailoverBehavior.HasFlag(FailoverBehavior.ReadFromAllServers);
+					if (allowReadFromAllServers && method == "GET")
+						return;
+					break;
+			}
+			throw new InvalidOperationException("Could not replicate " + method +
+												" operation to secondary node, failover behavior is: " +
+												Conventions.FailoverBehavior);
+		}
+
+		private FailureCounter GetHolder(string operationUrl)
+		{
+			return failureCounts.GetOrAdd(operationUrl, new FailureCounter());
+		}
+
+		/// <summary>
+		/// Determines whether this is the first failure on the specified operation URL.
+		/// </summary>
+		/// <param name="operationUrl">The operation URL.</param>
+		public bool IsFirstFailure(string operationUrl)
+		{
+			FailureCounter value = GetHolder(operationUrl);
+			return value.Value == 0;
+		}
+
+		/// <summary>
+		/// Increments the failure count for the specified operation URL
+		/// </summary>
+		/// <param name="operationUrl">The operation URL.</param>
+		public void IncrementFailureCount(string operationUrl)
+		{
+			FailureCounter value = GetHolder(operationUrl);
+			value.ForceCheck = false;
+			var current = Interlocked.Increment(ref value.Value);
+			if (current == 1)// first failure
+			{
+				FailoverStatusChanged(this, new FailoverStatusChangedEventArgs
+				{
+					Url = operationUrl,
+					Failing = true
+				});
+			}
+		}
+
+		/// <summary>
+		/// Refreshes the replication information.
+		/// Expert use only.
+		/// </summary>
+		public async Task RefreshReplicationInformationAsync(RavenFileSystemClient serverClient)
+		{
+			var serverHash = ServerHash.GetServerHash(serverClient.ServerUrl);
+
+			try
+			{
+				var result = await serverClient.Config.GetConfig(SynchronizationConstants.RavenSynchronizationDestinations);
+				if (result == null)
+				{
+					LastReplicationUpdate = SystemTime.UtcNow; // checked and not found
+				}
+				else
+				{
+					var urls = result.GetValues("url");
+					replicationDestinations = urls == null ? new List<string>() : urls.ToList();
+				}
+			}
+			catch (Exception e)
+			{
+				log.ErrorException("Could not contact master for new replication information", e);
+				replicationDestinations = ReplicationInformerLocalCache.TryLoadReplicationInformationFromLocalCache(serverHash).ToList();
+				LastReplicationUpdate = SystemTime.UtcNow;
+				return;
+			}
+
+			failureCounts[serverClient.ServerUrl] = new FailureCounter(); // we just hit the master, so we can reset its failure count
+			ReplicationInformerLocalCache.TrySavingReplicationInformationToLocalCache(serverHash, replicationDestinations);
+			UpdateReplicationInformationFromDocument(replicationDestinations);
+			LastReplicationUpdate = SystemTime.UtcNow;
+		}
+
+		private void UpdateReplicationInformationFromDocument(IEnumerable<string> destinations)
+		{
+			foreach (var destination in destinations)
+			{
+				FailureCounter value;
+				if (failureCounts.TryGetValue(destination, out value))
+					continue;
+				failureCounts[destination] = new FailureCounter();
+			}
+		}
+
+		/// <summary>
+		/// Resets the failure count for the specified URL
+		/// </summary>
+		/// <param name="operationUrl">The operation URL.</param>
+		public virtual void ResetFailureCount(string operationUrl)
+		{
+			var value = GetHolder(operationUrl);
+			var oldVal = Interlocked.Exchange(ref value.Value, 0);
+			value.LastCheck = SystemTime.UtcNow;
+			value.ForceCheck = false;
+			if (oldVal != 0)
+			{
+				FailoverStatusChanged(this,
+					new FailoverStatusChangedEventArgs
+					{
+						Url = operationUrl,
+						Failing = false
+					});
+			}
+		}
+
+		public virtual int GetReadStripingBase()
+		{
+			return Interlocked.Increment(ref readStripingBase);
+		}
 
 		public bool IsHttpStatus(Exception e, params HttpStatusCode[] httpStatusCode)
 		{

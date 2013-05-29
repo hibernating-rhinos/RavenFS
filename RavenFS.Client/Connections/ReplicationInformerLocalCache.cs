@@ -30,7 +30,7 @@ namespace RavenFS.Client.Connections
 			{
 				using (var machineStoreForApplication = GetIsolatedStorageFileForReplicationInformation())
 				{
-					var path = "RavenDB Replication Information For - " + serverHash;
+					var path = "RavenFS Replication Information For - " + serverHash;
 
 					if (machineStoreForApplication.GetFileNames(path).Length == 0)
 						return null;
@@ -56,7 +56,7 @@ namespace RavenFS.Client.Connections
 			{
 				using (var machineStoreForApplication = GetIsolatedStorageFileForReplicationInformation())
 				{
-					var path = "RavenDB Replication Information For - " + serverHash;
+					var path = "RavenFS Replication Information For - " + serverHash;
 					using (var stream = new IsolatedStorageFileStream(path, FileMode.Create, machineStoreForApplication))
 					{
 						var data = string.Join(" ", destinations);
