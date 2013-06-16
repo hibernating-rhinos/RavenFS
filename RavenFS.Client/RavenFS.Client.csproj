@@ -86,12 +86,10 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\RavenFS\Synchronization\SynchronizationConstants.cs">
-      <Link>Imports\SynchronizationConstants.cs</Link>
-    </Compile>
     <Compile Include="..\RavenFS\Util\NameValueCollectionJsonConverter.cs">
       <Link>NameValueCollectionJsonConverter.cs</Link>
     </Compile>
+    <Compile Include="Abstructions\SynchronizationConstants.cs" />
     <Compile Include="AsyncExtensions.cs" />
     <Compile Include="Changes\Base62Util.cs" />
     <Compile Include="Changes\ImmutableList.cs" />

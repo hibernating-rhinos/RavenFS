@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Storage;
 

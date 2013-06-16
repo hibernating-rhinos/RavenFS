@@ -55,6 +55,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.4.5.8\lib\sl4\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="NLog">
+      <HintPath>..\packages\NLog.2.0.1.2\lib\sl5\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="System.Reactive.Core">
       <HintPath>..\packages\Rx-Core.2.0.20823\lib\SL5\System.Reactive.Core.dll</HintPath>
     </Reference>
@@ -76,6 +79,9 @@
     <Reference Include="System.Net" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\RavenFS.Client\Abstructions\SynchronizationConstants.cs">
+      <Link>Connection\SynchronizationConstants.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\AsyncExtensions.cs">
       <Link>AsyncExtensions.cs</Link>
     </Compile>
@@ -127,11 +133,26 @@
     <Compile Include="..\RavenFS.Client\ConflictResolved.cs">
       <Link>ConflictResolved.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\Connections\FailoverBehavior.cs">
+      <Link>Connection\FailoverBehavior.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Connections\FileConvention.cs">
+      <Link>Connection\FileConvention.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\Connections\HttpWebRequestExtensions.cs">
       <Link>Connection\HttpWebRequestExtensions.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\Connections\ObservableLineStream.cs">
       <Link>Connection\ObservableLineStream.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Connections\ReplicationInformer.cs">
+      <Link>Connection\ReplicationInformer.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Connections\ReplicationInformerLocalCache.cs">
+      <Link>Connection\ReplicationInformerLocalCache.cs</Link>
+    </Compile>
+    <Compile Include="..\RavenFS.Client\Connections\ServerHash.cs">
+      <Link>Connection\ServerHash.cs</Link>
     </Compile>
     <Compile Include="..\RavenFS.Client\Connections\WebResponseExtensions.cs">
       <Link>Connection\WebResponseExtensions.cs</Link>
@@ -229,6 +250,9 @@
     <Compile Include="..\RavenFS.Client\Util\DisposableAction.cs">
       <Link>Util\DisposableAction.cs</Link>
     </Compile>
+    <Compile Include="..\RavenFS.Client\Util\SystemTime.cs">
+      <Link>Util\SystemTime.cs</Link>
+    </Compile>
     <Compile Include="..\RavenFS.Client\Util\TaskExtensions.cs">
       <Link>Util\TaskExtensions.cs</Link>
     </Compile>
@@ -267,6 +291,7 @@
     <Compile Include="DotNetZip\ZlibException.cs" />
     <Compile Include="DotNetZip\ZlibStream.cs" />
     <Compile Include="DotNetZip\ZlibStreamFlavor.cs" />
+    <Compile Include="MissingFromSilverlight\MD5.cs" />
     <Compile Include="NameValueCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringUtils.cs" />

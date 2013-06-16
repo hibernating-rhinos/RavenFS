@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using NLog;
+using RavenFS.Client;
 using RavenFS.Extensions;
 using RavenFS.Storage;
 using RavenFS.Util;

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NLog;
 using RavenFS.Client.Util;
+using RavenFS.Client;
 
 namespace RavenFS.Client.Connections
 {
@@ -70,7 +71,7 @@ namespace RavenFS.Client.Connections
 		/// </summary>
 		/// <param name="serverClient">The server client.</param>
 #if SILVERLIGHT || NETFX_CORE
-		public Task UpdateReplicationInformationIfNeeded(AsyncServerClient serverClient)
+		public Task UpdateReplicationInformationIfNeeded(RavenFileSystemClient serverClient)
 #else
 		public Task UpdateReplicationInformationIfNeeded(RavenFileSystemClient serverClient)
 #endif
@@ -472,7 +473,24 @@ Failed to get in touch with any of the " + (1 + state.ReplicationDestinations.Co
 
 		private FailureCounter GetHolder(string operationUrl)
 		{
+			#if !SILVERLIGHT
 			return failureCounts.GetOrAdd(operationUrl, new FailureCounter());
+#else
+			// need to compensate for 3.5 not having concurrent dic.
+
+			FailureCounter value;
+			if (failureCounts.TryGetValue(operationUrl, out value) == false)
+			{
+				lock (replicationLock)
+				{
+					if (failureCounts.TryGetValue(operationUrl, out value) == false)
+					{
+						failureCounts[operationUrl] = value = new FailureCounter();
+					}
+				}
+			}
+			return value;
+#endif
 		}
 
 		/// <summary>

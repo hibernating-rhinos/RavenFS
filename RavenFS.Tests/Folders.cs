@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 using RavenFS.Client;
 using Xunit;
 using System.Linq;
@@ -82,15 +83,16 @@ namespace RavenFS.Tests
 		}
 
 		[Fact]
-		public void CanGetListOfFilesInFolder()
+		public async Task CanGetListOfFilesInFolder()
 		{
 			var client = NewClient();
 			var ms = new MemoryStream();
-			client.UploadAsync("test/abc.txt", ms).Wait();
-			client.UploadAsync("test/ced.txt", ms).Wait();
-			client.UploadAsync("why/abc.txt", ms).Wait();
+			await client.UploadAsync("test/abc.txt", ms);
+			await client.UploadAsync("test/ced.txt", ms);
+			await client.UploadAsync("why/abc.txt", ms);
 
-			var strings = client.GetFilesAsync("/test").Result.Files.Select(x => x.Name).ToArray();
+			var results = await client.GetFilesAsync("/test");
+			var strings = results.Files.Select(x => x.Name).ToArray();
 			Assert.Equal(new[] { "/test/abc.txt", "/test/ced.txt" }, strings);
 		}
 

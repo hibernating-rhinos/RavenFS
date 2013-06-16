@@ -2,7 +2,7 @@
 using System.Text;
 using System.Security.Cryptography;
 #if SILVERLIGHT || NETFX_CORE
-using Raven.Client.Silverlight.MissingFromSilverlight;
+using RavenFS.Client.Silverlight.MissingFromSilverlight;
 #else
 
 #endif

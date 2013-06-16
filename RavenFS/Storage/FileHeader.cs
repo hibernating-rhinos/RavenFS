@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
+using RavenFS.Client;
 using RavenFS.Synchronization;
 
 namespace RavenFS.Storage

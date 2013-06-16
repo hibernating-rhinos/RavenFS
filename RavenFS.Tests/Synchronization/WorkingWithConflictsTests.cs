@@ -182,7 +182,7 @@ namespace RavenFS.Tests.Synchronization
 			var innerException = SyncTestUtils.ExecuteAndGetInnerException(async () =>
 					await client.Synchronization.ApplyConflictAsync("test.bin", 8, guid, new List<HistoryItem>(), "http://localhost:12345"));
 
-			Assert.IsType<FileNotFoundException>(innerException);
+			Assert.IsType<FileNotFoundException>(innerException.GetBaseException());
 		}
 
 		[Fact]

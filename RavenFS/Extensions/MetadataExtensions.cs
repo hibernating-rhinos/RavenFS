@@ -19,6 +19,7 @@ using RavenFS.Client;
 #else
 using System.Net.Http;
 using System.Net.Http.Headers;
+using RavenFS.Client;
 using RavenFS.Storage;
 using System.Net;
 #endif

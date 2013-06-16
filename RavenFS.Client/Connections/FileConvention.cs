@@ -23,6 +23,7 @@ namespace RavenFS.Client.Connections
 		{
 			MaxFailoverCheckPeriod = TimeSpan.FromMinutes(5);
 			FailoverBehavior = FailoverBehavior.AllowReadsFromSecondaries;
+			AllowMultipuleAsyncOperations = true;
 		}
 
 		/// <summary>

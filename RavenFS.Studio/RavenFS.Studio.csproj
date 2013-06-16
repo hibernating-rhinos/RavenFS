@@ -137,7 +137,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\RavenFS\Synchronization\SynchronizationConstants.cs">
+    <Compile Include="..\RavenFS.Client\Abstructions\SynchronizationConstants.cs">
       <Link>Features\Replication\SynchronizationConstants.cs</Link>
     </Compile>
     <Compile Include="App.xaml.cs">

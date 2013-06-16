@@ -43,8 +43,8 @@ namespace RavenFS.Tests.Synchronization
 			var innerException =
 				SyncTestUtils.ExecuteAndGetInnerException(async () => await destinationClient.UpdateMetadataAsync("test.bin", new NameValueCollection()));
 
-			Assert.IsType(typeof (SynchronizationException), innerException);
-			Assert.Equal("File test.bin is being synced", innerException.Message);
+			Assert.IsType(typeof (SynchronizationException), innerException.GetBaseException());
+			Assert.Equal("File test.bin is being synced", innerException.GetBaseException().Message);
 		}
 
 		[Fact]
@@ -60,8 +60,8 @@ namespace RavenFS.Tests.Synchronization
 
 			var innerException = SyncTestUtils.ExecuteAndGetInnerException(async () => await destinationClient.DeleteAsync("test.bin"));
 
-			Assert.IsType(typeof (SynchronizationException), innerException);
-			Assert.Equal("File test.bin is being synced", innerException.Message);
+			Assert.IsType(typeof (SynchronizationException), innerException.GetBaseException());
+			Assert.Equal("File test.bin is being synced", innerException.GetBaseException().Message);
 		}
 
 		[Fact]
@@ -78,8 +78,8 @@ namespace RavenFS.Tests.Synchronization
 			var innerException =
 				SyncTestUtils.ExecuteAndGetInnerException(async () => await destinationClient.RenameAsync("test.bin", "newname.bin"));
 
-			Assert.IsType(typeof (SynchronizationException), innerException);
-			Assert.Equal("File test.bin is being synced", innerException.Message);
+			Assert.IsType(typeof (SynchronizationException), innerException.GetBaseException());
+			Assert.Equal("File test.bin is being synced", innerException.GetBaseException().Message);
 		}
 
 		[Fact]
@@ -96,8 +96,8 @@ namespace RavenFS.Tests.Synchronization
 			var innerException =
 				SyncTestUtils.ExecuteAndGetInnerException(async () => await destinationClient.UploadAsync("test.bin", EmptyData, new MemoryStream()));
 
-			Assert.IsType(typeof (SynchronizationException), innerException);
-			Assert.Equal("File test.bin is being synced", innerException.Message);
+			Assert.IsType(typeof (SynchronizationException), innerException.GetBaseException());
+			Assert.Equal("File test.bin is being synced", innerException.GetBaseException().Message);
 		}
 
 		[Fact]

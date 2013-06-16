@@ -39,7 +39,7 @@ namespace RavenFS.Client.Connections
 					{
 						var buffer = new byte[stream.Length];
 						var bytes = stream.Read(buffer, 0, (int) stream.Length);
-						return Encoding.Default.GetString(buffer,0, bytes).Split(' ').ToList();
+						return Encoding.UTF8.GetString(buffer,0, bytes).Split(' ').ToList();
 					}
 				}
 			}
