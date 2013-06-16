@@ -15,7 +15,7 @@ namespace RavenFS.Tests.Synchronization
 	public class FailoverTests : MultiHostTestBase
 	{
 		[Fact]
-		public async Task Synchronization_should_upload_all_missing_files()
+		public async Task ShouldFailOver()
 		{
 			var sourceClient = NewClient(0);
 			var destinationClient = NewClient(1);
