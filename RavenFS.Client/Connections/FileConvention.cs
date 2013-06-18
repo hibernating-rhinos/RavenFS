@@ -5,7 +5,10 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace RavenFS.Client.Connections
@@ -25,6 +28,8 @@ namespace RavenFS.Client.Connections
 			FailoverBehavior = FailoverBehavior.AllowReadsFromSecondaries;
 			AllowMultipuleAsyncOperations = true;
 		}
+
+		private Dictionary<Type, PropertyInfo> idPropertyCache = new Dictionary<Type, PropertyInfo>();
 
 		/// <summary>
 		/// How should we behave in a replicated environment when we can't 
@@ -56,5 +61,61 @@ namespace RavenFS.Client.Connections
 		/// Enable multipule async operations
 		/// </summary>
 		public bool AllowMultipuleAsyncOperations { get; set; }
+
+		/// <summary>
+		/// Gets or sets the function to find the identity property.
+		/// </summary>
+		/// <value>The find identity property.</value>
+		public Func<PropertyInfo, bool> FindIdentityProperty { get; set; }
+
+		/// <summary>
+		/// Gets or sets the identity parts separator used by the HiLo generators
+		/// </summary>
+		/// <value>The identity parts separator.</value>
+		public string IdentityPartsSeparator { get; set; }
+
+		/// <summary>
+		/// Gets the identity property.
+		/// </summary>
+		/// <param name="type">The type.</param>
+		/// <returns></returns>
+		public PropertyInfo GetIdentityProperty(Type type)
+		{
+			PropertyInfo info;
+			var currentIdPropertyCache = idPropertyCache;
+			if (currentIdPropertyCache.TryGetValue(type, out info))
+				return info;
+
+			var identityProperty = GetPropertiesForType(type).FirstOrDefault(FindIdentityProperty);
+
+			if (identityProperty != null && identityProperty.DeclaringType != type)
+			{
+				var propertyInfo = identityProperty.DeclaringType.GetProperty(identityProperty.Name);
+				identityProperty = propertyInfo ?? identityProperty;
+			}
+
+			idPropertyCache = new Dictionary<Type, PropertyInfo>(currentIdPropertyCache)
+			{
+				{type, identityProperty}
+			};
+
+			return identityProperty;
+		}
+
+		private static IEnumerable<PropertyInfo> GetPropertiesForType(Type type)
+		{
+			foreach (var propertyInfo in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic))
+			{
+				yield return propertyInfo;
+			}
+
+			foreach (var @interface in type.GetInterfaces())
+			{
+				foreach (var propertyInfo in GetPropertiesForType(@interface))
+				{
+					yield return propertyInfo;
+				}
+			}
+		}
 	}
 }

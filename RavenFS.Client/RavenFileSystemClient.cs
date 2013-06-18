@@ -19,7 +19,7 @@ namespace RavenFS.Client
 	using System.Collections.Concurrent;
 	using System.Threading;
 
-	public class RavenFileSystemClient : IDisposable
+	public class RavenFileSystemClient : IDisposable, IRavenFileSystemClient
 	{
 		private readonly string baseUrl;
 	    private readonly ServerNotifications notifications;
@@ -529,6 +529,11 @@ namespace RavenFS.Client
         {
             get { return notifications; }
         }
+
+		public FileConvention Convention
+		{
+			get { return convention; }
+		}
 
 		private static void AddHeaders(NameValueCollection metadata, HttpWebRequest request)
 		{
