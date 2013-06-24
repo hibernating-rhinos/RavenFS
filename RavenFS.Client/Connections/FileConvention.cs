@@ -27,6 +27,7 @@ namespace RavenFS.Client.Connections
 			MaxFailoverCheckPeriod = TimeSpan.FromMinutes(5);
 			FailoverBehavior = FailoverBehavior.AllowReadsFromSecondaries;
 			AllowMultipuleAsyncOperations = true;
+			IdentityPartsSeparator = "/";
 		}
 
 		private Dictionary<Type, PropertyInfo> idPropertyCache = new Dictionary<Type, PropertyInfo>();
