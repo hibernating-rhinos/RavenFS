@@ -123,39 +123,125 @@ namespace RavenFS.Client.Shard
 
 		#endregion
 
-		public Task<ServerStats> StatsAsync()
+		public async Task<ServerStats> StatsAsync()
 		{
-			throw new NotImplementedException();
+			var shards = shardClients;
+			var result = new ServerStats();
+			foreach (var ravenFileSystemClient in shards.Values)
+			{
+				var stat = await ravenFileSystemClient.StatsAsync();
+
+				result.FileCount += stat.FileCount;
+			}
+
+			return result;
 		}
 
 		public async Task DeleteAsync(string filename)
 		{
-			var shards = GetShardsToOperateOn(new ShardRequestData {Keys = new List<string> {filename}});
+			var client = GetSingleClient(filename);
+			await client.DeleteAsync(filename);
+		}
 
-			foreach (var shard in shards)
+		public async Task RenameAsync(string filename, string rename)
+		{
+			var client = GetSingleClient(filename);
+			await client.RenameAsync(filename, rename);
+		}
+
+		public async Task<FileInfo[]> BrowseAsync(int start = 0, int pageSize = 25)
+		{
+			var clients = shardClients.Values;
+			var found = 0;
+			var skip = start;
+			var results = new List<FileInfo>();
+			foreach (var ravenFileSystemClient in clients)
 			{
-				await shard.Item2.DeleteAsync(filename);
+				if (found >= pageSize)
+					return results.ToArray();
+				var local = await ravenFileSystemClient.BrowseAsync(skip, pageSize - found);
+				found = local.Length;
+				results.AddRange(local);
+				if (local.Length == 0)
+				{
+					var fileCount = await ravenFileSystemClient.StatsAsync();
+					skip -= (int)fileCount.FileCount;
+					if (skip < 0)
+						skip = 0;
+				}
+				else
+				{
+					skip = 0;
+				}
 			}
+
+			return results.ToArray();
 		}
 
-		public Task RenameAsync(string filename, string rename)
+		public async Task<string[]> GetSearchFieldsAsync(int start = 0, int pageSize = 25)
 		{
-			throw new NotImplementedException();
+			var clients = shardClients.Values;
+			var found = 0;
+			var skip = start;
+			var results = new List<string>();
+			foreach (var ravenFileSystemClient in clients)
+			{
+				if (found >= pageSize)
+					return results.ToArray();
+				var local = await ravenFileSystemClient.GetSearchFieldsAsync(skip, pageSize - found);
+				found = local.Length;
+				results.AddRange(local);
+				if (local.Length == 0)
+				{
+					var fileCount = await ravenFileSystemClient.StatsAsync();
+					skip -= (int)fileCount.FileCount;
+					if (skip < 0)
+						skip = 0;
+				}
+				else
+				{
+					skip = 0;
+				}
+			}
+
+			return results.ToArray();
 		}
 
-		public Task<FileInfo[]> BrowseAsync(int start = 0, int pageSize = 25)
+		public async Task<SearchResults> SearchAsync(string query, string[] sortFields = null, int start = 0, int pageSize = 25)
 		{
-			throw new NotImplementedException();
-		}
+			var clients = shardClients.Values;
+			var found = 0;
+			var skip = start;
+			var result = new SearchResults();
+			foreach (var ravenFileSystemClient in clients)
+			{
+				if (found >= pageSize)
+					return result;
+				var local = await ravenFileSystemClient.SearchAsync(query, sortFields, skip, pageSize - found);
+				found = local.FileCount;
 
-		public Task<string[]> GetSearchFieldsAsync(int start = 0, int pageSize = 25)
-		{
-			throw new NotImplementedException();
-		}
+				if (local.FileCount == 0)
+				{
+					var fileCount = await ravenFileSystemClient.StatsAsync();
+					skip -= (int)fileCount.FileCount;
+					if (skip < 0)
+						skip = 0;
+				}
+				else
+				{
+					var files = new List<FileInfo>();
+					files.AddRange(result.Files);
+					files.AddRange(local.Files);
 
-		public Task<SearchResults> SearchAsync(string query, string[] sortFields = null, int start = 0, int pageSize = 25)
-		{
-			throw new NotImplementedException();
+					result.FileCount += local.FileCount;
+					result.Files = files.ToArray();
+					result.PageSize = pageSize;
+					result.Start = start;
+					skip = 0;
+				}
+			}
+
+			return result;
 		}
 
 		public async Task<NameValueCollection> GetMetadataForAsync(string filename)
@@ -198,15 +284,72 @@ namespace RavenFS.Client.Shard
 			await client.UploadAsync(filename, metadata, source, progress);
 		}
 
-		public Task<string[]> GetFoldersAsync(string @from = null, int start = 0, int pageSize = 25)
+		public async Task<string[]> GetFoldersAsync(string @from = null, int start = 0, int pageSize = 25)
 		{
-			throw new NotImplementedException();
+			var clients = shardClients.Values;
+			var found = 0;
+			var skip = start;
+			var results = new List<string>();
+			foreach (var ravenFileSystemClient in clients)
+			{
+				if (found >= pageSize)
+					return results.ToArray();
+				var local = await ravenFileSystemClient.GetFoldersAsync(from, skip, pageSize - found);
+				found = local.Length;
+				results.AddRange(local);
+				if (local.Length == 0)
+				{
+					//TODO: update to Folders Count
+					//var fileCount = await ravenFileSystemClient.StatsAsync();
+					//skip -= (int)fileCount.FileCount;
+					//if (skip < 0)
+						skip = 0;
+				}
+				else
+				{
+					skip = 0;
+				}
+			}
+
+			return results.ToArray();
 		}
 
-		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int start = 0,
+		public async Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int start = 0,
 		                          int pageSize = 25)
 		{
-			throw new NotImplementedException();
+			var clients = shardClients.Values;
+			var found = 0;
+			var skip = start;
+			var result = new SearchResults();
+			foreach (var ravenFileSystemClient in clients)
+			{
+				if (found >= pageSize)
+					return result;
+				var local = await ravenFileSystemClient.GetFilesAsync(folder, options,fileNameSearchPattern, skip, pageSize - found);
+				found = local.FileCount;
+
+				if (local.FileCount == 0)
+				{
+					var fileCount = await ravenFileSystemClient.StatsAsync();
+					skip -= (int)fileCount.FileCount;
+					if (skip < 0)
+						skip = 0;
+				}
+				else
+				{
+					var files = new List<FileInfo>();
+					files.AddRange(result.Files);
+					files.AddRange(local.Files);
+
+					result.FileCount += local.FileCount;
+					result.Files = files.ToArray();
+					result.PageSize = pageSize;
+					result.Start = start;
+					skip = 0;
+				}
+			}
+
+			return result;
 		}
 
 		public Task<Guid> GetServerId()
