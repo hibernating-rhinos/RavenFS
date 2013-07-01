@@ -19,7 +19,7 @@ namespace RavenFS.Client
 	using System.Collections.Concurrent;
 	using System.Threading;
 
-	public class RavenFileSystemClient : IDisposable, IRavenFileSystemClient
+	public class RavenFileSystemClient : IDisposable
 	{
 		private readonly string baseUrl;
 	    private readonly ServerNotifications notifications;

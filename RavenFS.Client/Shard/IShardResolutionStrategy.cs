@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 
@@ -11,16 +12,20 @@ namespace RavenFS.Client.Shard
 	/// </summary>
 	public interface IShardResolutionStrategy
 	{
+        /// <summary>
+        /// Find in which node to put the file
+        /// </summary>
+	    ShardResolutionResult GetShardIdForUpload(string filename, NameValueCollection metadata);
+
+        /// <summary>
+        /// Find in which node to the file is in
+        /// </summary>
+        string GetShardIdFromFileName(string filename);
+
 		/// <summary>
 		///  Generate a shard id for the specified entity
 		///  </summary>
-		string GenerateShardIdFor(object entity, RavenFileSystemClient client);
-
-		/// <summary>
-		///  The shard id for the server that contains the metadata (such as the HiLo documents)
-		///  for the given entity
-		///  </summary>
-		string MetadataShardIdFor(object entity);
+		string GenerateShardIdFor(string  filename, NameValueCollection metadata);
 
 		/// <summary>
 		///  Selects the shard ids appropriate for the specified data.

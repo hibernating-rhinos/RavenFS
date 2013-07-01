@@ -122,7 +122,6 @@
     <Compile Include="FilesSortOptions.cs" />
     <Compile Include="Heartbeat.cs" />
     <Compile Include="HistoryItem.cs" />
-    <Compile Include="IRavenFileSystemClient.cs" />
     <Compile Include="ListenableStream.cs" />
     <Compile Include="MultiPartParser.cs" />
     <Compile Include="Notification.cs" />
@@ -136,6 +135,7 @@
     <Compile Include="Shard\IShardResolutionStrategy.cs" />
     <Compile Include="Shard\SequentialShardAccessStrategy.cs" />
     <Compile Include="Shard\ShardedRavenFileSystemClient.cs" />
+    <Compile Include="Shard\ShardPagingInfo.cs" />
     <Compile Include="Shard\ShardRequestData.cs" />
     <Compile Include="Shard\ShardStrategy.cs" />
     <Compile Include="Signature.cs" />

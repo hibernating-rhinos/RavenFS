@@ -14,13 +14,12 @@ namespace RavenFS.Client.Shard
 		/// <value>The key.</value>
 		public IList<string> Keys { get; set; }
 
-		/// <summary>
-		/// Gets or sets the type of the entity.
-		/// </summary>
-		/// <value>The type of the entity.</value>
-		public Type EntityType { get; set; }
+        /// <summary>
+        /// The query the user is using
+        /// </summary>
+	    public string Query { get; set; }
 
-		public ShardRequestData()
+	    public ShardRequestData()
 		{
 			Keys = new List<string>();
 		}
