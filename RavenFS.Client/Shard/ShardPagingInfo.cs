@@ -4,33 +4,36 @@ using System.Linq;
 
 namespace RavenFS.Client.Shard
 {
-    public class ShardPagingInfo
-    {
-        public List<int> PageLocations { get; set; }
-
-        public ShardPagingInfo()
-        {
-            PageLocations = new List<int> {0};
-        }
-    }
-
     public class PagingInfo
     {
-        public Dictionary<string, ShardPagingInfo> ShardPagingInfos { get; set; }
+        private readonly Dictionary<int, int[]> positions = new Dictionary<int, int[]>();
 
-        public PagingInfo(IEnumerable<string> shardIds)
+        public PagingInfo(int size)
         {
-            ShardPagingInfos = new Dictionary<string, ShardPagingInfo>();
-            foreach (var shardId in shardIds)
-            {
-                ShardPagingInfos[shardId] = new ShardPagingInfo();
-            }
+            positions.Add(0, new int[size]);
         }
 
-        public int GetLastInfo(string shardId, bool getNext)
+        public void SetPagingInfo(int[] offsets)
         {
-            var locations = ShardPagingInfos[shardId].PageLocations;
-            return getNext ? locations[locations.Count - 1] : locations[locations.Count - 2];
+            positions[CurrentPage + 1] = offsets; // current page results is the offset for the next page
+        }
+
+        public int CurrentPage { get; set; }
+
+        public int[] GetPagingInfo(int page)
+        {
+            int[] ints;
+            if (positions.TryGetValue(page, out ints) == false)
+                return null;
+
+            var clone = new int[ints.Length];
+            Buffer.BlockCopy(ints, 0, clone, 0, ints.Length * sizeof(int));
+            return clone;
+        }
+
+        public int GetLastPageNumber()
+        {
+            return positions.Keys.Max();
         }
     }
 }

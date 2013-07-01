@@ -31,21 +31,21 @@ namespace RavenFS.Client.Shard
 
         public virtual ShardResolutionResult GetShardIdForUpload(string filename, NameValueCollection metadata)
         {
-            var client = (
+            var shardId = (
                              from kvp in ShardIds
                              where filename.StartsWith(kvp + shardStrategy.Conventions.IdentityPartsSeparator,
                                                      StringComparison.InvariantCultureIgnoreCase)
                              select kvp
                          ).FirstOrDefault();
 
-            if (client == null)
+            if (shardId == null)
             {
-                var shardId = GenerateShardIdFor(filename, metadata);
+                shardId = GenerateShardIdFor(filename, metadata);
                 filename = shardStrategy.ModifyFileName(shardStrategy.Conventions, shardId, filename);
             }
             return new ShardResolutionResult
                 {
-                    ShardId = client,
+                    ShardId = shardId,
                     NewFileName = filename
                 };
         }

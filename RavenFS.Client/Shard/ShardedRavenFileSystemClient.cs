@@ -18,6 +18,11 @@ namespace RavenFS.Client.Shard
 			ShardClients = strategy.Shards;
 		}
 
+	    public int NumberOfShards
+	    {
+	        get { return ShardClients.Count; }
+	    }
+
 		#region Sharding support methods
 
 		public IList<Tuple<string, RavenFileSystemClient>> GetShardsToOperateOn(ShardRequestData resultionData)
@@ -76,60 +81,58 @@ namespace RavenFS.Client.Shard
 		    return client.RenameAsync(filename, rename);
 		}
 
-		public async Task<FileInfo[]> BrowseAsync(int pageSize = 25, PagingInfo pagingInfo = null, bool getNext = true)
+		public async Task<FileInfo[]> BrowseAsync(int pageSize = 25, PagingInfo pagingInfo = null)
 		{
-		    var shardIds = ShardClients.Keys.ToList();
             if(pagingInfo == null)
-                pagingInfo = new PagingInfo(shardIds);
+                pagingInfo = new PagingInfo(ShardClients.Count);
+
+            var indexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
+            if (indexes == null)
+            {
+                var lastPage = pagingInfo.GetLastPageNumber();
+                if(pagingInfo.CurrentPage - lastPage > 10)
+                    throw new InvalidOperationException("Not Enough info in order to calculate requested page in a timely fation, last page info is for page #" + lastPage + ", please go to a closer page");
+
+                var originalPage = pagingInfo.CurrentPage;
+                pagingInfo.CurrentPage = lastPage;
+                while (pagingInfo.CurrentPage < originalPage)
+                {
+                    await BrowseAsync(pageSize, pagingInfo);
+                    pagingInfo.CurrentPage++;
+                }
+
+                indexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
+            }
+
+		    var results = new List<FileInfo>();
 
             var applyAsync =
                await
                ShardStrategy.ShardAccessStrategy.ApplyAsync(ShardClients.Values.ToList(), new ShardRequestData(),
-                                                            (client, i) => client.BrowseAsync(pagingInfo.GetLastInfo(shardIds[i], getNext), pageSize));
-		    var indexes = new int[shardIds.Count];
-		    var results = new List<FileInfo>();
-
-		    InitIndexes(pagingInfo, indexes,shardIds, getNext);
-
+                                                            (client, i) => client.BrowseAsync(indexes[i], pageSize));
+		    var originalIndexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
             while (results.Count < pageSize)
             {
-                var item = GetSmallest(applyAsync, indexes);
+                var item = GetSmallest(applyAsync, indexes, originalIndexes);
                 if (item == null)
                     break;
 
                 results.Add(item);
             }
 
-		    for (var i = 0; i < pagingInfo.ShardPagingInfos.Count; i++)
-		    {
-		        var shardId = shardIds[i];
-		        pagingInfo.ShardPagingInfos[shardId].PageLocations.Add(indexes[i]);
-		    }
+		    pagingInfo.SetPagingInfo(indexes);
 
 		    return results.ToArray();
 		}
 
-	    private void InitIndexes(PagingInfo pagingInfo, int[] indexes,List<string> shardIds, bool getNext)
-	    {
-	        var delta = getNext ? 1 : 2;
-
-	        for (var i = 0; i < pagingInfo.ShardPagingInfos.Count; i++)
-	        {
-		        var shardId = shardIds[i];
-	            var index = pagingInfo.ShardPagingInfos[shardId].PageLocations.Count - delta;
-	            indexes[i] = pagingInfo.ShardPagingInfos[shardId].PageLocations[index];
-	        }   
-        }
-
-	    private FileInfo GetSmallest(FileInfo[][] applyAsync, int[] indexes)
+	    private FileInfo GetSmallest(FileInfo[][] applyAsync, int[] indexes, int[] originalIndexes)
 	    {
 	        FileInfo smallest = null;
 	        var smallestIndex = -1;
-	        var smallestPos = -1;
 	        for (var i = 0; i < applyAsync.Length; i++)
 	        {
 
-	            var pos = indexes[i];
+	            var pos = indexes[i] - originalIndexes[i];
 	            if (pos >= applyAsync[i].Length)
 	                continue;
 
@@ -139,12 +142,11 @@ namespace RavenFS.Client.Shard
 	            {
 	                smallest = current;
 	                smallestIndex = i;
-	                smallestPos = pos;
 	            }
 	        }
 
 	        if (smallestIndex != -1)
-	            indexes[smallestIndex] = smallestPos + 1;
+	            indexes[smallestIndex]++;
 
 	        return smallest;
 	    }
@@ -182,12 +184,12 @@ namespace RavenFS.Client.Shard
 			return client.DownloadAsync(filename, destination, from, to);
 		}
 
-		public Task UploadAsync(string filename, Stream source)
+        public Task<string> UploadAsync(string filename, Stream source)
 		{
             return UploadAsync(filename, new NameValueCollection(), source, null);
 		}
 
-		public  Task UploadAsync(string filename, NameValueCollection metadata, Stream source)
+        public Task<string> UploadAsync(string filename, NameValueCollection metadata, Stream source)
 		{
 		    return UploadAsync(filename, metadata, source, null);
 		}
@@ -229,12 +231,77 @@ namespace RavenFS.Client.Shard
             }
         }
 
-	    public Task<string[]> GetFoldersAsync(string @from = null, int start = 0, int pageSize = 25)
+        public async Task<string[]> GetFoldersAsync(string @from = null, int pageSize = 25, PagingInfo pagingInfo = null)
 		{
-            throw new NotImplementedException();
+            if (pagingInfo == null)
+                pagingInfo = new PagingInfo(ShardClients.Count);
+
+            var indexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
+            if (indexes == null)
+            {
+                var lastPage = pagingInfo.GetLastPageNumber();
+                if (pagingInfo.CurrentPage - lastPage > 10)
+                    throw new InvalidOperationException("Not Enough info in order to calculate requested page in a timely fation, last page info is for page #" + lastPage + ", please go to a closer page");
+
+                var originalPage = pagingInfo.CurrentPage;
+                pagingInfo.CurrentPage = lastPage;
+                while (pagingInfo.CurrentPage < originalPage)
+                {
+                    await GetFoldersAsync(from, pageSize, pagingInfo);
+                    pagingInfo.CurrentPage++;
+                }
+
+                indexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
+            }
+
+            var results = new List<string>();
+
+            var applyAsync =
+               await
+               ShardStrategy.ShardAccessStrategy.ApplyAsync(ShardClients.Values.ToList(), new ShardRequestData(),
+                                                            (client, i) => client.GetFoldersAsync(from, indexes[i], pageSize));
+
+            var originalIndexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
+            while (results.Count < pageSize)
+            {
+                var item = GetSmallest(applyAsync, indexes, originalIndexes);
+                if (item == null)
+                    break;
+
+                results.Add(item);
+            }
+
+            pagingInfo.SetPagingInfo(indexes);
+
+            return results.ToArray();
 		}
 
-		public async Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int start = 0,
+        private string GetSmallest(string[][] applyAsync, int[] indexes, int[] originalIndexes)
+	    {
+            string smallest = null;
+            var smallestIndex = -1;
+            for (var i = 0; i < applyAsync.Length; i++)
+            {
+
+                var pos = indexes[i] - originalIndexes[i];
+                if (pos >= applyAsync[i].Length)
+                    continue;
+
+                var current = applyAsync[i][pos];
+                if (smallest != null && string.Compare(current, smallest, StringComparison.InvariantCultureIgnoreCase) >= 0) 
+                    continue;
+
+                smallest = current;
+                smallestIndex = i;
+            }
+
+            if (smallestIndex != -1)
+                indexes[smallestIndex]++;
+
+            return smallest;
+	    }
+
+	    public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int start = 0,
 		                          int pageSize = 25)
 		{
             throw new NotImplementedException();
