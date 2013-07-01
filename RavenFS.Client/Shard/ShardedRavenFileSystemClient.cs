@@ -88,46 +88,65 @@ namespace RavenFS.Client.Shard
                                                             (client, i) => client.BrowseAsync(pagingInfo.GetLastInfo(shardIds[i], getNext), pageSize));
 		    var indexes = new int[shardIds.Count];
 		    var results = new List<FileInfo>();
-            while (results.Count != pageSize && results.Count != applyAsync.Sum(infos => infos.Count()))
+
+		    InitIndexes(pagingInfo, indexes,shardIds, getNext);
+
+            while (results.Count < pageSize)
             {
-                var items = GetItems(applyAsync, indexes);
-                var item = items[0];
-                var selectedIndex = 0;
-                for (var i = 0; i < items.Count; i++)
-                {
-                    if(items[i].TotalSize == 0)
-                        continue;
+                var item = GetSmallest(applyAsync, indexes);
+                if (item == null)
+                    break;
 
-                    if (String.Compare(items[i].Name, item.Name, StringComparison.InvariantCultureIgnoreCase) < 0)
-                    {
-                        selectedIndex = i;
-                        item = items[i];
-                    }
-                }
-
-                results.Add(applyAsync[selectedIndex][0]);
-                indexes[selectedIndex]++;
+                results.Add(item);
             }
+
+		    for (var i = 0; i < pagingInfo.ShardPagingInfos.Count; i++)
+		    {
+		        var shardId = shardIds[i];
+		        pagingInfo.ShardPagingInfos[shardId].PageLocations.Add(indexes[i]);
+		    }
 
 		    return results.ToArray();
 		}
 
-	    private List<FileInfo> GetItems(FileInfo[][] applyAsync, int[] indexes)
+	    private void InitIndexes(PagingInfo pagingInfo, int[] indexes,List<string> shardIds, bool getNext)
 	    {
-	        var results = new List<FileInfo>();
-	        for (var i = 0; i < applyAsync.Count(); i++)
+	        var delta = getNext ? 1 : 2;
+
+	        for (var i = 0; i < pagingInfo.ShardPagingInfos.Count; i++)
 	        {
-	            try
+		        var shardId = shardIds[i];
+	            var index = pagingInfo.ShardPagingInfos[shardId].PageLocations.Count - delta;
+	            indexes[i] = pagingInfo.ShardPagingInfos[shardId].PageLocations[index];
+	        }   
+        }
+
+	    private FileInfo GetSmallest(FileInfo[][] applyAsync, int[] indexes)
+	    {
+	        FileInfo smallest = null;
+	        var smallestIndex = -1;
+	        var smallestPos = -1;
+	        for (var i = 0; i < applyAsync.Length; i++)
+	        {
+
+	            var pos = indexes[i];
+	            if (pos >= applyAsync[i].Length)
+	                continue;
+
+	            var current = applyAsync[i][pos];
+	            if (smallest == null ||
+	                string.Compare(current.Name, smallest.Name, StringComparison.InvariantCultureIgnoreCase) < 0)
 	            {
-                    results[i] = applyAsync[i][indexes[i]];
-	            }
-	            catch (Exception)
-	            {
-	                results[i] = new FileInfo{TotalSize = 0};
+	                smallest = current;
+	                smallestIndex = i;
+	                smallestPos = pos;
 	            }
 	        }
 
-	        return results;
+	        if (smallestIndex != -1)
+	            indexes[smallestIndex] = smallestPos + 1;
+
+	        return smallest;
 	    }
 
 	    public Task<string[]> GetSearchFieldsAsync(int start = 0, int pageSize = 25)
