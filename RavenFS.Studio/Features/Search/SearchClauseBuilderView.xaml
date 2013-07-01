@@ -1,48 +1,47 @@
 ﻿<UserControl x:Class="RavenFS.Studio.Features.Search.SearchClauseBuilderView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:ClauseBuilders="clr-namespace:RavenFS.Studio.Features.Search.ClauseBuilders"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:pb="clr-namespace:Boogaart.Silverlight.Behaviors"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:b="clr-namespace:RavenFS.Studio.Behaviors"
              xmlns:z="clr-namespace:RavenFS.Studio.Infrastructure.MarkupExtensions"
-             xmlns:Search="clr-namespace:RavenFS.Studio.Features.Search" mc:Ignorable="d"
-    d:DesignHeight="300" d:DesignWidth="400" d:DataContext="{d:DesignInstance Search:SearchClauseBuilderModel}">
-    
-    <Grid x:Name="LayoutRoot" Margin="5">
-      <i:Interaction.Triggers>
-        <b:UIMessageTrigger Message="{z:Static Member=Search:SearchClauseBuilderModel.DisplayPopupMessage}" SourceObject="{Binding}">
-          <b:OpenPopupAction TargetObject="{Binding ElementName=Popup}"/>
-        </b:UIMessageTrigger>
-      </i:Interaction.Triggers>
-        <HyperlinkButton x:Name="Hyperlink" Content="{Binding Description}" Command="{Binding Display}" />
-        
-      <Popup x:Name="Popup" pb:Popup.PlacementTarget="{Binding ElementName=Hyperlink}" pb:Popup.StaysOpen="False">
-          <pb:Popup.PreferredOrientations>
-                <pb:PopupOrientationCollection>
-                    <pb:PopupOrientation Placement="Left"/>
-                </pb:PopupOrientationCollection>
-            </pb:Popup.PreferredOrientations>
-            
-          <Border Background="White" BorderThickness="1" BorderBrush="{StaticResource Brush_ControlBorder}">
-                <i:Interaction.Triggers>
-                  <b:StudioKeyTrigger Key="Enter">
-                    <b:ClosePopupAction TargetName="Popup"/>
-                    <i:InvokeCommandAction Command="{Binding Complete}"/>
-                  </b:StudioKeyTrigger>
-                  <b:StudioKeyTrigger Key="Escape">
-                    <b:ClosePopupAction TargetName="Popup"/>
-                  </b:StudioKeyTrigger>
-                </i:Interaction.Triggers>
-                <Border.Effect>
-                    <DropShadowEffect Opacity="0.3"/>
-                </Border.Effect>
-              
-                <ContentControl Content="{Binding InputView}" Margin="3"/>
+             xmlns:search="clr-namespace:RavenFS.Studio.Features.Search" 
+             mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="400" 
+             d:DataContext="{d:DesignInstance search:SearchClauseBuilderModel}">
+	<Grid x:Name="LayoutRoot" Margin="5">
+		<i:Interaction.Triggers>
+			<b:UIMessageTrigger Message="{z:Static Member=search:SearchClauseBuilderModel.DisplayPopupMessage}" SourceObject="{Binding}">
+				<b:OpenPopupAction TargetObject="{Binding ElementName=Popup}"/>
+			</b:UIMessageTrigger>
+		</i:Interaction.Triggers>
+		<HyperlinkButton x:Name="Hyperlink" Content="{Binding Description}" Command="{Binding Display}" />
 
-            </Border>
-        </Popup>
-    </Grid>
+		<Popup x:Name="Popup" pb:Popup.PlacementTarget="{Binding ElementName=Hyperlink}" pb:Popup.StaysOpen="False">
+			<pb:Popup.PreferredOrientations>
+				<pb:PopupOrientationCollection>
+					<pb:PopupOrientation Placement="Left"/>
+				</pb:PopupOrientationCollection>
+			</pb:Popup.PreferredOrientations>
+
+			<Border Background="White" BorderThickness="1" BorderBrush="{StaticResource Brush_ControlBorder}">
+				<i:Interaction.Triggers>
+					<b:StudioKeyTrigger Key="Enter">
+						<b:ClosePopupAction TargetName="Popup"/>
+						<i:InvokeCommandAction Command="{Binding Complete}"/>
+					</b:StudioKeyTrigger>
+					<b:StudioKeyTrigger Key="Escape">
+						<b:ClosePopupAction TargetName="Popup"/>
+					</b:StudioKeyTrigger>
+				</i:Interaction.Triggers>
+				<Border.Effect>
+					<DropShadowEffect Opacity="0.3"/>
+				</Border.Effect>
+
+				<ContentControl Content="{Binding InputView}" Margin="3"/>
+
+			</Border>
+		</Popup>
+	</Grid>
 </UserControl>

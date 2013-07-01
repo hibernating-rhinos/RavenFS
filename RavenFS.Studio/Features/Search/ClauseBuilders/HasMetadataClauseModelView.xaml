@@ -1,45 +1,45 @@
 ﻿<UserControl x:Class="RavenFS.Studio.Features.Search.ClauseBuilders.HasMetadataClauseModelView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                xmlns:ClauseBuilders="clr-namespace:RavenFS.Studio.Features.Search.ClauseBuilders"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:clauseBuilders="clr-namespace:RavenFS.Studio.Features.Search.ClauseBuilders"
              xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
              xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-             xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors"
-             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk" mc:Ignorable="d"
-    d:DataContext="{d:DesignInstance ClauseBuilders:HasMetadataClauseModel}">
-    
-    <Grid x:Name="LayoutRoot">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="150"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="150"/>
-        </Grid.ColumnDefinitions>
-        <TextBlock Text="Metadata Key:" toolkit:DockPanel.Dock="Left" VerticalAlignment="Center" FontWeight="Bold"
+             xmlns:behaviors="clr-namespace:RavenFS.Studio.Behaviors"
+             xmlns:sdk="http://schemas.microsoft.com/winfx/2006/xaml/presentation/sdk"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance clauseBuilders:HasMetadataClauseModel}">
+	<Grid x:Name="LayoutRoot">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="Auto"/>
+			<ColumnDefinition Width="150"/>
+			<ColumnDefinition Width="Auto"/>
+			<ColumnDefinition Width="150"/>
+		</Grid.ColumnDefinitions>
+		<TextBlock Text="Metadata Key:" toolkit:DockPanel.Dock="Left" VerticalAlignment="Center" FontWeight="Bold"
                    Margin="0,0,5,0"/>
-        <sdk:AutoCompleteBox ItemsSource="{Binding AvailableFields}" Text="{Binding SelectedField, Mode=TwoWay}" IsTextCompletionEnabled="true" MinimumPrefixLength="0" Grid.Column="1">
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="Loaded" SourceName="LayoutRoot">
-                    <Behaviors:FocusElementAction />
-                    <Behaviors:OpenDropDownAction/>
-                </i:EventTrigger>
-                <i:EventTrigger EventName="GotFocus">
-                    <Behaviors:OpenDropDownAction/>
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
-        </sdk:AutoCompleteBox>
-      <TextBlock Text="Value:" toolkit:DockPanel.Dock="Left" VerticalAlignment="Center" FontWeight="Bold"
-                   Margin="5,0,5,0"
-                   Grid.Column="2"/>
-        <TextBox Text="{Binding SearchPattern, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,0" VerticalAlignment="Center"
-                 Grid.Column="3">
-        </TextBox>
-        <TextBlock Text="E.g. Value*" VerticalAlignment="Center" Foreground="Gray"  Grid.Column="4" Grid.Row="1"/>
-    </Grid>
+		<sdk:AutoCompleteBox ItemsSource="{Binding AvailableFields}" Text="{Binding SelectedField, Mode=TwoWay}" IsTextCompletionEnabled="true" MinimumPrefixLength="0"
+                             Grid.Row="0" Grid.Column="1">
+			<i:Interaction.Triggers>
+				<i:EventTrigger EventName="Loaded" SourceName="LayoutRoot">
+					<behaviors:FocusElementAction />
+					<behaviors:OpenDropDownAction/>
+				</i:EventTrigger>
+				<i:EventTrigger EventName="GotFocus">
+					<behaviors:OpenDropDownAction/>
+				</i:EventTrigger>
+			</i:Interaction.Triggers>
+		</sdk:AutoCompleteBox>
+		<TextBlock Text="Value:" toolkit:DockPanel.Dock="Left" VerticalAlignment="Center" FontWeight="Bold"
+                 Margin="5,0,5,0" Grid.Row="0" Grid.Column="2"/>
+		<TextBox Text="{Binding SearchPattern, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,0" VerticalAlignment="Center"
+                 Grid.Row="0" Grid.Column="3">
+		</TextBox>
+		<TextBlock Text="E.g. Value*" VerticalAlignment="Center" Foreground="Gray"  Grid.Column="3" Grid.Row="1"/>
+	</Grid>
 </UserControl>

@@ -1,67 +1,67 @@
-﻿<Infrastructure:View x:Class="RavenFS.Studio.Features.Replication.ReplicationRemotesView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                xmlns:Infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
-                xmlns:Models="clr-namespace:RavenFS.Studio.Models"
+﻿<infrastructure:View x:Class="RavenFS.Studio.Features.Replication.ReplicationRemotesView"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:infrastructure="clr-namespace:RavenFS.Studio.Infrastructure"
+                     xmlns:models="clr-namespace:RavenFS.Studio.Models"
                      xmlns:toolkit="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
-                     xmlns:Behaviors="clr-namespace:RavenFS.Studio.Behaviors" mc:Ignorable="d"
+                     mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="400"
-    Infrastructure:ModelResolver.AttachModel="ReplicationRemotesModel" d:DataContext="{d:DesignInstance Models:ReplicationRemotesModel}">
-    
-    <StackPanel x:Name="LayoutRoot" Margin="0">
-        <Border Grid.Row="1" Style="{StaticResource Style_Border_Toolbar}">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,6" >
-                <Button Command="{Binding AddDestinationCommand}" HorizontalAlignment="Left"
-                    Margin="0,0,0,0"
-                        Style="{StaticResource Style_Button_MouseOverChrome}">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="{StaticResource Image_AddReplicationTarget_Tiny}" Stretch="None"/>
-                        <TextBlock Margin="2,0,0,0">Add Destination</TextBlock>
-                    </StackPanel>
-                </Button>
+    infrastructure:ModelResolver.AttachModel="ReplicationRemotesModel" d:DataContext="{d:DesignInstance models:ReplicationRemotesModel}">
 
-                <Button Command="{StaticResource RunSynchronizationCommand}" HorizontalAlignment="Left"
+	<StackPanel x:Name="LayoutRoot" Margin="0">
+		<Border Style="{StaticResource Style_Border_Toolbar}">
+			<StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,6" >
+				<Button Command="{Binding AddDestinationCommand}" HorizontalAlignment="Left"
                     Margin="0,0,0,0"
                         Style="{StaticResource Style_Button_MouseOverChrome}">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="{StaticResource Image_Sync_Tiny}" Stretch="None"/>
-                        <TextBlock Margin="2,0,0,0">Sync Now</TextBlock>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-        </Border>
-        <TextBlock Text="Destinations" Style="{StaticResource Style_TextBlock_PagePartHeader}" VerticalAlignment="Center"
+					<StackPanel Orientation="Horizontal">
+						<Image Source="{StaticResource Image_AddReplicationTarget_Tiny}" Stretch="None"/>
+						<TextBlock Margin="2,0,0,0">Add Destination</TextBlock>
+					</StackPanel>
+				</Button>
+
+				<Button Command="{StaticResource RunSynchronizationCommand}" HorizontalAlignment="Left"
+                    Margin="0,0,0,0"
+                        Style="{StaticResource Style_Button_MouseOverChrome}">
+					<StackPanel Orientation="Horizontal">
+						<Image Source="{StaticResource Image_Sync_Tiny}" Stretch="None"/>
+						<TextBlock Margin="2,0,0,0">Sync Now</TextBlock>
+					</StackPanel>
+				</Button>
+			</StackPanel>
+		</Border>
+		<TextBlock Text="Destinations" Style="{StaticResource Style_TextBlock_PagePartHeader}" VerticalAlignment="Center"
                    Margin="0,10,0,0"/>
-        <ItemsControl ItemsSource="{Binding DestinationServers}" MaxHeight="150" Margin="10" Width="300" HorizontalAlignment="Left">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <toolkit:DockPanel Margin="0,3">
-                        <Image Source="{StaticResource Image_ReplicationTarget_Tiny}" Stretch="None" toolkit:DockPanel.Dock="Left"/>
-                        <Button Command="{StaticResource RemoveReplicationDestinationCommand}" 
+		<ItemsControl ItemsSource="{Binding DestinationServers}" MaxHeight="150" Margin="10" Width="300" HorizontalAlignment="Left">
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<toolkit:DockPanel Margin="0,3">
+						<Image Source="{StaticResource Image_ReplicationTarget_Tiny}" Stretch="None" toolkit:DockPanel.Dock="Left"/>
+						<Button Command="{StaticResource RemoveReplicationDestinationCommand}" 
                                 CommandParameter="{Binding}" ToolTipService.ToolTip="Remove"
                                 Style="{StaticResource Style_Button_MouseOverChrome}"
                                 toolkit:DockPanel.Dock="Right"
                                 VerticalAlignment="Center">
-                                <Image Source="{StaticResource Image_Remove_Tiny}" Stretch="None"/>
-                        </Button>
-                        <HyperlinkButton Content="{Binding}" Command="{StaticResource NavigateToExternalUrl}" CommandParameter="{Binding}" Margin="3,0,5,0"
+							<Image Source="{StaticResource Image_Remove_Tiny}" Stretch="None"/>
+						</Button>
+						<HyperlinkButton Content="{Binding}" Command="{StaticResource NavigateToExternalUrl}" CommandParameter="{Binding}" Margin="3,0,5,0"
                                          VerticalAlignment="Center"/>
-                    </toolkit:DockPanel>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      <TextBlock Text="Sources" Style="{StaticResource Style_TextBlock_PagePartHeader}" Visibility="{Binding SourceServers.Count, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}"/>
-        <ItemsControl ItemsSource="{Binding SourceServers}"  MaxHeight="150" Margin="10" Width="300" HorizontalAlignment="Left"
+					</toolkit:DockPanel>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
+		<TextBlock Text="Sources" Style="{StaticResource Style_TextBlock_PagePartHeader}" Visibility="{Binding SourceServers.Count, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}"/>
+		<ItemsControl ItemsSource="{Binding SourceServers}"  MaxHeight="150" Margin="10" Width="300" HorizontalAlignment="Left"
                        Visibility="{Binding SourceServers.Count, Converter={StaticResource Converter_VisibleWhenValueGreaterThan}, ConverterParameter=0}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <toolkit:DockPanel Margin="0,3">
-                        <HyperlinkButton Content="{Binding}" Command="{StaticResource NavigateToExternalUrl}" CommandParameter="{Binding}" Margin="0,0,5,0"/>
-                    </toolkit:DockPanel>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </StackPanel>
-</Infrastructure:View>
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<toolkit:DockPanel Margin="0,3">
+						<HyperlinkButton Content="{Binding}" Command="{StaticResource NavigateToExternalUrl}" CommandParameter="{Binding}" Margin="0,0,5,0"/>
+					</toolkit:DockPanel>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
+	</StackPanel>
+</infrastructure:View>
