@@ -151,25 +151,54 @@ namespace RavenFS.Client.Shard
 	        return smallest;
 	    }
 
-	    public Task<string[]> GetSearchFieldsAsync(int start = 0, int pageSize = 25)
+        public async Task<string[]> GetSearchFieldsAsync(int pageSize = 25, PagingInfo pagingInfo = null)
 		{
-            throw new NotImplementedException();
+            if (pagingInfo == null)
+                pagingInfo = new PagingInfo(ShardClients.Count);
+
+            var indexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
+            if (indexes == null)
+            {
+                var lastPage = pagingInfo.GetLastPageNumber();
+                if (pagingInfo.CurrentPage - lastPage > 10)
+                    throw new InvalidOperationException("Not Enough info in order to calculate requested page in a timely fation, last page info is for page #" + lastPage + ", please go to a closer page");
+
+                var originalPage = pagingInfo.CurrentPage;
+                pagingInfo.CurrentPage = lastPage;
+                while (pagingInfo.CurrentPage < originalPage)
+                {
+                    await GetSearchFieldsAsync(pageSize, pagingInfo);
+                    pagingInfo.CurrentPage++;
+                }
+
+                indexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
+            }
+
+            var results = new List<string>();
+
+            var applyAsync =
+               await
+               ShardStrategy.ShardAccessStrategy.ApplyAsync(ShardClients.Values.ToList(), new ShardRequestData(),
+                                                            (client, i) => client.GetSearchFieldsAsync(indexes[i], pageSize));
+
+            var originalIndexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
+            while (results.Count < pageSize)
+            {
+                var item = GetSmallest(applyAsync, indexes, originalIndexes);
+                if (item == null)
+                    break;
+
+                results.Add(item);
+            }
+
+            pagingInfo.SetPagingInfo(indexes);
+
+            return results.ToArray();
 		}
 
 		public Task<SearchResults> SearchAsync(string query, string[] sortFields = null, int start = 0, int pageSize = 25)
 		{
             throw new NotImplementedException();
-            //var shardRequestData = new ShardRequestData
-            //    {
-            //        Query = query
-            //    };
-            //var potentialShards = ShardStrategy.ShardResolutionStrategy.PotentialShardsFor(shardRequestData);
-
-            //var results = await ShardStrategy.ShardAccessStrategy.ApplyAsync(potentialShards.Select(s => ShardClients[s]).ToList(),
-            //                                             shardRequestData,
-            //                                             async (client, i) => await client.SearchAsync(query, sortFields, start, pageSize));
-            
-            //// merge & re-sort results
 		}
 
 	    public Task<NameValueCollection> GetMetadataForAsync(string filename)
