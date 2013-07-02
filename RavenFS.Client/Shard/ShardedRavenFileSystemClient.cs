@@ -125,32 +125,6 @@ namespace RavenFS.Client.Shard
 		    return results.ToArray();
 		}
 
-	    private FileInfo GetSmallest(FileInfo[][] applyAsync, int[] indexes, int[] originalIndexes)
-	    {
-	        FileInfo smallest = null;
-	        var smallestIndex = -1;
-	        for (var i = 0; i < applyAsync.Length; i++)
-	        {
-
-	            var pos = indexes[i] - originalIndexes[i];
-	            if (pos >= applyAsync[i].Length)
-	                continue;
-
-	            var current = applyAsync[i][pos];
-	            if (smallest == null ||
-	                string.Compare(current.Name, smallest.Name, StringComparison.InvariantCultureIgnoreCase) < 0)
-	            {
-	                smallest = current;
-	                smallestIndex = i;
-	            }
-	        }
-
-	        if (smallestIndex != -1)
-	            indexes[smallestIndex]++;
-
-	        return smallest;
-	    }
-
         public async Task<string[]> GetSearchFieldsAsync(int pageSize = 25, PagingInfo pagingInfo = null)
 		{
             if (pagingInfo == null)
@@ -196,9 +170,56 @@ namespace RavenFS.Client.Shard
             return results.ToArray();
 		}
 
-		public Task<SearchResults> SearchAsync(string query, string[] sortFields = null, int start = 0, int pageSize = 25)
+		public async Task<SearchResults> SearchAsync(string query, string[] sortFields = null, int pageSize = 25, PagingInfo pagingInfo = null)
 		{
-            throw new NotImplementedException();
+			if (pagingInfo == null)
+				pagingInfo = new PagingInfo(ShardClients.Count);
+
+			var indexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
+			if (indexes == null)
+			{
+				var lastPage = pagingInfo.GetLastPageNumber();
+				if (pagingInfo.CurrentPage - lastPage > 10)
+					throw new InvalidOperationException("Not Enough info in order to calculate requested page in a timely fation, last page info is for page #" + lastPage + ", please go to a closer page");
+
+				var originalPage = pagingInfo.CurrentPage;
+				pagingInfo.CurrentPage = lastPage;
+				while (pagingInfo.CurrentPage < originalPage)
+				{
+					await SearchAsync(query, sortFields, pageSize, pagingInfo);
+					pagingInfo.CurrentPage++;
+				}
+				
+				indexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
+			}
+			
+			var result = new SearchResults();
+
+			var applyAsync =
+			   await
+			   ShardStrategy.ShardAccessStrategy.ApplyAsync(ShardClients.Values.ToList(), new ShardRequestData(),
+															(client, i) => client.SearchAsync(query, sortFields, indexes[i], pageSize));
+
+			var originalIndexes = pagingInfo.GetPagingInfo(pagingInfo.CurrentPage);
+			while (result.FileCount < pageSize)
+			{
+				var item = GetSmallest(applyAsync, indexes, originalIndexes, sortFields);
+				if (item == null)
+					break;
+
+				var files = new List<FileInfo>();
+				files.AddRange(result.Files);
+				files.AddRange(item.Files);
+
+				result.FileCount++;
+				result.Files = files.ToArray();
+				result.PageSize = pageSize;
+				result.Start = 0;//todo: update start
+			}
+
+			pagingInfo.SetPagingInfo(indexes);
+
+			return result;
 		}
 
 	    public Task<NameValueCollection> GetMetadataForAsync(string filename)
@@ -230,13 +251,6 @@ namespace RavenFS.Client.Shard
             return client.UpdateMetadataAsync(filename, metadata);
         }
 
-	    private RavenFileSystemClient TryGetClintFromFileName(string filename)
-	    {
-	        var clientId = ShardStrategy.ShardResolutionStrategy.GetShardIdFromFileName(filename);
-	        var client = TryGetClient(clientId);
-	        return client;
-	    }
-
 	    public async Task<string> UploadAsync(string filename, NameValueCollection metadata, Stream source, Action<string, long> progress)
 		{
 		    var resolutionResult = ShardStrategy.ShardResolutionStrategy.GetShardIdForUpload(filename, metadata);
@@ -247,18 +261,6 @@ namespace RavenFS.Client.Shard
 
             return resolutionResult.NewFileName;
 		}
-
-        private RavenFileSystemClient TryGetClient(string clientId)
-        {
-            try
-            {
-                return ShardClients[clientId];
-            }
-            catch (Exception)
-            {
-                throw new FileNotFoundException("Count not find shard client with the id:" + clientId);
-            }
-        }
 
         public async Task<string[]> GetFoldersAsync(string @from = null, int pageSize = 25, PagingInfo pagingInfo = null)
 		{
@@ -305,40 +307,182 @@ namespace RavenFS.Client.Shard
             return results.ToArray();
 		}
 
-        private string GetSmallest(string[][] applyAsync, int[] indexes, int[] originalIndexes)
-	    {
-            string smallest = null;
-            var smallestIndex = -1;
-            for (var i = 0; i < applyAsync.Length; i++)
-            {
-
-                var pos = indexes[i] - originalIndexes[i];
-                if (pos >= applyAsync[i].Length)
-                    continue;
-
-                var current = applyAsync[i][pos];
-                if (smallest != null && string.Compare(current, smallest, StringComparison.InvariantCultureIgnoreCase) >= 0) 
-                    continue;
-
-                smallest = current;
-                smallestIndex = i;
-            }
-
-            if (smallestIndex != -1)
-                indexes[smallestIndex]++;
-
-            return smallest;
-	    }
-
-	    public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int start = 0,
-		                          int pageSize = 25)
+		public Task<SearchResults> GetFilesAsync(string folder, FilesSortOptions options = FilesSortOptions.Default, string fileNameSearchPattern = "", int pageSize = 25, PagingInfo pagingInfo = null)
 		{
-            throw new NotImplementedException();
+			var folderQueryPart = GetFolderQueryPart(folder);
+
+			if (string.IsNullOrEmpty(fileNameSearchPattern) == false && fileNameSearchPattern.Contains("*") == false &&
+				fileNameSearchPattern.Contains("?") == false)
+			{
+				fileNameSearchPattern = fileNameSearchPattern + "*";
+			}
+			var fileNameQueryPart = GetFileNameQueryPart(fileNameSearchPattern);
+
+			return SearchAsync(folderQueryPart + fileNameQueryPart, GetSortFields(options), pageSize, pagingInfo);
 		}
 
-		public Task<Guid> GetServerId()
+		#region private Methods
+		private FileInfo GetSmallest(FileInfo[][] applyAsync, int[] indexes, int[] originalIndexes)
 		{
-			throw new NotImplementedException();
+			FileInfo smallest = null;
+			var smallestIndex = -1;
+			for (var i = 0; i < applyAsync.Length; i++)
+			{
+
+				var pos = indexes[i] - originalIndexes[i];
+				if (pos >= applyAsync[i].Length)
+					continue;
+
+				var current = applyAsync[i][pos];
+				if (smallest == null ||
+					string.Compare(current.Name, smallest.Name, StringComparison.InvariantCultureIgnoreCase) < 0)
+				{
+					smallest = current;
+					smallestIndex = i;
+				}
+			}
+
+			if (smallestIndex != -1)
+				indexes[smallestIndex]++;
+
+			return smallest;
 		}
+
+		private SearchResults GetSmallest(SearchResults[] searchResults, int[] indexes, int[] originalIndexes, string[] sortFields)
+		{
+			//todo: update get smallest according to sort field
+			FileInfo smallest = null;
+			var smallestIndex = -1;
+			for (var i = 0; i < searchResults.Length; i++)
+			{
+
+				var pos = indexes[i] - originalIndexes[i];
+				if (pos >= searchResults[i].FileCount)
+					continue;
+
+				var current = searchResults[i].Files[pos];
+				if (smallest != null && string.Compare(current.Name, smallest.Name, StringComparison.InvariantCultureIgnoreCase) >= 0)
+					continue;
+
+				smallest = current;
+				smallestIndex = i;
+			}
+
+			if (smallestIndex != -1)
+				indexes[smallestIndex]++;
+
+			return new SearchResults
+			{
+				FileCount = 1,
+				Files = new[] { smallest }
+			};
+		}
+
+		private string GetSmallest(string[][] applyAsync, int[] indexes, int[] originalIndexes)
+		{
+			string smallest = null;
+			var smallestIndex = -1;
+			for (var i = 0; i < applyAsync.Length; i++)
+			{
+
+				var pos = indexes[i] - originalIndexes[i];
+				if (pos >= applyAsync[i].Length)
+					continue;
+
+				var current = applyAsync[i][pos];
+				if (smallest != null && string.Compare(current, smallest, StringComparison.InvariantCultureIgnoreCase) >= 0)
+					continue;
+
+				smallest = current;
+				smallestIndex = i;
+			}
+
+			if (smallestIndex != -1)
+				indexes[smallestIndex]++;
+
+			return smallest;
+		}
+
+		private RavenFileSystemClient TryGetClintFromFileName(string filename)
+		{
+			var clientId = ShardStrategy.ShardResolutionStrategy.GetShardIdFromFileName(filename);
+			var client = TryGetClient(clientId);
+			return client;
+		}
+
+		private RavenFileSystemClient TryGetClient(string clientId)
+		{
+			try
+			{
+				return ShardClients[clientId];
+			}
+			catch (Exception)
+			{
+				throw new FileNotFoundException("Count not find shard client with the id:" + clientId);
+			}
+		}
+
+		private static string GetFolderQueryPart(string folder)
+		{
+			if (folder == null) throw new ArgumentNullException("folder");
+			if (folder.StartsWith("/") == false)
+				throw new ArgumentException("folder must starts with a /", "folder");
+
+			int level;
+			if (folder == "/")
+				level = 1;
+			else
+				level = folder.Count(ch => ch == '/') + 1;
+
+			var folderQueryPart = "__directory:" + folder + " AND __level:" + level;
+			return folderQueryPart;
+		}
+
+		private static string GetFileNameQueryPart(string fileNameSearchPattern)
+		{
+			if (string.IsNullOrEmpty(fileNameSearchPattern))
+				return "";
+
+			if (fileNameSearchPattern.StartsWith("*") || (fileNameSearchPattern.StartsWith("?")))
+				return " AND __rfileName:" + Reverse(fileNameSearchPattern);
+
+			return " AND __fileName:" + fileNameSearchPattern;
+		}
+
+		private static string Reverse(string value)
+		{
+			var characters = value.ToCharArray();
+			Array.Reverse(characters);
+
+			return new string(characters);
+		}
+
+		private static string[] GetSortFields(FilesSortOptions options)
+		{
+			string sort = null;
+			switch (options & ~FilesSortOptions.Desc)
+			{
+				case FilesSortOptions.Name:
+					sort = "__key";
+					break;
+				case FilesSortOptions.Size:
+					sort = "__size";
+					break;
+				case FilesSortOptions.LastModified:
+					sort = "__modified";
+					break;
+			}
+
+			if (options.HasFlag(FilesSortOptions.Desc))
+			{
+				if (string.IsNullOrEmpty(sort))
+					throw new ArgumentException("options");
+				sort = "-" + sort;
+			}
+
+			var sortFields = string.IsNullOrEmpty(sort) ? null : new[] { sort };
+			return sortFields;
+		}
+		#endregion
 	}
 }
