@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
+using NLog.Config;
 #if SILVERLIGHT
 using System.Net.Browser;
 #endif

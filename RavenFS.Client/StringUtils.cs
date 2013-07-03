@@ -1,4 +1,5 @@
-﻿#if SILVERLIGHT
+﻿using System;
+#if SILVERLIGHT
 using System.Net.Browser;
 #else
 using System.Web;
@@ -12,7 +13,7 @@ namespace RavenFS.Client
         public static string UrlEncode(string textToEncode)
         {
 #if SILVERLIGHT
-            return Uri.EscapeUriString(textToEncode)
+	        return Uri.EscapeUriString(textToEncode);
 #else
             return HttpUtility.UrlEncode(textToEncode);
 #endif

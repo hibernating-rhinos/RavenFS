@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !SILVERLIGHT
+using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Text;
@@ -135,3 +136,4 @@ namespace RavenFS.Extensions
 		}
 	}
 }
+#endif

@@ -81,7 +81,7 @@ namespace RavenFS.Client.Changes
 			try
 			{
 				await ConnectionTask;
-				action();
+				await action();
 			}
 			catch (Exception)
 			{

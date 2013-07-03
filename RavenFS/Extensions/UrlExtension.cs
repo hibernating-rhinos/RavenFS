@@ -4,6 +4,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+#if !SILVERLIGHT
 using System;
 using System.Web;
 using System.Net.Http;
@@ -34,3 +35,4 @@ namespace RavenFS.Extensions
 		}
 	}
 }
+#endif

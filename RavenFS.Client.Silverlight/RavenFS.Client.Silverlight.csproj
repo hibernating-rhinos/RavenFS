@@ -79,185 +79,23 @@
     <Reference Include="System.Net" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\RavenFS.Client\Abstructions\SynchronizationConstants.cs">
-      <Link>Connection\SynchronizationConstants.cs</Link>
+    <Compile Include="..\RavenFS.Client\Abstructions\*.cs">
+      <Link>Connection\%(FileName)</Link>
     </Compile>
-    <Compile Include="..\RavenFS.Client\AsyncExtensions.cs">
-      <Link>AsyncExtensions.cs</Link>
+    <Compile Include="..\RavenFS.Client\*.cs">
+      <Link>%(FileName)</Link>
     </Compile>
-    <Compile Include="..\RavenFS.Client\Changes\Base62Util.cs">
-      <Link>Changes\Base62Util.cs</Link>
+    <Compile Include="..\RavenFS.Client\Changes\*.cs">
+      <Link>Changes\%(FileName)</Link>
     </Compile>
-    <Compile Include="..\RavenFS.Client\Changes\ImmutableList.cs">
-      <Link>Changes\ImmutableList.cs</Link>
+    <Compile Include="..\RavenFS.Client\Connections\*.cs">
+      <Link>Connection\%(FileName)</Link>
     </Compile>
-    <Compile Include="..\RavenFS.Client\Changes\IServerNotifications.cs">
-      <Link>Changes\IServerNotifications.cs</Link>
+    <Compile Include="..\RavenFS.Client\Util\*.cs">
+      <Link>Util\%(FileName)</Link>
     </Compile>
-    <Compile Include="..\RavenFS.Client\Changes\LocalConnectionState.cs">
-      <Link>Changes\LocalConnectionState.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Changes\NotificationObservable.cs">
-      <Link>Changes\NotificationObservable.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Changes\ServerNotifications.cs">
-      <Link>Changes\ServerNotifications.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Changes\TaskedObservable.cs">
-      <Link>Changes\TaskedObservable.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Changes\TaskErrorExtensions.cs">
-      <Link>Changes\TaskErrorExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Changes\TaskObservable.cs">
-      <Link>Changes\TaskObservable.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\ConcurrencyException.cs">
-      <Link>ConcurrencyException.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\ConfigChange.cs">
-      <Link>ConfigChange.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\ConflictItem.cs">
-      <Link>ConflictItem.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\ConflictNotification.cs">
-      <Link>ConflictNotification.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\ConflictResolutionStrategy.cs">
-      <Link>ConflictResolutionStrategy.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\ConflictDetected.cs">
-      <Link>ConflictDetected.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\ConflictResolved.cs">
-      <Link>ConflictResolved.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Connections\FailoverBehavior.cs">
-      <Link>Connection\FailoverBehavior.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Connections\FileConvention.cs">
-      <Link>Connection\FileConvention.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Connections\HttpWebRequestExtensions.cs">
-      <Link>Connection\HttpWebRequestExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Connections\ObservableLineStream.cs">
-      <Link>Connection\ObservableLineStream.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Connections\ReplicationInformer.cs">
-      <Link>Connection\ReplicationInformer.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Connections\ReplicationInformerLocalCache.cs">
-      <Link>Connection\ReplicationInformerLocalCache.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Connections\ServerHash.cs">
-      <Link>Connection\ServerHash.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Connections\WebResponseExtensions.cs">
-      <Link>Connection\WebResponseExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\DestinationSyncResult.cs">
-      <Link>DestinationSyncResult.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\ExceptionExtensions.cs">
-      <Link>ExceptionExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\FileChange.cs">
-      <Link>FileChange.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\FileInfo.cs">
-      <Link>FileInfo.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\FilesSortOptions.cs">
-      <Link>FilesSortOptions.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\FileStatus.cs">
-      <Link>FileStatus.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Heartbeat.cs">
-      <Link>Heartbeat.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\HistoryItem.cs">
-      <Link>HistoryItem.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\ListenableStream.cs">
-      <Link>ListenableStream.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\ListPage.cs">
-      <Link>ListPage.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\MultiPartParser.cs">
-      <Link>MultiPartParser.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Notification.cs">
-      <Link>Notification.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\NotificationJSonUtilities.cs">
-      <Link>NotificationJSonUtilities.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\RavenFileSystemClient.cs">
-      <Link>RavenFileSystemClient.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\RdcStats.cs">
-      <Link>RdcStats.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\ServerStats.cs">
-      <Link>ServerStats.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Signature.cs">
-      <Link>Signature.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\SignatureManifest.cs">
-      <Link>SignatureManifest.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\SourceSynchronizationInformation.cs">
-      <Link>SourceSynchronizationInformation.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\SynchronizationConfirmation.cs">
-      <Link>SynchronizationConfirmation.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\SynchronizationDetails.cs">
-      <Link>SynchronizationDetails.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\SynchronizationException.cs">
-      <Link>SynchronizationException.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\SynchronizationReport.cs">
-      <Link>SynchronizationReport.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\SynchronizationType.cs">
-      <Link>SynchronizationType.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\SynchronizationUpdate.cs">
-      <Link>SynchronizationUpdate.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\UploadFailed.cs">
-      <Link>UploadFailed.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\UrlExtensions.cs">
-      <Link>UrlExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Util\AtomicDictionary.cs">
-      <Link>Util\AtomicDictionary.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Util\CompletedTask.cs">
-      <Link>Util\CompletedTask.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Util\ConcurrentSet.cs">
-      <Link>Util\ConcurrentSet.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Util\DisposableAction.cs">
-      <Link>Util\DisposableAction.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Util\SystemTime.cs">
-      <Link>Util\SystemTime.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS.Client\Util\TaskExtensions.cs">
-      <Link>Util\TaskExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\RavenFS\Extensions\MetadataExtensions.cs">
-      <Link>Imports\MetadataExtensions.cs</Link>
+    <Compile Include="..\RavenFS\Extensions\*.cs">
+      <Link>Imports\%(FileName)</Link>
     </Compile>
     <Compile Include="..\RavenFS\Util\NameValueCollectionJsonConverter.cs">
       <Link>NameValueCollectionJsonConverter.cs</Link>
@@ -294,7 +132,6 @@
     <Compile Include="MissingFromSilverlight\MD5.cs" />
     <Compile Include="NameValueCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StringUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

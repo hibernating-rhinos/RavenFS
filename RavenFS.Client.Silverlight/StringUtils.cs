@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 #if SILVERLIGHT
 using System.Net.Browser;
 #else
@@ -11,15 +8,23 @@ using System.Web;
 
 namespace RavenFS.Client
 {
-    public static class StringUtils
-    {
-        public static string UrlEncode(string textToEncode)
+	public static class StringUtils
+	{
+		public static string UrlEncode(string textToEncode)
         {
 #if SILVERLIGHT
-            return Uri.EscapeUriString(textToEncode);
+            return Uri.EscapeUriString(textToEncode)
 #else
-            return HttpServerUtility.UrlEncode(textToEncode);
+            return HttpUtility.UrlEncode(textToEncode);
 #endif
         }
-    }
+
+		public static string RemoveTrailingSlashAndEncode(string url)
+		{
+			while (url.EndsWith("/"))
+				url = url.Substring(0, url.Length - 1);
+
+			return UrlEncode(url);
+		}
+	}
 }

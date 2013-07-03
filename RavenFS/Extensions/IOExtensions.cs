@@ -3,7 +3,7 @@
 //     Copyright (c) Hibernating Rhinos LTD. All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
-
+#if !SILVERLIGHT
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -110,3 +110,4 @@ namespace RavenFS.Extensions
         }
     }
 }
+#endif
