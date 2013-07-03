@@ -28,7 +28,7 @@ namespace RavenFS.Client.Shard
 
 			ShardAccessStrategy = new SequentialShardAccessStrategy();
 			ShardResolutionStrategy = new DefaultShardResolutionStrategy(shards.Keys, this);
-			ModifyFileName = (convention, shardId, documentId) => shardId + convention.IdentityPartsSeparator + documentId;
+			ModifyFileName = (convention, shardId, documentId) => convention.IdentityPartsSeparator + shardId + convention.IdentityPartsSeparator + documentId;
 		}
 
 		public FileConvention Conventions { get; set; }

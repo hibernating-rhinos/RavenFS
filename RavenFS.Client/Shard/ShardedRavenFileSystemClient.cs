@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web.SessionState;
 
 namespace RavenFS.Client.Shard
 {
@@ -208,8 +209,10 @@ namespace RavenFS.Client.Shard
 					break;
 
 				var files = new List<FileInfo>();
-				files.AddRange(result.Files);
-				files.AddRange(item.Files);
+				if(result.Files != null)
+					files.AddRange(result.Files);
+				if(item.Files != null)
+					files.AddRange(item.Files);
 
 				result.FileCount++;
 				result.Files = files.ToArray();
@@ -219,6 +222,8 @@ namespace RavenFS.Client.Shard
 
 			pagingInfo.SetPagingInfo(indexes);
 
+			result.Files = result.Files.Where(info => info != null).ToArray();
+			result.FileCount = result.Files.Length;
 			return result;
 		}
 
@@ -350,7 +355,6 @@ namespace RavenFS.Client.Shard
 
 		private SearchResults GetSmallest(SearchResults[] searchResults, int[] indexes, int[] originalIndexes, string[] sortFields)
 		{
-			//todo: update get smallest according to sort field
 			FileInfo smallest = null;
 			var smallestIndex = -1;
 			for (var i = 0; i < searchResults.Length; i++)
@@ -361,7 +365,7 @@ namespace RavenFS.Client.Shard
 					continue;
 
 				var current = searchResults[i].Files[pos];
-				if (smallest != null && string.Compare(current.Name, smallest.Name, StringComparison.InvariantCultureIgnoreCase) >= 0)
+				if (smallest != null && CompareFileInfos(current, smallest, sortFields) >= 0)
 					continue;
 
 				smallest = current;
@@ -376,6 +380,55 @@ namespace RavenFS.Client.Shard
 				FileCount = 1,
 				Files = new[] { smallest }
 			};
+		}
+
+		private int CompareFileInfos(FileInfo current, FileInfo smallest, string[] sortFields)
+		{
+			if (sortFields == null || sortFields.Length == 0)
+			{
+				return string.Compare(current.Name, smallest.Name, StringComparison.InvariantCultureIgnoreCase);
+			}
+			foreach (var sortField in sortFields)
+			{
+				var field = sortField;
+				var multiplay = 1; //for asending decending
+				if (sortField.StartsWith("-"))
+				{
+					field = sortField.TrimStart(new[] {'-'});
+					multiplay = -1;
+				}
+
+				if (field.Equals("__size", StringComparison.InvariantCultureIgnoreCase))
+				{
+					var currentItem = current.TotalSize;
+					var smallestItem = smallest.TotalSize;
+
+					if(currentItem == null && smallestItem == null)
+						continue;
+
+					if (currentItem == null)
+						return 1*multiplay;
+
+					if (smallestItem == null)
+						return -1*multiplay;
+
+
+					var compare = (long) (currentItem - smallestItem);
+					if (compare != 0)
+						return Math.Sign(compare)*multiplay;
+				}
+				else
+				{
+					var currentItem = current.Metadata[field];
+					var smallestItem = smallest.Metadata[field];
+
+					var compare = string.Compare(currentItem, smallestItem, StringComparison.InvariantCultureIgnoreCase);
+					if (compare != 0)
+						return compare*multiplay;
+				}
+			}
+
+			return 0;
 		}
 
 		private string GetSmallest(string[][] applyAsync, int[] indexes, int[] originalIndexes)

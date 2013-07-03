@@ -22,7 +22,7 @@ namespace RavenFS.Tests
 		{
 			foreach (var port in Ports)
 			{
-				StartServerInstance(port);
+			StartServerInstance(port);
 			}
 		}
 
